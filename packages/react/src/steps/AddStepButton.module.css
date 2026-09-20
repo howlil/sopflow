@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 0.75rem;
+
+  margin-top: 0.75rem;
+}
+
+.button {
+  min-height: 2.25rem;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.375rem 0.75rem;
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+
+  font: inherit;
+  font-size: var(--sopflow-font-xs);
+
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+
+  outline-offset: 1px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+
+  background: var(--sopflow-disabled-surface);
+  color: var(--sopflow-disabled-text);
+}
+
+.hint {
+  margin: 0;
+
+  color: var(--sopflow-text-muted);
+
+  font-size: var(--sopflow-font-xs);
+}

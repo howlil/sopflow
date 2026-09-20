@@ -1,0 +1,52 @@
+{
+  "name": "@sopflow/core",
+  "version": "0.1.0",
+  "description": "Core engine for structured SOP workflows",
+  "type": "module",
+  "sideEffects": false,
+  "author": {
+    "name": "howlil",
+    "email": "mhdulilabshar27@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/howlil/sopflow#readme",
+  "bugs": {
+    "url": "https://github.com/howlil/sopflow/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["sop", "workflow", "process", "procedure", "typescript"],
+  "license": "MIT"
+}

@@ -1,0 +1,123 @@
+.backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 1rem;
+
+  background: rgb(0 0 0 / 35%);
+}
+
+.backdropClose {
+  position: absolute;
+  inset: 0;
+
+  border: 0;
+  padding: 0;
+
+  background: transparent;
+}
+
+.dialog {
+  width: min(100%, 28rem);
+
+  position: relative;
+  z-index: 1;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  padding: 1rem;
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.title {
+  margin: 0;
+
+  font-size: var(--sopflow-font-sm);
+  font-weight: 600;
+}
+
+.description,
+.notice {
+  margin: 0.25rem 0 0;
+
+  color: var(--sopflow-text-muted);
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.field {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: var(--sopflow-font-xs);
+  font-weight: 600;
+}
+
+.select {
+  min-height: 2.25rem;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.375rem 0.5rem;
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+
+  font: inherit;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 0.5rem;
+
+  margin-top: 1rem;
+}
+
+.secondaryButton,
+.dangerButton {
+  min-height: 2.25rem;
+
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.375rem 0.75rem;
+
+  font: inherit;
+
+  cursor: pointer;
+}
+
+.secondaryButton {
+  border: 1px solid var(--sopflow-border);
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+}
+
+.dangerButton {
+  border: 1px solid var(--sopflow-error-border);
+
+  background: var(--sopflow-error-border);
+  color: white;
+}
+
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

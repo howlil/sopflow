@@ -1,6 +1,15 @@
 {
   "files": {
-    "includes": ["src/**/*.ts", "tests/**/*.ts"]
+    "includes": [
+      "packages/core/src/**/*.ts",
+      "packages/core/tests/**/*.ts",
+      "packages/diagram/src/**/*.ts",
+      "packages/diagram/tests/**/*.ts",
+      "packages/react/src/**/*.ts",
+      "packages/react/src/**/*.tsx",
+      "apps/**/*.ts",
+      "apps/**/*.tsx"
+    ]
   },
   "formatter": {
     "enabled": true,

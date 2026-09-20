@@ -1,0 +1,85 @@
+.menu {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--sopflow-control-radius);
+  border: 0;
+  padding: 0;
+
+  background: transparent;
+
+  font: inherit;
+
+  cursor: pointer;
+  user-select: none;
+  color: var(--sopflow-text-muted);
+}
+
+.trigger:hover {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+}
+
+.content {
+  position: absolute;
+  z-index: 20;
+
+  top: calc(100% + 0.25rem);
+  right: 0;
+
+  width: 13rem;
+
+  padding: 0.25rem;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  background: var(--sopflow-surface);
+}
+
+.item,
+.dangerItem {
+  display: block;
+  width: 100%;
+
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.5rem;
+
+  background: transparent;
+
+  text-align: left;
+  font: inherit;
+
+  cursor: pointer;
+}
+
+.item {
+  color: var(--sopflow-text);
+}
+
+.item:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+}
+
+.dangerItem {
+  color: var(--sopflow-error-text);
+}
+
+.dangerItem:hover:not(:disabled) {
+  background: var(--sopflow-error-surface);
+}
+
+.item:disabled,
+.dangerItem:disabled {
+  cursor: not-allowed;
+  color: var(--sopflow-disabled-text);
+}

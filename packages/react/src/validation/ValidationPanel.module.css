@@ -1,0 +1,67 @@
+.panel {
+  width: 100%;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  padding: 0.75rem;
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+}
+
+.panel[data-error="true"] {
+  border-color: var(--sopflow-error-border);
+  background: var(--sopflow-error-surface);
+}
+
+.panel[data-empty="true"] {
+  color: var(--sopflow-text-muted);
+}
+
+.header {
+  margin-bottom: 0.5rem;
+
+  color: var(--sopflow-error-text);
+
+  font-size: var(--sopflow-font-sm);
+}
+
+.list {
+  display: grid;
+  gap: 0.375rem;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.issue {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  gap: 0.75rem;
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.message {
+  min-width: 0;
+}
+
+.stepId {
+  flex-shrink: 0;
+
+  color: var(--sopflow-text-muted);
+
+  font-family: monospace;
+  font-size: var(--sopflow-font-xs);
+}
+
+.success {
+  margin: 0;
+
+  font-size: var(--sopflow-font-xs);
+}

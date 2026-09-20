@@ -1,0 +1,46 @@
+.field {
+  width: 100%;
+  min-width: 0;
+
+  border: 0;
+  padding: 0.25rem;
+
+  background: transparent;
+  color: var(--sopflow-text);
+
+  font: inherit;
+  line-height: inherit;
+
+  outline: none;
+}
+
+.field:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+}
+
+.field:focus-visible {
+  background: var(--sopflow-selected-surface);
+
+  outline:
+    2px solid
+    var(--sopflow-selected-border);
+
+  outline-offset: -2px;
+}
+
+.field[data-error="true"] {
+  background: var(--sopflow-error-surface);
+
+  outline:
+    1px solid
+    var(--sopflow-error-border);
+
+  outline-offset: -1px;
+}
+
+.field:disabled {
+  cursor: not-allowed;
+
+  background: var(--sopflow-disabled-surface);
+  color: var(--sopflow-disabled-text);
+}

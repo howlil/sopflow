@@ -1,0 +1,27 @@
+.root {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.loading,
+.error {
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.625rem 0.75rem;
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.loading {
+  border: 1px solid var(--sopflow-border);
+
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text-muted);
+}
+
+.error {
+  border: 1px solid var(--sopflow-error-border);
+
+  background: var(--sopflow-error-surface);
+  color: var(--sopflow-error-text);
+}

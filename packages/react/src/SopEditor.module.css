@@ -1,0 +1,26 @@
+.root {
+  display: grid;
+  gap: 1rem;
+
+  min-height: 100%;
+  width: 100%;
+
+  color: var(--sopflow-text);
+  background: var(--sopflow-background);
+}
+
+.root[data-loading="true"] {
+  cursor: progress;
+}
+
+.root[data-disabled="true"] {
+  cursor: default;
+}
+
+.root[data-readonly="true"] {
+  cursor: default;
+}
+
+.root[data-error="true"] {
+  --sopflow-current-border: var(--sopflow-error-border);
+}

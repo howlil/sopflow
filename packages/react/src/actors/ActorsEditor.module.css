@@ -1,0 +1,144 @@
+.editor {
+  width: 100%;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  padding: 0.75rem;
+
+  background: var(--sopflow-surface);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  margin: 0;
+
+  color: var(--sopflow-text);
+
+  font-size: var(--sopflow-font-sm);
+  font-weight: 600;
+}
+
+.description {
+  margin: 0.125rem 0 0;
+
+  color: var(--sopflow-text-muted);
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.list {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.actor {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+
+  align-items: center;
+
+  gap: 0.5rem;
+}
+
+.number {
+  color: var(--sopflow-text-muted);
+
+  text-align: center;
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.nameInput {
+  width: 100%;
+  min-width: 0;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.375rem 0.5rem;
+
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+
+  font: inherit;
+  outline: none;
+}
+
+.nameInput:focus-visible {
+  border-color: var(--sopflow-selected-border);
+
+  outline: 2px solid var(--sopflow-selected-border);
+
+  outline-offset: 1px;
+}
+
+.nameInput[data-empty="true"] {
+  color: var(--sopflow-empty-text);
+}
+
+.nameInput:disabled {
+  cursor: not-allowed;
+
+  background: var(--sopflow-disabled-surface);
+  color: var(--sopflow-disabled-text);
+}
+
+.actorName {
+  min-width: 0;
+
+  padding: 0.375rem 0.5rem;
+
+  color: var(--sopflow-text);
+}
+
+.addButton,
+.removeButton {
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+
+  padding: 0.375rem 0.5rem;
+
+  background: transparent;
+
+  font: inherit;
+
+  cursor: pointer;
+}
+
+.addButton {
+  color: var(--sopflow-text);
+}
+
+.addButton:hover {
+  background: var(--sopflow-surface-muted);
+}
+
+.removeButton {
+  color: var(--sopflow-error-text);
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.removeButton:hover {
+  background: var(--sopflow-error-surface);
+}
+
+.empty {
+  padding: 1rem;
+
+  color: var(--sopflow-empty-text);
+
+  text-align: center;
+
+  font-size: var(--sopflow-font-xs);
+}

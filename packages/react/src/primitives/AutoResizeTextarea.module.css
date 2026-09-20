@@ -1,0 +1,67 @@
+.textarea {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  border: 0;
+  padding: 0.375rem 0.5rem;
+
+  background: transparent;
+  color: var(--sopflow-text);
+
+  font: inherit;
+  line-height: 1.4;
+
+  resize: none;
+  outline: none;
+
+  overflow-y: hidden;
+}
+
+.textarea::placeholder {
+  color: var(--sopflow-empty-text);
+}
+
+.textarea:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+}
+
+.textarea:focus-visible {
+  background: var(--sopflow-selected-surface);
+
+  outline: 2px solid var(--sopflow-selected-border);
+
+  outline-offset: -2px;
+}
+
+.textarea[data-error="true"] {
+  background: var(--sopflow-error-surface);
+
+  outline: 1px solid var(--sopflow-error-border);
+
+  outline-offset: -1px;
+}
+
+.textarea[data-readonly="true"] {
+  cursor: text;
+
+  background: transparent;
+  color: var(--sopflow-text);
+}
+
+.textarea[data-readonly="true"]:hover {
+  background: transparent;
+}
+
+.textarea[data-readonly="true"]:focus {
+  outline: none;
+}
+
+.textarea:disabled {
+  cursor: not-allowed;
+
+  background: var(--sopflow-disabled-surface);
+
+  color: var(--sopflow-disabled-text);
+}

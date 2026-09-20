@@ -1,0 +1,177 @@
+.editor {
+  width: 100%;
+
+  outline: none;
+}
+
+.editor:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 4px;
+
+  border-radius: var(--sopflow-surface-radius);
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  margin: 0;
+
+  color: var(--sopflow-text);
+
+  font-size: var(--sopflow-font-sm);
+  font-weight: 600;
+}
+
+.description {
+  margin: 0.125rem 0 0;
+
+  color: var(--sopflow-text-muted);
+
+  font-size: var(--sopflow-font-xs);
+}
+
+.tableViewport {
+  width: 100%;
+  overflow-x: auto;
+
+  border: 1px solid var(--sopflow-border);
+
+  background: var(--sopflow-surface);
+}
+
+.desktop {
+  display: block;
+}
+
+.mobile {
+  display: none;
+}
+
+.table {
+  width: 100%;
+  min-width: 1460px;
+
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  color: var(--sopflow-text);
+
+  font-size: var(--sopflow-font-sm);
+}
+
+.table th {
+  padding: 0.5rem 0.375rem;
+
+  border-bottom: 1px solid var(--sopflow-border);
+
+  background: var(--sopflow-surface-muted);
+
+  text-align: left;
+  font-weight: 600;
+}
+
+.table td {
+  padding: 0.375rem;
+
+  border-bottom: 1px solid var(--sopflow-border);
+
+  vertical-align: top;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover {
+  background: var(--sopflow-surface-muted);
+}
+
+.numberColumn {
+  width: 48px;
+}
+
+.activityColumn {
+  width: 260px;
+}
+
+.typeColumn {
+  width: 140px;
+}
+
+.actorColumn {
+  width: 190px;
+}
+
+.inputColumn {
+  width: 190px;
+}
+
+.durationColumn {
+  width: 190px;
+}
+
+.outputColumn {
+  width: 190px;
+}
+
+.noteColumn {
+  width: 220px;
+}
+
+.actionColumn {
+  width: 48px;
+}
+
+.numberCell {
+  text-align: center;
+
+  color: var(--sopflow-text-muted);
+}
+
+.actionCell {
+  text-align: center;
+}
+
+.emptyState {
+  min-height: 8rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--sopflow-empty-text);
+
+  font-size: var(--sopflow-font-sm);
+}
+
+.emptyReadonly {
+  border: 1px dashed var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  padding: 2rem 1rem;
+
+  color: var(--sopflow-text-muted);
+  font-size: var(--sopflow-font-sm);
+  text-align: center;
+}
+
+.editor[data-disabled="true"] {
+  color: var(--sopflow-disabled-text);
+}
+
+@media (max-width: 768px) {
+  .desktop {
+    display: none;
+  }
+
+  .mobile {
+    display: grid;
+    gap: 0.75rem;
+  }
+}

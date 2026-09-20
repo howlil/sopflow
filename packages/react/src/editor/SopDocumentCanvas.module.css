@@ -1,0 +1,80 @@
+.canvas {
+  box-sizing: border-box;
+  min-height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: 1rem;
+
+  background: var(--sopflow-color-background);
+}
+
+.document {
+  box-sizing: border-box;
+  width: var(--sopflow-page-width);
+  min-height: var(--sopflow-page-height);
+
+  margin-inline: auto;
+  padding: 1rem;
+
+  background: var(--sopflow-color-surface);
+}
+
+.procedure {
+  width: 100%;
+  margin-top: 2.5rem;
+}
+
+.emptyState {
+  min-height: 8rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed
+    var(--sopflow-color-border);
+
+  color: var(--sopflow-color-empty);
+  font-size: var(--sopflow-font-size-sm);
+}
+
+.procedure[data-empty="true"] {
+  background: transparent;
+}
+
+.actors {
+  margin-top: 2rem;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 1.5rem;
+}
+
+.validation {
+  margin-top: 1rem;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  .canvas {
+    width: var(--sopflow-page-width);
+    min-height: var(--sopflow-page-height);
+    overflow: visible;
+    padding: 0;
+
+    background: var(--sopflow-color-surface);
+  }
+
+  .document {
+    width: var(--sopflow-page-width);
+    min-height: var(--sopflow-page-height);
+    margin: 0;
+  }
+}

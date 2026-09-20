@@ -1,0 +1,52 @@
+[data-sopflow-root] {
+  --sopflow-color-background: #f5f5f5;
+  --sopflow-color-surface: #ffffff;
+  --sopflow-color-surface-muted: #f7f7f7;
+
+  --sopflow-color-text: #171717;
+  --sopflow-color-text-muted: #737373;
+
+  --sopflow-color-border: #d4d4d4;
+  --sopflow-color-document-border: #171717;
+
+  --sopflow-color-selected: #eff6ff;
+  --sopflow-color-selected-border: #2563eb;
+
+  --sopflow-color-error: #dc2626;
+  --sopflow-color-error-surface: #fef2f2;
+
+  --sopflow-color-disabled: #a3a3a3;
+  --sopflow-color-disabled-surface: #f5f5f5;
+
+  --sopflow-color-loading: #e5e5e5;
+  --sopflow-color-empty: #a3a3a3;
+
+  --sopflow-radius-control: 4px;
+  --sopflow-radius-surface: 6px;
+
+  --sopflow-font-size-sm: 0.875rem;
+  --sopflow-font-size-xs: 0.75rem;
+
+  --sopflow-page-width: 210mm;
+  --sopflow-page-height: 297mm;
+
+  /* Component aliases keep field styles readable while preserving the token names above. */
+  --sopflow-background: var(--sopflow-color-background);
+  --sopflow-surface: var(--sopflow-color-surface);
+  --sopflow-surface-muted: var(--sopflow-color-surface-muted);
+  --sopflow-text: var(--sopflow-color-text);
+  --sopflow-text-muted: var(--sopflow-color-text-muted);
+  --sopflow-border: var(--sopflow-color-border);
+  --sopflow-selected-surface: var(--sopflow-color-selected);
+  --sopflow-selected-border: var(--sopflow-color-selected-border);
+  --sopflow-error-text: var(--sopflow-color-error);
+  --sopflow-error-border: var(--sopflow-color-error);
+  --sopflow-error-surface: var(--sopflow-color-error-surface);
+  --sopflow-disabled-text: var(--sopflow-color-disabled);
+  --sopflow-disabled-surface: var(--sopflow-color-disabled-surface);
+  --sopflow-empty-text: var(--sopflow-color-empty);
+  --sopflow-control-radius: var(--sopflow-radius-control);
+  --sopflow-surface-radius: var(--sopflow-radius-surface);
+  --sopflow-font-sm: var(--sopflow-font-size-sm);
+  --sopflow-font-xs: var(--sopflow-font-size-xs);
+}
