@@ -306,9 +306,7 @@ export function setProcedureManualRoute(
               ...(route.startAnchor
                 ? { startAnchor: { ...route.startAnchor } }
                 : {}),
-              ...(route.endAnchor
-                ? { endAnchor: { ...route.endAnchor } }
-                : {}),
+              ...(route.endAnchor ? { endAnchor: { ...route.endAnchor } } : {}),
               ...(route.labelPosition
                 ? { labelPosition: { ...route.labelPosition } }
                 : {}),
@@ -319,9 +317,7 @@ export function setProcedureManualRoute(
               ...(route.startAnchor
                 ? { startAnchor: { ...route.startAnchor } }
                 : {}),
-              ...(route.endAnchor
-                ? { endAnchor: { ...route.endAnchor } }
-                : {}),
+              ...(route.endAnchor ? { endAnchor: { ...route.endAnchor } } : {}),
               ...(route.labelPosition
                 ? { labelPosition: { ...route.labelPosition } }
                 : {}),
