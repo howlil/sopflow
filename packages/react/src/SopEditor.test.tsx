@@ -252,9 +252,10 @@ describe("SopEditor document workbench", () => {
     expect(
       screen.getByRole("button", { name: "Edit Manual" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Flowchart" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Flowchart" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /undo/i }),
@@ -294,7 +295,9 @@ describe("SopEditor document workbench", () => {
     expect(
       screen.queryByRole("button", { name: /tambah pelaksana/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Flowchart" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Flowchart" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
   });
 });
