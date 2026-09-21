@@ -1,3 +1,14 @@
+export { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
+export type {
+  FormalFlowchartBounds,
+  FormalFlowchartColumnBounds,
+  FormalFlowchartGeometry,
+  FormalFlowchartGridLayout,
+  FormalFlowchartRect,
+  FormalFlowchartShapeGeometry,
+  FormalFlowchartSide,
+} from "./flowchart/formal/types.js";
+
 export { buildBpmnModel } from "./bpmn.js";
 export type {
   BpmnLane,

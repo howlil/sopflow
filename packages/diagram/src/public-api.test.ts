@@ -38,6 +38,7 @@ describe("diagram public API", () => {
         "buildSvgRenderModel",
         "getDiamondPoints",
         "layoutDiagram",
+        "planFormalProcedureEdges",
         "pointsToPath",
         "removeProcedureManualRoute",
         "routeDiagramEdges",
