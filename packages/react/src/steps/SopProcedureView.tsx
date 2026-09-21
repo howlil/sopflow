@@ -71,7 +71,8 @@ export function SopProcedureView({
   const diagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
   const routeOverrides = usesLegacyManualPaths ? pathOffsets : diagramConfig;
   const routedEdges = useMemo(
-    () => (geometry ? routeProcedureEdges(model, geometry, routeOverrides) : []),
+    () =>
+      geometry ? routeProcedureEdges(model, geometry, routeOverrides) : [],
     [geometry, model, routeOverrides],
   );
 
