@@ -140,11 +140,7 @@ export function routeProcedureEdges(
     const points =
       manualRoute?.kind === "orthogonal"
         ? buildManualPath(from, to, manualRoute.bendPoints, geometry)
-        : buildTrunkPath(
-            from,
-            to,
-            clampTrunkX(effectiveTrunkX, geometry),
-          );
+        : buildTrunkPath(from, to, clampTrunkX(effectiveTrunkX, geometry));
     const fallbackHandle = {
       x: clampTrunkX(effectiveTrunkX, geometry),
       y: (from.y + to.y) / 2,
@@ -267,9 +263,11 @@ function resolveRoutingOverrides(overrides: ProcedureRoutingOverrides): {
 function isDiagramConfig(
   overrides: ProcedureRoutingOverrides,
 ): overrides is SopDiagramConfig {
-  if (!Object.prototype.hasOwnProperty.call(overrides, "routes")) return false;
+  if (!Object.hasOwn(overrides, "routes")) return false;
   const routes = (overrides as SopDiagramConfig).routes;
-  return routes === undefined || (routes !== null && typeof routes === "object");
+  return (
+    routes === undefined || (routes !== null && typeof routes === "object")
+  );
 }
 
 function buildTrunkPath(
