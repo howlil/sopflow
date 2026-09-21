@@ -51,6 +51,16 @@ describe("SopProcedureView", () => {
     expect(screen.getByText("11 menit")).toBeInTheDocument();
   });
 
+  it("renders flow connections as an overlay on the SOP-AP matrix", async () => {
+    const { container } = render(
+      <SopProcedureView document={document} manualEditing />,
+    );
+
+    const overlay = container.querySelector('svg[data-editing="true"]');
+    expect(overlay).not.toBeNull();
+    expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(1);
+  });
+
   it("marks every assigned actor cell for multi-actor steps", () => {
     const { container } = render(<SopProcedureView document={document} />);
     const row = container.querySelector(
