@@ -50,7 +50,7 @@ export function SopStepFields({
       onOperations={onOperations}
       issues={issues}
       disabled={disabled}
-      className={className}
+      {...(className ? { className } : {})}
     />
   );
 }
