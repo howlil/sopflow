@@ -152,6 +152,7 @@ function chooseElbow(
 export function normalizeFormalOrthogonalPath(
   input: readonly DiagramPoint[],
   bounds: FormalFlowchartRect | null = null,
+  options: { readonly preserveCollinear?: boolean } = {},
 ): DiagramPoint[] {
   if (input.length === 0) return [];
 
@@ -181,7 +182,7 @@ export function normalizeFormalOrthogonalPath(
     expanded.push({ ...to });
   }
 
-  if (expanded.length <= 2) return expanded;
+  if (expanded.length <= 2 || options.preserveCollinear) return expanded;
 
   const compact: DiagramPoint[] = [expanded[0] as DiagramPoint];
 

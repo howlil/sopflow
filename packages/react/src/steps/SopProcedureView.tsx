@@ -2,7 +2,9 @@ import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import {
   buildProcedureModel,
   pointsToPath,
+  removeProcedureManualRoute,
   routeProcedureEdges,
+  setProcedureManualRoute,
   updateProcedureManualTrunk,
   type FormalFlowchartBounds,
   type FormalFlowchartColumnBounds,
@@ -10,6 +12,7 @@ import {
   type FormalFlowchartGridLayout,
   type FormalFlowchartRect,
   type FormalFlowchartShapeGeometry,
+  type DiagramPoint,
   type ProcedureGeometry,
   type ProcedureManualTrunks,
   type ProcedureModel,
@@ -24,6 +27,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
 import styles from "./SopProcedureView.module.css";
 
 export type SopManualPathOffsets = ProcedureManualTrunks;
@@ -249,6 +253,35 @@ export function SopProcedureView({
     ],
   );
 
+  const updateManualPath = useCallback(
+    (connectionId: string, points: readonly DiagramPoint[]) => {
+      if (usesLegacyManualPaths || points.length < 2) return;
+
+      const currentRoute = diagramConfig.routes?.[connectionId];
+      updateDiagramConfig(
+        setProcedureManualRoute(diagramConfig, connectionId, {
+          kind: "orthogonal",
+          bendPoints: points.slice(1, -1).map((point) => ({ ...point })),
+          ...(currentRoute?.labelPosition
+            ? { labelPosition: currentRoute.labelPosition }
+            : {}),
+        }),
+      );
+    },
+    [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
+  );
+
+  const resetManualPath = useCallback(
+    (connectionId: string) => {
+      if (usesLegacyManualPaths) return;
+
+      updateDiagramConfig(
+        removeProcedureManualRoute(diagramConfig, connectionId),
+      );
+    },
+    [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
+  );
+
   const handleOverlayPointerMove = (
     event: ReactPointerEvent<SVGSVGElement>,
   ) => {
@@ -413,7 +446,14 @@ export function SopProcedureView({
           width={geometry.width}
           height={geometry.height}
           viewBox={`0 0 ${geometry.width} ${geometry.height}`}
-          aria-hidden="true"
+          aria-label={
+            manualEditing && !usesLegacyManualPaths
+              ? "Editor jalur flowchart SOP"
+              : undefined
+          }
+          aria-hidden={
+            manualEditing && !usesLegacyManualPaths ? undefined : true
+          }
           onPointerMove={handleOverlayPointerMove}
           onPointerUp={stopDragging}
           onPointerCancel={stopDragging}
@@ -437,17 +477,33 @@ export function SopProcedureView({
 
             return (
               <g key={edge.id}>
+                {manualEditing && !usesLegacyManualPaths ? (
+                  <EditableFormalFlowchartPath
+                    path={edge.points}
+                    connectionId={edge.id}
+                    selected={selected}
+                    onSelect={setSelectedConnectionId}
+                    onChange={(points) => updateManualPath(edge.id, points)}
+                    onReset={() => resetManualPath(edge.id)}
+                  />
+                ) : null}
+
                 <path
                   d={pointsToPath(edge.points)}
                   className={styles.edge}
                   data-selected={selected || undefined}
-                  data-editable={manualEditing || undefined}
+                  data-editable={
+                    manualEditing && usesLegacyManualPaths ? true : undefined
+                  }
                   markerEnd="url(#sopflow-procedure-arrow)"
-                  onPointerDown={(event) => {
-                    if (!manualEditing) return;
-                    event.stopPropagation();
-                    setSelectedConnectionId(edge.id);
-                  }}
+                  onPointerDown={
+                    manualEditing && usesLegacyManualPaths
+                      ? (event) => {
+                          event.stopPropagation();
+                          setSelectedConnectionId(edge.id);
+                        }
+                      : undefined
+                  }
                 />
                 {edge.label && edge.labelPosition ? (
                   <text
@@ -460,7 +516,9 @@ export function SopProcedureView({
                     {edge.label}
                   </text>
                 ) : null}
-                {manualEditing && selected ? (
+                {manualEditing &&
+                selected &&
+                (usesLegacyManualPaths || edge.points.length < 4) ? (
                   <circle
                     cx={edge.handlePosition.x}
                     cy={edge.handlePosition.y}

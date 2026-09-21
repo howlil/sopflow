@@ -202,13 +202,7 @@ export function planFormalProcedureEdges(
         crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
         columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
       });
-      const resolved = applyManualRoute(
-        auto,
-        manual,
-        source,
-        target,
-        routingBounds,
-      );
+      const resolved = applyManualRoute(auto, manual, routingBounds);
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
       registerSide(usedSides, edge.to, "in", resolved.targetSide, edge.id);
@@ -455,57 +449,35 @@ function resolveAutoRoute(input: {
 function applyManualRoute(
   auto: FormalFlowchartRouteResult,
   manual: FormalManualRoute | undefined,
-  source: FormalFlowchartRect,
-  target: FormalFlowchartRect,
   bounds: FormalFlowchartBounds | null,
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
+  const start = auto.points[0];
+  const end = auto.points.at(-1);
+  if (!start || !end) return auto;
+
   if (manual.kind === "orthogonal") {
-    const start = auto.points[0];
-    const end = auto.points.at(-1);
-    if (!start || !end) return auto;
-
     return {
       ...auto,
-      points: normalizeFormalOrthogonalPath([start, ...manual.bendPoints, end]),
+      points: normalizeFormalOrthogonalPath(
+        [start, ...manual.bendPoints, end],
+        null,
+        { preserveCollinear: true },
+      ),
     };
   }
-
-  const points = [...auto.points].map((point) => ({ ...point }));
-  let bestSegmentIndex = -1;
-  let bestLength = -1;
-
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const from = points[index];
-    const to = points[index + 1];
-    if (!from || !to || from.x !== to.x) continue;
-
-    const length = Math.abs(to.y - from.y);
-    if (length > bestLength) {
-      bestLength = length;
-      bestSegmentIndex = index;
-    }
-  }
-
-  if (bestSegmentIndex < 0) {
-    return {
-      ...auto,
-      points: fallbackTrunkPath(source, target, manual.x, bounds),
-    };
-  }
-
-  const before = points[bestSegmentIndex];
-  const after = points[bestSegmentIndex + 1];
-  if (!before || !after) return auto;
 
   const x = clampX(manual.x, bounds);
-  points[bestSegmentIndex] = { x, y: before.y };
-  points[bestSegmentIndex + 1] = { x, y: after.y };
 
   return {
     ...auto,
-    points: normalizeFormalOrthogonalPath(points),
+    points: normalizeFormalOrthogonalPath([
+      start,
+      { x, y: start.y },
+      { x, y: end.y },
+      end,
+    ]),
   };
 }
 
@@ -608,30 +580,6 @@ function fallbackPath(
 
   const midX = Math.round((start.x + end.x) / 2);
   return [start, { x: midX, y: start.y }, { x: midX, y: end.y }, end];
-}
-
-function fallbackTrunkPath(
-  source: FormalFlowchartRect,
-  target: FormalFlowchartRect,
-  requestedX: number,
-  bounds: FormalFlowchartBounds | null,
-): DiagramPoint[] {
-  const start = {
-    x: Math.round(source.left + source.width / 2),
-    y: Math.round(source.top + source.height),
-  };
-  const end = {
-    x: Math.round(target.left + target.width / 2),
-    y: Math.round(target.top),
-  };
-  const x = clampX(requestedX, bounds);
-
-  return normalizeFormalOrthogonalPath([
-    start,
-    { x, y: start.y },
-    { x, y: end.y },
-    end,
-  ]);
 }
 
 function clampX(value: number, bounds: FormalFlowchartBounds | null): number {
