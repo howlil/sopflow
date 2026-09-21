@@ -195,11 +195,7 @@ export function buildChangeStepTypeOperations(
 
   if (step.type === "decision" && type === "task") {
     if (step.yes !== step.no) {
-      throw new SopCoreError(
-        "INVALID_STEP_CONNECTION",
-        "Decision branches must point to the same target before converting to task",
-        { stepId },
-      );
+      return [];
     }
 
     return [
