@@ -1,0 +1,76 @@
+.toolbar {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+  padding: 0.25rem;
+  background: var(--sopflow-surface);
+}
+
+.group,
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.divider {
+  width: 1px;
+  height: 1.75rem;
+  background: var(--sopflow-border);
+}
+
+.button,
+.tab {
+  min-height: 2rem;
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.25rem 0.625rem;
+  background: transparent;
+  color: var(--sopflow-text-muted);
+  font: inherit;
+  font-size: var(--sopflow-font-xs);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled),
+.tab:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+}
+
+.button[data-active="true"],
+.tab[data-active="true"] {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+}
+
+.button:focus-visible,
+.tab:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
+}
+
+.button:disabled,
+.tab:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.tabs {
+  min-width: 10.5rem;
+}
+
+.tab {
+  flex: 1 1 0;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+}
