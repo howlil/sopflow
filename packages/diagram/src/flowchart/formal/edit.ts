@@ -154,7 +154,9 @@ export function dragFormalRouteSegmentFromOrigin(
 
   return options.normalize === false
     ? next
-    : normalizeFormalOrthogonalPath(next);
+    : normalizeFormalOrthogonalPath(next, null, {
+        preserveCollinear: true,
+      });
 }
 
 export function findNearestFormalRouteSegmentIndex(
