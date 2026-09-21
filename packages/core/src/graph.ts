@@ -169,9 +169,7 @@ export function getIncomingConnections(
  */
 export function findDeadEndStepIds(document: SOPDocument): StepId[] {
   return document.steps
-    .filter(
-      (step) => step.type !== "end" && getNextStepIds(step).length === 0,
-    )
+    .filter((step) => step.type !== "end" && getNextStepIds(step).length === 0)
     .map((step) => step.id);
 }
 
