@@ -1,5 +1,9 @@
 import type { ActorId, StepId } from "@sopflow/core";
-import type { DiagramEdgeKind, DiagramNodeKind, DiagramPoint } from "../types.js";
+import type {
+  DiagramEdgeKind,
+  DiagramNodeKind,
+  DiagramPoint,
+} from "../types.js";
 
 export interface SopFlowchartLane {
   actorId: ActorId | null;
