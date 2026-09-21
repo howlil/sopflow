@@ -275,18 +275,14 @@ describe("formal SOP-AP flowchart routing parity", () => {
       },
     });
 
-    const [routed] = planFormalProcedureEdges(
-      { rows, edges },
-      geometry,
-      {
-        "start:next:task": {
-          kind: "orthogonal",
-          bendPoints: [{ x: 240, y: 121 }],
-          startAnchor: { side: "right", distance: 0.5 },
-          endAnchor: { side: "left", distance: 0.25 },
-        },
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:task": {
+        kind: "orthogonal",
+        bendPoints: [{ x: 240, y: 121 }],
+        startAnchor: { side: "right", distance: 0.5 },
+        endAnchor: { side: "left", distance: 0.25 },
       },
-    );
+    });
 
     expect(routed?.sourceSide).toBe("right");
     expect(routed?.targetSide).toBe("left");
