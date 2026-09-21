@@ -90,7 +90,8 @@ export function SopStepsEditor({
           <h2 className={styles.title}>Edit langkah / prosedur</h2>
 
           <p className={styles.description}>
-            Nomor mengikuti urutan tampilan langkah.
+            Nomor mengikuti urutan baris. Geser tabel secara horizontal untuk
+            melihat semua kolom.
           </p>
         </div>
       </div>
@@ -104,7 +105,13 @@ export function SopStepsEditor({
       ) : (
         <>
           <div className={styles.desktop}>
-            <div className={styles.tableViewport}>
+            <div
+              className={styles.tableViewport}
+              role="region"
+              tabIndex={0}
+              aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
+              data-sopflow-steps-scroll
+            >
               <table className={styles.table}>
                 <thead>
                   <tr>
