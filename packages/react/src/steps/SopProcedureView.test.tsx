@@ -64,7 +64,9 @@ describe("SopProcedureView", () => {
     );
     const manager = row.querySelector('[data-sopflow-actor-id="manager"]');
 
-    expect(frontOffice?.querySelector("svg[data-kind='decision']")).not.toBeNull();
+    expect(
+      frontOffice?.querySelector("svg[data-kind='decision']"),
+    ).not.toBeNull();
     expect(manager?.querySelector("svg[data-kind='decision']")).not.toBeNull();
     expect(within(row as HTMLElement).getByText("Valid?")).toBeInTheDocument();
   });
