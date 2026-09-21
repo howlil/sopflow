@@ -14,11 +14,7 @@ export function insertFormalRouteWaypointAtSegmentMidpoint(
   path: readonly DiagramPoint[],
   segmentIndex: number,
 ): DiagramPoint[] {
-  if (
-    path.length < 2 ||
-    segmentIndex < 0 ||
-    segmentIndex >= path.length - 1
-  ) {
+  if (path.length < 2 || segmentIndex < 0 || segmentIndex >= path.length - 1) {
     return path.map((point) => ({ ...point }));
   }
 
@@ -123,10 +119,7 @@ export function dragFormalRouteSegmentFromOrigin(
   dy: number,
   options: { readonly normalize?: boolean } = {},
 ): DiagramPoint[] {
-  if (
-    segmentIndex <= 0 ||
-    segmentIndex >= originPath.length - 2
-  ) {
+  if (segmentIndex <= 0 || segmentIndex >= originPath.length - 2) {
     return originPath.map((point) => ({ ...point }));
   }
 
@@ -174,14 +167,7 @@ export function findNearestFormalRouteSegmentIndex(
     const to = path[index + 1];
     if (!from || !to) continue;
 
-    const distance = pointToSegmentDistance(
-      x,
-      y,
-      from.x,
-      from.y,
-      to.x,
-      to.y,
-    );
+    const distance = pointToSegmentDistance(x, y, from.x, from.y, to.x, to.y);
 
     if (distance < bestDistance) {
       bestDistance = distance;
