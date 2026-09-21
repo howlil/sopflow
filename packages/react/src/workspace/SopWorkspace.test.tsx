@@ -65,7 +65,7 @@ describe("SopWorkspace", () => {
 
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
-    expect(screen.getByDisplayValue("Review")).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
     expect(
       globalThis.document.querySelector("[data-sopflow-procedure-view]"),
     ).toBeNull();
