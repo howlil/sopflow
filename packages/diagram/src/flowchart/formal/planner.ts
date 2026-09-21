@@ -10,6 +10,7 @@ import {
 } from "./dedicated.js";
 import {
   computeFormalConnectionRoutingBounds,
+  pointOnFormalShape,
   resolveFormalColumnForConnection,
 } from "./geometry.js";
 import {
@@ -47,17 +48,26 @@ export interface FormalProcedureModelLike {
   readonly edges: readonly WorkflowEdge[];
 }
 
+export interface FormalManualAnchor {
+  readonly side: FormalFlowchartSide;
+  readonly distance: number;
+}
+
+interface FormalManualRouteBase {
+  readonly startAnchor?: FormalManualAnchor;
+  readonly endAnchor?: FormalManualAnchor;
+  readonly labelPosition?: DiagramPoint;
+}
+
 export type FormalManualRoute =
-  | {
+  | (FormalManualRouteBase & {
       readonly kind: "trunk";
       readonly x: number;
-      readonly labelPosition?: DiagramPoint;
-    }
-  | {
+    })
+  | (FormalManualRouteBase & {
       readonly kind: "orthogonal";
       readonly bendPoints: readonly DiagramPoint[];
-      readonly labelPosition?: DiagramPoint;
-    };
+    });
 
 export interface FormalPlannedEdge extends WorkflowEdge {
   readonly points: readonly DiagramPoint[];
@@ -202,7 +212,15 @@ export function planFormalProcedureEdges(
         crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
         columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
       });
-      const resolved = applyManualRoute(auto, manual, routingBounds);
+      const resolved = applyManualRoute(
+        auto,
+        manual,
+        routingBounds,
+        source,
+        target,
+        meta.sourceType === "flowchart-decision",
+        meta.targetType === "flowchart-decision",
+      );
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
       registerSide(usedSides, edge.to, "in", resolved.targetSide, edge.id);
@@ -450,35 +468,85 @@ function applyManualRoute(
   auto: FormalFlowchartRouteResult,
   manual: FormalManualRoute | undefined,
   bounds: FormalFlowchartBounds | null,
+  source: FormalFlowchartRect,
+  target: FormalFlowchartRect,
+  sourceIsDecision: boolean,
+  targetIsDecision: boolean,
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
-  const start = auto.points[0];
-  const end = auto.points.at(-1);
-  if (!start || !end) return auto;
+  const autoStart = auto.points[0];
+  const autoEnd = auto.points.at(-1);
+  if (!autoStart || !autoEnd) return auto;
+
+  const sourceSide = manual.startAnchor?.side ?? auto.sourceSide;
+  const targetSide = manual.endAnchor?.side ?? auto.targetSide;
+  const start = manual.startAnchor
+    ? pointOnManualAnchor(source, manual.startAnchor, sourceIsDecision)
+    : autoStart;
+  const end = manual.endAnchor
+    ? pointOnManualAnchor(target, manual.endAnchor, targetIsDecision)
+    : autoEnd;
 
   if (manual.kind === "orthogonal") {
     return {
-      ...auto,
       points: normalizeFormalOrthogonalPath(
         [start, ...manual.bendPoints, end],
         null,
         { preserveCollinear: true },
       ),
+      sourceSide,
+      targetSide,
     };
   }
 
   const x = clampX(manual.x, bounds);
 
   return {
-    ...auto,
     points: normalizeFormalOrthogonalPath([
       start,
       { x, y: start.y },
       { x, y: end.y },
       end,
     ]),
+    sourceSide,
+    targetSide,
   };
+}
+
+function pointOnManualAnchor(
+  rect: FormalFlowchartRect,
+  anchor: FormalManualAnchor,
+  isDecision: boolean,
+): DiagramPoint {
+  if (isDecision) {
+    return pointOnFormalShape(rect, anchor.side, true);
+  }
+
+  const distance = Math.max(0, Math.min(1, anchor.distance));
+
+  switch (anchor.side) {
+    case "top":
+      return {
+        x: Math.round(rect.left + rect.width * distance),
+        y: Math.round(rect.top),
+      };
+    case "bottom":
+      return {
+        x: Math.round(rect.left + rect.width * distance),
+        y: Math.round(rect.top + rect.height),
+      };
+    case "left":
+      return {
+        x: Math.round(rect.left),
+        y: Math.round(rect.top + rect.height * distance),
+      };
+    case "right":
+      return {
+        x: Math.round(rect.left + rect.width),
+        y: Math.round(rect.top + rect.height * distance),
+      };
+  }
 }
 
 function placeFormalEdgeLabel(
