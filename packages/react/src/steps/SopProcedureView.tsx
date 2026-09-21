@@ -254,25 +254,36 @@ export function SopProcedureView({
           }
         : null;
 
+    const hasMeasuredFlowchartGeometry =
+      shapes.size === model.rows.length &&
+      [...shapes.values()].every(
+        (shape) => shape.rect.width > 0 && shape.rect.height > 0,
+      ) &&
+      resolvedRight > resolvedLeft;
+
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
       actorLeft: resolvedLeft,
       actorRight: resolvedRight,
-      flowchart: {
-        width: root.scrollWidth,
-        height: root.scrollHeight,
-        shapes,
-        columns,
-        pelaksanaBounds: {
-          left: Math.max(0, resolvedLeft + 8),
-          top: Math.max(0, resolvedTop + 4),
-          right: resolvedRight - 8,
-          bottom: resolvedBottom + 8,
-        },
-        grid,
-      },
+      ...(hasMeasuredFlowchartGeometry
+        ? {
+            flowchart: {
+              width: root.scrollWidth,
+              height: root.scrollHeight,
+              shapes,
+              columns,
+              pelaksanaBounds: {
+                left: Math.max(0, resolvedLeft + 8),
+                top: Math.max(0, resolvedTop + 4),
+                right: resolvedRight - 8,
+                bottom: resolvedBottom + 8,
+              },
+              grid,
+            },
+          }
+        : {}),
     });
   }, [model.rows]);
 
