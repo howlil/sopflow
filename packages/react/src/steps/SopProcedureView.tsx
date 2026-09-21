@@ -1,4 +1,13 @@
-import type { SOPDocument, Step, StepId, ValidationIssue } from "@sopflow/core";
+import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
+import {
+  buildProcedureModel,
+  pointsToPath,
+  routeProcedureEdges,
+  type ProcedureGeometry,
+  type ProcedureManualTrunks,
+  type ProcedureModel,
+  type ProcedureRowModel,
+} from "@sopflow/diagram";
 import {
   useCallback,
   useLayoutEffect,
@@ -9,7 +18,7 @@ import {
 } from "react";
 import styles from "./SopProcedureView.module.css";
 
-export type SopManualPathOffsets = Readonly<Record<string, number>>;
+export type SopManualPathOffsets = ProcedureManualTrunks;
 
 export interface SopProcedureViewProps {
   document: SOPDocument;
@@ -20,27 +29,6 @@ export interface SopProcedureViewProps {
   manualPathOffsets?: SopManualPathOffsets;
   onManualPathOffsetsChange?: (offsets: SopManualPathOffsets) => void;
   className?: string;
-}
-
-interface Anchor {
-  x: number;
-  y: number;
-}
-
-interface Geometry {
-  width: number;
-  height: number;
-  anchors: Map<StepId, Anchor>;
-  actorLeft: number;
-  actorRight: number;
-}
-
-interface Connection {
-  id: string;
-  from: StepId;
-  to: StepId;
-  label?: string;
-  backIndex: number;
 }
 
 export function SopProcedureView({
@@ -55,7 +43,7 @@ export function SopProcedureView({
 }: SopProcedureViewProps) {
   const rootRef = useRef<HTMLElement>(null);
   const shapeRefs = useRef(new Map<StepId, HTMLSpanElement>());
-  const [geometry, setGeometry] = useState<Geometry | null>(null);
+  const [geometry, setGeometry] = useState<ProcedureGeometry | null>(null);
   const [internalOffsets, setInternalOffsets] = useState<SopManualPathOffsets>(
     {},
   );
@@ -64,7 +52,15 @@ export function SopProcedureView({
   >(null);
   const draggingConnectionId = useRef<string | null>(null);
 
+  const model = useMemo(() => buildProcedureModel(document), [document]);
   const pathOffsets = manualPathOffsets ?? internalOffsets;
+  const routedEdges = useMemo(
+    () =>
+      geometry
+        ? routeProcedureEdges(model, geometry, pathOffsets)
+        : [],
+    [geometry, model, pathOffsets],
+  );
 
   const updatePathOffsets = useCallback(
     (next: SopManualPathOffsets) => {
@@ -76,24 +72,15 @@ export function SopProcedureView({
     [manualPathOffsets, onManualPathOffsetsChange],
   );
 
-  const actorColumns =
-    document.actors.length > 0
-      ? document.actors.map((actor) => ({
-          id: actor.id as string | null,
-          name: actor.name,
-        }))
-      : [{ id: null, name: "Pelaksana" }];
-  const actorWidth = 24 / actorColumns.length;
-  const totalColumns = actorColumns.length + 6;
-
-  const connections = useMemo(() => buildConnections(document), [document]);
+  const actorWidth = 24 / model.actorColumns.length;
+  const totalColumns = model.actorColumns.length + 6;
 
   const measure = useCallback(() => {
     const root = rootRef.current;
     if (!root) return;
 
     const rootRect = root.getBoundingClientRect();
-    const anchors = new Map<StepId, Anchor>();
+    const anchors = new Map<StepId, { x: number; y: number }>();
 
     for (const [stepId, element] of shapeRefs.current) {
       const rect = element.getBoundingClientRect();
@@ -190,9 +177,9 @@ export function SopProcedureView({
         <colgroup>
           <col style={{ width: "5%" }} />
           <col style={{ width: "24%" }} />
-          {actorColumns.map((actor, index) => (
+          {model.actorColumns.map((actor, index) => (
             <col
-              key={actor.id ?? `fallback-${index}`}
+              key={actor.actorId ?? `fallback-${index}`}
               style={{ width: `${actorWidth}%` }}
             />
           ))}
@@ -206,18 +193,18 @@ export function SopProcedureView({
           <tr>
             <th rowSpan={2}>No</th>
             <th rowSpan={2}>Kegiatan</th>
-            <th colSpan={actorColumns.length}>Pelaksana</th>
+            <th colSpan={model.actorColumns.length}>Pelaksana</th>
             <th colSpan={3}>Mutu Baku</th>
             <th rowSpan={2}>Ket</th>
           </tr>
           <tr>
-            {actorColumns.map((actor, index) => (
+            {model.actorColumns.map((actor, index) => (
               <th
-                key={actor.id ?? `fallback-${index}`}
+                key={actor.actorId ?? `fallback-${index}`}
                 className={styles.actorHeader}
                 data-sopflow-actor-header
               >
-                {actor.name}
+                {actor.label}
               </th>
             ))}
             <th>Kelengkapan</th>
@@ -227,50 +214,48 @@ export function SopProcedureView({
         </thead>
 
         <tbody>
-          {document.steps.length === 0 ? (
+          {model.rows.length === 0 ? (
             <tr>
               <td colSpan={totalColumns} className={styles.empty}>
                 Belum ada langkah SOP.
               </td>
             </tr>
           ) : (
-            document.steps.map((step, index) => {
-              const selected = selectedStepId === step.id;
+            model.rows.map((row) => {
+              const selected = selectedStepId === row.stepId;
               const issueCount = issues.filter(
-                (issue) => issue.stepId === step.id,
+                (issue) => issue.stepId === row.stepId,
               ).length;
-              const primaryActorId =
-                step.actorIds[0] ?? actorColumns[0]?.id ?? null;
 
               return (
                 <tr
-                  key={step.id}
+                  key={row.stepId}
                   className={styles.row}
-                  data-sopflow-procedure-step-id={step.id}
+                  data-sopflow-procedure-step-id={row.stepId}
                   data-selected={selected || undefined}
                   data-error={issueCount > 0 || undefined}
                   tabIndex={onSelectedStepChange ? 0 : undefined}
                   aria-selected={selected || undefined}
-                  onClick={() => onSelectedStepChange?.(step.id)}
+                  onClick={() => onSelectedStepChange?.(row.stepId)}
                   onKeyDown={(event) => {
                     if (
                       onSelectedStepChange &&
                       (event.key === "Enter" || event.key === " ")
                     ) {
                       event.preventDefault();
-                      onSelectedStepChange(step.id);
+                      onSelectedStepChange(row.stepId);
                     }
                   }}
                 >
-                  <td className={styles.number}>{index + 1}</td>
+                  <td className={styles.number}>{row.number}</td>
                   <td className={styles.activity}>
                     <div className={styles.activityName}>
-                      {step.name.trim() || "—"}
+                      {row.activity.trim() || "—"}
                     </div>
-                    {step.type === "decision" || issueCount > 0 ? (
+                    {row.kind === "decision" || issueCount > 0 ? (
                       <div className={styles.activityMeta}>
-                        {step.type === "decision" ? (
-                          <span>{decisionSummary(step, document)}</span>
+                        {row.kind === "decision" ? (
+                          <span>{decisionSummary(row.stepId, model)}</span>
                         ) : null}
                         {issueCount > 0 ? (
                           <span className={styles.issue}>
@@ -281,40 +266,42 @@ export function SopProcedureView({
                     ) : null}
                   </td>
 
-                  {actorColumns.map((actor, actorIndex) => {
+                  {model.actorColumns.map((actor, actorIndex) => {
                     const assigned =
-                      actor.id === null
-                        ? document.actors.length === 0
-                        : step.actorIds.includes(actor.id);
-                    const primary = assigned && actor.id === primaryActorId;
+                      actor.actorId === null
+                        ? model.actorColumns.length === 1 &&
+                          model.actorColumns[0]?.actorId === null
+                        : row.actorIds.includes(actor.actorId);
+                    const primary =
+                      assigned && actor.actorId === row.primaryActorId;
 
                     return (
                       <td
-                        key={actor.id ?? `fallback-${actorIndex}`}
+                        key={actor.actorId ?? `fallback-${actorIndex}`}
                         className={styles.actorCell}
-                        data-sopflow-actor-id={actor.id ?? undefined}
+                        data-sopflow-actor-id={actor.actorId ?? undefined}
                       >
                         {assigned ? (
                           <span
                             ref={(element) => {
-                              if (primary) setShapeRef(step.id, element);
+                              if (primary) setShapeRef(row.stepId, element);
                             }}
                             className={styles.shapeAnchor}
                             data-sopflow-primary-shape={
-                              primary ? step.id : undefined
+                              primary ? row.stepId : undefined
                             }
                           >
-                            <ProcedureShape step={step} />
+                            <ProcedureShape kind={row.kind} />
                           </span>
                         ) : null}
                       </td>
                     );
                   })}
 
-                  <td>{display(step.input)}</td>
-                  <td>{durationLabel(step)}</td>
-                  <td>{display(step.output)}</td>
-                  <td>{display(step.note)}</td>
+                  <td>{display(row.input)}</td>
+                  <td>{durationLabel(row)}</td>
+                  <td>{display(row.output)}</td>
+                  <td>{display(row.note)}</td>
                 </tr>
               );
             })
@@ -322,7 +309,7 @@ export function SopProcedureView({
         </tbody>
       </table>
 
-      {geometry && connections.length > 0 ? (
+      {geometry && routedEdges.length > 0 ? (
         <svg
           className={styles.overlay}
           data-editing={manualEditing || undefined}
@@ -348,24 +335,13 @@ export function SopProcedureView({
             </marker>
           </defs>
 
-          {connections.map((connection) => {
-            const from = geometry.anchors.get(connection.from);
-            const to = geometry.anchors.get(connection.to);
-            if (!from || !to) return null;
-
-            const routed = routeConnection(
-              connection,
-              from,
-              to,
-              geometry,
-              pathOffsets[connection.id],
-            );
-            const selected = selectedConnectionId === connection.id;
+          {routedEdges.map((edge) => {
+            const selected = selectedConnectionId === edge.id;
 
             return (
-              <g key={connection.id}>
+              <g key={edge.id}>
                 <path
-                  d={routed.path}
+                  d={pointsToPath(edge.points)}
                   className={styles.edge}
                   data-selected={selected || undefined}
                   data-editable={manualEditing || undefined}
@@ -373,27 +349,27 @@ export function SopProcedureView({
                   onPointerDown={(event) => {
                     if (!manualEditing) return;
                     event.stopPropagation();
-                    setSelectedConnectionId(connection.id);
+                    setSelectedConnectionId(edge.id);
                   }}
                 />
-                {connection.label ? (
+                {edge.label && edge.labelPosition ? (
                   <text
-                    x={routed.trunkX + 3}
-                    y={(from.y + to.y) / 2 - 4}
+                    x={edge.labelPosition.x}
+                    y={edge.labelPosition.y}
                     className={styles.edgeLabel}
                   >
-                    {connection.label}
+                    {edge.label}
                   </text>
                 ) : null}
                 {manualEditing && selected ? (
                   <circle
-                    cx={routed.trunkX}
-                    cy={(from.y + to.y) / 2}
+                    cx={edge.trunkX}
+                    cy={edge.points.reduce((sum, point) => sum + point.y, 0) / edge.points.length}
                     r={5}
                     className={styles.pathHandle}
                     onPointerDown={(event) => {
                       event.stopPropagation();
-                      draggingConnectionId.current = connection.id;
+                      draggingConnectionId.current = edge.id;
                       event.currentTarget.setPointerCapture(event.pointerId);
                     }}
                   />
@@ -407,17 +383,17 @@ export function SopProcedureView({
   );
 }
 
-function ProcedureShape({ step }: { step: Step }) {
+function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
   return (
     <svg
       className={styles.flowShape}
-      data-kind={step.type}
+      data-kind={kind}
       viewBox="0 0 36 28"
       aria-hidden="true"
     >
-      {step.type === "decision" ? (
+      {kind === "decision" ? (
         <polygon points="18,2 34,14 18,26 2,14" />
-      ) : step.type === "start" || step.type === "end" ? (
+      ) : kind === "start" || kind === "end" ? (
         <rect x="2" y="5" width="32" height="18" rx="9" />
       ) : (
         <rect x="2" y="5" width="32" height="18" />
@@ -426,63 +402,12 @@ function ProcedureShape({ step }: { step: Step }) {
   );
 }
 
-function buildConnections(document: SOPDocument): Connection[] {
-  let backIndex = 0;
-  const order = new Map(
-    document.steps.map((step, index) => [step.id, index] as const),
-  );
-
-  return document.steps.flatMap((step) => {
-    const candidates =
-      step.type === "end"
-        ? []
-        : step.type === "decision"
-          ? [
-              { id: `${step.id}:yes:${step.yes}`, to: step.yes, label: "Ya" },
-              { id: `${step.id}:no:${step.no}`, to: step.no, label: "Tidak" },
-            ]
-          : [{ id: `${step.id}:next:${step.next}`, to: step.next }];
-
-    return candidates
-      .filter((candidate) => order.has(candidate.to))
-      .map((candidate) => {
-        const isBack =
-          (order.get(candidate.to) ?? 0) <= (order.get(step.id) ?? 0);
-
-        return {
-          ...candidate,
-          from: step.id,
-          backIndex: isBack ? backIndex++ : -1,
-        };
-      });
-  });
-}
-
-function routeConnection(
-  connection: Connection,
-  from: Anchor,
-  to: Anchor,
-  geometry: Geometry,
-  manualTrunkX: number | undefined,
-): { path: string; trunkX: number } {
-  const isBack = connection.backIndex >= 0;
-  const autoTrunkX = isBack
-    ? geometry.actorRight - 10 - connection.backIndex * 10
-    : from.x + (to.x - from.x) / 2;
-  const trunkX = manualTrunkX ?? autoTrunkX;
-
-  return {
-    trunkX,
-    path: `M ${from.x} ${from.y} L ${trunkX} ${from.y} L ${trunkX} ${to.y} L ${to.x} ${to.y}`,
-  };
-}
-
 function display(value: string | undefined): string {
   return value?.trim() || "—";
 }
 
-function durationLabel(step: Step): string {
-  if (!step.duration) return "—";
+function durationLabel(row: ProcedureRowModel): string {
+  if (!row.duration) return "—";
 
   const unitLabels = {
     minute: "menit",
@@ -493,16 +418,16 @@ function durationLabel(step: Step): string {
     year: "tahun",
   } as const;
 
-  return `${step.duration.value} ${unitLabels[step.duration.unit]}`;
+  return `${row.duration.value} ${unitLabels[row.duration.unit]}`;
 }
 
-function decisionSummary(
-  step: Extract<Step, { type: "decision" }>,
-  document: SOPDocument,
-): string {
+function decisionSummary(stepId: StepId, model: ProcedureModel): string {
   const orderById = new Map(
-    document.steps.map((candidate, index) => [candidate.id, index + 1]),
+    model.rows.map((row) => [row.stepId, row.number] as const),
   );
+  const branches = model.graph.edges.filter((edge) => edge.from === stepId);
+  const yes = branches.find((edge) => edge.kind === "yes");
+  const no = branches.find((edge) => edge.kind === "no");
 
-  return `Ya → ${orderById.get(step.yes) ?? "?"} · Tidak → ${orderById.get(step.no) ?? "?"}`;
+  return `Ya → ${yes ? orderById.get(yes.to) ?? "?" : "?"} · Tidak → ${no ? orderById.get(no.to) ?? "?" : "?"}`;
 }
