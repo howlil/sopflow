@@ -267,7 +267,11 @@ export function buildFormalLoopbackPath(input: {
     input.side,
     input.sourceDecision,
   );
-  const end = pointOnFormalShape(input.target, input.side, input.targetDecision);
+  const end = pointOnFormalShape(
+    input.target,
+    input.side,
+    input.targetDecision,
+  );
   const sourceExit = extrudeFormalShapePoint(
     input.source,
     input.side,
@@ -292,9 +296,7 @@ export function buildFormalLoopbackPath(input: {
     Math.min(input.corridor.right - 8, rawPipeX),
   );
 
-  const vertical: DiagramPoint[] = [
-    { x: pipeX, y: sourceExit.y },
-  ];
+  const vertical: DiagramPoint[] = [{ x: pipeX, y: sourceExit.y }];
 
   if (input.gridLayout && input.fromRow > input.toRow + 1) {
     const minY = Math.min(sourceExit.y, targetEntry.y);
@@ -364,10 +366,8 @@ export function tryBuildFormalDedicatedRoute(input: {
     !formalPathOverlapsSegments(path, input.occupied);
 
   if (destinationAbove && input.sourceColumn) {
-    const corridor = routingBounds ?? mergeBounds(
-      input.sourceColumn,
-      input.targetColumn,
-    );
+    const corridor =
+      routingBounds ?? mergeBounds(input.sourceColumn, input.targetColumn);
     const targetLeft = targetCenterX < sourceCenterX;
     const sides: Array<"left" | "right"> = targetLeft
       ? ["left", "right"]
@@ -511,11 +511,7 @@ function rowPipe(
     return layout.rowGutters[row] ?? Math.round(fallback);
   }
 
-  return findFormalRowPipeY(
-    layout,
-    Math.max(0, row - 1),
-    Math.max(0, row),
-  );
+  return findFormalRowPipeY(layout, Math.max(0, row - 1), Math.max(0, row));
 }
 
 function compact(points: readonly DiagramPoint[]): DiagramPoint[] {
