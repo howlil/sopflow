@@ -80,6 +80,7 @@ describe("procedure model", () => {
 
     expect(forward?.trunkX).toBe(300);
     expect(loopback?.trunkX).toBe(490);
+    expect(loopback?.handlePosition).toEqual({ x: 490, y: 150 });
     expect(loopback?.points).toEqual([
       { x: 350, y: 200 },
       { x: 490, y: 200 },
