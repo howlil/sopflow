@@ -3,14 +3,20 @@ import { describe, expect, it } from "vitest";
 import * as publicApi from "./index.js";
 
 describe("@sopflow/react public API", () => {
-  it("exports only the supported runtime component", () => {
+  it("exports the supported editor composition and reusable primitives", () => {
     expect(Object.keys(publicApi)).toEqual([
-      "SopEditor",
+      "ActorsEditor",
       "SopDiagram",
+      "SopEditor",
+      "SopHeaderFields",
+      "SopHeaderView",
       "SopWorkspace",
     ]);
-    expect(publicApi.SopEditor).toBeTypeOf("function");
+    expect(publicApi.ActorsEditor).toBeTypeOf("function");
     expect(publicApi.SopDiagram).toBeTypeOf("function");
+    expect(publicApi.SopEditor).toBeTypeOf("function");
+    expect(publicApi.SopHeaderFields).toBeTypeOf("function");
+    expect(publicApi.SopHeaderView).toBeTypeOf("function");
     expect(publicApi.SopWorkspace).toBeTypeOf("function");
   });
 });
