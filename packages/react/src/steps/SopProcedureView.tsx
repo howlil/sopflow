@@ -1,12 +1,46 @@
 import type { SOPDocument, Step, StepId, ValidationIssue } from "@sopflow/core";
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import styles from "./SopProcedureView.module.css";
+
+export type SopManualPathOffsets = Readonly<Record<string, number>>;
 
 export interface SopProcedureViewProps {
   document: SOPDocument;
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
   issues?: readonly ValidationIssue[];
+  manualEditing?: boolean;
+  manualPathOffsets?: SopManualPathOffsets;
+  onManualPathOffsetsChange?: (offsets: SopManualPathOffsets) => void;
   className?: string;
+}
+
+interface Anchor {
+  x: number;
+  y: number;
+}
+
+interface Geometry {
+  width: number;
+  height: number;
+  anchors: Map<StepId, Anchor>;
+  actorLeft: number;
+  actorRight: number;
+}
+
+interface Connection {
+  id: string;
+  from: StepId;
+  to: StepId;
+  label?: string;
+  backIndex: number;
 }
 
 export function SopProcedureView({
@@ -14,8 +48,34 @@ export function SopProcedureView({
   selectedStepId = null,
   onSelectedStepChange,
   issues = [],
+  manualEditing = false,
+  manualPathOffsets,
+  onManualPathOffsetsChange,
   className,
 }: SopProcedureViewProps) {
+  const rootRef = useRef<HTMLElement>(null);
+  const shapeRefs = useRef(new Map<StepId, HTMLSpanElement>());
+  const [geometry, setGeometry] = useState<Geometry | null>(null);
+  const [internalOffsets, setInternalOffsets] = useState<SopManualPathOffsets>(
+    {},
+  );
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null);
+  const draggingConnectionId = useRef<string | null>(null);
+
+  const pathOffsets = manualPathOffsets ?? internalOffsets;
+
+  const updatePathOffsets = useCallback(
+    (next: SopManualPathOffsets) => {
+      if (manualPathOffsets === undefined) {
+        setInternalOffsets(next);
+      }
+      onManualPathOffsetsChange?.(next);
+    },
+    [manualPathOffsets, onManualPathOffsetsChange],
+  );
+
   const actorColumns =
     document.actors.length > 0
       ? document.actors.map((actor) => ({
@@ -26,10 +86,106 @@ export function SopProcedureView({
   const actorWidth = 24 / actorColumns.length;
   const totalColumns = actorColumns.length + 6;
 
+  const connections = useMemo(() => buildConnections(document), [document]);
+
+  const measure = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const rootRect = root.getBoundingClientRect();
+    const anchors = new Map<StepId, Anchor>();
+
+    for (const [stepId, element] of shapeRefs.current) {
+      const rect = element.getBoundingClientRect();
+      anchors.set(stepId, {
+        x: rect.left - rootRect.left + rect.width / 2,
+        y: rect.top - rootRect.top + rect.height / 2,
+      });
+    }
+
+    const actorHeaders = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-sopflow-actor-header]"),
+    );
+    const firstActorHeader = actorHeaders[0]?.getBoundingClientRect();
+    const lastActorHeader = actorHeaders.at(-1)?.getBoundingClientRect();
+
+    setGeometry({
+      width: root.scrollWidth,
+      height: root.scrollHeight,
+      anchors,
+      actorLeft: firstActorHeader
+        ? firstActorHeader.left - rootRect.left
+        : 0,
+      actorRight: lastActorHeader
+        ? lastActorHeader.right - rootRect.left
+        : rootRect.width,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    measure();
+
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(root);
+
+    return () => observer.disconnect();
+  }, [measure, document]);
+
+  const setShapeRef = useCallback(
+    (stepId: StepId, element: HTMLSpanElement | null) => {
+      if (element) {
+        shapeRefs.current.set(stepId, element);
+      } else {
+        shapeRefs.current.delete(stepId);
+      }
+    },
+    [],
+  );
+
+  const updateManualTrunk = useCallback(
+    (connectionId: string, clientX: number) => {
+      const root = rootRef.current;
+      if (!root || !geometry) return;
+
+      const rect = root.getBoundingClientRect();
+      const localX = clientX - rect.left;
+      const padding = 8;
+      const x = Math.max(
+        geometry.actorLeft + padding,
+        Math.min(geometry.actorRight - padding, localX),
+      );
+
+      updatePathOffsets({
+        ...pathOffsets,
+        [connectionId]: x,
+      });
+    },
+    [geometry, pathOffsets, updatePathOffsets],
+  );
+
+  const handleOverlayPointerMove = (
+    event: ReactPointerEvent<SVGSVGElement>,
+  ) => {
+    const connectionId = draggingConnectionId.current;
+    if (!connectionId) return;
+
+    event.preventDefault();
+    updateManualTrunk(connectionId, event.clientX);
+  };
+
+  const stopDragging = () => {
+    draggingConnectionId.current = null;
+  };
+
   return (
     <section
+      ref={rootRef}
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-sopflow-procedure-view
+      data-manual-editing={manualEditing || undefined}
       aria-label="Prosedur SOP"
     >
       <table className={styles.table}>
@@ -61,6 +217,7 @@ export function SopProcedureView({
               <th
                 key={actor.id ?? `fallback-${index}`}
                 className={styles.actorHeader}
+                data-sopflow-actor-header
               >
                 {actor.name}
               </th>
@@ -84,6 +241,8 @@ export function SopProcedureView({
               const issueCount = issues.filter(
                 (issue) => issue.stepId === step.id,
               ).length;
+              const primaryActorId =
+                step.actorIds[0] ?? actorColumns[0]?.id ?? null;
 
               return (
                 <tr
@@ -129,6 +288,7 @@ export function SopProcedureView({
                       actor.id === null
                         ? document.actors.length === 0
                         : step.actorIds.includes(actor.id);
+                    const primary = assigned && actor.id === primaryActorId;
 
                     return (
                       <td
@@ -136,7 +296,19 @@ export function SopProcedureView({
                         className={styles.actorCell}
                         data-sopflow-actor-id={actor.id ?? undefined}
                       >
-                        {assigned ? <ProcedureShape step={step} /> : null}
+                        {assigned ? (
+                          <span
+                            ref={(element) => {
+                              if (primary) setShapeRef(step.id, element);
+                            }}
+                            className={styles.shapeAnchor}
+                            data-sopflow-primary-shape={
+                              primary ? step.id : undefined
+                            }
+                          >
+                            <ProcedureShape step={step} />
+                          </span>
+                        ) : null}
                       </td>
                     );
                   })}
@@ -151,6 +323,88 @@ export function SopProcedureView({
           )}
         </tbody>
       </table>
+
+      {geometry && connections.length > 0 ? (
+        <svg
+          className={styles.overlay}
+          data-editing={manualEditing || undefined}
+          width={geometry.width}
+          height={geometry.height}
+          viewBox={`0 0 ${geometry.width} ${geometry.height}`}
+          aria-hidden="true"
+          onPointerMove={handleOverlayPointerMove}
+          onPointerUp={stopDragging}
+          onPointerCancel={stopDragging}
+        >
+          <defs>
+            <marker
+              id="sopflow-procedure-arrow"
+              markerWidth="7"
+              markerHeight="7"
+              refX="6"
+              refY="3.5"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M 0 0 L 7 3.5 L 0 7 Z" className={styles.arrowHead} />
+            </marker>
+          </defs>
+
+          {connections.map((connection) => {
+            const from = geometry.anchors.get(connection.from);
+            const to = geometry.anchors.get(connection.to);
+            if (!from || !to) return null;
+
+            const routed = routeConnection(
+              connection,
+              from,
+              to,
+              geometry,
+              pathOffsets[connection.id],
+            );
+            const selected = selectedConnectionId === connection.id;
+
+            return (
+              <g key={connection.id}>
+                <path
+                  d={routed.path}
+                  className={styles.edge}
+                  data-selected={selected || undefined}
+                  data-editable={manualEditing || undefined}
+                  markerEnd="url(#sopflow-procedure-arrow)"
+                  onPointerDown={(event) => {
+                    if (!manualEditing) return;
+                    event.stopPropagation();
+                    setSelectedConnectionId(connection.id);
+                  }}
+                />
+                {connection.label ? (
+                  <text
+                    x={routed.trunkX + 3}
+                    y={(from.y + to.y) / 2 - 4}
+                    className={styles.edgeLabel}
+                  >
+                    {connection.label}
+                  </text>
+                ) : null}
+                {manualEditing && selected ? (
+                  <circle
+                    cx={routed.trunkX}
+                    cy={(from.y + to.y) / 2}
+                    r={5}
+                    className={styles.pathHandle}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      draggingConnectionId.current = connection.id;
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                    }}
+                  />
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+      ) : null}
     </section>
   );
 }
@@ -172,6 +426,57 @@ function ProcedureShape({ step }: { step: Step }) {
       )}
     </svg>
   );
+}
+
+function buildConnections(document: SOPDocument): Connection[] {
+  let backIndex = 0;
+  const order = new Map(
+    document.steps.map((step, index) => [step.id, index] as const),
+  );
+
+  return document.steps.flatMap((step) => {
+    const candidates =
+      step.type === "end"
+        ? []
+        : step.type === "decision"
+          ? [
+              { id: `${step.id}:yes:${step.yes}`, to: step.yes, label: "Ya" },
+              { id: `${step.id}:no:${step.no}`, to: step.no, label: "Tidak" },
+            ]
+          : [{ id: `${step.id}:next:${step.next}`, to: step.next }];
+
+    return candidates
+      .filter((candidate) => order.has(candidate.to))
+      .map((candidate) => {
+        const isBack =
+          (order.get(candidate.to) ?? 0) <= (order.get(step.id) ?? 0);
+
+        return {
+          ...candidate,
+          from: step.id,
+          backIndex: isBack ? backIndex++ : -1,
+        };
+      });
+  });
+}
+
+function routeConnection(
+  connection: Connection,
+  from: Anchor,
+  to: Anchor,
+  geometry: Geometry,
+  manualTrunkX: number | undefined,
+): { path: string; trunkX: number } {
+  const isBack = connection.backIndex >= 0;
+  const autoTrunkX = isBack
+    ? geometry.actorRight - 10 - connection.backIndex * 10
+    : from.x + (to.x - from.x) / 2;
+  const trunkX = manualTrunkX ?? autoTrunkX;
+
+  return {
+    trunkX,
+    path: `M ${from.x} ${from.y} L ${trunkX} ${from.y} L ${trunkX} ${to.y} L ${to.x} ${to.y}`,
+  };
 }
 
 function display(value: string | undefined): string {
