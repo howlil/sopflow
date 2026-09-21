@@ -1,6 +1,11 @@
 import { useId } from "react";
 import { createPortal } from "react-dom";
-import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
+import {
+  buildRemoveActorAndReferencesOperations,
+  type Actor,
+  type SOPDocument,
+  type SopOperation,
+} from "@sopflow/core";
 import { useDialogFocus } from "../primitives/dialog/useDialogFocus.js";
 
 import styles from "./DeleteActorDialog.module.css";
@@ -44,20 +49,7 @@ export function DeleteActorDialog({
       return;
     }
 
-    const operations: SopOperation[] = usedBy.map((step) => ({
-      type: "update-step",
-      step: {
-        ...step,
-        actorIds: step.actorIds.filter((actorId) => actorId !== actor.id),
-      },
-    }));
-
-    operations.push({
-      type: "remove-actor",
-      actorId: actor.id,
-    });
-
-    onOperations(operations);
+    onOperations(buildRemoveActorAndReferencesOperations(document, actor.id));
     onClose();
   }
 
