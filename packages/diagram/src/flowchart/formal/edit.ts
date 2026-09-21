@@ -33,7 +33,9 @@ export function insertFormalRouteWaypointAtSegmentMidpoint(
   const next = path.map((point) => ({ ...point }));
   next.splice(segmentIndex + 1, 0, midpoint);
 
-  return normalizeFormalOrthogonalPath(next);
+  return normalizeFormalOrthogonalPath(next, null, {
+    preserveCollinear: true,
+  });
 }
 
 export function removeFormalRouteWaypoint(
@@ -46,6 +48,8 @@ export function removeFormalRouteWaypoint(
 
   return normalizeFormalOrthogonalPath(
     path.filter((_, pointIndex) => pointIndex !== index),
+    null,
+    { preserveCollinear: true },
   );
 }
 
@@ -107,7 +111,9 @@ export function dragFormalRouteWaypointFromOrigin(
 
   return options.normalize === false
     ? next
-    : normalizeFormalOrthogonalPath(next);
+    : normalizeFormalOrthogonalPath(next, null, {
+        preserveCollinear: true,
+      });
 }
 
 export function dragFormalRouteSegmentFromOrigin(
