@@ -10,6 +10,7 @@ import {
 import {
   useEffect,
   useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -50,6 +51,7 @@ export function EditableFormalFlowchartPath({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
+      if (isEditableKeyboardTarget(event.target)) return;
 
       event.preventDefault();
       onReset();
@@ -193,12 +195,63 @@ export function EditableFormalFlowchartPath({
     onChange(removeFormalRouteWaypoint(path, index));
   };
 
+  const handlePathKeyDown = (
+    event: ReactKeyboardEvent<SVGPathElement>,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    onSelect(connectionId);
+  };
+
+  const handleWaypointKeyDown = (
+    index: number,
+    event: ReactKeyboardEvent<SVGCircleElement>,
+  ) => {
+    if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      event.stopPropagation();
+      onChange(removeFormalRouteWaypoint(path, index));
+      return;
+    }
+
+    const delta =
+      event.key === "ArrowLeft"
+        ? { dx: -4, dy: 0 }
+        : event.key === "ArrowRight"
+          ? { dx: 4, dy: 0 }
+          : event.key === "ArrowUp"
+            ? { dx: 0, dy: -4 }
+            : event.key === "ArrowDown"
+              ? { dx: 0, dy: 4 }
+              : null;
+
+    if (!delta) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    onSelect(connectionId);
+    onChange(
+      dragFormalRouteWaypointFromOrigin(
+        path,
+        index,
+        delta.dx,
+        delta.dy,
+      ),
+    );
+  };
+
   return (
     <g data-sopflow-editable-route={connectionId}>
       <path
         d={pointsToPath(path)}
         className={styles.hitPath}
         data-selected={selected || undefined}
+        role="button"
+        tabIndex={0}
+        aria-label={`Edit route ${connectionId}`}
+        onKeyDown={handlePathKeyDown}
         onClick={handlePathClick}
         onPointerDown={handlePathPointerDown}
         onPointerMove={handlePointerMove}
@@ -218,6 +271,10 @@ export function EditableFormalFlowchartPath({
                 r={6}
                 className={styles.waypoint}
                 data-sopflow-route-waypoint={index}
+                role="button"
+                tabIndex={0}
+                aria-label={`Waypoint ${index} route ${connectionId}`}
+                onKeyDown={(event) => handleWaypointKeyDown(index, event)}
                 onPointerDown={(event) =>
                   startDrag(event, "waypoint", index)
                 }
@@ -232,6 +289,17 @@ export function EditableFormalFlowchartPath({
           })
         : null}
     </g>
+  );
+}
+
+function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return (
+    target.isContentEditable ||
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT"
   );
 }
 
