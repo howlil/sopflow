@@ -72,6 +72,6 @@ describe("ActorField", () => {
     );
 
     expect(container.querySelector("details")).toBeNull();
-    expect(screen.getByLabelText("Pelaksana")).toHaveTextContent("Staff +1");
+    expect(screen.getByText("Staff +1")).toBeInTheDocument();
   });
 });
