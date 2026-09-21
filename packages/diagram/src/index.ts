@@ -1,3 +1,11 @@
+export {
+  dragFormalRouteSegmentFromOrigin,
+  dragFormalRouteWaypointFromOrigin,
+  findNearestFormalRouteSegmentIndex,
+  insertFormalRouteWaypointAtSegmentMidpoint,
+  removeFormalRouteWaypoint,
+} from "./flowchart/formal/edit.js";
+
 export { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
 export type {
   FormalFlowchartBounds,
