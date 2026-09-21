@@ -117,9 +117,12 @@ describe("SopEditor default composition", () => {
     expect(
       within(inspector as HTMLElement).getByLabelText("Kegiatan"),
     ).toHaveValue("Proses");
+    const actorGroup = within(inspector as HTMLElement).getByRole("group", {
+      name: "Pelaksana",
+    });
     expect(
-      within(inspector as HTMLElement).getByLabelText("Pelaksana"),
-    ).toHaveValue("staff");
+      within(actorGroup).getByRole("checkbox", { name: "Staff" }),
+    ).toBeChecked();
     expect(
       within(inspector as HTMLElement).getByRole("button", {
         name: "Kembali ke properti dokumen",
