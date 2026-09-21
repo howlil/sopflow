@@ -495,10 +495,7 @@ export function resolveFormalMagneticAnchorSnap(input: {
     );
 
     if (locked) {
-      const lockedDistance = Math.hypot(
-        locked.x - input.x,
-        locked.y - input.y,
-      );
+      const lockedDistance = Math.hypot(locked.x - input.x, locked.y - input.y);
 
       if (lockedDistance <= input.releaseDistancePx) {
         target = locked;
