@@ -50,6 +50,7 @@ export function ActorField({
       <summary
         className={styles.trigger}
         aria-label="Pelaksana"
+        data-sopflow-actor-trigger
         title={names.join(", ") || "Pilih pelaksana"}
       >
         <span className={styles.summaryText}>{compactActorLabel(names)}</span>
