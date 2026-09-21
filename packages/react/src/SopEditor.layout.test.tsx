@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -85,6 +85,6 @@ describe("SopEditor default composition", () => {
       }),
     ).toHaveValue("Staff");
 
-    expect(screen.getByText("Layout SOP")).toBeInTheDocument();
+    expect(within(headerView as HTMLElement).getByText("Layout SOP")).toBeInTheDocument();
   });
 });
