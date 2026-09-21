@@ -39,8 +39,7 @@ describe("useSopHistory", () => {
     const onChange = vi.fn();
 
     const { result, rerender } = renderHook(
-      ({ value }: { value: SOPDocument }) =>
-        useSopHistory({ value, onChange }),
+      ({ value }: { value: SOPDocument }) => useSopHistory({ value, onChange }),
       {
         initialProps: { value: document },
       },
@@ -79,8 +78,8 @@ describe("useSopHistory", () => {
 
     const restored = onChange.mock.lastCall?.[0] as SOPDocument | undefined;
 
-    expect(
-      restored?.steps.find((step) => step.id === "task")?.name,
-    ).toBe("Review");
+    expect(restored?.steps.find((step) => step.id === "task")?.name).toBe(
+      "Review",
+    );
   });
 });
