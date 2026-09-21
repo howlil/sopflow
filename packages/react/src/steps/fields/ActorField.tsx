@@ -19,11 +19,11 @@ export function ActorField({
   readOnly = false,
   error = false,
 }: ActorFieldProps) {
-  if (readOnly) {
-    const names = value
-      .map((actorId) => actors.find((actor) => actor.id === actorId)?.name)
-      .filter((name): name is string => Boolean(name));
+  const names = value
+    .map((actorId) => actors.find((actor) => actor.id === actorId)?.name)
+    .filter((name): name is string => Boolean(name));
 
+  if (readOnly) {
     return (
       <span className={styles.readonly} data-error={error || undefined}>
         {names.length > 0 ? names.join(", ") : "—"}
@@ -31,51 +31,78 @@ export function ActorField({
     );
   }
 
+  if (disabled) {
+    return (
+      <span
+        className={styles.disabled}
+        data-error={error || undefined}
+        aria-label="Pelaksana"
+      >
+        {compactActorLabel(names)}
+      </span>
+    );
+  }
+
   const selected = new Set(value);
 
   return (
-    <fieldset
-      className={styles.group}
-      data-error={error || undefined}
-      aria-label="Pelaksana"
-      disabled={disabled}
-    >
-      <legend className={styles.srOnly}>Pelaksana</legend>
+    <details className={styles.dropdown} data-error={error || undefined}>
+      <summary
+        className={styles.trigger}
+        aria-label="Pelaksana"
+        title={names.join(", ") || "Pilih pelaksana"}
+      >
+        <span className={styles.summaryText}>{compactActorLabel(names)}</span>
+        <span className={styles.chevron} aria-hidden="true">
+          ▾
+        </span>
+      </summary>
 
-      {actors.length === 0 ? (
-        <span className={styles.empty}>Belum ada pelaksana.</span>
-      ) : (
-        actors.map((actor) => {
-          const checked = selected.has(actor.id);
+      <fieldset className={styles.options} aria-label="Pilih pelaksana">
+        <legend className={styles.srOnly}>Pilih pelaksana</legend>
 
-          return (
-            <label key={actor.id} className={styles.option}>
-              <input
-                type="checkbox"
-                className={styles.checkbox}
-                checked={checked}
-                aria-label={actor.name}
-                onChange={(event) => {
-                  const next = new Set(value);
+        {actors.length === 0 ? (
+          <span className={styles.empty}>Belum ada pelaksana.</span>
+        ) : (
+          actors.map((actor) => {
+            const checked = selected.has(actor.id);
 
-                  if (event.target.checked) {
-                    next.add(actor.id);
-                  } else {
-                    next.delete(actor.id);
-                  }
+            return (
+              <label key={actor.id} className={styles.option}>
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={checked}
+                  aria-label={actor.name}
+                  onChange={(event) => {
+                    const next = new Set(value);
 
-                  onChange(
-                    actors
-                      .map((candidate) => candidate.id)
-                      .filter((actorId) => next.has(actorId)),
-                  );
-                }}
-              />
-              <span className={styles.optionLabel}>{actor.name}</span>
-            </label>
-          );
-        })
-      )}
-    </fieldset>
+                    if (event.target.checked) {
+                      next.add(actor.id);
+                    } else {
+                      next.delete(actor.id);
+                    }
+
+                    onChange(
+                      actors
+                        .map((candidate) => candidate.id)
+                        .filter((actorId) => next.has(actorId)),
+                    );
+                  }}
+                />
+                <span className={styles.optionLabel}>{actor.name}</span>
+              </label>
+            );
+          })
+        )}
+      </fieldset>
+    </details>
   );
+}
+
+function compactActorLabel(names: readonly string[]): string {
+  if (names.length === 0) return "Pilih pelaksana";
+  if (names.length === 1) return names[0] ?? "Pilih pelaksana";
+
+  return `${names[0]} +${names.length - 1}`;
 }
