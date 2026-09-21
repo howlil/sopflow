@@ -160,9 +160,7 @@ export function EditableFormalFlowchartPath({
     onChange(insertFormalRouteWaypointAtSegmentMidpoint(path, segmentIndex));
   };
 
-  const handlePathPointerDown = (
-    event: ReactPointerEvent<SVGPathElement>,
-  ) => {
+  const handlePathPointerDown = (event: ReactPointerEvent<SVGPathElement>) => {
     if (!selected) {
       event.stopPropagation();
       onSelect(connectionId);
@@ -195,9 +193,7 @@ export function EditableFormalFlowchartPath({
     onChange(removeFormalRouteWaypoint(path, index));
   };
 
-  const handlePathKeyDown = (
-    event: ReactKeyboardEvent<SVGPathElement>,
-  ) => {
+  const handlePathKeyDown = (event: ReactKeyboardEvent<SVGPathElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
@@ -233,17 +229,13 @@ export function EditableFormalFlowchartPath({
     event.stopPropagation();
     onSelect(connectionId);
     onChange(
-      dragFormalRouteWaypointFromOrigin(
-        path,
-        index,
-        delta.dx,
-        delta.dy,
-      ),
+      dragFormalRouteWaypointFromOrigin(path, index, delta.dx, delta.dy),
     );
   };
 
   return (
     <g data-sopflow-editable-route={connectionId}>
+      {/* biome-ignore lint/a11y/useSemanticElements: SVG geometry is the interactive route hit target. */}
       <path
         d={pointsToPath(path)}
         className={styles.hitPath}
@@ -264,6 +256,7 @@ export function EditableFormalFlowchartPath({
             const index = offset + 1;
 
             return (
+              {/* biome-ignore lint/a11y/useSemanticElements: SVG waypoint handles are directly focusable controls. */}
               <circle
                 key={`${connectionId}-waypoint-${index}`}
                 cx={point.x}
@@ -275,9 +268,7 @@ export function EditableFormalFlowchartPath({
                 tabIndex={0}
                 aria-label={`Waypoint ${index} route ${connectionId}`}
                 onKeyDown={(event) => handleWaypointKeyDown(index, event)}
-                onPointerDown={(event) =>
-                  startDrag(event, "waypoint", index)
-                }
+                onPointerDown={(event) => startDrag(event, "waypoint", index)}
                 onPointerMove={handlePointerMove}
                 onPointerUp={finishDrag}
                 onPointerCancel={finishDrag}
