@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  applyValidatedOperations,
   getIncomingConnections,
   type SOPDocument,
   type SopOperation,
@@ -47,24 +48,16 @@ export function DeleteStepDialog({
     return null;
   }
 
-  const candidates = document.steps.filter(
-    (candidate) => candidate.id !== step.id,
-  );
-
-  function handleDelete() {
-    if (disabled || (needsReplacement && !replacementId)) {
-      return;
-    }
-
+  function buildDeleteOperations(targetId?: StepId): SopOperation[] {
     const operations: SopOperation[] = [];
 
-    if (replacementId) {
+    if (targetId) {
       for (const connection of incoming) {
         if (connection.type === "next") {
           operations.push({
             type: "connect",
             from: connection.from,
-            to: replacementId,
+            to: targetId,
           });
           continue;
         }
@@ -73,7 +66,7 @@ export function DeleteStepDialog({
           type: "connect-decision",
           from: connection.from,
           branch: connection.type,
-          to: replacementId,
+          to: targetId,
         });
       }
     }
@@ -83,7 +76,35 @@ export function DeleteStepDialog({
       stepId: step.id,
     });
 
-    onOperations(operations);
+    return operations;
+  }
+
+  function isValidReplacement(targetId: StepId): boolean {
+    try {
+      applyValidatedOperations(document, buildDeleteOperations(targetId));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const candidates = document.steps.filter(
+    (candidate) =>
+      candidate.id !== step.id &&
+      (!needsReplacement || isValidReplacement(candidate.id)),
+  );
+  const hasNoValidReplacement = needsReplacement && candidates.length === 0;
+
+  function handleDelete() {
+    if (
+      disabled ||
+      hasNoValidReplacement ||
+      (needsReplacement && !replacementId)
+    ) {
+      return;
+    }
+
+    onOperations(buildDeleteOperations(replacementId || undefined));
     onClose();
   }
 
@@ -110,26 +131,34 @@ export function DeleteStepDialog({
         </header>
 
         {needsReplacement ? (
-          <label className={styles.field}>
-            <span className={styles.label}>
-              Sambungkan langkah sebelumnya ke
-            </span>
+          <>
+            <label className={styles.field}>
+              <span className={styles.label}>
+                Sambungkan langkah sebelumnya ke
+              </span>
 
-            <select
-              className={styles.select}
-              value={replacementId}
-              disabled={disabled}
-              onChange={(event) => setReplacementId(event.target.value)}
-            >
-              <option value="">Pilih langkah</option>
+              <select
+                className={styles.select}
+                value={replacementId}
+                disabled={disabled || hasNoValidReplacement}
+                onChange={(event) => setReplacementId(event.target.value)}
+              >
+                <option value="">Pilih langkah</option>
 
-              {candidates.map((candidate, index) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {index + 1}. {candidate.name || "Tanpa judul"}
-                </option>
-              ))}
-            </select>
-          </label>
+                {candidates.map((candidate, index) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {index + 1}. {candidate.name || "Tanpa judul"}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {hasNoValidReplacement ? (
+              <p className={styles.notice}>
+                Tidak ada target pengganti yang menjaga workflow tetap valid.
+              </p>
+            ) : null}
+          </>
         ) : (
           <p className={styles.notice}>
             Langkah ini tidak direferensikan oleh langkah lain.
@@ -148,7 +177,11 @@ export function DeleteStepDialog({
           <button
             type="button"
             className={styles.dangerButton}
-            disabled={disabled || (needsReplacement && !replacementId)}
+            disabled={
+              disabled ||
+              hasNoValidReplacement ||
+              (needsReplacement && !replacementId)
+            }
             onClick={handleDelete}
           >
             Hapus
