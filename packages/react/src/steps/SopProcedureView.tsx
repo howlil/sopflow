@@ -493,9 +493,7 @@ export function SopProcedureView({
                   className={styles.edge}
                   data-selected={selected || undefined}
                   data-editable={
-                    manualEditing && usesLegacyManualPaths
-                      ? true
-                      : undefined
+                    manualEditing && usesLegacyManualPaths ? true : undefined
                   }
                   markerEnd="url(#sopflow-procedure-arrow)"
                   onPointerDown={
