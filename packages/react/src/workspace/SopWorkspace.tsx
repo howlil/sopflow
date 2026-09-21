@@ -39,8 +39,7 @@ export function SopWorkspace({
   error = null,
   className,
 }: SopWorkspaceProps) {
-  const [internalView, setInternalView] =
-    useState<SopWorkspaceView>("diagram");
+  const [internalView, setInternalView] = useState<SopWorkspaceView>("diagram");
 
   const view = controlledView ?? internalView;
 
