@@ -255,27 +255,30 @@ export function EditableFormalFlowchartPath({
         ? path.slice(1, -1).map((point, offset) => {
             const index = offset + 1;
 
-            // biome-ignore lint/a11y/useSemanticElements: SVG waypoint handles are directly focusable controls.
             return (
-              <circle
-                key={`${connectionId}-waypoint-${index}`}
-                cx={point.x}
-                cy={point.y}
-                r={6}
-                className={styles.waypoint}
-                data-sopflow-route-waypoint={index}
-                role="button"
-                tabIndex={0}
-                aria-label={`Waypoint ${index} route ${connectionId}`}
-                onKeyDown={(event) => handleWaypointKeyDown(index, event)}
-                onPointerDown={(event) => startDrag(event, "waypoint", index)}
-                onPointerMove={handlePointerMove}
-                onPointerUp={finishDrag}
-                onPointerCancel={finishDrag}
-                onContextMenu={(event) =>
-                  handleWaypointContextMenu(index, event)
-                }
-              />
+              <g key={`${connectionId}-waypoint-${index}`}>
+                {/* biome-ignore lint/a11y/useSemanticElements: SVG waypoint handles are directly focusable controls. */}
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={6}
+                  className={styles.waypoint}
+                  data-sopflow-route-waypoint={index}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Waypoint ${index} route ${connectionId}`}
+                  onKeyDown={(event) => handleWaypointKeyDown(index, event)}
+                  onPointerDown={(event) =>
+                    startDrag(event, "waypoint", index)
+                  }
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={finishDrag}
+                  onContextMenu={(event) =>
+                    handleWaypointContextMenu(index, event)
+                  }
+                />
+              </g>
             );
           })
         : null}
