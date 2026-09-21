@@ -36,15 +36,25 @@ export function StepTypeField({
     return <span className={styles.fixedType}>End</span>;
   }
 
+  const cannotCollapseDecision =
+    step.type === "decision" && step.yes !== step.no;
+
   return (
     <select
       className={styles.select}
       value={step.type}
       disabled={disabled}
       aria-label="Tipe langkah"
+      title={
+        cannotCollapseDecision
+          ? "Satukan target cabang Ya dan Tidak sebelum mengubah menjadi Task"
+          : undefined
+      }
       onChange={(event) => onChange(event.target.value as "task" | "decision")}
     >
-      <option value="task">Task</option>
+      <option value="task" disabled={cannotCollapseDecision}>
+        {cannotCollapseDecision ? "Task — satukan cabang dulu" : "Task"}
+      </option>
 
       <option value="decision">Decision</option>
     </select>

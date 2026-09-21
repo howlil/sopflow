@@ -42,6 +42,16 @@ export function removeActor(
   document: SOPDocument,
   actorId: ActorId,
 ): SOPDocument {
+  const exists = document.actors.some((actor) => actor.id === actorId);
+
+  if (!exists) {
+    throw new SopCoreError(
+      "ACTOR_NOT_FOUND",
+      `Actor "${actorId}" does not exist`,
+      { actorId },
+    );
+  }
+
   const usedBy = document.steps.filter((step) =>
     step.actorIds.includes(actorId),
   );
@@ -105,7 +115,7 @@ function requireActorReferences(document: SOPDocument, step: Step): void {
   throw new SopCoreError(
     "UNKNOWN_ACTOR_REFERENCE",
     `Step "${step.id}" references unknown actor "${unknownActorId}"`,
-    { stepId: step.id },
+    { stepId: step.id, actorId: unknownActorId },
   );
 }
 
@@ -245,24 +255,24 @@ export function connectStep(
   const source = requireStep(document, fromId, "source");
   requireTarget(document, toId);
 
+  if (source.type !== "start" && source.type !== "task") {
+    throw new SopCoreError(
+      "INVALID_STEP_CONNECTION",
+      `Step ${fromId} cannot use a single next connection`,
+      { sourceId: fromId, targetId: toId },
+    );
+  }
+
   return {
     ...document,
-    steps: document.steps.map((step) => {
-      if (step.id !== fromId) return step;
-
-      if (source.type === "start" || source.type === "task") {
-        return {
-          ...step,
-          next: toId,
-        };
-      }
-
-      throw new SopCoreError(
-        "INVALID_STEP_CONNECTION",
-        `Step ${fromId} cannot use a single next connection`,
-        { sourceId: fromId, targetId: toId },
-      );
-    }),
+    steps: document.steps.map((step) =>
+      step.id === fromId
+        ? {
+            ...source,
+            next: toId,
+          }
+        : step,
+    ),
   };
 }
 
@@ -285,13 +295,13 @@ export function connectDecisionBranch(
 
   return {
     ...document,
-    steps: document.steps.map((step) => {
-      if (step.id !== decisionId) return step;
-
-      return {
-        ...step,
-        [branch]: targetId,
-      };
-    }),
+    steps: document.steps.map((step) =>
+      step.id === decisionId
+        ? {
+            ...decision,
+            [branch]: targetId,
+          }
+        : step,
+    ),
   };
 }

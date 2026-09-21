@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@sopflow/core": ["../core/src/index.ts"],
+      "@sopflow/diagram": ["../diagram/src/index.ts"]
+    }
+  }
+}

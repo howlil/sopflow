@@ -2,6 +2,8 @@ import { z } from "zod";
 import { ActorSchema, StepSchema } from "./schema.js";
 import type { SopOperation } from "./operations.js";
 
+const RequiredId = z.string().trim().min(1);
+
 const AddActorOperationSchema = z.object({
   type: z.literal("add-actor"),
   actor: ActorSchema,
@@ -14,7 +16,7 @@ const UpdateActorOperationSchema = z.object({
 
 const RemoveActorOperationSchema = z.object({
   type: z.literal("remove-actor"),
-  actorId: z.string().trim().min(1),
+  actorId: RequiredId,
 });
 
 const AddStepOperationSchema = z.object({
@@ -25,13 +27,13 @@ const AddStepOperationSchema = z.object({
 const InsertStepOperationSchema = z.object({
   type: z.literal("insert-step"),
   step: StepSchema,
-  afterStepId: z.string().trim().min(1),
+  afterStepId: RequiredId,
 });
 
 const InsertStepBeforeOperationSchema = z.object({
   type: z.literal("insert-step-before"),
   step: StepSchema,
-  beforeStepId: z.string().trim().min(1),
+  beforeStepId: RequiredId,
 });
 
 const UpdateStepOperationSchema = z.object({
@@ -41,20 +43,20 @@ const UpdateStepOperationSchema = z.object({
 
 const RemoveStepOperationSchema = z.object({
   type: z.literal("remove-step"),
-  stepId: z.string().trim().min(1),
+  stepId: RequiredId,
 });
 
 const ConnectOperationSchema = z.object({
   type: z.literal("connect"),
-  from: z.string().trim().min(1),
-  to: z.string().trim().min(1),
+  from: RequiredId,
+  to: RequiredId,
 });
 
 const ConnectDecisionOperationSchema = z.object({
   type: z.literal("connect-decision"),
-  from: z.string().trim().min(1),
+  from: RequiredId,
   branch: z.enum(["yes", "no"]),
-  to: z.string().trim().min(1),
+  to: RequiredId,
 });
 
 export const SopOperationSchema = z.discriminatedUnion("type", [
@@ -70,14 +72,21 @@ export const SopOperationSchema = z.discriminatedUnion("type", [
   ConnectDecisionOperationSchema,
 ]);
 
+export interface ParseOperationIssue {
+  readonly code: string;
+  readonly path: readonly PropertyKey[];
+  readonly message: string;
+}
+
 export interface ParseOperationSuccess {
-  success: true;
-  data: SopOperation;
+  readonly success: true;
+  readonly data: SopOperation;
 }
 
 export interface ParseOperationFailure {
-  success: false;
-  errors: string[];
+  readonly success: false;
+  readonly errors: readonly string[];
+  readonly issues: readonly ParseOperationIssue[];
 }
 
 export type ParseOperationResult =
@@ -88,9 +97,16 @@ export function parseSopOperation(input: unknown): ParseOperationResult {
   const result = SopOperationSchema.safeParse(input);
 
   if (!result.success) {
+    const issues: ParseOperationIssue[] = result.error.issues.map((issue) => ({
+      code: issue.code,
+      path: issue.path,
+      message: issue.message,
+    }));
+
     return {
       success: false,
-      errors: result.error.issues.map((issue) => issue.message),
+      errors: issues.map((issue) => issue.message),
+      issues,
     };
   }
 

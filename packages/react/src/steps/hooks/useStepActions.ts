@@ -50,6 +50,10 @@ export function useStepActions({
     }
 
     if (step.type === "decision" && type === "task") {
+      if (step.yes !== step.no) {
+        return;
+      }
+
       updateStep({
         id,
         type: "task",

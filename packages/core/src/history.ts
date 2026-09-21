@@ -3,9 +3,9 @@ import type { SopOperation } from "./operations.js";
 import { applyOperations, applyValidatedOperations } from "./operations.js";
 
 export interface SopHistory {
-  past: SOPDocument[];
-  present: SOPDocument;
-  future: SOPDocument[];
+  readonly past: readonly SOPDocument[];
+  readonly present: SOPDocument;
+  readonly future: readonly SOPDocument[];
 }
 
 export function createHistory(document: SOPDocument): SopHistory {
@@ -25,8 +25,10 @@ export function applyHistoryOperation(
 
 export function applyHistoryOperations(
   history: SopHistory,
-  operations: SopOperation[],
+  operations: readonly SopOperation[],
 ): SopHistory {
+  if (operations.length === 0) return history;
+
   const nextDocument = applyOperations(history.present, operations);
 
   return commitHistory(history, nextDocument);
@@ -34,8 +36,10 @@ export function applyHistoryOperations(
 
 export function applyValidatedHistoryOperations(
   history: SopHistory,
-  operations: SopOperation[],
+  operations: readonly SopOperation[],
 ): SopHistory {
+  if (operations.length === 0) return history;
+
   const nextDocument = applyValidatedOperations(history.present, operations);
 
   return commitHistory(history, nextDocument);

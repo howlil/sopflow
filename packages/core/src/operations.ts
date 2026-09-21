@@ -17,49 +17,49 @@ import {
 
 export type SopOperation =
   | {
-      type: "add-actor";
-      actor: Actor;
+      readonly type: "add-actor";
+      readonly actor: Actor;
     }
   | {
-      type: "update-actor";
-      actor: Actor;
+      readonly type: "update-actor";
+      readonly actor: Actor;
     }
   | {
-      type: "remove-actor";
-      actorId: ActorId;
+      readonly type: "remove-actor";
+      readonly actorId: ActorId;
     }
   | {
-      type: "add-step";
-      step: Step;
+      readonly type: "add-step";
+      readonly step: Step;
     }
   | {
-      type: "insert-step";
-      step: Step;
-      afterStepId: StepId;
+      readonly type: "insert-step";
+      readonly step: Step;
+      readonly afterStepId: StepId;
     }
   | {
-      type: "insert-step-before";
-      step: Step;
-      beforeStepId: StepId;
+      readonly type: "insert-step-before";
+      readonly step: Step;
+      readonly beforeStepId: StepId;
     }
   | {
-      type: "update-step";
-      step: Step;
+      readonly type: "update-step";
+      readonly step: Step;
     }
   | {
-      type: "remove-step";
-      stepId: StepId;
+      readonly type: "remove-step";
+      readonly stepId: StepId;
     }
   | {
-      type: "connect";
-      from: StepId;
-      to: StepId;
+      readonly type: "connect";
+      readonly from: StepId;
+      readonly to: StepId;
     }
   | {
-      type: "connect-decision";
-      from: StepId;
-      branch: "yes" | "no";
-      to: StepId;
+      readonly type: "connect-decision";
+      readonly from: StepId;
+      readonly branch: "yes" | "no";
+      readonly to: StepId;
     };
 
 export function applyOperation(
@@ -106,9 +106,9 @@ export function applyOperation(
 
 export function applyOperations(
   document: SOPDocument,
-  operations: SopOperation[],
+  operations: readonly SopOperation[],
 ): SOPDocument {
-  return operations.reduce(
+  return operations.reduce<SOPDocument>(
     (current, operation) => applyOperation(current, operation),
     document,
   );
@@ -116,7 +116,7 @@ export function applyOperations(
 
 export function applyValidatedOperations(
   document: SOPDocument,
-  operations: SopOperation[],
+  operations: readonly SopOperation[],
 ): SOPDocument {
   const nextDocument = applyOperations(document, operations);
   const issues = validateSop(nextDocument);

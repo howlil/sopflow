@@ -1,5 +1,5 @@
 import { validateSop, type SOPDocument, type StepId } from "@sopflow/core";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./styles/token.css";
 
@@ -64,7 +64,7 @@ export function SopEditor({
       ? controlledSelectedStepId
       : internalSelectedStepId;
   const mutationDisabled = readOnly || loading || !onChange;
-  const issues = validateSop(value);
+  const issues = useMemo(() => validateSop(value), [value]);
 
   const handleSelectedStepChange = useCallback(
     (stepId: StepId | null) => {
