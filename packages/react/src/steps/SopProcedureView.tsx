@@ -55,10 +55,7 @@ export function SopProcedureView({
   const model = useMemo(() => buildProcedureModel(document), [document]);
   const pathOffsets = manualPathOffsets ?? internalOffsets;
   const routedEdges = useMemo(
-    () =>
-      geometry
-        ? routeProcedureEdges(model, geometry, pathOffsets)
-        : [],
+    () => (geometry ? routeProcedureEdges(model, geometry, pathOffsets) : []),
     [geometry, model, pathOffsets],
   );
 
@@ -429,5 +426,5 @@ function decisionSummary(stepId: StepId, model: ProcedureModel): string {
   const yes = branches.find((edge) => edge.kind === "yes");
   const no = branches.find((edge) => edge.kind === "no");
 
-  return `Ya → ${yes ? orderById.get(yes.to) ?? "?" : "?"} · Tidak → ${no ? orderById.get(no.to) ?? "?" : "?"}`;
+  return `Ya → ${yes ? (orderById.get(yes.to) ?? "?") : "?"} · Tidak → ${no ? (orderById.get(no.to) ?? "?") : "?"}`;
 }
