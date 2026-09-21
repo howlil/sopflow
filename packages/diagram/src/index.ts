@@ -2,6 +2,16 @@ export { buildDiagramModel } from "./buildDiagramModel.js";
 export { buildDiagram } from "./buildDiagram.js";
 export type { BuildDiagramOptions } from "./buildDiagram.js";
 
+export { buildSopFlowchart } from "./flowchart/buildSopFlowchart.js";
+export type { BuildSopFlowchartOptions } from "./flowchart/buildSopFlowchart.js";
+export type {
+  SopFlowchartEdge,
+  SopFlowchartLane,
+  SopFlowchartModel,
+  SopFlowchartNode,
+  SopFlowchartNodePlacement,
+} from "./flowchart/types.js";
+
 export { layoutDiagram } from "./layout.js";
 export type { DiagramLayoutOptions } from "./layout.js";
 
