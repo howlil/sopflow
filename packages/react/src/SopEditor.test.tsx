@@ -238,24 +238,36 @@ function EditorHarness({
   );
 }
 
-function getReviewField() {
-  const field = screen.getAllByDisplayValue("Review")[0];
+function selectStep(stepId: string) {
+  const row = document.querySelector<HTMLElement>(
+    `[data-sopflow-procedure-step-id="${stepId}"]`,
+  );
 
-  if (!field) {
-    throw new Error("Review field not found");
+  if (!row) {
+    throw new Error(`Procedure row not found: ${stepId}`);
   }
 
-  return field;
+  fireEvent.click(row);
+
+  return screen.getByLabelText("Kegiatan");
+}
+
+function getReviewField() {
+  return selectStep("task");
 }
 
 function getField(value: string) {
-  const field = screen.getAllByDisplayValue(value)[0];
+  const row = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-sopflow-procedure-step-id]"),
+  ).find((candidate) => candidate.textContent?.includes(value));
 
-  if (!field) {
-    throw new Error(`Field not found: ${value}`);
+  if (!row) {
+    throw new Error(`Procedure row not found: ${value}`);
   }
 
-  return field;
+  fireEvent.click(row);
+
+  return screen.getByLabelText("Kegiatan");
 }
 
 function getStepRow(field: HTMLElement) {
@@ -280,9 +292,7 @@ describe("SopEditor controlled history", () => {
       <SopEditor value={initialDocument} header={initialHeader} readOnly />,
     );
 
-    expect(screen.getAllByDisplayValue("Review")[0]).toHaveAttribute(
-      "readonly",
-    );
+    expect(getReviewField()).toHaveAttribute("readonly");
     expect(
       screen.queryByRole("button", { name: /tambah pelaksana/i }),
     ).not.toBeInTheDocument();
@@ -312,7 +322,7 @@ describe("SopEditor controlled history", () => {
 
     await user.click(screen.getByRole("button", { name: /undo/i }));
 
-    expect(screen.getAllByDisplayValue("Review")).toHaveLength(2);
+    expect(screen.getAllByDisplayValue("Review")).toHaveLength(1);
   });
 
   it("redoes an undone controlled edit", async () => {
@@ -327,7 +337,7 @@ describe("SopEditor controlled history", () => {
     await user.click(screen.getByRole("button", { name: /undo/i }));
     await user.click(screen.getByRole("button", { name: /redo/i }));
 
-    expect(screen.getAllByDisplayValue("Review baru")).toHaveLength(2);
+    expect(screen.getAllByDisplayValue("Review baru")).toHaveLength(1);
   });
 
   it("resets history when value changes externally", async () => {
