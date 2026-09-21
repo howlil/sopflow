@@ -94,8 +94,7 @@ export function buildSopFlowchart(
   const graph = buildDiagramModel(document);
   let backEdgeIndex = 0;
 
-  const laneAreaRight =
-    config.padding + lanes.length * config.laneWidth;
+  const laneAreaRight = config.padding + lanes.length * config.laneWidth;
 
   const edges = graph.edges.flatMap<SopFlowchartEdge>((edge) => {
     const from = nodeById.get(edge.from);
@@ -114,7 +113,6 @@ export function buildSopFlowchart(
             to,
             laneAreaRight,
             backEdgeIndex++,
-            config,
           )
         : routeForwardEdge(source, target, from, to);
 
@@ -165,7 +163,9 @@ function resolveOptions(
 }
 
 function positive(value: number | undefined, fallback: number): number {
-  return Number.isFinite(value) && (value ?? 0) > 0 ? (value as number) : fallback;
+  return Number.isFinite(value) && (value ?? 0) > 0
+    ? (value as number)
+    : fallback;
 }
 
 function nonNegative(value: number | undefined, fallback: number): number {
@@ -234,7 +234,6 @@ function routeBackEdge(
   to: SopFlowchartNode,
   laneAreaRight: number,
   index: number,
-  config: Required<BuildSopFlowchartOptions>,
 ): { points: DiagramPoint[]; labelPosition?: DiagramPoint } {
   const start = {
     x: source.x + from.width / 2,
