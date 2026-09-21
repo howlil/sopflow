@@ -32,6 +32,7 @@ describe("diagram public API", () => {
       [
         "buildDiagram",
         "buildDiagramModel",
+        "buildSopFlowchart",
         "buildSvgRenderModel",
         "getDiamondPoints",
         "layoutDiagram",
