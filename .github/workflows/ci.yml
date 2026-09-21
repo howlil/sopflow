@@ -30,8 +30,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check package
+      - name: Check workspace
         run: pnpm check
 
-      - name: Inspect npm package
-        run: pnpm pack --dry-run
+      - name: Pack publishable packages
+        run: |
+          mkdir -p /tmp/sopflow-packs
+          pnpm --filter @sopflow/core pack --pack-destination /tmp/sopflow-packs
+          pnpm --filter @sopflow/diagram pack --pack-destination /tmp/sopflow-packs
+          pnpm --filter @sopflow/react pack --pack-destination /tmp/sopflow-packs
+          ls -lah /tmp/sopflow-packs
