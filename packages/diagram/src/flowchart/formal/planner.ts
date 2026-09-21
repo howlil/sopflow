@@ -23,6 +23,7 @@ import {
   findFormalRouteCrossingIds,
   sortFormalRoutesForPlanning,
 } from "./order.js";
+import { finalizeFormalManualOrthogonalPath } from "./path-guard.js";
 import {
   selectFormalFlowchartSidePairs,
   type FormalFlowchartConnectionMeta,
@@ -220,6 +221,7 @@ export function planFormalProcedureEdges(
         target,
         meta.sourceType === "flowchart-decision",
         meta.targetType === "flowchart-decision",
+        obstacles,
       );
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
@@ -472,6 +474,7 @@ function applyManualRoute(
   target: FormalFlowchartRect,
   sourceIsDecision: boolean,
   targetIsDecision: boolean,
+  obstacles: readonly FormalFlowchartRect[],
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
@@ -488,27 +491,54 @@ function applyManualRoute(
     ? pointOnManualAnchor(target, manual.endAnchor, targetIsDecision)
     : autoEnd;
 
-  if (manual.kind === "orthogonal") {
-    return {
-      points: normalizeFormalOrthogonalPath(
-        [start, ...manual.bendPoints, end],
-        null,
-        { preserveCollinear: true },
-      ),
+  const rawPath =
+    manual.kind === "orthogonal"
+      ? normalizeFormalOrthogonalPath(
+          [start, ...manual.bendPoints, end],
+          null,
+          { preserveCollinear: true },
+        )
+      : (() => {
+          const x = clampX(manual.x, bounds);
+          return normalizeFormalOrthogonalPath([
+            start,
+            { x, y: start.y },
+            { x, y: end.y },
+            end,
+          ]);
+        })();
+
+  const boundsRect = bounds
+    ? {
+        left: bounds.left,
+        top: bounds.top,
+        width: Math.max(1, bounds.right - bounds.left),
+        height: Math.max(1, bounds.bottom - bounds.top),
+      }
+    : null;
+  const points = finalizeFormalManualOrthogonalPath(rawPath, {
+    collisionPolicy: "repair",
+    check: {
+      path: rawPath,
+      fromShape: source,
+      toShape: target,
+      obstacles,
+    },
+    repair: {
+      startPoint: start,
+      endPoint: end,
       sourceSide,
       targetSide,
-    };
-  }
-
-  const x = clampX(manual.x, bounds);
+      fromShape: source,
+      toShape: target,
+      obstacles,
+      bounds: boundsRect,
+    },
+    fallbackPath: auto.points,
+  });
 
   return {
-    points: normalizeFormalOrthogonalPath([
-      start,
-      { x, y: start.y },
-      { x, y: end.y },
-      end,
-    ]),
+    points,
     sourceSide,
     targetSide,
   };
