@@ -1,6 +1,14 @@
-.select {
+.stack {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.select,
+.fixedType,
+.value {
   width: 100%;
   min-height: 2.25rem;
+  box-sizing: border-box;
 
   border: 1px solid var(--sopflow-border);
   border-radius: var(--sopflow-control-radius);
@@ -11,20 +19,22 @@
   color: var(--sopflow-text);
 
   font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.select {
   outline: none;
 }
 
 .select:hover:not(:disabled) {
-  background: var(--sopflow-surface-muted);
+  border-color: var(--sopflow-text-muted);
 }
 
 .select:focus-visible {
   border-color: var(--sopflow-selected-border);
 
-  outline:
-    2px solid
-    var(--sopflow-selected-border);
-
+  outline: 2px solid var(--sopflow-selected-border);
   outline-offset: 1px;
 }
 
@@ -36,20 +46,24 @@
 }
 
 .fixedType {
-  display: block;
+  display: flex;
+  align-items: center;
 
-  padding: 0.5rem;
-
+  background: var(--sopflow-surface-muted);
   color: var(--sopflow-text-muted);
-
-  font-size: var(--sopflow-font-sm);
 }
 
 .value {
-  display: block;
+  display: flex;
+  align-items: center;
 
-  padding: 0.5rem;
+  border-color: transparent;
+  background: transparent;
+}
 
-  color: var(--sopflow-text);
-  font-size: var(--sopflow-font-sm);
+.branchSummary {
+  color: var(--sopflow-text-muted);
+
+  font-size: 0.6875rem;
+  line-height: 1.25;
 }
