@@ -9,6 +9,7 @@ describe("@sopflow/react public API", () => {
         "ActorsEditor",
         "SopDiagram",
         "SopEditor",
+        "SopFlowchart",
         "SopHeaderFields",
         "SopHeaderView",
         "SopProcedureView",
@@ -19,6 +20,7 @@ describe("@sopflow/react public API", () => {
     expect(publicApi.ActorsEditor).toBeTypeOf("function");
     expect(publicApi.SopDiagram).toBeTypeOf("function");
     expect(publicApi.SopEditor).toBeTypeOf("function");
+    expect(publicApi.SopFlowchart).toBeTypeOf("function");
     expect(publicApi.SopHeaderFields).toBeTypeOf("function");
     expect(publicApi.SopHeaderView).toBeTypeOf("function");
     expect(publicApi.SopProcedureView).toBeTypeOf("function");
