@@ -14,8 +14,10 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter playground typecheck",
-    "pack:core": "pnpm --filter @sopflow/core pack"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "pack:core": "pnpm --filter @sopflow/core pack",
+    "pack:diagram": "pnpm --filter @sopflow/diagram pack",
+    "pack:react": "pnpm --filter @sopflow/react pack"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13"
