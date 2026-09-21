@@ -63,6 +63,7 @@ export function SopHeaderFields({
             rows={3}
             value={header.institutionName}
             disabled={headerDisabled}
+            aria-label="Nama lembaga"
             placeholder="Nama instansi atau lembaga"
             onChange={(event) =>
               updateHeader("institutionName", event.target.value)
@@ -78,6 +79,7 @@ export function SopHeaderFields({
             rows={2}
             value={document.title}
             disabled={documentDisabled}
+            aria-label="Nama SOP"
             placeholder="Judul SOP"
             onChange={(event) =>
               onDocumentChange?.({
@@ -94,6 +96,7 @@ export function SopHeaderFields({
             type="text"
             value={header.number}
             disabled={headerDisabled}
+            aria-label="Nomor SOP"
             placeholder="Nomor SOP"
             onChange={(event) => updateHeader("number", event.target.value)}
           />
@@ -107,6 +110,7 @@ export function SopHeaderFields({
             type="date"
             value={header.createdDate}
             disabled={headerDisabled}
+            aria-label="Tanggal pembuatan"
             onChange={(event) =>
               updateHeader("createdDate", event.target.value)
             }
@@ -119,6 +123,7 @@ export function SopHeaderFields({
             type="date"
             value={header.revisionDate}
             disabled={headerDisabled}
+            aria-label="Tanggal revisi"
             onChange={(event) =>
               updateHeader("revisionDate", event.target.value)
             }
@@ -131,6 +136,7 @@ export function SopHeaderFields({
             type="date"
             value={header.effectiveDate}
             disabled={headerDisabled}
+            aria-label="Tanggal efektif"
             onChange={(event) =>
               updateHeader("effectiveDate", event.target.value)
             }
@@ -145,6 +151,7 @@ export function SopHeaderFields({
             type="text"
             value={header.signatory?.role ?? ""}
             disabled={headerDisabled}
+            aria-label="Jabatan"
             placeholder="Jabatan penandatangan"
             onChange={(event) => updateSignatory("role", event.target.value)}
           />
@@ -156,6 +163,7 @@ export function SopHeaderFields({
             type="text"
             value={header.signatory?.name ?? ""}
             disabled={headerDisabled}
+            aria-label="Nama penandatangan"
             placeholder="Nama penandatangan"
             onChange={(event) => updateSignatory("name", event.target.value)}
           />
@@ -167,6 +175,7 @@ export function SopHeaderFields({
             type="text"
             value={header.signatory?.identifier ?? ""}
             disabled={headerDisabled}
+            aria-label="Nomor identitas"
             placeholder="NIP / nomor identitas"
             onChange={(event) =>
               updateSignatory("identifier", event.target.value)
@@ -235,18 +244,12 @@ function InspectorSection({
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className={styles.field}>
+    <div className={styles.field}>
       <span className={styles.label}>{label}</span>
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -263,9 +266,7 @@ function ListSection({
 }) {
   function updateItem(index: number, nextValue: string) {
     onChange(
-      value.map((item, itemIndex) =>
-        itemIndex === index ? nextValue : item,
-      ),
+      value.map((item, itemIndex) => (itemIndex === index ? nextValue : item)),
     );
   }
 
