@@ -40,12 +40,8 @@ export function pointOnFormalDecisionVertex(
   const vertex = FORMAL_FLOWCHART_DECISION_VERTICES[side];
 
   return {
-    x: Math.round(
-      rect.left + ((vertex.x - vb.minX) / vb.width) * rect.width,
-    ),
-    y: Math.round(
-      rect.top + ((vertex.y - vb.minY) / vb.height) * rect.height,
-    ),
+    x: Math.round(rect.left + ((vertex.x - vb.minX) / vb.width) * rect.width),
+    y: Math.round(rect.top + ((vertex.y - vb.minY) / vb.height) * rect.height),
   };
 }
 
@@ -192,10 +188,7 @@ export function computeFormalConnectionRoutingBounds(input: {
 
   if (sourceColumn) {
     const left = sourceColumn.left + ROUTING_INNER_INSET;
-    const right = Math.min(
-      maxRight,
-      sourceColumn.right - ROUTING_INNER_INSET,
-    );
+    const right = Math.min(maxRight, sourceColumn.right - ROUTING_INNER_INSET);
     if (right <= left) return null;
 
     return {
@@ -243,19 +236,13 @@ export function pickFormalColumnGutterBusX(
   if (fromColumn.left <= toColumn.left) {
     const mid = (fromColumn.right + toColumn.left) / 2;
     return Math.round(
-      mid +
-        (gutterSlot % 2 === 0 ? -1 : 1) *
-          Math.ceil(gutterSlot / 2) *
-          step,
+      mid + (gutterSlot % 2 === 0 ? -1 : 1) * Math.ceil(gutterSlot / 2) * step,
     );
   }
 
   const mid = (toColumn.right + fromColumn.left) / 2;
   return Math.round(
-    mid +
-      (gutterSlot % 2 === 0 ? 1 : -1) *
-        Math.ceil(gutterSlot / 2) *
-        step,
+    mid + (gutterSlot % 2 === 0 ? 1 : -1) * Math.ceil(gutterSlot / 2) * step,
   );
 }
 
