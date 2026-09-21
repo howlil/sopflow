@@ -1,9 +1,6 @@
 import type { ActorId, SOPDocument, StepId } from "@sopflow/core";
 import type { DiagramPoint } from "./types.js";
-import {
-  projectWorkflow,
-  type WorkflowEdge,
-} from "./workflow.js";
+import { projectWorkflow, type WorkflowEdge } from "./workflow.js";
 
 export interface BpmnLayoutOptions {
   readonly laneHeight?: number;
