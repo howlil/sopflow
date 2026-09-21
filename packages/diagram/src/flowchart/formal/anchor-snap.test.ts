@@ -77,9 +77,7 @@ describe("formal flowchart endpoint snapping parity", () => {
   it("projects a pointer onto a requested shape edge", () => {
     expect(projectPointerToFormalShapeEdge(shape, 115, 70)?.side).toBe("top");
     expect(projectPointerToFormalShapeEdge(shape, 150, 95)?.side).toBe("right");
-    expect(
-      projectPointerToFormalShapeEdge(shape, 150, 95, "top")?.y,
-    ).toBe(80);
+    expect(projectPointerToFormalShapeEdge(shape, 150, 95, "top")?.y).toBe(80);
   });
 
   it("slides regular shapes on the perimeter but pins diamonds to vertices", () => {
@@ -128,12 +126,9 @@ describe("formal flowchart endpoint snapping parity", () => {
   it("builds four diamond anchors and twelve regular anchors", () => {
     const diamond = { left: 100, top: 100, width: 80, height: 80 };
     const process = { left: 300, top: 100, width: 120, height: 50 };
-    const built = buildFormalVisualConnectorAnchors(
-      "edge",
-      diamond,
-      process,
-      { fromIsDiamond: true },
-    );
+    const built = buildFormalVisualConnectorAnchors("edge", diamond, process, {
+      fromIsDiamond: true,
+    });
 
     expect(built.filter((anchor) => anchor.kind === "start")).toHaveLength(4);
     expect(built.filter((anchor) => anchor.kind === "end")).toHaveLength(12);
@@ -141,11 +136,12 @@ describe("formal flowchart endpoint snapping parity", () => {
 
   it("prefers the center anchor without switching the projected side", () => {
     const rect = { left: 100, top: 100, width: 120, height: 50 };
-    const built = buildFormalVisualConnectorAnchors(
-      "edge",
-      rect,
-      { left: 300, top: 100, width: 80, height: 40 },
-    );
+    const built = buildFormalVisualConnectorAnchors("edge", rect, {
+      left: 300,
+      top: 100,
+      width: 80,
+      height: 40,
+    });
 
     const snapped = resolveFormalPreferredEndpointSnap({
       connectionId: "edge",
