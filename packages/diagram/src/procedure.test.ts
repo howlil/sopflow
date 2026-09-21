@@ -160,7 +160,6 @@ describe("procedure model", () => {
   });
 
   it("persists manual endpoint anchors independently from bend points", () => {
-    const model = buildProcedureModel(document);
     const config = setProcedureManualEndpoint(
       {},
       "start:next:review",
