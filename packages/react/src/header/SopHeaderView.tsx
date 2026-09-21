@@ -158,11 +158,7 @@ function HeaderValue({
   );
 }
 
-function SignatoryView({
-  value,
-}: {
-  value: SopSignatory | undefined;
-}) {
+function SignatoryView({ value }: { value: SopSignatory | undefined }) {
   return (
     <div className={styles.signatory}>
       <div className={styles.signatoryRole}>
