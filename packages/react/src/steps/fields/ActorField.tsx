@@ -3,8 +3,8 @@ import type { Actor } from "@sopflow/core";
 import styles from "./ActorField.module.css";
 
 export interface ActorFieldProps {
-  value: string[];
-  actors: Actor[];
+  value: readonly string[];
+  actors: readonly Actor[];
   onChange: (actorIds: string[]) => void;
   disabled?: boolean;
   readOnly?: boolean;
