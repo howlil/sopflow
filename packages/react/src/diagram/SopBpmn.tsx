@@ -19,6 +19,13 @@ interface BpmnNode {
   height: number;
 }
 
+interface BpmnEdge {
+  id: string;
+  from: StepId;
+  to: StepId;
+  label?: string;
+}
+
 export function SopBpmn({
   document,
   selectedStepId = null,
@@ -59,7 +66,7 @@ export function SopBpmn({
   });
 
   const nodeById = new Map(nodes.map((node) => [node.step.id, node]));
-  const edges = document.steps.flatMap((step) => {
+  const edges = document.steps.flatMap<BpmnEdge>((step) => {
     if (step.type === "end") return [];
     if (step.type === "decision") {
       return [
@@ -155,7 +162,7 @@ export function SopBpmn({
                   className={styles.edge}
                   markerEnd={`url(#${markerId})`}
                 />
-                {"label" in edge && edge.label ? (
+                {edge.label ? (
                   <text
                     x={midX + 4}
                     y={(start.y + end.y) / 2 - 4}
