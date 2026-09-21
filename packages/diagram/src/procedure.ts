@@ -1,5 +1,8 @@
 import type { ActorId, Duration, SOPDocument, StepId } from "@sopflow/core";
-import type { FormalFlowchartGeometry } from "./flowchart/formal/types.js";
+import type {
+  FormalFlowchartGeometry,
+  FormalFlowchartSide,
+} from "./flowchart/formal/types.js";
 import { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
 import type { DiagramPoint } from "./types.js";
 import {
@@ -45,17 +48,26 @@ export interface ProcedureGeometry {
   readonly formal?: FormalFlowchartGeometry;
 }
 
+export interface ProcedureManualAnchor {
+  readonly side: FormalFlowchartSide;
+  readonly distance: number;
+}
+
+interface ProcedureManualRouteBase {
+  readonly startAnchor?: ProcedureManualAnchor;
+  readonly endAnchor?: ProcedureManualAnchor;
+  readonly labelPosition?: DiagramPoint;
+}
+
 export type ProcedureManualRoute =
-  | {
+  | (ProcedureManualRouteBase & {
       readonly kind: "trunk";
       readonly x: number;
-      readonly labelPosition?: DiagramPoint;
-    }
-  | {
+    })
+  | (ProcedureManualRouteBase & {
       readonly kind: "orthogonal";
       readonly bendPoints: readonly DiagramPoint[];
-      readonly labelPosition?: DiagramPoint;
-    };
+    });
 
 export type ProcedureManualRoutes = Readonly<
   Record<string, ProcedureManualRoute>
@@ -245,6 +257,30 @@ export function updateProcedureManualTrunk(
   };
 }
 
+export function setProcedureManualEndpoint(
+  config: SopDiagramConfig,
+  edgeId: string,
+  kind: "start" | "end",
+  anchor: ProcedureManualAnchor,
+): SopDiagramConfig {
+  const current = config.routes?.[edgeId];
+  const base: ProcedureManualRoute =
+    current ??
+    ({
+      kind: "orthogonal",
+      bendPoints: [],
+    } satisfies ProcedureManualRoute);
+
+  const next: ProcedureManualRoute = {
+    ...base,
+    ...(kind === "start"
+      ? { startAnchor: { ...anchor } }
+      : { endAnchor: { ...anchor } }),
+  };
+
+  return setProcedureManualRoute(config, edgeId, next);
+}
+
 export function setProcedureManualRoute(
   config: SopDiagramConfig,
   edgeId: string,
@@ -259,6 +295,12 @@ export function setProcedureManualRoute(
           ? {
               kind: "trunk",
               x: route.x,
+              ...(route.startAnchor
+                ? { startAnchor: { ...route.startAnchor } }
+                : {}),
+              ...(route.endAnchor
+                ? { endAnchor: { ...route.endAnchor } }
+                : {}),
               ...(route.labelPosition
                 ? { labelPosition: { ...route.labelPosition } }
                 : {}),
@@ -266,6 +308,12 @@ export function setProcedureManualRoute(
           : {
               kind: "orthogonal",
               bendPoints: route.bendPoints.map((point) => ({ ...point })),
+              ...(route.startAnchor
+                ? { startAnchor: { ...route.startAnchor } }
+                : {}),
+              ...(route.endAnchor
+                ? { endAnchor: { ...route.endAnchor } }
+                : {}),
               ...(route.labelPosition
                 ? { labelPosition: { ...route.labelPosition } }
                 : {}),
