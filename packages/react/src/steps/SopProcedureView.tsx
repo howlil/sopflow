@@ -363,8 +363,8 @@ export function SopProcedureView({
                 ) : null}
                 {manualEditing && selected ? (
                   <circle
-                    cx={edge.trunkX}
-                    cy={edge.points.reduce((sum, point) => sum + point.y, 0) / edge.points.length}
+                    cx={edge.handlePosition.x}
+                    cy={edge.handlePosition.y}
                     r={5}
                     className={styles.pathHandle}
                     onPointerDown={(event) => {
