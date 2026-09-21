@@ -24,7 +24,12 @@ export interface FormalOrthogonalRouteOptions {
   readonly lShapeOnly?: boolean;
 }
 
-function rangesOverlap(a1: number, a2: number, b1: number, b2: number): boolean {
+function rangesOverlap(
+  a1: number,
+  a2: number,
+  b1: number,
+  b2: number,
+): boolean {
   const aMin = Math.min(a1, a2);
   const aMax = Math.max(a1, a2);
   const bMin = Math.min(b1, b2);
@@ -345,7 +350,8 @@ export function scoreFormalPath(
     for (const used of occupied) {
       if (formalSegmentsOverlap(segment, used)) score += OVERLAP_PENALTY;
       else if (formalSegmentsCross(segment, used)) score += CROSS_PENALTY;
-      else if (segmentsNearby(segment, used, NEAR_THRESHOLD)) score += NEAR_PENALTY;
+      else if (segmentsNearby(segment, used, NEAR_THRESHOLD))
+        score += NEAR_PENALTY;
     }
   }
 
@@ -353,9 +359,7 @@ export function scoreFormalPath(
   return score;
 }
 
-function pointOnRect(
-  connector: FormalConnectorPoint,
-): DiagramPoint {
+function pointOnRect(connector: FormalConnectorPoint): DiagramPoint {
   const distance = Math.max(0, Math.min(1, connector.distance));
   const shape = connector.shape;
 
@@ -491,10 +495,8 @@ export function routeFormalOrthogonal(
   if (direct) return direct;
   if (lShapeOnly) return [];
 
-  const sourceVertical =
-    source.side === "top" || source.side === "bottom";
-  const targetVertical =
-    target.side === "top" || target.side === "bottom";
+  const sourceVertical = source.side === "top" || source.side === "bottom";
+  const targetVertical = target.side === "top" || target.side === "bottom";
 
   if (sourceVertical && targetVertical) {
     const midY = Math.round((sourceExit.y + targetEntry.y) / 2);
