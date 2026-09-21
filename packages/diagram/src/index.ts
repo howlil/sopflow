@@ -1,4 +1,48 @@
 export {
+  buildFormalEdgeAnchorId,
+  buildFormalVisualConnectorAnchors,
+  findNearestFormalAnchor,
+  formalChannelAnchorDistance,
+  formalDistanceOnShapeEdge,
+  formalPointOnShapeEdge,
+  formalSideLengthPx,
+  formalSnapDistanceToCenter,
+  getFormalAutoRouteAnchorSlot,
+  parseFormalLockedSideFromAnchorId,
+  pickFormalDiamondSideFromPointer,
+  pickFormalSnapSideForPointer,
+  preferFormalCenterAnchorDistance,
+  projectPointerToFormalShapeEdge,
+  resolveFormalAnchorSnap,
+  resolveFormalConstrainedEdgeSnap,
+  resolveFormalMagneticAnchorSnap,
+  resolveFormalPreferredEndpointSnap,
+  scoreFormalAnchorOffCenter,
+} from "./flowchart/formal/anchor-snap.js";
+export type {
+  FormalFlowchartAnchorKind,
+  FormalFlowchartEdgeSnapResult,
+  FormalFlowchartMagneticSnapResult,
+  FormalFlowchartPathAnchor,
+  FormalFlowchartShapeEdgeProjection,
+  FormalFlowchartShapeSnapTargets,
+} from "./flowchart/formal/anchor-snap.js";
+
+export {
+  finalizeFormalManualOrthogonalPath,
+  formalPathCrossesShapeBodies,
+  isFormalPathBlockingShapes,
+  rebuildFormalPathForAnchorSides,
+  repairFormalPathAroundShapes,
+} from "./flowchart/formal/path-guard.js";
+export type {
+  FinalizeFormalManualPathOptions,
+  FormalManualPathCollisionPolicy,
+  FormalManualPathGuardInput,
+  FormalManualPathRepairInput,
+} from "./flowchart/formal/path-guard.js";
+
+export {
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
@@ -30,12 +74,14 @@ export {
   buildProcedureModel,
   removeProcedureManualRoute,
   routeProcedureEdges,
+  setProcedureManualEndpoint,
   setProcedureManualRoute,
   updateProcedureManualTrunk,
 } from "./procedure.js";
 export type {
   ProcedureActorColumn,
   ProcedureGeometry,
+  ProcedureManualAnchor,
   ProcedureManualRoute,
   ProcedureManualRoutes,
   ProcedureManualTrunks,
