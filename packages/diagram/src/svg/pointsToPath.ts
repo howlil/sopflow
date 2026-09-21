@@ -1,6 +1,6 @@
 import type { DiagramPoint } from "../types.js";
 
-export function pointsToPath(points: DiagramPoint[]): string {
+export function pointsToPath(points: readonly DiagramPoint[]): string {
   const [first, ...rest] = points;
 
   if (!first) {
