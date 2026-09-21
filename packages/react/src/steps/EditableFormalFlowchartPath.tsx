@@ -169,10 +169,7 @@ export function EditableFormalFlowchartPath({
 
     event.preventDefault();
 
-    if (
-      session.mode === "start-endpoint" ||
-      session.mode === "end-endpoint"
-    ) {
+    if (session.mode === "start-endpoint" || session.mode === "end-endpoint") {
       resolveEndpoint(
         session.mode === "start-endpoint" ? "start" : "end",
         point,
@@ -344,7 +341,11 @@ export function EditableFormalFlowchartPath({
         onPointerCancel={finishDrag}
       />
 
-      {selected && endpointTargets && onEndpointChange && startPoint && endPoint ? (
+      {selected &&
+      endpointTargets &&
+      onEndpointChange &&
+      startPoint &&
+      endPoint ? (
         <>
           <g>
             {/* biome-ignore lint/a11y/useSemanticElements: SVG endpoint handle is a directly focusable control. */}
@@ -404,9 +405,7 @@ export function EditableFormalFlowchartPath({
                   tabIndex={0}
                   aria-label={`Waypoint ${index} route ${connectionId}`}
                   onKeyDown={(event) => handleWaypointKeyDown(index, event)}
-                  onPointerDown={(event) =>
-                    startDrag(event, "waypoint", index)
-                  }
+                  onPointerDown={(event) => startDrag(event, "waypoint", index)}
                   onPointerMove={handlePointerMove}
                   onPointerUp={finishDrag}
                   onPointerCancel={finishDrag}
