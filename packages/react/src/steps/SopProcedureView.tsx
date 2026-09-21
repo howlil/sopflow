@@ -268,11 +268,7 @@ export function SopProcedureView({
         }),
       );
     },
-    [
-      diagramConfig,
-      updateDiagramConfig,
-      usesLegacyManualPaths,
-    ],
+    [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
   );
 
   const resetManualPath = useCallback(
