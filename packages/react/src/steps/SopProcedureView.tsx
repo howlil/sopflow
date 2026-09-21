@@ -1,9 +1,4 @@
-import type {
-  SOPDocument,
-  Step,
-  StepId,
-  ValidationIssue,
-} from "@sopflow/core";
+import type { SOPDocument, Step, StepId, ValidationIssue } from "@sopflow/core";
 import styles from "./SopProcedureView.module.css";
 
 export interface SopProcedureViewProps {
@@ -138,7 +133,9 @@ function stepTypeLabel(step: Step): string {
 
 function actorNames(step: Step, document: SOPDocument): string {
   const names = step.actorIds
-    .map((actorId) => document.actors.find((actor) => actor.id === actorId)?.name)
+    .map(
+      (actorId) => document.actors.find((actor) => actor.id === actorId)?.name,
+    )
     .filter((name): name is string => Boolean(name?.trim()));
 
   return names.length > 0 ? names.join(", ") : "—";
