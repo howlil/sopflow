@@ -1,10 +1,8 @@
 import type { SOPDocument, StepId } from "@sopflow/core";
 import { useState } from "react";
 
-import { SopFlowchart } from "../diagram/SopFlowchart.js";
-import { SopEditor } from "../SopEditor.js";
+import { SopEditor, type SopDiagramKind } from "../SopEditor.js";
 import type { SopHeaderValue } from "../types.js";
-import styles from "./SopWorkspace.module.css";
 
 export type SopWorkspaceView = "editor" | "diagram";
 
@@ -15,6 +13,8 @@ export interface SopWorkspaceProps {
   onHeaderChange?: (header: SopHeaderValue) => void;
   view?: SopWorkspaceView;
   onViewChange?: (view: SopWorkspaceView) => void;
+  diagramKind?: SopDiagramKind;
+  onDiagramKindChange?: (kind: SopDiagramKind) => void;
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
   readOnly?: boolean;
@@ -30,97 +30,46 @@ export function SopWorkspace({
   onHeaderChange,
   view: controlledView,
   onViewChange,
-  selectedStepId: controlledSelectedStepId,
+  diagramKind,
+  onDiagramKindChange,
+  selectedStepId,
   onSelectedStepChange,
   readOnly = false,
   loading = false,
   error = null,
   className,
 }: SopWorkspaceProps) {
-  const [internalView, setInternalView] = useState<SopWorkspaceView>("editor");
-  const [internalSelectedStepId, setInternalSelectedStepId] =
-    useState<StepId | null>(null);
+  const [internalView, setInternalView] =
+    useState<SopWorkspaceView>("diagram");
 
   const view = controlledView ?? internalView;
-  const selectedStepId =
-    controlledSelectedStepId !== undefined
-      ? controlledSelectedStepId
-      : internalSelectedStepId;
 
-  function handleViewChange(next: SopWorkspaceView) {
+  function handleViewChange(next: "preview" | "steps") {
+    const mapped: SopWorkspaceView = next === "steps" ? "editor" : "diagram";
+
     if (controlledView === undefined) {
-      setInternalView(next);
+      setInternalView(mapped);
     }
 
-    onViewChange?.(next);
-  }
-
-  function handleSelectedStepChange(stepId: StepId | null) {
-    if (controlledSelectedStepId === undefined) {
-      setInternalSelectedStepId(stepId);
-    }
-
-    onSelectedStepChange?.(stepId);
+    onViewChange?.(mapped);
   }
 
   return (
-    <section
-      className={[styles.root, className].filter(Boolean).join(" ")}
-      data-sopflow-root
-      data-sopflow-workspace
-    >
-      <WorkspaceToolbar view={view} onViewChange={handleViewChange} />
-
-      {view === "editor" ? (
-        <SopEditor
-          value={value}
-          header={header}
-          selectedStepId={selectedStepId}
-          onSelectedStepChange={handleSelectedStepChange}
-          readOnly={readOnly}
-          loading={loading}
-          error={error}
-          {...(onChange ? { onChange } : {})}
-          {...(onHeaderChange ? { onHeaderChange } : {})}
-        />
-      ) : (
-        <SopFlowchart
-          document={value}
-          selectedStepId={selectedStepId}
-          onSelectedStepChange={handleSelectedStepChange}
-        />
-      )}
-    </section>
-  );
-}
-
-interface WorkspaceToolbarProps {
-  view: SopWorkspaceView;
-  onViewChange: (view: SopWorkspaceView) => void;
-}
-
-function WorkspaceToolbar({ view, onViewChange }: WorkspaceToolbarProps) {
-  return (
-    <div className={styles.toolbar} role="toolbar" aria-label="Tampilan SOP">
-      <button
-        type="button"
-        className={styles.viewButton}
-        data-active={view === "editor" || undefined}
-        aria-pressed={view === "editor"}
-        onClick={() => onViewChange("editor")}
-      >
-        Langkah
-      </button>
-
-      <button
-        type="button"
-        className={styles.viewButton}
-        data-active={view === "diagram" || undefined}
-        aria-pressed={view === "diagram"}
-        onClick={() => onViewChange("diagram")}
-      >
-        Flowchart
-      </button>
-    </div>
+    <SopEditor
+      value={value}
+      header={header}
+      mode={view === "editor" ? "steps" : "preview"}
+      onModeChange={handleViewChange}
+      readOnly={readOnly}
+      loading={loading}
+      error={error}
+      {...(onChange ? { onChange } : {})}
+      {...(onHeaderChange ? { onHeaderChange } : {})}
+      {...(diagramKind ? { diagramKind } : {})}
+      {...(onDiagramKindChange ? { onDiagramKindChange } : {})}
+      {...(selectedStepId !== undefined ? { selectedStepId } : {})}
+      {...(onSelectedStepChange ? { onSelectedStepChange } : {})}
+      {...(className ? { className } : {})}
+    />
   );
 }
