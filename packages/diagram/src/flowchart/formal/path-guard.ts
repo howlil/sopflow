@@ -105,8 +105,8 @@ export function rebuildFormalPathForAnchorSides(
     path: normalized,
     fromShape: input.fromShape,
     toShape: input.toShape,
-    obstacles: input.obstacles,
-    clearance: input.clearance,
+    ...(input.obstacles !== undefined ? { obstacles: input.obstacles } : {}),
+    ...(input.clearance !== undefined ? { clearance: input.clearance } : {}),
   })
     ? null
     : normalized;
