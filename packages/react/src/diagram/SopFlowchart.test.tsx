@@ -38,7 +38,9 @@ const document: SOPDocument = {
 
 describe("SopFlowchart", () => {
   it("renders actor lanes and workflow shapes", () => {
-    const { container } = render(<SopFlowchart document={document} fit={false} />);
+    const { container } = render(
+      <SopFlowchart document={document} fit={false} />,
+    );
 
     expect(
       screen.getByRole("img", { name: "Flowchart SOP Flowchart SOP" }),
