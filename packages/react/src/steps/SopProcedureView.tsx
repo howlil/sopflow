@@ -113,9 +113,7 @@ export function SopProcedureView({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
-      actorLeft: firstActorHeader
-        ? firstActorHeader.left - rootRect.left
-        : 0,
+      actorLeft: firstActorHeader ? firstActorHeader.left - rootRect.left : 0,
       actorRight: lastActorHeader
         ? lastActorHeader.right - rootRect.left
         : rootRect.width,
@@ -132,7 +130,7 @@ export function SopProcedureView({
     observer.observe(root);
 
     return () => observer.disconnect();
-  }, [measure, document]);
+  }, [measure]);
 
   const setShapeRef = useCallback(
     (stepId: StepId, element: HTMLSpanElement | null) => {
