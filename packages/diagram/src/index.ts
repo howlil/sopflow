@@ -1,3 +1,16 @@
+export {
+  buildProcedureModel,
+  routeProcedureEdges,
+} from "./procedure.js";
+export type {
+  ProcedureActorColumn,
+  ProcedureGeometry,
+  ProcedureManualTrunks,
+  ProcedureModel,
+  ProcedureRoutedEdge,
+  ProcedureRowModel,
+} from "./procedure.js";
+
 export { projectWorkflow } from "./workflow.js";
 export type {
   WorkflowEdge,
