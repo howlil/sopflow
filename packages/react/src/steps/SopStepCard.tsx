@@ -124,6 +124,7 @@ export function SopStepCard({
         <Field label="Tipe">
           <StepTypeField
             step={step}
+            steps={document.steps}
             readOnly={disabled}
             onChange={changeStepType}
           />

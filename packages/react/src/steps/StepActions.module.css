@@ -4,28 +4,34 @@
 
 .trigger {
   display: flex;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
 
   align-items: center;
   justify-content: center;
 
-  border-radius: var(--sopflow-control-radius);
   border: 0;
+  border-radius: var(--sopflow-control-radius);
   padding: 0;
 
   background: transparent;
+  color: var(--sopflow-text-muted);
 
   font: inherit;
+  line-height: 1;
 
   cursor: pointer;
   user-select: none;
-  color: var(--sopflow-text-muted);
 }
 
 .trigger:hover {
   background: var(--sopflow-surface-muted);
   color: var(--sopflow-text);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
 }
 
 .content {
@@ -58,6 +64,7 @@
 
   text-align: left;
   font: inherit;
+  font-size: 0.8125rem;
 
   cursor: pointer;
 }
@@ -66,7 +73,8 @@
   color: var(--sopflow-text);
 }
 
-.item:hover:not(:disabled) {
+.item:hover:not(:disabled),
+.item:focus-visible {
   background: var(--sopflow-surface-muted);
 }
 
@@ -74,8 +82,15 @@
   color: var(--sopflow-error-text);
 }
 
-.dangerItem:hover:not(:disabled) {
+.dangerItem:hover:not(:disabled),
+.dangerItem:focus-visible {
   background: var(--sopflow-error-surface);
+}
+
+.item:focus-visible,
+.dangerItem:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: -2px;
 }
 
 .item:disabled,

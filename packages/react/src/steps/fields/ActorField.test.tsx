@@ -22,18 +22,30 @@ function Harness() {
 }
 
 describe("ActorField", () => {
-  it("preserves and edits multiple actor assignments", async () => {
+  it("keeps multi-actor assignment compact until opened", async () => {
     const user = userEvent.setup();
-    render(<Harness />);
+    const { container } = render(<Harness />);
+    const trigger = container.querySelector<HTMLElement>(
+      "[data-sopflow-actor-trigger]",
+    );
+
+    expect(trigger).not.toBeNull();
+    expect(trigger).toHaveTextContent("Staff");
+
+    await user.click(trigger as HTMLElement);
 
     expect(screen.getByRole("checkbox", { name: "Staff" })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Manager" })).not.toBeChecked();
 
     await user.click(screen.getByRole("checkbox", { name: "Manager" }));
+
     expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
+    expect(trigger).toHaveTextContent("Staff +1");
 
     await user.click(screen.getByRole("checkbox", { name: "Staff" }));
+
     expect(screen.getByTestId("value")).toHaveTextContent("manager");
+    expect(trigger).toHaveTextContent("Manager");
   });
 
   it("renders every selected actor in read-only mode", () => {
@@ -47,5 +59,19 @@ describe("ActorField", () => {
     );
 
     expect(screen.getByText("Staff, Manager")).toBeInTheDocument();
+  });
+
+  it("renders a non-interactive compact value when disabled", () => {
+    const { container } = render(
+      <ActorField
+        value={["staff", "manager"]}
+        actors={actors}
+        onChange={() => undefined}
+        disabled
+      />,
+    );
+
+    expect(container.querySelector("details")).toBeNull();
+    expect(screen.getByText("Staff +1")).toBeInTheDocument();
   });
 });
