@@ -255,8 +255,8 @@ export function EditableFormalFlowchartPath({
         ? path.slice(1, -1).map((point, offset) => {
             const index = offset + 1;
 
+            // biome-ignore lint/a11y/useSemanticElements: SVG waypoint handles are directly focusable controls.
             return (
-              {/* biome-ignore lint/a11y/useSemanticElements: SVG waypoint handles are directly focusable controls. */}
               <circle
                 key={`${connectionId}-waypoint-${index}`}
                 cx={point.x}
