@@ -235,6 +235,65 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(no?.labelPosition).toBeDefined();
   });
 
+  it("uses persisted endpoint side and distance for manual routes", () => {
+    const rows = [
+      {
+        stepId: "start",
+        number: 1,
+        kind: "start",
+        primaryActorId: "staff",
+      },
+      {
+        stepId: "task",
+        number: 2,
+        kind: "task",
+        primaryActorId: "manager",
+      },
+    ] as const;
+    const edges = [
+      {
+        id: "start:next:task",
+        from: "start",
+        to: "task",
+        kind: "next",
+      },
+    ] as const;
+    const geometry = buildGeometry({
+      start: {
+        stepId: "start",
+        actorId: "staff",
+        row: 0,
+        kind: "start",
+        rect: { left: 120, top: 100, width: 86, height: 42 },
+      },
+      task: {
+        stepId: "task",
+        actorId: "manager",
+        row: 1,
+        kind: "task",
+        rect: { left: 320, top: 200, width: 82, height: 42 },
+      },
+    });
+
+    const [routed] = planFormalProcedureEdges(
+      { rows, edges },
+      geometry,
+      {
+        "start:next:task": {
+          kind: "orthogonal",
+          bendPoints: [{ x: 240, y: 121 }],
+          startAnchor: { side: "right", distance: 0.5 },
+          endAnchor: { side: "left", distance: 0.25 },
+        },
+      },
+    );
+
+    expect(routed?.sourceSide).toBe("right");
+    expect(routed?.targetSide).toBe("left");
+    expect(routed?.points[0]).toEqual({ x: 206, y: 121 });
+    expect(routed?.points.at(-1)).toEqual({ x: 320, y: 211 });
+  });
+
   it("keeps manual trunk endpoints attached to their shapes", () => {
     const rows = [
       row("start", 1, "start", "staff"),
