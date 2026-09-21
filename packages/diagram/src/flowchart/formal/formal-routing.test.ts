@@ -258,22 +258,33 @@ describe("formal SOP-AP flowchart routing parity", () => {
         kind: "next",
       },
     ] as const;
-    const geometry = buildGeometry({
-      start: {
-        stepId: "start",
-        actorId: "staff",
-        row: 0,
-        kind: "start",
-        rect: { left: 120, top: 100, width: 86, height: 42 },
-      },
-      task: {
-        stepId: "task",
-        actorId: "manager",
-        row: 1,
-        kind: "task",
-        rect: { left: 320, top: 200, width: 82, height: 42 },
-      },
-    });
+    const geometry: FormalFlowchartGeometry = {
+      width: 700,
+      height: 420,
+      pelaksanaBounds: pelaksana,
+      columns: { staff, manager },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 120,
+            top: 100,
+            width: 86,
+            height: 42,
+          }),
+        ],
+        [
+          "task",
+          shape("task", "manager", 1, "task", {
+            left: 320,
+            top: 200,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
 
     const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
       "start:next:task": {
