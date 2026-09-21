@@ -1,5 +1,9 @@
 import type { SOPDocument, Step, StepId } from "./types.js";
 
+function createStepMap(document: SOPDocument): Map<StepId, Step> {
+  return new Map(document.steps.map((step) => [step.id, step]));
+}
+
 export function getStep(document: SOPDocument, id: StepId): Step | undefined {
   return document.steps.find((step) => step.id === id);
 }
@@ -7,15 +11,12 @@ export function getStep(document: SOPDocument, id: StepId): Step | undefined {
 export function getNextStepIds(step: Step): StepId[] {
   switch (step.type) {
     case "start":
-      return [step.next];
     case "task":
       return [step.next];
     case "decision":
       return [step.yes, step.no];
     case "end":
       return [];
-    default:
-      throw new Error("Unsupported step type");
   }
 }
 
@@ -24,6 +25,7 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
 
   if (!start) return document.steps.map((step) => step.id);
 
+  const steps = createStepMap(document);
   const visited = new Set<StepId>();
   const visiting = new Set<StepId>();
   const ordered: StepId[] = [];
@@ -32,7 +34,7 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
   function visit(id: StepId): void {
     if (visited.has(id) || visiting.has(id)) return;
 
-    const step = getStep(document, id);
+    const step = steps.get(id);
 
     if (!step) return;
 
@@ -64,7 +66,7 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
 }
 
 export function getOrderedSteps(document: SOPDocument): Step[] {
-  const steps = new Map(document.steps.map((step) => [step.id, step]));
+  const steps = createStepMap(document);
 
   return getOrderedStepIds(document)
     .map((stepId) => steps.get(stepId))
@@ -76,19 +78,18 @@ export function getReachableStepIds(document: SOPDocument): Set<StepId> {
 
   if (!start) return new Set();
 
+  const steps = createStepMap(document);
   const visited = new Set<StepId>();
   const stack: StepId[] = [start.id];
 
   while (stack.length > 0) {
     const currentId = stack.pop();
 
-    if (currentId === undefined) continue;
-
-    if (visited.has(currentId)) continue;
+    if (currentId === undefined || visited.has(currentId)) continue;
 
     visited.add(currentId);
 
-    const step = getStep(document, currentId);
+    const step = steps.get(currentId);
 
     if (!step) continue;
 
@@ -117,16 +118,16 @@ export function getPreviousStepIds(
 
 export type IncomingConnection =
   | {
-      from: StepId;
-      type: "next";
+      readonly from: StepId;
+      readonly type: "next";
     }
   | {
-      from: StepId;
-      type: "yes";
+      readonly from: StepId;
+      readonly type: "yes";
     }
   | {
-      from: StepId;
-      type: "no";
+      readonly from: StepId;
+      readonly type: "no";
     };
 
 export function getIncomingConnections(
@@ -140,26 +141,17 @@ export function getIncomingConnections(
       case "start":
       case "task":
         if (step.next === targetId) {
-          connections.push({
-            from: step.id,
-            type: "next",
-          });
+          connections.push({ from: step.id, type: "next" });
         }
         break;
 
       case "decision":
         if (step.yes === targetId) {
-          connections.push({
-            from: step.id,
-            type: "yes",
-          });
+          connections.push({ from: step.id, type: "yes" });
         }
 
         if (step.no === targetId) {
-          connections.push({
-            from: step.id,
-            type: "no",
-          });
+          connections.push({ from: step.id, type: "no" });
         }
         break;
 
@@ -171,44 +163,48 @@ export function getIncomingConnections(
   return connections;
 }
 
+/**
+ * @deprecated In the v1 domain every non-end step always has an outgoing edge,
+ * so a well-typed SOPDocument cannot contain a structural dead end.
+ */
 export function findDeadEndStepIds(document: SOPDocument): StepId[] {
   return document.steps
-    .filter((step) => {
-      if (step.type === "end") {
-        return false;
-      }
-      return getNextStepIds(step).length === 0;
-    })
+    .filter(
+      (step) => step.type !== "end" && getNextStepIds(step).length === 0,
+    )
     .map((step) => step.id);
 }
 
 export function canReachEnd(document: SOPDocument, startId: StepId): boolean {
+  const steps = createStepMap(document);
   const visited = new Set<StepId>();
   const stack: StepId[] = [startId];
 
   while (stack.length > 0) {
     const currentId = stack.pop();
 
-    if (currentId === undefined) continue;
-
-    if (visited.has(currentId)) continue;
+    if (currentId === undefined || visited.has(currentId)) continue;
 
     visited.add(currentId);
 
-    const step = getStep(document, currentId);
+    const step = steps.get(currentId);
 
     if (!step) continue;
 
     if (step.type === "end") return true;
 
     for (const nextId of getNextStepIds(step)) {
-      stack.push(nextId);
+      if (!visited.has(nextId)) {
+        stack.push(nextId);
+      }
     }
   }
+
   return false;
 }
 
 export function findCycleStepIds(document: SOPDocument): Set<StepId> {
+  const steps = createStepMap(document);
   const visited = new Set<StepId>();
   const visiting = new Set<StepId>();
   const path: StepId[] = [];
@@ -218,8 +214,10 @@ export function findCycleStepIds(document: SOPDocument): Set<StepId> {
     if (visiting.has(id)) {
       const cycleStart = path.indexOf(id);
 
-      for (const cycleId of path.slice(cycleStart)) {
-        cycleNodes.add(cycleId);
+      if (cycleStart >= 0) {
+        for (const cycleId of path.slice(cycleStart)) {
+          cycleNodes.add(cycleId);
+        }
       }
 
       return;
@@ -230,7 +228,7 @@ export function findCycleStepIds(document: SOPDocument): Set<StepId> {
     visiting.add(id);
     path.push(id);
 
-    const step = getStep(document, id);
+    const step = steps.get(id);
 
     if (step) {
       for (const nextId of getNextStepIds(step)) {
