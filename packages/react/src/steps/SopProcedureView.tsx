@@ -4,6 +4,7 @@ import {
   pointsToPath,
   removeProcedureManualRoute,
   routeProcedureEdges,
+  setProcedureManualEndpoint,
   setProcedureManualRoute,
   updateProcedureManualTrunk,
   type FormalFlowchartBounds,
@@ -14,6 +15,7 @@ import {
   type FormalFlowchartShapeGeometry,
   type DiagramPoint,
   type ProcedureGeometry,
+  type ProcedureManualAnchor,
   type ProcedureManualTrunks,
   type ProcedureModel,
   type ProcedureRowModel,
@@ -262,10 +264,36 @@ export function SopProcedureView({
         setProcedureManualRoute(diagramConfig, connectionId, {
           kind: "orthogonal",
           bendPoints: points.slice(1, -1).map((point) => ({ ...point })),
+          ...(currentRoute?.startAnchor
+            ? { startAnchor: { ...currentRoute.startAnchor } }
+            : {}),
+          ...(currentRoute?.endAnchor
+            ? { endAnchor: { ...currentRoute.endAnchor } }
+            : {}),
           ...(currentRoute?.labelPosition
             ? { labelPosition: currentRoute.labelPosition }
             : {}),
         }),
+      );
+    },
+    [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
+  );
+
+  const updateManualEndpoint = useCallback(
+    (
+      connectionId: string,
+      kind: "start" | "end",
+      anchor: ProcedureManualAnchor,
+    ) => {
+      if (usesLegacyManualPaths) return;
+
+      updateDiagramConfig(
+        setProcedureManualEndpoint(
+          diagramConfig,
+          connectionId,
+          kind,
+          anchor,
+        ),
       );
     },
     [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
@@ -482,8 +510,15 @@ export function SopProcedureView({
                     path={edge.points}
                     connectionId={edge.id}
                     selected={selected}
+                    endpointTargets={resolveEndpointTargets(
+                      edge,
+                      geometry.formal,
+                    )}
                     onSelect={setSelectedConnectionId}
                     onChange={(points) => updateManualPath(edge.id, points)}
+                    onEndpointChange={(kind, anchor) =>
+                      updateManualEndpoint(edge.id, kind, anchor)
+                    }
                     onReset={() => resetManualPath(edge.id)}
                   />
                 ) : null}
@@ -538,6 +573,24 @@ export function SopProcedureView({
       ) : null}
     </section>
   );
+}
+
+function resolveEndpointTargets(
+  edge: { readonly from: StepId; readonly to: StepId },
+  geometry: FormalFlowchartGeometry | undefined,
+) {
+  if (!geometry) return undefined;
+
+  const source = geometry.shapes.get(edge.from);
+  const target = geometry.shapes.get(edge.to);
+  if (!source || !target) return undefined;
+
+  return {
+    start: source.rect,
+    end: target.rect,
+    startIsDiamond: source.kind === "decision",
+    endIsDiamond: target.kind === "decision",
+  };
 }
 
 function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
