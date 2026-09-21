@@ -38,6 +38,7 @@ describe("diagram public API", () => {
         "layoutDiagram",
         "pointsToPath",
         "routeDiagramEdges",
+        "projectWorkflow",
       ].sort(),
     );
   });
