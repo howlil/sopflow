@@ -118,6 +118,7 @@ export function SopStepRow({
         <td>
           <StepTypeField
             step={step}
+            steps={document.steps}
             readOnly={disabled}
             onChange={changeStepType}
           />
