@@ -324,6 +324,14 @@ describe("SopEditor document workbench", () => {
 
     expect(screen.getByRole("button", { name: "Diagram" })).toBeInTheDocument();
     expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", {
+        name: /editor langkah sop; gulir horizontal/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/geser tabel secara horizontal/i),
+    ).toBeInTheDocument();
 
     const inspector = container.querySelector("[data-sopflow-inspector]");
     expect(inspector).not.toBeNull();
@@ -420,6 +428,14 @@ describe("SopEditor graph mutations", () => {
     }
 
     expect(inserted.next).toBe("end");
+  });
+
+  it("shows decision branch targets inline using authoring order", () => {
+    render(<EditorHarness initial={decisionDocument} />);
+
+    const row = getDesktopStepRow("decision");
+
+    expect(within(row).getByText("Ya → 3 · Tidak → 4")).toBeInTheDocument();
   });
 
   it("updates decision branches through the decision editor", async () => {
@@ -549,10 +565,15 @@ describe("SopEditor actor mutations", () => {
     render(<EditorHarness initial={actorDocument} />);
 
     const row = getStepRow(getField("Review dokumen"));
-    const actorGroup = within(row).getByRole("group", { name: "Pelaksana" });
+    const actorTrigger = row.querySelector<HTMLElement>(
+      "[data-sopflow-actor-trigger]",
+    );
 
+    expect(actorTrigger).not.toBeNull();
+
+    await user.click(actorTrigger as HTMLElement);
     await user.click(
-      within(actorGroup).getByRole("checkbox", { name: "Manager" }),
+      within(row).getByRole("checkbox", { name: "Manager" }),
     );
 
     const document = readDocument();
