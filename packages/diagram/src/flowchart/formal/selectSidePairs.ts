@@ -18,8 +18,14 @@ export interface FormalFlowchartConnectionMeta {
   readonly from: string;
   readonly to: string;
   readonly label?: string | null;
-  readonly sourceType?: "flowchart-terminator" | "flowchart-process" | "flowchart-decision";
-  readonly targetType?: "flowchart-terminator" | "flowchart-process" | "flowchart-decision";
+  readonly sourceType?:
+    | "flowchart-terminator"
+    | "flowchart-process"
+    | "flowchart-decision";
+  readonly targetType?:
+    | "flowchart-terminator"
+    | "flowchart-process"
+    | "flowchart-decision";
 }
 
 const DEFAULT_JETTY = 16;
