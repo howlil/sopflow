@@ -33,10 +33,7 @@ export function ActorField({
 
   if (disabled) {
     return (
-      <span
-        className={styles.disabled}
-        data-error={error || undefined}
-      >
+      <span className={styles.disabled} data-error={error || undefined}>
         {compactActorLabel(names)}
       </span>
     );
