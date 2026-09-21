@@ -85,6 +85,8 @@ describe("SopEditor default composition", () => {
       }),
     ).toHaveValue("Staff");
 
-    expect(within(headerView as HTMLElement).getByText("Layout SOP")).toBeInTheDocument();
+    expect(
+      within(headerView as HTMLElement).getByText("Layout SOP"),
+    ).toBeInTheDocument();
   });
 });
