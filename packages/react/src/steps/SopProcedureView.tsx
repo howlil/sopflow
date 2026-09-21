@@ -9,6 +9,7 @@ import {
   type FormalFlowchartGeometry,
   type FormalFlowchartGridLayout,
   type FormalFlowchartRect,
+  type FormalFlowchartShapeGeometry,
   type ProcedureGeometry,
   type ProcedureManualTrunks,
   type ProcedureModel,
@@ -113,15 +114,7 @@ export function SopProcedureView({
       model.rows.map((row) => [row.stepId, row] as const),
     );
     const anchors = new Map<StepId, { x: number; y: number }>();
-    const shapes = new Map<
-      StepId,
-      FormalFlowchartGeometry["shapes"] extends ReadonlyMap<
-        StepId,
-        infer Shape
-      >
-        ? Shape
-        : never
-    >();
+    const shapes = new Map<StepId, FormalFlowchartShapeGeometry>();
 
     for (const [stepId, element] of shapeRefs.current) {
       const rect = toLocalRect(element.getBoundingClientRect(), rootRect);
@@ -159,20 +152,30 @@ export function SopProcedureView({
     const columns = measureActorColumns(actorCells, rootRect);
     const gridLayout = measureGridLayout(root, rootRect);
 
+    const formalGeometry =
+      pelaksanaBounds &&
+      pelaksanaBounds.right > pelaksanaBounds.left &&
+      shapes.size === model.rows.length &&
+      [...shapes.values()].every(
+        (shape) => shape.rect.width > 0 && shape.rect.height > 0,
+      )
+        ? ({
+            width: root.scrollWidth,
+            height: root.scrollHeight,
+            pelaksanaBounds,
+            columns,
+            gridLayout,
+            shapes,
+          } satisfies FormalFlowchartGeometry)
+        : null;
+
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
       actorLeft,
       actorRight,
-      formal: {
-        width: root.scrollWidth,
-        height: root.scrollHeight,
-        pelaksanaBounds,
-        columns,
-        gridLayout,
-        shapes,
-      },
+      ...(formalGeometry ? { formal: formalGeometry } : {}),
     });
   }, [model.rows]);
 
