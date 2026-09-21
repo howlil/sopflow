@@ -1,20 +1,19 @@
 import { validateSop, type SOPDocument, type StepId } from "@sopflow/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import "./styles/token.css";
 
 import { ActorsEditor } from "./actors/ActorsEditor.js";
 import { SopDocumentCanvas } from "./editor/SopDocumentCanvas.js";
+import {
+  type SopDiagramKind,
+  type SopDocumentMode,
+} from "./editor/SopDocumentToolbar.js";
 import { EditorStatus } from "./editor/EditorStatus.js";
 import { useSopHistory } from "./editor/hooks/useSopHistory.js";
-import { SopEditorToolbar } from "./editor/SopEditorToolbar.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
-import { AddStepButton } from "./steps/AddStepButton.js";
-import { EmptyStepsState } from "./steps/EmptyStepsState.js";
-import { SopStepFields } from "./steps/SopStepFields.js";
 import type { SopHeaderValue } from "./types.js";
-import { ValidationPanel } from "./validation/ValidationPanel.js";
 
 export interface SopEditorProps {
   value: SOPDocument;
@@ -23,6 +22,12 @@ export interface SopEditorProps {
   onHeaderChange?: (header: SopHeaderValue) => void;
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
+  mode?: SopDocumentMode;
+  onModeChange?: (mode: SopDocumentMode) => void;
+  diagramKind?: SopDiagramKind;
+  onDiagramKindChange?: (kind: SopDiagramKind) => void;
+  manualEditing?: boolean;
+  onManualEditingChange?: (editing: boolean) => void;
   readOnly?: boolean;
   loading?: boolean;
   error?: string | null;
@@ -36,6 +41,12 @@ export function SopEditor({
   onHeaderChange,
   selectedStepId: controlledSelectedStepId,
   onSelectedStepChange: onSelectedStepChangeProp,
+  mode: controlledMode,
+  onModeChange,
+  diagramKind: controlledDiagramKind,
+  onDiagramKindChange,
+  manualEditing: controlledManualEditing,
+  onManualEditingChange,
   readOnly = false,
   loading = false,
   error = null,
@@ -43,63 +54,93 @@ export function SopEditor({
 }: SopEditorProps) {
   const handleChange = useCallback(
     (nextDocument: SOPDocument) => {
-      if (readOnly || loading || !onChange) {
-        return;
-      }
-
+      if (readOnly || loading || !onChange) return;
       onChange(nextDocument);
     },
     [loading, onChange, readOnly],
   );
   const handleHeaderChange = useCallback(
     (nextHeader: SopHeaderValue) => {
-      if (readOnly || loading || !onHeaderChange) {
-        return;
-      }
-
+      if (readOnly || loading || !onHeaderChange) return;
       onHeaderChange(nextHeader);
     },
     [loading, onHeaderChange, readOnly],
   );
-  const { applyOperation, applyOperations, undo, redo, canUndo, canRedo } =
-    useSopHistory({ value, onChange: handleChange });
+
+  const { applyOperation, applyOperations } = useSopHistory({
+    value,
+    onChange: handleChange,
+  });
+
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
+  const [internalMode, setInternalMode] =
+    useState<SopDocumentMode>("preview");
+  const [internalDiagramKind, setInternalDiagramKind] =
+    useState<SopDiagramKind>("flowchart");
+  const [internalManualEditing, setInternalManualEditing] = useState(false);
+
   const selectedStepId =
     controlledSelectedStepId !== undefined
       ? controlledSelectedStepId
       : internalSelectedStepId;
+  const mode = controlledMode ?? internalMode;
+  const diagramKind = controlledDiagramKind ?? internalDiagramKind;
+  const manualEditing = controlledManualEditing ?? internalManualEditing;
+
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
   const issues = useMemo(() => validateSop(value), [value]);
-  const selectedStepIndex = selectedStepId
-    ? value.steps.findIndex((step) => step.id === selectedStepId)
-    : -1;
-  const selectedStep =
-    selectedStepIndex >= 0 ? value.steps[selectedStepIndex] : undefined;
 
   const handleSelectedStepChange = useCallback(
     (stepId: StepId | null) => {
       if (controlledSelectedStepId === undefined) {
         setInternalSelectedStepId(stepId);
       }
-
       onSelectedStepChangeProp?.(stepId);
     },
     [controlledSelectedStepId, onSelectedStepChangeProp],
   );
 
-  useEffect(() => {
-    if (!selectedStepId) {
-      return;
-    }
+  const handleManualEditingChange = useCallback(
+    (editing: boolean) => {
+      if (controlledManualEditing === undefined) {
+        setInternalManualEditing(editing);
+      }
+      onManualEditingChange?.(editing);
+    },
+    [controlledManualEditing, onManualEditingChange],
+  );
 
-    const stillExists = value.steps.some((step) => step.id === selectedStepId);
+  const handleModeChange = useCallback(
+    (nextMode: SopDocumentMode) => {
+      if (controlledMode === undefined) {
+        setInternalMode(nextMode);
+      }
+      onModeChange?.(nextMode);
+      if (nextMode === "steps") {
+        handleManualEditingChange(false);
+      }
+    },
+    [controlledMode, handleManualEditingChange, onModeChange],
+  );
 
-    if (!stillExists) {
-      handleSelectedStepChange(null);
-    }
-  }, [value.steps, selectedStepId, handleSelectedStepChange]);
+  const handleDiagramKindChange = useCallback(
+    (nextKind: SopDiagramKind) => {
+      if (controlledDiagramKind === undefined) {
+        setInternalDiagramKind(nextKind);
+      }
+      onDiagramKindChange?.(nextKind);
+      if (nextKind !== "flowchart") {
+        handleManualEditingChange(false);
+      }
+    },
+    [
+      controlledDiagramKind,
+      handleManualEditingChange,
+      onDiagramKindChange,
+    ],
+  );
 
   return (
     <div
@@ -122,106 +163,48 @@ export function SopEditor({
               issues={issues}
               selectedStepId={selectedStepId}
               onSelectedStepChange={handleSelectedStepChange}
+              onOperation={applyOperation}
+              onOperations={applyOperations}
+              mode={mode}
+              onModeChange={handleModeChange}
+              diagramKind={diagramKind}
+              onDiagramKindChange={handleDiagramKindChange}
+              manualEditing={manualEditing}
+              onManualEditingChange={handleManualEditingChange}
+              disabled={mutationDisabled}
+              readOnly={readOnly}
             />
           </div>
 
           <aside
             className={styles.inspector}
             data-sopflow-inspector
-            aria-label={selectedStep ? "Properti langkah" : "Properti SOP"}
+            aria-label="Properti SOP"
           >
             <div className={styles.inspectorHeader}>
-              <div className={styles.inspectorHeading}>
-                {selectedStep ? (
-                  <button
-                    type="button"
-                    className={styles.backButton}
-                    aria-label="Kembali ke properti dokumen"
-                    onClick={() => handleSelectedStepChange(null)}
-                  >
-                    ←
-                  </button>
-                ) : null}
-
-                <div>
-                  <h2 className={styles.inspectorTitle}>
-                    {selectedStep
-                      ? `Langkah ${selectedStepIndex + 1}`
-                      : "Properti"}
-                  </h2>
-                  {selectedStep ? (
-                    <p className={styles.inspectorSubtitle}>
-                      {selectedStep.name || "Tanpa judul"}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              {!mutationDisabled ? (
-                <SopEditorToolbar
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onUndo={undo}
-                  onRedo={redo}
-                />
-              ) : null}
+              <h2 className={styles.inspectorTitle}>Properti</h2>
             </div>
 
             <div className={styles.inspectorContent}>
-              {selectedStep ? (
-                <SopStepFields
-                  document={value}
-                  stepId={selectedStep.id}
-                  issues={issues}
-                  onOperation={applyOperation}
-                  onOperations={applyOperations}
-                  disabled={mutationDisabled}
-                />
-              ) : (
-                <>
-                  <SopHeaderFields
-                    document={value}
-                    header={header}
-                    disabled={readOnly || loading}
-                    {...(onChange ? { onDocumentChange: handleChange } : {})}
-                    {...(onHeaderChange
-                      ? { onHeaderChange: handleHeaderChange }
-                      : {})}
-                  />
+              <SopHeaderFields
+                document={value}
+                header={header}
+                disabled={readOnly || loading}
+                {...(onChange ? { onDocumentChange: handleChange } : {})}
+                {...(onHeaderChange
+                  ? { onHeaderChange: handleHeaderChange }
+                  : {})}
+              />
 
-                  <ActorsEditor
-                    document={value}
-                    onOperation={applyOperation}
-                    onOperations={applyOperations}
-                    disabled={mutationDisabled}
-                  />
-
-                  <section className={styles.procedureActions}>
-                    <h3 className={styles.sectionTitle}>Prosedur</h3>
-
-                    {value.steps.length === 0 ? (
-                      <EmptyStepsState
-                        document={value}
-                        onOperations={applyOperations}
-                        disabled={mutationDisabled}
-                      />
-                    ) : (
-                      <AddStepButton
-                        document={value}
-                        onOperations={applyOperations}
-                        disabled={mutationDisabled}
-                      />
-                    )}
-                  </section>
-                </>
-              )}
-
-              <div className={styles.validation}>
-                <ValidationPanel issues={issues} />
-              </div>
+              <ActorsEditor
+                document={value}
+                onOperation={applyOperation}
+                onOperations={applyOperations}
+                disabled={mutationDisabled}
+              />
             </div>
 
-            {headerDisabled && !mutationDisabled && !selectedStep ? (
+            {headerDisabled && !mutationDisabled ? (
               <p className={styles.inspectorNotice}>
                 Header hanya dapat dibaca karena onHeaderChange tidak tersedia.
               </p>
@@ -232,3 +215,5 @@ export function SopEditor({
     </div>
   );
 }
+
+export type { SopDiagramKind, SopDocumentMode };
