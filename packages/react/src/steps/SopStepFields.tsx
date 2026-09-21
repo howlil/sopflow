@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type {
   SOPDocument,
   SopOperation,
@@ -196,7 +197,7 @@ function InspectorSection({
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className={styles.section}>
@@ -211,7 +212,7 @@ function Field({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className={styles.field}>
