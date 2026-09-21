@@ -315,7 +315,9 @@ function isDiagramConfig(
   if (Object.hasOwn(overrides, "routes")) return true;
 
   const values = Object.values(overrides);
-  return values.length === 0 || values.some((value) => typeof value !== "number");
+  return (
+    values.length === 0 || values.some((value) => typeof value !== "number")
+  );
 }
 
 function buildTrunkPath(
