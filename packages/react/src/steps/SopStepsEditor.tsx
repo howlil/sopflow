@@ -105,10 +105,8 @@ export function SopStepsEditor({
       ) : (
         <>
           <div className={styles.desktop}>
-            <div
+            <section
               className={styles.tableViewport}
-              role="region"
-              tabIndex={0}
               aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
               data-sopflow-steps-scroll
             >
@@ -144,7 +142,7 @@ export function SopStepsEditor({
                   ))}
                 </tbody>
               </table>
-            </div>
+            </section>
           </div>
 
           <div className={styles.mobile}>
