@@ -4,11 +4,16 @@ import {
   pointsToPath,
   routeProcedureEdges,
   updateProcedureManualTrunk,
+  type FormalFlowchartBounds,
+  type FormalFlowchartColumnBounds,
+  type FormalFlowchartGeometry,
+  type FormalFlowchartGridLayout,
+  type FormalFlowchartRect,
   type ProcedureGeometry,
   type ProcedureManualTrunks,
-  type SopDiagramConfig,
   type ProcedureModel,
   type ProcedureRowModel,
+  type SopDiagramConfig,
 } from "@sopflow/diagram";
 import {
   useCallback,
@@ -96,7 +101,7 @@ export function SopProcedureView({
     [controlledDiagramConfig, onDiagramConfigChange],
   );
 
-  const actorWidth = 24 / model.actorColumns.length;
+  const actorWidth = Math.max(10, 70 / model.actorColumns.length);
   const totalColumns = model.actorColumns.length + 6;
 
   const measure = useCallback(() => {
@@ -104,32 +109,72 @@ export function SopProcedureView({
     if (!root) return;
 
     const rootRect = root.getBoundingClientRect();
+    const rowById = new Map(
+      model.rows.map((row) => [row.stepId, row] as const),
+    );
     const anchors = new Map<StepId, { x: number; y: number }>();
+    const shapes = new Map<
+      StepId,
+      FormalFlowchartGeometry["shapes"] extends ReadonlyMap<
+        StepId,
+        infer Shape
+      >
+        ? Shape
+        : never
+    >();
 
     for (const [stepId, element] of shapeRefs.current) {
-      const rect = element.getBoundingClientRect();
+      const rect = toLocalRect(element.getBoundingClientRect(), rootRect);
+      const row = rowById.get(stepId);
+      if (!row) continue;
+
       anchors.set(stepId, {
-        x: rect.left - rootRect.left + rect.width / 2,
-        y: rect.top - rootRect.top + rect.height / 2,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      });
+      shapes.set(stepId, {
+        stepId,
+        actorId: row.primaryActorId,
+        row: row.number - 1,
+        kind: row.kind,
+        rect,
       });
     }
 
+    const actorCells = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-sopflow-actor-cell]"),
+    );
     const actorHeaders = Array.from(
       root.querySelectorAll<HTMLElement>("[data-sopflow-actor-header]"),
     );
     const firstActorHeader = actorHeaders[0]?.getBoundingClientRect();
     const lastActorHeader = actorHeaders.at(-1)?.getBoundingClientRect();
+    const actorLeft = firstActorHeader
+      ? firstActorHeader.left - rootRect.left
+      : 0;
+    const actorRight = lastActorHeader
+      ? lastActorHeader.right - rootRect.left
+      : rootRect.width;
+    const pelaksanaBounds = measurePelaksanaBounds(actorCells, rootRect);
+    const columns = measureActorColumns(actorCells, rootRect);
+    const gridLayout = measureGridLayout(root, rootRect);
 
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
-      actorLeft: firstActorHeader ? firstActorHeader.left - rootRect.left : 0,
-      actorRight: lastActorHeader
-        ? lastActorHeader.right - rootRect.left
-        : rootRect.width,
+      actorLeft,
+      actorRight,
+      formal: {
+        width: root.scrollWidth,
+        height: root.scrollHeight,
+        pelaksanaBounds,
+        columns,
+        gridLayout,
+        shapes,
+      },
     });
-  }, []);
+  }, [model.rows]);
 
   useLayoutEffect(() => {
     measure();
@@ -226,17 +271,17 @@ export function SopProcedureView({
       <table className={styles.table}>
         <colgroup>
           <col style={{ width: "5%" }} />
-          <col style={{ width: "24%" }} />
+          <col style={{ width: "25%" }} />
           {model.actorColumns.map((actor, index) => (
             <col
               key={actor.actorId ?? `fallback-${index}`}
               style={{ width: `${actorWidth}%` }}
             />
           ))}
-          <col style={{ width: "14%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "12%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "15%" }} />
         </colgroup>
 
         <thead>
@@ -317,32 +362,31 @@ export function SopProcedureView({
                   </td>
 
                   {model.actorColumns.map((actor, actorIndex) => {
-                    const assigned =
-                      actor.actorId === null
-                        ? model.actorColumns.length === 1 &&
-                          model.actorColumns[0]?.actorId === null
-                        : row.actorIds.includes(actor.actorId);
                     const primary =
-                      assigned && actor.actorId === row.primaryActorId;
+                      actor.actorId === row.primaryActorId ||
+                      (actor.actorId === null &&
+                        row.primaryActorId === null &&
+                        model.actorColumns.length === 1);
 
                     return (
                       <td
                         key={actor.actorId ?? `fallback-${actorIndex}`}
                         className={styles.actorCell}
+                        data-sopflow-actor-cell
                         data-sopflow-actor-id={actor.actorId ?? undefined}
                       >
-                        {assigned ? (
-                          <span
-                            ref={(element) => {
-                              if (primary) setShapeRef(row.stepId, element);
-                            }}
-                            className={styles.shapeAnchor}
-                            data-sopflow-primary-shape={
-                              primary ? row.stepId : undefined
-                            }
-                          >
-                            <ProcedureShape kind={row.kind} />
-                          </span>
+                        {primary ? (
+                          <div className={styles.shapeSlot}>
+                            <span
+                              ref={(element) =>
+                                setShapeRef(row.stepId, element)
+                              }
+                              className={styles.shapeAnchor}
+                              data-sopflow-primary-shape={row.stepId}
+                            >
+                              <ProcedureShape kind={row.kind} />
+                            </span>
+                          </div>
                         ) : null}
                       </td>
                     );
@@ -374,14 +418,17 @@ export function SopProcedureView({
           <defs>
             <marker
               id="sopflow-procedure-arrow"
-              markerWidth="7"
-              markerHeight="7"
-              refX="6"
-              refY="3.5"
+              markerWidth="10"
+              markerHeight="8"
+              refX="7"
+              refY="4"
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path d="M 0 0 L 7 3.5 L 0 7 Z" className={styles.arrowHead} />
+              <path
+                d="M0,0 L8,4 L0,8 L2,4 Z"
+                className={styles.arrowHead}
+              />
             </marker>
           </defs>
 
@@ -406,6 +453,8 @@ export function SopProcedureView({
                   <text
                     x={edge.labelPosition.x}
                     y={edge.labelPosition.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
                     className={styles.edgeLabel}
                   >
                     {edge.label}
@@ -434,21 +483,219 @@ export function SopProcedureView({
 }
 
 function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
+  if (kind === "decision") {
+    return (
+      <svg
+        width={66}
+        height={66}
+        viewBox="-2 -2 64 64"
+        className={styles.flowShape}
+        data-kind={kind}
+        aria-hidden="true"
+      >
+        <polygon points="30,1 59,30 30,59 1,30" />
+      </svg>
+    );
+  }
+
+  if (kind === "start" || kind === "end") {
+    return (
+      <svg
+        width={86}
+        height={42}
+        viewBox="-2 -2 82 42"
+        className={styles.flowShape}
+        data-kind={kind}
+        aria-hidden="true"
+      >
+        <rect
+          width={76}
+          height={36}
+          x={0.8}
+          y={0.8}
+          rx={19.2}
+          ry={19.2}
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg
+      width={82}
+      height={42}
+      viewBox="0 -2 82 42"
       className={styles.flowShape}
       data-kind={kind}
-      viewBox="0 0 36 28"
       aria-hidden="true"
     >
-      {kind === "decision" ? (
-        <polygon points="18,2 34,14 18,26 2,14" />
-      ) : kind === "start" || kind === "end" ? (
-        <rect x="2" y="5" width="32" height="18" rx="9" />
-      ) : (
-        <rect x="2" y="5" width="32" height="18" />
-      )}
+      <rect width={76} height={36} x={1} y={1} />
     </svg>
+  );
+}
+
+function toLocalRect(
+  rect: DOMRect,
+  rootRect: DOMRect,
+): FormalFlowchartRect {
+  return {
+    left: Math.round(rect.left - rootRect.left),
+    top: Math.round(rect.top - rootRect.top),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+}
+
+function measurePelaksanaBounds(
+  cells: readonly HTMLElement[],
+  rootRect: DOMRect,
+): FormalFlowchartBounds | null {
+  if (cells.length === 0) return null;
+
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+
+  for (const cell of cells) {
+    const rect = cell.getBoundingClientRect();
+    left = Math.min(left, rect.left - rootRect.left);
+    top = Math.min(top, rect.top - rootRect.top);
+    right = Math.max(right, rect.right - rootRect.left);
+    bottom = Math.max(bottom, rect.bottom - rootRect.top);
+  }
+
+  if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
+
+  return {
+    left: Math.max(0, Math.round(left + 8)),
+    top: Math.max(0, Math.round(top + 4)),
+    right: Math.round(right - 8),
+    bottom: Math.round(bottom + 8),
+  };
+}
+
+function measureActorColumns(
+  cells: readonly HTMLElement[],
+  rootRect: DOMRect,
+): FormalFlowchartColumnBounds {
+  const raw = new Map<
+    string,
+    { left: number; top: number; right: number; bottom: number }
+  >();
+
+  for (const cell of cells) {
+    const actorId = cell.dataset.sopflowActorId;
+    if (!actorId) continue;
+
+    const rect = cell.getBoundingClientRect();
+    const next = {
+      left: rect.left - rootRect.left,
+      top: rect.top - rootRect.top,
+      right: rect.right - rootRect.left,
+      bottom: rect.bottom - rootRect.top,
+    };
+    const previous = raw.get(actorId);
+
+    raw.set(
+      actorId,
+      previous
+        ? {
+            left: Math.min(previous.left, next.left),
+            top: Math.min(previous.top, next.top),
+            right: Math.max(previous.right, next.right),
+            bottom: Math.max(previous.bottom, next.bottom),
+          }
+        : next,
+    );
+  }
+
+  return Object.fromEntries(
+    [...raw.entries()].map(([actorId, bounds]) => [
+      actorId,
+      {
+        left: Math.max(0, Math.round(bounds.left + 6)),
+        top: Math.max(0, Math.round(bounds.top + 4)),
+        right: Math.round(bounds.right - 6),
+        bottom: Math.round(bounds.bottom - 8),
+      },
+    ]),
+  );
+}
+
+function measureGridLayout(
+  root: HTMLElement,
+  rootRect: DOMRect,
+): FormalFlowchartGridLayout | null {
+  const rows = Array.from(
+    root.querySelectorAll<HTMLElement>("[data-sopflow-procedure-step-id]"),
+  );
+  const rowBounds: Array<{ top: number; bottom: number }> = [];
+  const horizontalLines: number[] = [];
+  const verticalLines: number[] = [];
+
+  for (const row of rows) {
+    const cells = Array.from(
+      row.querySelectorAll<HTMLElement>("[data-sopflow-actor-cell]"),
+    );
+    if (cells.length === 0) continue;
+
+    const rects = cells.map((cell) => cell.getBoundingClientRect());
+    const top = Math.min(...rects.map((rect) => rect.top - rootRect.top));
+    const bottom = Math.max(
+      ...rects.map((rect) => rect.bottom - rootRect.top),
+    );
+
+    rowBounds.push({ top, bottom });
+    horizontalLines.push(top, bottom);
+
+    for (const rect of rects) {
+      verticalLines.push(
+        rect.left - rootRect.left,
+        rect.right - rootRect.left,
+      );
+    }
+  }
+
+  if (rowBounds.length === 0) return null;
+
+  const rowGutters: number[] = [];
+  for (let index = 0; index < rowBounds.length - 1; index += 1) {
+    const above = rowBounds[index];
+    const below = rowBounds[index + 1];
+    if (!above || !below) continue;
+
+    const gap = below.top - above.bottom;
+    const middle = (above.bottom + below.top) / 2;
+    const inset = Math.min(16, Math.max(6, Math.floor(gap / 3)));
+
+    rowGutters.push(
+      Math.round(
+        Math.max(
+          above.bottom + inset,
+          Math.min(below.top - inset, middle),
+        ),
+      ),
+    );
+  }
+
+  const horizontal = uniqueRounded(horizontalLines);
+  const vertical = uniqueRounded(verticalLines);
+
+  return {
+    horizontalLines: horizontal,
+    verticalLines: vertical,
+    rowGutters,
+    minGridX: vertical[0] ?? 0,
+    maxGridX: vertical.at(-1) ?? rootRect.width,
+    minGridY: horizontal[0] ?? 0,
+    maxGridY: horizontal.at(-1) ?? rootRect.height,
+  };
+}
+
+function uniqueRounded(values: readonly number[]): number[] {
+  return [...new Set(values.map((value) => Math.round(value)))].sort(
+    (a, b) => a - b,
   );
 }
 
