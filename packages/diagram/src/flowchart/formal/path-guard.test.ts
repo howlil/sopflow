@@ -95,8 +95,7 @@ describe("formal manual path shape guard parity", () => {
     expect(rebuilt?.[0]).toEqual({ x: 20, y: 40 });
     expect(rebuilt?.at(-1)).toEqual({ x: 220, y: 200 });
     expect(
-      rebuilt &&
-        formalPathCrossesShapeBodies(rebuilt, fromShape, toShape),
+      rebuilt && formalPathCrossesShapeBodies(rebuilt, fromShape, toShape),
     ).toBe(false);
   });
 
