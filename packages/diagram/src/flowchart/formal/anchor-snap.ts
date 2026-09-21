@@ -1,8 +1,5 @@
 import type { DiagramPoint } from "../../types.js";
-import type {
-  FormalFlowchartRect,
-  FormalFlowchartSide,
-} from "./types.js";
+import type { FormalFlowchartRect, FormalFlowchartSide } from "./types.js";
 
 export type FormalFlowchartAnchorKind = "start" | "end";
 
@@ -51,13 +48,7 @@ export const FORMAL_ANCHOR_CHANNEL_SPACING_PX = 14;
 export const FORMAL_ANCHOR_OFF_CENTER_PENALTY_PER_TENTH = 150;
 
 const AUTO_ANCHOR_SLOT_DISTANCES = [
-  0.5,
-  0.28,
-  0.72,
-  0.18,
-  0.82,
-  0.4,
-  0.6,
+  0.5, 0.28, 0.72, 0.18, 0.82, 0.4, 0.6,
 ] as const;
 const VISUAL_ANCHOR_SLOT_DISTANCES = [0.5, 0.28, 0.72] as const;
 const DIAMOND_VERTEX_DISTANCE = 0.5;
@@ -83,9 +74,8 @@ export function formalSideLengthPx(
 
 export function getFormalAutoRouteAnchorSlot(slotIndex: number): number {
   return (
-    AUTO_ANCHOR_SLOT_DISTANCES[
-      slotIndex % AUTO_ANCHOR_SLOT_DISTANCES.length
-    ] ?? 0.5
+    AUTO_ANCHOR_SLOT_DISTANCES[slotIndex % AUTO_ANCHOR_SLOT_DISTANCES.length] ??
+    0.5
   );
 }
 
@@ -112,9 +102,7 @@ export function preferFormalCenterAnchorDistance(
 
 export function scoreFormalAnchorOffCenter(distance: number): number {
   return (
-    Math.abs(distance - 0.5) *
-    10 *
-    FORMAL_ANCHOR_OFF_CENTER_PENALTY_PER_TENTH
+    Math.abs(distance - 0.5) * 10 * FORMAL_ANCHOR_OFF_CENTER_PENALTY_PER_TENTH
   );
 }
 
@@ -427,7 +415,10 @@ export function findNearestFormalAnchor(
   x: number,
   y: number,
   kind: FormalFlowchartAnchorKind,
-): { readonly anchor: FormalFlowchartPathAnchor; readonly distance: number } | null {
+): {
+  readonly anchor: FormalFlowchartPathAnchor;
+  readonly distance: number;
+} | null {
   let nearest: FormalFlowchartPathAnchor | null = null;
   let nearestDistance = Infinity;
 
@@ -468,10 +459,7 @@ export function resolveFormalAnchorSnap(input: {
     );
     if (!locked) return null;
 
-    const lockedDistance = Math.hypot(
-      locked.x - input.x,
-      locked.y - input.y,
-    );
+    const lockedDistance = Math.hypot(locked.x - input.x, locked.y - input.y);
     if (lockedDistance <= input.releaseDistancePx) return locked;
   }
 
@@ -586,10 +574,14 @@ export function resolveFormalPreferredEndpointSnap(input: {
     Math.hypot(input.x - center.x, input.y - center.y) <= snapDistancePx;
 
   if (magnetic) {
-    const pointerDistance = formalDistanceOnShapeEdge(input.shape, edgeSnap.side, {
-      x: magnetic.x,
-      y: magnetic.y,
-    });
+    const pointerDistance = formalDistanceOnShapeEdge(
+      input.shape,
+      edgeSnap.side,
+      {
+        x: magnetic.x,
+        y: magnetic.y,
+      },
+    );
     const anchorDistance = formalDistanceOnShapeEdge(
       input.shape,
       edgeSnap.side,
@@ -612,9 +604,7 @@ export function resolveFormalPreferredEndpointSnap(input: {
       y: point.y,
       ratio: magnetic.ratio,
       hardSnapped:
-        magnetic.hardSnapped ||
-        preferCenter ||
-        Math.abs(distance - 0.5) < 0.02,
+        magnetic.hardSnapped || preferCenter || Math.abs(distance - 0.5) < 0.02,
     };
   }
 
@@ -629,9 +619,7 @@ export function resolveFormalPreferredEndpointSnap(input: {
     x: point.x,
     y: point.y,
     hardSnapped:
-      edgeSnap.hardSnapped ||
-      preferCenter ||
-      Math.abs(distance - 0.5) < 0.02,
+      edgeSnap.hardSnapped || preferCenter || Math.abs(distance - 0.5) < 0.02,
   };
 }
 
@@ -697,9 +685,7 @@ function isPointerNearHorizontalSide(
 ): boolean {
   const right = rect.left + rect.width;
   const zoneW = Math.min(rect.width * EDGE_ZONE_RATIO, rect.height * 0.75);
-  return side === "left"
-    ? x <= rect.left + zoneW
-    : x >= right - zoneW;
+  return side === "left" ? x <= rect.left + zoneW : x >= right - zoneW;
 }
 
 function sideFacingOppositePoint(
@@ -745,14 +731,16 @@ function resolveZoneSideOverlap(
   x: number,
   y: number,
 ): FormalFlowchartSide {
-  return [...sides]
-    .map((side) => ({
-      side,
-      distance:
-        projectPointerToFormalShapeEdge(rect, x, y, side)?.distanceToEdge ??
-        Infinity,
-    }))
-    .sort((a, b) => a.distance - b.distance)[0]?.side ?? "top";
+  return (
+    [...sides]
+      .map((side) => ({
+        side,
+        distance:
+          projectPointerToFormalShapeEdge(rect, x, y, side)?.distanceToEdge ??
+          Infinity,
+      }))
+      .sort((a, b) => a.distance - b.distance)[0]?.side ?? "top"
+  );
 }
 
 function smoothstep(value: number): number {
