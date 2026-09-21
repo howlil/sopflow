@@ -60,20 +60,20 @@ describe("SopWorkspace", () => {
     render(<WorkspaceHarness />);
 
     expect(
-      document.querySelector("[data-sopflow-procedure-view]"),
+      globalThis.document.querySelector("[data-sopflow-procedure-view]"),
     ).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
     expect(screen.getByDisplayValue("Review")).toBeInTheDocument();
-    expect(document.querySelector("[data-sopflow-procedure-view]")).toBeNull();
+    expect(globalThis.document.querySelector("[data-sopflow-procedure-view]")).toBeNull();
   });
 
   it("preserves step selection between preview and inline editing", async () => {
     const user = userEvent.setup();
     render(<WorkspaceHarness />);
 
-    const previewRow = document.querySelector<HTMLElement>(
+    const previewRow = globalThis.document.querySelector<HTMLElement>(
       '[data-sopflow-procedure-step-id="task"]',
     );
     if (!previewRow) throw new Error("Review preview row not found");
@@ -81,7 +81,7 @@ describe("SopWorkspace", () => {
     await user.click(previewRow);
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
-    const editRow = document.querySelector<HTMLElement>(
+    const editRow = globalThis.document.querySelector<HTMLElement>(
       '[data-sopflow-step-id="task"]',
     );
     expect(editRow).toHaveAttribute("aria-selected", "true");
@@ -89,7 +89,7 @@ describe("SopWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Diagram" }));
 
     expect(
-      document.querySelector('[data-sopflow-procedure-step-id="task"]'),
+      globalThis.document.querySelector('[data-sopflow-procedure-step-id="task"]'),
     ).toHaveAttribute("aria-selected", "true");
   });
 });
