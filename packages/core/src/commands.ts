@@ -1,18 +1,19 @@
 import type { ActorId, SOPDocument, Step, StepId } from "./types.js";
 import { SopCoreError } from "./errors.js";
 import { getIncomingConnections } from "./graph.js";
-import {
-  applyValidatedOperations,
-  type SopOperation,
-} from "./operations.js";
+import { applyValidatedOperations, type SopOperation } from "./operations.js";
 
 function requireStep(document: SOPDocument, stepId: StepId): Step {
   const step = document.steps.find((candidate) => candidate.id === stepId);
 
   if (!step) {
-    throw new SopCoreError("STEP_NOT_FOUND", `Step "${stepId}" does not exist`, {
-      stepId,
-    });
+    throw new SopCoreError(
+      "STEP_NOT_FOUND",
+      `Step "${stepId}" does not exist`,
+      {
+        stepId,
+      },
+    );
   }
 
   return step;
@@ -266,7 +267,8 @@ export function getStepRemovalOptions(
     return { requiresReplacement: false, candidates: [] };
   }
 
-  const requiresReplacement = getIncomingConnections(document, stepId).length > 0;
+  const requiresReplacement =
+    getIncomingConnections(document, stepId).length > 0;
 
   if (!requiresReplacement) {
     return { requiresReplacement: false, candidates: [] };
@@ -379,7 +381,9 @@ export function buildRemoveActorAndReferencesOperations(
       type: "update-step",
       step: {
         ...step,
-        actorIds: step.actorIds.filter((candidateId) => candidateId !== actorId),
+        actorIds: step.actorIds.filter(
+          (candidateId) => candidateId !== actorId,
+        ),
       },
     }));
 
