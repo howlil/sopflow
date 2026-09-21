@@ -61,7 +61,7 @@ describe("SopProcedureView", () => {
     expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(1);
   });
 
-  it("marks every assigned actor cell for multi-actor steps", () => {
+  it("projects one formal flowchart shape to the primary actor", () => {
     const { container } = render(<SopProcedureView document={document} />);
     const row = container.querySelector(
       '[data-sopflow-procedure-step-id="review"]',
@@ -77,7 +77,10 @@ describe("SopProcedureView", () => {
     expect(
       frontOffice?.querySelector("svg[data-kind='decision']"),
     ).not.toBeNull();
-    expect(manager?.querySelector("svg[data-kind='decision']")).not.toBeNull();
+    expect(manager?.querySelector("svg[data-kind='decision']")).toBeNull();
+    expect(
+      row.querySelectorAll("[data-sopflow-primary-shape]"),
+    ).toHaveLength(1);
     expect(within(row as HTMLElement).getByText("Valid?")).toBeInTheDocument();
   });
 });
