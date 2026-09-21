@@ -9,13 +9,20 @@ export type {
 
 export {
   buildProcedureModel,
+  removeProcedureManualRoute,
   routeProcedureEdges,
+  setProcedureManualRoute,
+  updateProcedureManualTrunk,
 } from "./procedure.js";
 export type {
   ProcedureActorColumn,
   ProcedureGeometry,
+  ProcedureManualRoute,
+  ProcedureManualRoutes,
   ProcedureManualTrunks,
   ProcedureModel,
+  ProcedureRoutingOverrides,
+  SopDiagramConfig,
   ProcedureRoutedEdge,
   ProcedureRowModel,
 } from "./procedure.js";
