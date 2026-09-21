@@ -150,8 +150,9 @@ describe("SopEditor default composition", () => {
     await user.click(screen.getByRole("button", { name: "BPMN" }));
 
     expect(container.querySelector("[data-sopflow-bpmn]")).not.toBeNull();
-    expect(
-      screen.getByRole("button", { name: "BPMN" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "BPMN" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 });
