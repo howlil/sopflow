@@ -450,7 +450,14 @@ export function SopProcedureView({
           width={geometry.width}
           height={geometry.height}
           viewBox={`0 0 ${geometry.width} ${geometry.height}`}
-          aria-hidden="true"
+          aria-label={
+            manualEditing && !usesLegacyManualPaths
+              ? "Editor jalur flowchart SOP"
+              : undefined
+          }
+          aria-hidden={
+            manualEditing && !usesLegacyManualPaths ? undefined : true
+          }
           onPointerMove={handleOverlayPointerMove}
           onPointerUp={stopDragging}
           onPointerCancel={stopDragging}
