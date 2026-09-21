@@ -460,11 +460,11 @@ function applyManualRoute(
   if (manual.kind === "orthogonal") {
     return {
       ...auto,
-      points: normalizeFormalOrthogonalPath([
-        start,
-        ...manual.bendPoints,
-        end,
-      ]),
+      points: normalizeFormalOrthogonalPath(
+        [start, ...manual.bendPoints, end],
+        null,
+        { preserveCollinear: true },
+      ),
     };
   }
 
