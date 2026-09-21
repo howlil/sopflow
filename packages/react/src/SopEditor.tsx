@@ -1,4 +1,11 @@
-import { validateSop, type SOPDocument, type StepId } from "@sopflow/core";
+import {
+  applyOperation as applySopOperation,
+  applyOperations as applySopOperations,
+  validateSop,
+  type SOPDocument,
+  type SopOperation,
+  type StepId,
+} from "@sopflow/core";
 import { useCallback, useMemo, useState } from "react";
 
 import "./styles/token.css";
@@ -10,7 +17,6 @@ import {
   type SopDocumentMode,
 } from "./editor/SopDocumentToolbar.js";
 import { EditorStatus } from "./editor/EditorStatus.js";
-import { useSopHistory } from "./editor/hooks/useSopHistory.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
 import type { SopHeaderValue } from "./types.js";
@@ -67,10 +73,18 @@ export function SopEditor({
     [loading, onHeaderChange, readOnly],
   );
 
-  const { applyOperation, applyOperations } = useSopHistory({
-    value,
-    onChange: handleChange,
-  });
+  const applyOperation = useCallback(
+    (operation: SopOperation) => {
+      handleChange(applySopOperation(value, operation));
+    },
+    [handleChange, value],
+  );
+  const applyOperations = useCallback(
+    (operations: SopOperation[]) => {
+      handleChange(applySopOperations(value, operations));
+    },
+    [handleChange, value],
+  );
 
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
