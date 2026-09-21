@@ -428,10 +428,7 @@ export function SopProcedureView({
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path
-                d="M0,0 L8,4 L0,8 L2,4 Z"
-                className={styles.arrowHead}
-              />
+              <path d="M0,0 L8,4 L0,8 L2,4 Z" className={styles.arrowHead} />
             </marker>
           </defs>
 
@@ -511,14 +508,7 @@ function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
         data-kind={kind}
         aria-hidden="true"
       >
-        <rect
-          width={76}
-          height={36}
-          x={0.8}
-          y={0.8}
-          rx={19.2}
-          ry={19.2}
-        />
+        <rect width={76} height={36} x={0.8} y={0.8} rx={19.2} ry={19.2} />
       </svg>
     );
   }
@@ -537,10 +527,7 @@ function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
   );
 }
 
-function toLocalRect(
-  rect: DOMRect,
-  rootRect: DOMRect,
-): FormalFlowchartRect {
+function toLocalRect(rect: DOMRect, rootRect: DOMRect): FormalFlowchartRect {
   return {
     left: Math.round(rect.left - rootRect.left),
     top: Math.round(rect.top - rootRect.top),
@@ -645,18 +632,13 @@ function measureGridLayout(
 
     const rects = cells.map((cell) => cell.getBoundingClientRect());
     const top = Math.min(...rects.map((rect) => rect.top - rootRect.top));
-    const bottom = Math.max(
-      ...rects.map((rect) => rect.bottom - rootRect.top),
-    );
+    const bottom = Math.max(...rects.map((rect) => rect.bottom - rootRect.top));
 
     rowBounds.push({ top, bottom });
     horizontalLines.push(top, bottom);
 
     for (const rect of rects) {
-      verticalLines.push(
-        rect.left - rootRect.left,
-        rect.right - rootRect.left,
-      );
+      verticalLines.push(rect.left - rootRect.left, rect.right - rootRect.left);
     }
   }
 
@@ -674,10 +656,7 @@ function measureGridLayout(
 
     rowGutters.push(
       Math.round(
-        Math.max(
-          above.bottom + inset,
-          Math.min(below.top - inset, middle),
-        ),
+        Math.max(above.bottom + inset, Math.min(below.top - inset, middle)),
       ),
     );
   }
