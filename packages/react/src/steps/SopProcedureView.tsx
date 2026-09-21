@@ -3,8 +3,10 @@ import {
   buildProcedureModel,
   pointsToPath,
   routeProcedureEdges,
+  updateProcedureManualTrunk,
   type ProcedureGeometry,
   type ProcedureManualTrunks,
+  type SopDiagramConfig,
   type ProcedureModel,
   type ProcedureRowModel,
 } from "@sopflow/diagram";
@@ -26,7 +28,11 @@ export interface SopProcedureViewProps {
   onSelectedStepChange?: (stepId: StepId | null) => void;
   issues?: readonly ValidationIssue[];
   manualEditing?: boolean;
+  diagramConfig?: SopDiagramConfig;
+  onDiagramConfigChange?: (config: SopDiagramConfig) => void;
+  /** @deprecated Use diagramConfig. */
   manualPathOffsets?: SopManualPathOffsets;
+  /** @deprecated Use onDiagramConfigChange. */
   onManualPathOffsetsChange?: (offsets: SopManualPathOffsets) => void;
   className?: string;
 }
@@ -37,6 +43,8 @@ export function SopProcedureView({
   onSelectedStepChange,
   issues = [],
   manualEditing = false,
+  diagramConfig: controlledDiagramConfig,
+  onDiagramConfigChange,
   manualPathOffsets,
   onManualPathOffsetsChange,
   className,
@@ -47,6 +55,8 @@ export function SopProcedureView({
   const [internalOffsets, setInternalOffsets] = useState<SopManualPathOffsets>(
     {},
   );
+  const [internalDiagramConfig, setInternalDiagramConfig] =
+    useState<SopDiagramConfig>({});
   const [selectedConnectionId, setSelectedConnectionId] = useState<
     string | null
   >(null);
@@ -54,9 +64,16 @@ export function SopProcedureView({
 
   const model = useMemo(() => buildProcedureModel(document), [document]);
   const pathOffsets = manualPathOffsets ?? internalOffsets;
+  const usesLegacyManualPaths =
+    controlledDiagramConfig === undefined &&
+    (manualPathOffsets !== undefined ||
+      onManualPathOffsetsChange !== undefined);
+  const diagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
+  const routeOverrides = usesLegacyManualPaths ? pathOffsets : diagramConfig;
   const routedEdges = useMemo(
-    () => (geometry ? routeProcedureEdges(model, geometry, pathOffsets) : []),
-    [geometry, model, pathOffsets],
+    () =>
+      geometry ? routeProcedureEdges(model, geometry, routeOverrides) : [],
+    [geometry, model, routeOverrides],
   );
 
   const updatePathOffsets = useCallback(
@@ -67,6 +84,16 @@ export function SopProcedureView({
       onManualPathOffsetsChange?.(next);
     },
     [manualPathOffsets, onManualPathOffsetsChange],
+  );
+
+  const updateDiagramConfig = useCallback(
+    (next: SopDiagramConfig) => {
+      if (controlledDiagramConfig === undefined) {
+        setInternalDiagramConfig(next);
+      }
+      onDiagramConfigChange?.(next);
+    },
+    [controlledDiagramConfig, onDiagramConfigChange],
   );
 
   const actorWidth = 24 / model.actorColumns.length;
@@ -134,18 +161,44 @@ export function SopProcedureView({
 
       const rect = root.getBoundingClientRect();
       const localX = clientX - rect.left;
-      const padding = 8;
-      const x = Math.max(
-        geometry.actorLeft + padding,
-        Math.min(geometry.actorRight - padding, localX),
-      );
 
-      updatePathOffsets({
-        ...pathOffsets,
-        [connectionId]: x,
-      });
+      if (usesLegacyManualPaths) {
+        const nextConfig = updateProcedureManualTrunk(
+          model,
+          geometry,
+          {},
+          connectionId,
+          localX,
+        );
+        const nextRoute = nextConfig.routes?.[connectionId];
+        if (nextRoute?.kind !== "trunk") return;
+
+        updatePathOffsets({
+          ...pathOffsets,
+          [connectionId]: nextRoute.x,
+        });
+        return;
+      }
+
+      updateDiagramConfig(
+        updateProcedureManualTrunk(
+          model,
+          geometry,
+          diagramConfig,
+          connectionId,
+          localX,
+        ),
+      );
     },
-    [geometry, pathOffsets, updatePathOffsets],
+    [
+      diagramConfig,
+      geometry,
+      model,
+      pathOffsets,
+      updateDiagramConfig,
+      updatePathOffsets,
+      usesLegacyManualPaths,
+    ],
   );
 
   const handleOverlayPointerMove = (

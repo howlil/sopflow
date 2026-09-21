@@ -39,8 +39,11 @@ describe("diagram public API", () => {
         "getDiamondPoints",
         "layoutDiagram",
         "pointsToPath",
+        "removeProcedureManualRoute",
         "routeDiagramEdges",
         "routeProcedureEdges",
+        "setProcedureManualRoute",
+        "updateProcedureManualTrunk",
         "projectWorkflow",
       ].sort(),
     );

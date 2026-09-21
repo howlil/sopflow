@@ -4,13 +4,10 @@ import type {
   StepId,
   ValidationIssue,
 } from "@sopflow/core";
-import { useState } from "react";
+import type { SopDiagramConfig } from "@sopflow/diagram";
 import { SopBpmn } from "../diagram/SopBpmn.js";
 import { SopHeaderView } from "../header/SopHeaderView.js";
-import {
-  SopProcedureView,
-  type SopManualPathOffsets,
-} from "../steps/SopProcedureView.js";
+import { SopProcedureView } from "../steps/SopProcedureView.js";
 import { SopStepsEditor } from "../steps/SopStepsEditor.js";
 import type { SopHeaderValue } from "../types.js";
 import {
@@ -34,6 +31,9 @@ export interface SopDocumentCanvasProps {
   onDiagramKindChange: (kind: SopDiagramKind) => void;
   manualEditing: boolean;
   onManualEditingChange: (editing: boolean) => void;
+  diagramConfig: SopDiagramConfig;
+  onDiagramConfigChange: (config: SopDiagramConfig) => void;
+  manualEditingSupported?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -52,12 +52,12 @@ export function SopDocumentCanvas({
   onDiagramKindChange,
   manualEditing,
   onManualEditingChange,
+  diagramConfig,
+  onDiagramConfigChange,
+  manualEditingSupported = true,
   disabled = false,
   readOnly = false,
 }: SopDocumentCanvasProps) {
-  const [manualPathOffsets, setManualPathOffsets] =
-    useState<SopManualPathOffsets>({});
-
   return (
     <main className={styles.canvas}>
       <div className={styles.document} data-sopflow-page="a4">
@@ -73,7 +73,9 @@ export function SopDocumentCanvas({
               manualEditing={manualEditing}
               onManualEditingChange={onManualEditingChange}
               readOnly={readOnly}
-              manualEditingSupported={diagramKind === "flowchart"}
+              manualEditingSupported={
+                diagramKind === "flowchart" && manualEditingSupported
+              }
             />
           </div>
 
@@ -100,8 +102,8 @@ export function SopDocumentCanvas({
               selectedStepId={selectedStepId}
               onSelectedStepChange={onSelectedStepChange}
               manualEditing={manualEditing}
-              manualPathOffsets={manualPathOffsets}
-              onManualPathOffsetsChange={setManualPathOffsets}
+              diagramConfig={diagramConfig}
+              onDiagramConfigChange={onDiagramConfigChange}
             />
           )}
         </section>

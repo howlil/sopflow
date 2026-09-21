@@ -289,6 +289,33 @@ describe("SopEditor document workbench", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps controlled diagram config read-only without a change handler", () => {
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramConfig={{}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeDisabled();
+  });
+
+  it("allows manual route editing when controlled config has a change handler", () => {
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramConfig={{}}
+        onDiagramConfigChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
+  });
+
   it("edits steps inline in the document instead of the inspector", async () => {
     const user = userEvent.setup();
     const { container } = render(<ControlledEditor />);

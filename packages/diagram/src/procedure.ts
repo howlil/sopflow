@@ -38,7 +38,35 @@ export interface ProcedureGeometry {
   readonly actorRight: number;
 }
 
+export type ProcedureManualRoute =
+  | {
+      readonly kind: "trunk";
+      readonly x: number;
+      readonly labelPosition?: DiagramPoint;
+    }
+  | {
+      readonly kind: "orthogonal";
+      readonly bendPoints: readonly DiagramPoint[];
+      readonly labelPosition?: DiagramPoint;
+    };
+
+export type ProcedureManualRoutes = Readonly<
+  Record<string, ProcedureManualRoute>
+>;
+
+export interface SopDiagramConfig {
+  readonly routes?: ProcedureManualRoutes;
+}
+
+/**
+ * @deprecated Use SopDiagramConfig.routes. Kept so existing low-level
+ * SopProcedureView consumers can migrate without a breaking change.
+ */
 export type ProcedureManualTrunks = Readonly<Record<string, number>>;
+
+export type ProcedureRoutingOverrides =
+  | SopDiagramConfig
+  | ProcedureManualTrunks;
 
 export interface ProcedureRoutedEdge extends WorkflowEdge {
   readonly points: readonly DiagramPoint[];
@@ -80,11 +108,12 @@ export function buildProcedureModel(document: SOPDocument): ProcedureModel {
 export function routeProcedureEdges(
   model: ProcedureModel,
   geometry: ProcedureGeometry,
-  manualTrunks: ProcedureManualTrunks = {},
+  overrides: ProcedureRoutingOverrides = {},
 ): ProcedureRoutedEdge[] {
   const orderByStepId = new Map(
     model.rows.map((row, index) => [row.stepId, index] as const),
   );
+  const { routes, legacyTrunks } = resolveRoutingOverrides(overrides);
   let backIndex = 0;
 
   return model.graph.edges.flatMap<ProcedureRoutedEdge>((edge) => {
@@ -101,34 +130,236 @@ export function routeProcedureEdges(
     const autoTrunkX = isBack
       ? geometry.actorRight - 10 - currentBackIndex * 10
       : from.x + (to.x - from.x) / 2;
-    const trunkX = manualTrunks[edge.id] ?? autoTrunkX;
-    const points = compactOrthogonalPoints([
-      from,
-      { x: trunkX, y: from.y },
-      { x: trunkX, y: to.y },
-      to,
-    ]);
+
+    const manualRoute = routes[edge.id];
+    const legacyTrunkX = legacyTrunks[edge.id];
+    const effectiveTrunkX =
+      manualRoute?.kind === "trunk"
+        ? manualRoute.x
+        : (legacyTrunkX ?? autoTrunkX);
+    const points =
+      manualRoute?.kind === "orthogonal"
+        ? buildManualPath(from, to, manualRoute.bendPoints, geometry)
+        : buildTrunkPath(from, to, clampTrunkX(effectiveTrunkX, geometry));
+    const fallbackHandle = {
+      x: clampTrunkX(effectiveTrunkX, geometry),
+      y: (from.y + to.y) / 2,
+    };
+    const handlePosition = findRouteHandle(points, fallbackHandle);
+    const trunkX = handlePosition.x;
 
     return [
       {
         ...edge,
         points,
         trunkX,
-        handlePosition: {
-          x: trunkX,
-          y: (from.y + to.y) / 2,
-        },
+        handlePosition,
         ...(edge.label
           ? {
-              labelPosition: {
-                x: trunkX + 3,
-                y: (from.y + to.y) / 2 - 4,
+              labelPosition: manualRoute?.labelPosition ?? {
+                x: handlePosition.x + 3,
+                y: handlePosition.y - 4,
               },
             }
           : {}),
       },
     ];
   });
+}
+
+export function updateProcedureManualTrunk(
+  model: ProcedureModel,
+  geometry: ProcedureGeometry,
+  config: SopDiagramConfig,
+  edgeId: string,
+  requestedX: number,
+): SopDiagramConfig {
+  const edge = model.graph.edges.find((candidate) => candidate.id === edgeId);
+  if (!edge) return config;
+
+  const from = geometry.anchors.get(edge.from);
+  const to = geometry.anchors.get(edge.to);
+  if (!from || !to) return config;
+
+  const trunkX = clampTrunkX(requestedX, geometry);
+  const currentRoute = config.routes?.[edgeId];
+  const nextRoute: ProcedureManualRoute = {
+    kind: "trunk",
+    x: trunkX,
+    ...(currentRoute?.labelPosition
+      ? { labelPosition: currentRoute.labelPosition }
+      : {}),
+  };
+
+  return {
+    ...config,
+    routes: {
+      ...config.routes,
+      [edgeId]: nextRoute,
+    },
+  };
+}
+
+export function setProcedureManualRoute(
+  config: SopDiagramConfig,
+  edgeId: string,
+  route: ProcedureManualRoute,
+): SopDiagramConfig {
+  return {
+    ...config,
+    routes: {
+      ...config.routes,
+      [edgeId]:
+        route.kind === "trunk"
+          ? {
+              kind: "trunk",
+              x: route.x,
+              ...(route.labelPosition
+                ? { labelPosition: { ...route.labelPosition } }
+                : {}),
+            }
+          : {
+              kind: "orthogonal",
+              bendPoints: route.bendPoints.map((point) => ({ ...point })),
+              ...(route.labelPosition
+                ? { labelPosition: { ...route.labelPosition } }
+                : {}),
+            },
+    },
+  };
+}
+
+export function removeProcedureManualRoute(
+  config: SopDiagramConfig,
+  edgeId: string,
+): SopDiagramConfig {
+  if (!config.routes?.[edgeId]) return config;
+
+  const routes = { ...config.routes };
+  delete routes[edgeId];
+
+  const { routes: _removedRoutes, ...rest } = config;
+
+  return Object.keys(routes).length > 0 ? { ...rest, routes } : rest;
+}
+
+function resolveRoutingOverrides(overrides: ProcedureRoutingOverrides): {
+  routes: ProcedureManualRoutes;
+  legacyTrunks: ProcedureManualTrunks;
+} {
+  if (isDiagramConfig(overrides)) {
+    return {
+      routes: overrides.routes ?? {},
+      legacyTrunks: {},
+    };
+  }
+
+  return {
+    routes: {},
+    legacyTrunks: overrides,
+  };
+}
+
+function isDiagramConfig(
+  overrides: ProcedureRoutingOverrides,
+): overrides is SopDiagramConfig {
+  if (!Object.hasOwn(overrides, "routes")) return false;
+  const routes = (overrides as SopDiagramConfig).routes;
+  return (
+    routes === undefined || (routes !== null && typeof routes === "object")
+  );
+}
+
+function buildTrunkPath(
+  from: DiagramPoint,
+  to: DiagramPoint,
+  trunkX: number,
+): DiagramPoint[] {
+  return compactOrthogonalPoints([
+    from,
+    { x: trunkX, y: from.y },
+    { x: trunkX, y: to.y },
+    to,
+  ]);
+}
+
+function buildManualPath(
+  from: DiagramPoint,
+  to: DiagramPoint,
+  bendPoints: readonly DiagramPoint[],
+  geometry: ProcedureGeometry,
+): DiagramPoint[] {
+  const points = [
+    clampPoint(from, geometry),
+    ...bendPoints.map((point) => clampPoint(point, geometry)),
+    clampPoint(to, geometry),
+  ];
+
+  return orthogonalize(points);
+}
+
+function orthogonalize(points: readonly DiagramPoint[]): DiagramPoint[] {
+  const result: DiagramPoint[] = [];
+
+  for (const point of points) {
+    const previous = result.at(-1);
+    if (!previous) {
+      result.push({ ...point });
+      continue;
+    }
+
+    if (previous.x !== point.x && previous.y !== point.y) {
+      result.push({ x: point.x, y: previous.y });
+    }
+
+    result.push({ ...point });
+  }
+
+  return compactOrthogonalPoints(result);
+}
+
+function clampTrunkX(value: number, geometry: ProcedureGeometry): number {
+  const padding = 8;
+  return Math.max(
+    geometry.actorLeft + padding,
+    Math.min(geometry.actorRight - padding, value),
+  );
+}
+
+function clampPoint(
+  point: DiagramPoint,
+  geometry: ProcedureGeometry,
+): DiagramPoint {
+  return {
+    x: clampTrunkX(point.x, geometry),
+    y: Math.max(0, Math.min(geometry.height, point.y)),
+  };
+}
+
+function findRouteHandle(
+  points: readonly DiagramPoint[],
+  fallback: DiagramPoint,
+): DiagramPoint {
+  let best: { position: DiagramPoint; length: number } | null = null;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const from = points[index];
+    const to = points[index + 1];
+    if (!from || !to || from.x !== to.x || from.y === to.y) continue;
+
+    const length = Math.abs(to.y - from.y);
+    if (best && best.length >= length) continue;
+
+    best = {
+      length,
+      position: {
+        x: from.x,
+        y: from.y + (to.y - from.y) / 2,
+      },
+    };
+  }
+
+  return best?.position ?? fallback;
 }
 
 function compactOrthogonalPoints(

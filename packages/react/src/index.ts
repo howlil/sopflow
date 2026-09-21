@@ -1,5 +1,6 @@
 export { SopEditor } from "./SopEditor.js";
 export type {
+  SopDiagramConfig,
   SopDiagramKind,
   SopDocumentMode,
   SopEditorProps,
