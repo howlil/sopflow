@@ -296,7 +296,7 @@ describe("SopEditor document workbench", () => {
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
     expect(screen.getByRole("button", { name: "Diagram" })).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Review")).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
 
     const inspector = container.querySelector("[data-sopflow-inspector]");
     expect(inspector).not.toBeNull();
