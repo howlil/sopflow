@@ -54,9 +54,19 @@
 }
 
 .actions {
-  display: grid;
-  gap: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding-top: 0.75rem;
+}
+
+.actionLabel {
+  color: var(--sopflow-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .secondaryButton,
