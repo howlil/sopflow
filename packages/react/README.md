@@ -50,6 +50,12 @@ Consumers that own their own layout can compose the lower-level exports directly
   onSelectedStepChange={setSelectedStepId}
 />
 
+<SopFlowchart
+  document={document}
+  selectedStepId={selectedStepId}
+  onSelectedStepChange={setSelectedStepId}
+/>
+
 <SopHeaderFields
   document={document}
   header={header}
@@ -75,7 +81,8 @@ The important boundary is:
 
 ```text
 SopHeaderView     = header presentation only
-SopProcedureView  = procedure presentation + selection only
+SopProcedureView  = formal SOP-AP procedure matrix + selection only
+SopFlowchart      = actor-lane SOP flowchart + selection only
 SopHeaderFields   = controlled header editing
 SopStepFields     = controlled selected-step editing
 ActorsEditor      = controlled actor operations
