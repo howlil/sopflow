@@ -3,10 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import "./styles/token.css";
 
+import { ActorsEditor } from "./actors/ActorsEditor.js";
 import { SopDocumentCanvas } from "./editor/SopDocumentCanvas.js";
 import { EditorStatus } from "./editor/EditorStatus.js";
 import { useSopHistory } from "./editor/hooks/useSopHistory.js";
 import { SopEditorToolbar } from "./editor/SopEditorToolbar.js";
+import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
 import type { SopHeaderValue } from "./types.js";
 
@@ -64,6 +66,7 @@ export function SopEditor({
       ? controlledSelectedStepId
       : internalSelectedStepId;
   const mutationDisabled = readOnly || loading || !onChange;
+  const headerDisabled = readOnly || loading || !onHeaderChange;
   const issues = useMemo(() => validateSop(value), [value]);
 
   const handleSelectedStepChange = useCallback(
@@ -101,28 +104,66 @@ export function SopEditor({
     >
       <EditorStatus loading={loading} error={error} />
 
-      <SopDocumentCanvas
-        document={value}
-        header={header}
-        issues={issues}
-        selectedStepId={selectedStepId}
-        onSelectedStepChange={handleSelectedStepChange}
-        toolbar={
-          mutationDisabled ? null : (
-            <SopEditorToolbar
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onUndo={undo}
-              onRedo={redo}
+      <div className={styles.workspaceScroll}>
+        <div className={styles.workspace} data-sopflow-editor-layout>
+          <div className={styles.mainPane} data-sopflow-main-pane>
+            <SopDocumentCanvas
+              document={value}
+              header={header}
+              issues={issues}
+              selectedStepId={selectedStepId}
+              onSelectedStepChange={handleSelectedStepChange}
+              onOperation={applyOperation}
+              onOperations={applyOperations}
+              disabled={mutationDisabled}
             />
-          )
-        }
-        {...(onChange ? { onDocumentChange: handleChange } : {})}
-        {...(onHeaderChange ? { onHeaderChange: handleHeaderChange } : {})}
-        onOperation={applyOperation}
-        onOperations={applyOperations}
-        disabled={mutationDisabled}
-      />
+          </div>
+
+          <aside
+            className={styles.inspector}
+            data-sopflow-inspector
+            aria-label="Properti SOP"
+          >
+            <div className={styles.inspectorHeader}>
+              <h2 className={styles.inspectorTitle}>Properti</h2>
+
+              {!mutationDisabled ? (
+                <SopEditorToolbar
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={undo}
+                  onRedo={redo}
+                />
+              ) : null}
+            </div>
+
+            <div className={styles.inspectorContent}>
+              <SopHeaderFields
+                document={value}
+                header={header}
+                disabled={readOnly || loading}
+                {...(onChange ? { onDocumentChange: handleChange } : {})}
+                {...(onHeaderChange
+                  ? { onHeaderChange: handleHeaderChange }
+                  : {})}
+              />
+
+              <ActorsEditor
+                document={value}
+                onOperation={applyOperation}
+                onOperations={applyOperations}
+                disabled={mutationDisabled}
+              />
+            </div>
+
+            {headerDisabled && !mutationDisabled ? (
+              <p className={styles.inspectorNotice}>
+                Header hanya dapat dibaca karena onHeaderChange tidak tersedia.
+              </p>
+            ) : null}
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }

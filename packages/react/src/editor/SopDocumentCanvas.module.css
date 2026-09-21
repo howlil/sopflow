@@ -1,10 +1,8 @@
 .canvas {
   box-sizing: border-box;
   min-height: 100%;
-  width: 100%;
-  overflow: auto;
-  padding: 1rem;
-
+  width: var(--sopflow-page-width);
+  overflow: visible;
   background: var(--sopflow-color-background);
 }
 
@@ -12,44 +10,12 @@
   box-sizing: border-box;
   width: var(--sopflow-page-width);
   min-height: var(--sopflow-page-height);
-
-  margin-inline: auto;
+  margin: 0;
   padding: 1rem;
-
   background: var(--sopflow-color-surface);
 }
 
-.procedure {
-  width: 100%;
-  margin-top: 2.5rem;
-}
-
-.emptyState {
-  min-height: 8rem;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px dashed
-    var(--sopflow-color-border);
-
-  color: var(--sopflow-color-empty);
-  font-size: var(--sopflow-font-size-sm);
-}
-
-.procedure[data-empty="true"] {
-  background: transparent;
-}
-
-.actors {
-  margin-top: 2rem;
-}
-
-.toolbar {
-  display: flex;
-  justify-content: center;
-
+.content {
   margin-top: 1.5rem;
 }
 
@@ -67,8 +33,6 @@
     width: var(--sopflow-page-width);
     min-height: var(--sopflow-page-height);
     overflow: visible;
-    padding: 0;
-
     background: var(--sopflow-color-surface);
   }
 

@@ -29,6 +29,7 @@
 
   --sopflow-page-width: 210mm;
   --sopflow-page-height: 297mm;
+  --sopflow-inspector-width: calc(var(--sopflow-page-width) / 3);
 
   /* Component aliases keep field styles readable while preserving the token names above. */
   --sopflow-background: var(--sopflow-color-background);
