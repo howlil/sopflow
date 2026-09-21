@@ -41,6 +41,7 @@ describe("diagram public API", () => {
         "pointsToPath",
         "removeProcedureManualRoute",
         "routeDiagramEdges",
+        "routeFlowchartConnections",
         "routeProcedureEdges",
         "setProcedureManualRoute",
         "updateProcedureManualTrunk",
