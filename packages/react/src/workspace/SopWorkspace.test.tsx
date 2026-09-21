@@ -66,7 +66,9 @@ describe("SopWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
     expect(screen.getByDisplayValue("Review")).toBeInTheDocument();
-    expect(globalThis.document.querySelector("[data-sopflow-procedure-view]")).toBeNull();
+    expect(
+      globalThis.document.querySelector("[data-sopflow-procedure-view]"),
+    ).toBeNull();
   });
 
   it("preserves step selection between preview and inline editing", async () => {
@@ -89,7 +91,9 @@ describe("SopWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Diagram" }));
 
     expect(
-      globalThis.document.querySelector('[data-sopflow-procedure-step-id="task"]'),
+      globalThis.document.querySelector(
+        '[data-sopflow-procedure-step-id="task"]',
+      ),
     ).toHaveAttribute("aria-selected", "true");
   });
 });
