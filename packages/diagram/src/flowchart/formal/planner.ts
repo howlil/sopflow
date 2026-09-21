@@ -19,6 +19,10 @@ import {
   scoreFormalPath,
 } from "./orthogonal.js";
 import {
+  findFormalRouteCrossingIds,
+  sortFormalRoutesForPlanning,
+} from "./order.js";
+import {
   selectFormalFlowchartSidePairs,
   type FormalFlowchartConnectionMeta,
   type FormalFlowchartUsedSides,
@@ -64,12 +68,19 @@ export interface FormalPlannedEdge extends WorkflowEdge {
   readonly trunkX: number;
 }
 
+export interface FormalFlowchartPlanOptions {
+  readonly pathLayoutSeed?: number;
+  readonly maxReconcilePasses?: number;
+}
+
 export function planFormalProcedureEdges(
   model: FormalProcedureModelLike,
   geometry: FormalFlowchartGeometry,
   manualRoutes: Readonly<Record<string, FormalManualRoute>> = {},
+  options: FormalFlowchartPlanOptions = {},
 ): FormalPlannedEdge[] {
   const rowById = new Map(model.rows.map((row) => [row.stepId, row] as const));
+  const edgeById = new Map(model.edges.map((edge) => [edge.id, edge] as const));
   const routeMetas = model.edges.flatMap<FormalRouteMeta>((edge) => {
     const source = rowById.get(edge.from);
     const target = rowById.get(edge.to);
@@ -89,128 +100,161 @@ export function planFormalProcedureEdges(
     ];
   });
 
-  const metaById = new Map(routeMetas.map((meta) => [meta.id, meta] as const));
   const loopbackSlots = assignFormalLoopbackSlots(routeMetas);
   const crossColumnSlots = assignFormalCrossColumnSlots(routeMetas);
   const columnTrunkSlots = assignFormalColumnTrunkSlots(routeMetas);
-  const occupied: Array<{
-    x1: number;
-    y1: number;
-    x2: number;
-    y2: number;
-  }> = [];
-  const usedSides: MutableUsedSides = {};
-  const planned: FormalPlannedEdge[] = [];
+  const pathLayoutSeed = options.pathLayoutSeed ?? 0;
+  const maxReconcilePasses = Math.max(1, options.maxReconcilePasses ?? 4);
 
-  for (const edge of model.edges) {
-    const meta = metaById.get(edge.id);
-    const sourceGeometry = geometry.shapes.get(edge.from);
-    const targetGeometry = geometry.shapes.get(edge.to);
-    if (!meta || !sourceGeometry || !targetGeometry) continue;
+  let priorityIds = new Set<string>();
+  let latest = new Map<string, FormalPlannedEdge>();
 
-    const source = sourceGeometry.rect;
-    const target = targetGeometry.rect;
-    const obstacles = [...geometry.shapes.values()]
-      .filter(
-        (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
-      )
-      .map((shape) => shape.rect);
-
-    const sourceColumn = resolveFormalColumnForConnection(
-      meta.fromActorId,
-      source,
-      geometry.columns,
-      geometry.pelaksanaBounds,
+  for (let pass = 0; pass < maxReconcilePasses; pass += 1) {
+    const orderedMetas = sortFormalRoutesForPlanning(
+      routeMetas,
+      pathLayoutSeed,
+      {
+        priorityIds,
+        reconcilePass: pass,
+        priorityRoutesLast: true,
+      },
     );
-    const targetColumn = resolveFormalColumnForConnection(
-      meta.toActorId,
-      target,
-      geometry.columns,
-      geometry.pelaksanaBounds,
-    );
-    const crossColumn =
-      meta.fromActorId !== null &&
-      meta.toActorId !== null &&
-      meta.fromActorId !== meta.toActorId;
-    const routingBounds = computeFormalConnectionRoutingBounds({
-      pelaksana: geometry.pelaksanaBounds,
-      sourceColumn,
-      targetColumn,
-      isCrossColumn: crossColumn,
-    });
-    const connectionMeta: FormalFlowchartConnectionMeta = {
-      id: edge.id,
-      from: edge.from,
-      to: edge.to,
-      ...(edge.label ? { label: edge.label } : {}),
-      sourceType: meta.sourceType,
-      targetType: meta.targetType,
-    };
-    const routeCandidates = selectFormalFlowchartSidePairs(
-      connectionMeta,
-      source,
-      target,
-      usedSides as FormalFlowchartUsedSides,
-    );
+    const occupied: Array<{
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    }> = [];
+    const usedSides: MutableUsedSides = {};
+    const segmentsByConnection = new Map<
+      string,
+      ReturnType<typeof formalPathToSegments>
+    >();
+    const planned = new Map<string, FormalPlannedEdge>();
 
-    const manual = manualRoutes[edge.id];
-    const auto = resolveAutoRoute({
-      edge,
-      meta,
-      source,
-      target,
-      sourceColumn,
-      targetColumn,
-      routingBounds,
-      geometry,
-      obstacles,
-      occupied,
-      routeCandidates,
-      loopbackSlot: loopbackSlots.get(edge.id) ?? 0,
-      crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
-      columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
-    });
-    const resolved = applyManualRoute(
-      auto,
-      manual,
-      source,
-      target,
-      routingBounds,
-    );
+    for (const meta of orderedMetas) {
+      const edge = edgeById.get(meta.id);
+      if (!edge) continue;
 
-    registerSide(
-      usedSides,
-      edge.from,
-      "out",
-      resolved.sourceSide,
-      edge.id,
-    );
-    registerSide(
-      usedSides,
-      edge.to,
-      "in",
-      resolved.targetSide,
-      edge.id,
-    );
-    occupied.push(...formalPathToSegments(resolved.points));
+      const sourceGeometry = geometry.shapes.get(edge.from);
+      const targetGeometry = geometry.shapes.get(edge.to);
+      if (!sourceGeometry || !targetGeometry) continue;
 
-    const labelPosition =
-      manual?.labelPosition ??
-      placeFormalEdgeLabel(resolved.points, edge.label, obstacles);
-    const handlePosition = routeHandlePosition(resolved.points);
+      const source = sourceGeometry.rect;
+      const target = targetGeometry.rect;
+      const obstacles = [...geometry.shapes.values()]
+        .filter(
+          (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
+        )
+        .map((shape) => shape.rect);
 
-    planned.push({
-      ...edge,
-      points: resolved.points,
-      sourceSide: resolved.sourceSide,
-      targetSide: resolved.targetSide,
-      handlePosition,
-      trunkX: handlePosition.x,
-      ...(labelPosition ? { labelPosition } : {}),
-    });
+      const sourceColumn = resolveFormalColumnForConnection(
+        meta.fromActorId,
+        source,
+        geometry.columns,
+        geometry.pelaksanaBounds,
+      );
+      const targetColumn = resolveFormalColumnForConnection(
+        meta.toActorId,
+        target,
+        geometry.columns,
+        geometry.pelaksanaBounds,
+      );
+      const crossColumn =
+        meta.fromActorId !== null &&
+        meta.toActorId !== null &&
+        meta.fromActorId !== meta.toActorId;
+      const routingBounds = computeFormalConnectionRoutingBounds({
+        pelaksana: geometry.pelaksanaBounds,
+        sourceColumn,
+        targetColumn,
+        isCrossColumn: crossColumn,
+      });
+      const connectionMeta: FormalFlowchartConnectionMeta = {
+        id: edge.id,
+        from: edge.from,
+        to: edge.to,
+        ...(edge.label ? { label: edge.label } : {}),
+        sourceType: meta.sourceType,
+        targetType: meta.targetType,
+      };
+      const routeCandidates = selectFormalFlowchartSidePairs(
+        connectionMeta,
+        source,
+        target,
+        usedSides as FormalFlowchartUsedSides,
+      );
+
+      const manual = manualRoutes[edge.id];
+      const auto = resolveAutoRoute({
+        edge,
+        meta,
+        source,
+        target,
+        sourceColumn,
+        targetColumn,
+        routingBounds,
+        geometry,
+        obstacles,
+        occupied,
+        routeCandidates,
+        loopbackSlot: loopbackSlots.get(edge.id) ?? 0,
+        crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
+        columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
+      });
+      const resolved = applyManualRoute(
+        auto,
+        manual,
+        source,
+        target,
+        routingBounds,
+      );
+
+      registerSide(
+        usedSides,
+        edge.from,
+        "out",
+        resolved.sourceSide,
+        edge.id,
+      );
+      registerSide(
+        usedSides,
+        edge.to,
+        "in",
+        resolved.targetSide,
+        edge.id,
+      );
+
+      const segments = formalPathToSegments(resolved.points);
+      segmentsByConnection.set(edge.id, segments);
+      occupied.push(...segments);
+
+      const labelPosition =
+        manual?.labelPosition ??
+        placeFormalEdgeLabel(resolved.points, edge.label, obstacles);
+      const handlePosition = routeHandlePosition(resolved.points);
+
+      planned.set(edge.id, {
+        ...edge,
+        points: resolved.points,
+        sourceSide: resolved.sourceSide,
+        targetSide: resolved.targetSide,
+        handlePosition,
+        trunkX: handlePosition.x,
+        ...(labelPosition ? { labelPosition } : {}),
+      });
+    }
+
+    latest = planned;
+    const violators = findFormalRouteCrossingIds(segmentsByConnection);
+    if (violators.length === 0) break;
+    priorityIds = new Set(violators);
   }
 
-  return planned;
+  return model.edges.flatMap((edge) => {
+    const routed = latest.get(edge.id);
+    return routed ? [routed] : [];
+  });
 }
 
 function resolveAutoRoute(input: {
