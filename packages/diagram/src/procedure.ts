@@ -94,6 +94,8 @@ export type ProcedureRoutingOverrides =
 
 export interface ProcedureRoutedEdge extends WorkflowEdge {
   readonly points: readonly DiagramPoint[];
+  readonly sourceSide?: FormalFlowchartSide;
+  readonly targetSide?: FormalFlowchartSide;
   readonly trunkX: number;
   readonly handlePosition: DiagramPoint;
   readonly labelPosition?: DiagramPoint;
@@ -243,6 +245,12 @@ export function updateProcedureManualTrunk(
   const nextRoute: ProcedureManualRoute = {
     kind: "trunk",
     x: trunkX,
+    ...(currentRoute?.startAnchor
+      ? { startAnchor: { ...currentRoute.startAnchor } }
+      : {}),
+    ...(currentRoute?.endAnchor
+      ? { endAnchor: { ...currentRoute.endAnchor } }
+      : {}),
     ...(currentRoute?.labelPosition
       ? { labelPosition: currentRoute.labelPosition }
       : {}),
