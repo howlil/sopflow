@@ -63,6 +63,11 @@ export type ProcedureManualRoutes = Readonly<
 
 export interface SopDiagramConfig {
   readonly routes?: ProcedureManualRoutes;
+  /**
+   * Deterministic routing seed. Different seeds try another stable connection
+   * order without changing SOP semantics.
+   */
+  readonly pathLayoutSeed?: number;
 }
 
 /**
@@ -120,7 +125,8 @@ export function routeProcedureEdges(
   const orderByStepId = new Map(
     model.rows.map((row, index) => [row.stepId, index] as const),
   );
-  const { routes, legacyTrunks } = resolveRoutingOverrides(overrides);
+  const { routes, legacyTrunks, pathLayoutSeed } =
+    resolveRoutingOverrides(overrides);
 
   if (geometry.formal) {
     const manualRoutes = {
@@ -144,6 +150,7 @@ export function routeProcedureEdges(
       },
       geometry.formal,
       manualRoutes,
+      { pathLayoutSeed },
     );
 
     return planned.map((edge) => ({
@@ -284,28 +291,31 @@ export function removeProcedureManualRoute(
 function resolveRoutingOverrides(overrides: ProcedureRoutingOverrides): {
   routes: ProcedureManualRoutes;
   legacyTrunks: ProcedureManualTrunks;
+  pathLayoutSeed: number;
 } {
   if (isDiagramConfig(overrides)) {
     return {
       routes: overrides.routes ?? {},
       legacyTrunks: {},
+      pathLayoutSeed: overrides.pathLayoutSeed ?? 0,
     };
   }
 
   return {
     routes: {},
     legacyTrunks: overrides,
+    pathLayoutSeed: 0,
   };
 }
 
 function isDiagramConfig(
   overrides: ProcedureRoutingOverrides,
 ): overrides is SopDiagramConfig {
-  if (!Object.hasOwn(overrides, "routes")) return false;
-  const routes = (overrides as SopDiagramConfig).routes;
-  return (
-    routes === undefined || (routes !== null && typeof routes === "object")
-  );
+  if (Object.hasOwn(overrides, "pathLayoutSeed")) return true;
+  if (Object.hasOwn(overrides, "routes")) return true;
+
+  const values = Object.values(overrides);
+  return values.length === 0 || values.some((value) => typeof value !== "number");
 }
 
 function buildTrunkPath(
