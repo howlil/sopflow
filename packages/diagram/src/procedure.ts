@@ -1,4 +1,6 @@
 import type { ActorId, Duration, SOPDocument, StepId } from "@sopflow/core";
+import type { FormalFlowchartGeometry } from "./flowchart/formal/types.js";
+import { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
 import type { DiagramPoint } from "./types.js";
 import {
   projectWorkflow,
@@ -36,6 +38,11 @@ export interface ProcedureGeometry {
   readonly anchors: ReadonlyMap<StepId, DiagramPoint>;
   readonly actorLeft: number;
   readonly actorRight: number;
+  /**
+   * Detailed formal SOP-AP geometry. When present, routing uses the
+   * sop-ta-compatible formal flowchart planner.
+   */
+  readonly formal?: FormalFlowchartGeometry;
 }
 
 export type ProcedureManualRoute =
@@ -114,6 +121,37 @@ export function routeProcedureEdges(
     model.rows.map((row, index) => [row.stepId, index] as const),
   );
   const { routes, legacyTrunks } = resolveRoutingOverrides(overrides);
+
+  if (geometry.formal) {
+    const manualRoutes = {
+      ...Object.fromEntries(
+        Object.entries(legacyTrunks).map(([edgeId, x]) => [
+          edgeId,
+          { kind: "trunk" as const, x },
+        ]),
+      ),
+      ...routes,
+    };
+    const planned = planFormalProcedureEdges(
+      {
+        rows: model.rows.map((row) => ({
+          stepId: row.stepId,
+          number: row.number,
+          kind: row.kind,
+          primaryActorId: row.primaryActorId,
+        })),
+        edges: model.graph.edges,
+      },
+      geometry.formal,
+      manualRoutes,
+    );
+
+    return planned.map((edge) => ({
+      ...edge,
+      points: [...edge.points],
+    }));
+  }
+
   let backIndex = 0;
 
   return model.graph.edges.flatMap<ProcedureRoutedEdge>((edge) => {
