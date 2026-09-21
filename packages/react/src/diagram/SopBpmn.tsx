@@ -25,7 +25,7 @@ export function SopBpmn({
   onSelectedStepChange,
   className,
 }: SopBpmnProps) {
-  const markerId = \`sopflow-bpmn-arrow-\${useId().replace(/:/g, "")}\`;
+  const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
   const actorIndex = useMemo(
     () => new Map(document.actors.map((actor, index) => [actor.id, index])),
     [document.actors],
@@ -63,12 +63,12 @@ export function SopBpmn({
     if (step.type === "end") return [];
     if (step.type === "decision") {
       return [
-        { id: \`\${step.id}:yes\`, from: step.id, to: step.yes, label: "Ya" },
-        { id: \`\${step.id}:no\`, from: step.id, to: step.no, label: "Tidak" },
+        { id: `${step.id}:yes`, from: step.id, to: step.yes, label: "Ya" },
+        { id: `${step.id}:no`, from: step.id, to: step.no, label: "Tidak" },
       ];
     }
 
-    return [{ id: \`\${step.id}:next\`, from: step.id, to: step.next }];
+    return [{ id: `${step.id}:next`, from: step.id, to: step.next }];
   });
 
   return (
@@ -80,9 +80,9 @@ export function SopBpmn({
     >
       <svg
         className={styles.svg}
-        viewBox={\`0 0 \${width} \${height}\`}
+        viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label={\`BPMN SOP \${document.title}\`}
+        aria-label={`BPMN SOP ${document.title}`}
       >
         <defs>
           <marker
@@ -103,7 +103,7 @@ export function SopBpmn({
           const actor = document.actors[index];
 
           return (
-            <g key={actor?.id ?? \`lane-\${index}\`}>
+            <g key={actor?.id ?? `lane-${index}`}>
               <rect
                 x={padding}
                 y={y}
@@ -146,14 +146,14 @@ export function SopBpmn({
               y: to.y,
             };
             const midX = start.x + (end.x - start.x) / 2;
-            const d = \`M \${start.x} \${start.y} L \${midX} \${start.y} L \${midX} \${end.y} L \${end.x} \${end.y}\`;
+            const d = `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
 
             return (
               <g key={edge.id}>
                 <path
                   d={d}
                   className={styles.edge}
-                  markerEnd={\`url(#\${markerId})\`}
+                  markerEnd={`url(#${markerId})`}
                 />
                 {"label" in edge && edge.label ? (
                   <text
@@ -180,7 +180,7 @@ export function SopBpmn({
                 role="button"
                 tabIndex={0}
                 aria-pressed={selected}
-                aria-label={\`\${node.step.name} (\${node.step.type})\`}
+                aria-label={`${node.step.name} (${node.step.type})`}
                 data-selected={selected || undefined}
                 data-sopflow-diagram-interactive
                 data-sopflow-step-id={node.step.id}
@@ -230,11 +230,11 @@ function BpmnShape({ node }: { node: BpmnNode }) {
     return (
       <>
         <polygon
-          points={\`\${node.x},\${y} \${x + node.width},\${node.y} \${node.x},\${y + node.height} \${x},\${node.y}\`}
+          points={`${node.x},${y} ${x + node.width},${node.y} ${node.x},${y + node.height} ${x},${node.y}`}
           className={styles.nodeShape}
         />
         <path
-          d={\`M \${node.x - 8} \${node.y - 8} L \${node.x + 8} \${node.y + 8} M \${node.x + 8} \${node.y - 8} L \${node.x - 8} \${node.y + 8}\`}
+          d={`M ${node.x - 8} ${node.y - 8} L ${node.x + 8} ${node.y + 8} M ${node.x + 8} ${node.y - 8} L ${node.x - 8} ${node.y + 8}`}
           className={styles.gatewayMark}
         />
       </>
@@ -275,5 +275,5 @@ function BpmnShape({ node }: { node: BpmnNode }) {
 }
 
 function shortLabel(value: string): string {
-  return value.length > 18 ? \`\${value.slice(0, 17)}…\` : value;
+  return value.length > 18 ? `${value.slice(0, 17)}…` : value;
 }
