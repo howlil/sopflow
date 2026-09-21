@@ -6,6 +6,7 @@ import {
   type SopOperation,
   type StepId,
 } from "@sopflow/core";
+import type { SopDiagramConfig } from "@sopflow/diagram";
 import { useCallback, useMemo, useState } from "react";
 
 import "./styles/token.css";
@@ -32,6 +33,8 @@ export interface SopEditorProps {
   onModeChange?: (mode: SopDocumentMode) => void;
   diagramKind?: SopDiagramKind;
   onDiagramKindChange?: (kind: SopDiagramKind) => void;
+  diagramConfig?: SopDiagramConfig;
+  onDiagramConfigChange?: (config: SopDiagramConfig) => void;
   manualEditing?: boolean;
   onManualEditingChange?: (editing: boolean) => void;
   readOnly?: boolean;
@@ -51,6 +54,8 @@ export function SopEditor({
   onModeChange,
   diagramKind: controlledDiagramKind,
   onDiagramKindChange,
+  diagramConfig: controlledDiagramConfig,
+  onDiagramConfigChange,
   manualEditing: controlledManualEditing,
   onManualEditingChange,
   readOnly = false,
@@ -91,6 +96,8 @@ export function SopEditor({
   const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
   const [internalDiagramKind, setInternalDiagramKind] =
     useState<SopDiagramKind>("flowchart");
+  const [internalDiagramConfig, setInternalDiagramConfig] =
+    useState<SopDiagramConfig>({});
   const [internalManualEditing, setInternalManualEditing] = useState(false);
 
   const selectedStepId =
@@ -99,7 +106,10 @@ export function SopEditor({
       : internalSelectedStepId;
   const mode = controlledMode ?? internalMode;
   const diagramKind = controlledDiagramKind ?? internalDiagramKind;
+  const diagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
   const manualEditing = controlledManualEditing ?? internalManualEditing;
+  const diagramConfigMutable =
+    controlledDiagramConfig === undefined || onDiagramConfigChange !== undefined;
 
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
@@ -113,6 +123,16 @@ export function SopEditor({
       onSelectedStepChangeProp?.(stepId);
     },
     [controlledSelectedStepId, onSelectedStepChangeProp],
+  );
+
+  const handleDiagramConfigChange = useCallback(
+    (nextConfig: SopDiagramConfig) => {
+      if (controlledDiagramConfig === undefined) {
+        setInternalDiagramConfig(nextConfig);
+      }
+      onDiagramConfigChange?.(nextConfig);
+    },
+    [controlledDiagramConfig, onDiagramConfigChange],
   );
 
   const handleManualEditingChange = useCallback(
@@ -180,6 +200,9 @@ export function SopEditor({
               onDiagramKindChange={handleDiagramKindChange}
               manualEditing={manualEditing}
               onManualEditingChange={handleManualEditingChange}
+              diagramConfig={diagramConfig}
+              onDiagramConfigChange={handleDiagramConfigChange}
+              manualEditingSupported={diagramConfigMutable}
               disabled={mutationDisabled}
               readOnly={readOnly}
             />
@@ -225,4 +248,4 @@ export function SopEditor({
   );
 }
 
-export type { SopDiagramKind, SopDocumentMode };
+export type { SopDiagramConfig, SopDiagramKind, SopDocumentMode };
