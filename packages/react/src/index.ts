@@ -4,6 +4,8 @@ export { ActorsEditor } from "./actors/ActorsEditor.js";
 export type { ActorsEditorProps } from "./actors/ActorsEditor.js";
 export { SopDiagram } from "./diagram/SopDiagram.js";
 export type { SopDiagramProps } from "./diagram/SopDiagram.js";
+export { SopFlowchart } from "./diagram/SopFlowchart.js";
+export type { SopFlowchartProps } from "./diagram/SopFlowchart.js";
 export { SopHeaderFields } from "./header/SopHeaderFields.js";
 export type { SopHeaderFieldsProps } from "./header/SopHeaderFields.js";
 export { SopHeaderView } from "./header/SopHeaderView.js";
