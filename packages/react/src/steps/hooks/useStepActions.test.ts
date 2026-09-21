@@ -5,7 +5,10 @@ import type { DecisionStep, SOPDocument } from "@sopflow/core";
 
 import { useStepActions } from "./useStepActions.js";
 
-function createDocument(yes: string, no: string): {
+function createDocument(
+  yes: string,
+  no: string,
+): {
   document: SOPDocument;
   decision: DecisionStep;
 } {
