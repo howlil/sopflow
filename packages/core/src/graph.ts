@@ -1,5 +1,43 @@
 import type { SOPDocument, Step, StepId } from "./types.js";
 
+export interface SopGraphIndex {
+  readonly stepById: ReadonlyMap<StepId, Step>;
+  readonly actorById: ReadonlyMap<string, SOPDocument["actors"][number]>;
+  readonly incomingByStepId: ReadonlyMap<StepId, readonly IncomingConnection[]>;
+  readonly orderByStepId: ReadonlyMap<StepId, number>;
+}
+
+export function createGraphIndex(document: SOPDocument): SopGraphIndex {
+  const stepById = new Map(document.steps.map((step) => [step.id, step]));
+  const actorById = new Map(document.actors.map((actor) => [actor.id, actor]));
+  const incomingByStepId = new Map<StepId, IncomingConnection[]>();
+  const orderByStepId = new Map(
+    document.steps.map((step, index) => [step.id, index] as const),
+  );
+
+  for (const step of document.steps) {
+    for (const targetId of getNextStepIds(step)) {
+      const incoming = incomingByStepId.get(targetId) ?? [];
+
+      if (step.type === "decision") {
+        if (step.yes === targetId) incoming.push({ from: step.id, type: "yes" });
+        if (step.no === targetId) incoming.push({ from: step.id, type: "no" });
+      } else if (step.type !== "end") {
+        incoming.push({ from: step.id, type: "next" });
+      }
+
+      incomingByStepId.set(targetId, incoming);
+    }
+  }
+
+  return {
+    stepById,
+    actorById,
+    incomingByStepId,
+    orderByStepId,
+  };
+}
+
 function createStepMap(document: SOPDocument): Map<StepId, Step> {
   return new Map(document.steps.map((step) => [step.id, step]));
 }
