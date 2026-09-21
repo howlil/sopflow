@@ -4,10 +4,7 @@ import {
   normalizeFormalOrthogonalPath,
   routeFormalOrthogonal,
 } from "./orthogonal.js";
-import type {
-  FormalFlowchartRect,
-  FormalFlowchartSide,
-} from "./types.js";
+import type { FormalFlowchartRect, FormalFlowchartSide } from "./types.js";
 
 export type FormalManualPathCollisionPolicy = "repair" | "warn";
 
