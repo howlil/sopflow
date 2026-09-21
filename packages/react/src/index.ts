@@ -8,6 +8,10 @@ export { SopHeaderFields } from "./header/SopHeaderFields.js";
 export type { SopHeaderFieldsProps } from "./header/SopHeaderFields.js";
 export { SopHeaderView } from "./header/SopHeaderView.js";
 export type { SopHeaderViewProps } from "./header/SopHeaderView.js";
+export { SopProcedureView } from "./steps/SopProcedureView.js";
+export type { SopProcedureViewProps } from "./steps/SopProcedureView.js";
+export { SopStepFields } from "./steps/SopStepFields.js";
+export type { SopStepFieldsProps } from "./steps/SopStepFields.js";
 export { SopWorkspace } from "./workspace/SopWorkspace.js";
 export type {
   SopWorkspaceProps,
