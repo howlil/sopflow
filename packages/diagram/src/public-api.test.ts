@@ -32,12 +32,14 @@ describe("diagram public API", () => {
       [
         "buildDiagram",
         "buildDiagramModel",
+        "buildProcedureModel",
         "buildSopFlowchart",
         "buildSvgRenderModel",
         "getDiamondPoints",
         "layoutDiagram",
         "pointsToPath",
         "routeDiagramEdges",
+        "routeProcedureEdges",
         "projectWorkflow",
       ].sort(),
     );
