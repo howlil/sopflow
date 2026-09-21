@@ -38,6 +38,7 @@
   --sopflow-text: var(--sopflow-color-text);
   --sopflow-text-muted: var(--sopflow-color-text-muted);
   --sopflow-border: var(--sopflow-color-border);
+  --sopflow-document-border: var(--sopflow-color-document-border);
   --sopflow-selected-surface: var(--sopflow-color-selected);
   --sopflow-selected-border: var(--sopflow-color-selected-border);
   --sopflow-error-text: var(--sopflow-color-error);

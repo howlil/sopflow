@@ -11,6 +11,7 @@ const smokeDocument: SOPDocument = {
   actors: [
     { id: "staff", name: "Staff" },
     { id: "manager", name: "Manager" },
+    { id: "admin", name: "Admin" },
   ],
   steps: [
     {
@@ -24,7 +25,7 @@ const smokeDocument: SOPDocument = {
       id: "submit",
       type: "task",
       name: "Ajukan dokumen",
-      actorIds: ["staff"],
+      actorIds: ["staff", "admin"],
       next: "review",
     },
     {

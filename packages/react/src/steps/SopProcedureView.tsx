@@ -16,6 +16,16 @@ export function SopProcedureView({
   issues = [],
   className,
 }: SopProcedureViewProps) {
+  const actorColumns =
+    document.actors.length > 0
+      ? document.actors.map((actor) => ({
+          id: actor.id as string | null,
+          name: actor.name,
+        }))
+      : [{ id: null, name: "Pelaksana" }];
+  const actorWidth = 24 / actorColumns.length;
+  const totalColumns = actorColumns.length + 6;
+
   return (
     <section
       className={[styles.root, className].filter(Boolean).join(" ")}
@@ -24,24 +34,37 @@ export function SopProcedureView({
     >
       <table className={styles.table}>
         <colgroup>
-          <col className={styles.numberColumn} />
-          <col className={styles.activityColumn} />
-          <col className={styles.actorColumn} />
-          <col className={styles.inputColumn} />
-          <col className={styles.durationColumn} />
-          <col className={styles.outputColumn} />
-          <col className={styles.noteColumn} />
+          <col style={{ width: "5%" }} />
+          <col style={{ width: "24%" }} />
+          {actorColumns.map((actor, index) => (
+            <col
+              key={actor.id ?? `fallback-${index}`}
+              style={{ width: `${actorWidth}%` }}
+            />
+          ))}
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "13%" }} />
+          <col style={{ width: "12%" }} />
         </colgroup>
 
         <thead>
           <tr>
             <th rowSpan={2}>No</th>
             <th rowSpan={2}>Kegiatan</th>
-            <th rowSpan={2}>Pelaksana</th>
+            <th colSpan={actorColumns.length}>Pelaksana</th>
             <th colSpan={3}>Mutu Baku</th>
-            <th rowSpan={2}>Keterangan</th>
+            <th rowSpan={2}>Ket</th>
           </tr>
           <tr>
+            {actorColumns.map((actor, index) => (
+              <th
+                key={actor.id ?? `fallback-${index}`}
+                className={styles.actorHeader}
+              >
+                {actor.name}
+              </th>
+            ))}
             <th>Kelengkapan</th>
             <th>Waktu</th>
             <th>Output</th>
@@ -51,7 +74,7 @@ export function SopProcedureView({
         <tbody>
           {document.steps.length === 0 ? (
             <tr>
-              <td colSpan={7} className={styles.empty}>
+              <td colSpan={totalColumns} className={styles.empty}>
                 Belum ada langkah SOP.
               </td>
             </tr>
@@ -87,19 +110,37 @@ export function SopProcedureView({
                     <div className={styles.activityName}>
                       {step.name.trim() || "—"}
                     </div>
-                    <div className={styles.activityMeta}>
-                      <span>{stepTypeLabel(step)}</span>
-                      {step.type === "decision" ? (
-                        <span>{decisionSummary(step, document)}</span>
-                      ) : null}
-                      {issueCount > 0 ? (
-                        <span className={styles.issue}>
-                          {issueCount} masalah
-                        </span>
-                      ) : null}
-                    </div>
+                    {step.type === "decision" || issueCount > 0 ? (
+                      <div className={styles.activityMeta}>
+                        {step.type === "decision" ? (
+                          <span>{decisionSummary(step, document)}</span>
+                        ) : null}
+                        {issueCount > 0 ? (
+                          <span className={styles.issue}>
+                            {issueCount} masalah
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </td>
-                  <td>{actorNames(step, document)}</td>
+
+                  {actorColumns.map((actor, actorIndex) => {
+                    const assigned =
+                      actor.id === null
+                        ? document.actors.length === 0
+                        : step.actorIds.includes(actor.id);
+
+                    return (
+                      <td
+                        key={actor.id ?? `fallback-${actorIndex}`}
+                        className={styles.actorCell}
+                        data-sopflow-actor-id={actor.id ?? undefined}
+                      >
+                        {assigned ? <ProcedureShape step={step} /> : null}
+                      </td>
+                    );
+                  })}
+
                   <td>{display(step.input)}</td>
                   <td>{durationLabel(step)}</td>
                   <td>{display(step.output)}</td>
@@ -114,31 +155,27 @@ export function SopProcedureView({
   );
 }
 
+function ProcedureShape({ step }: { step: Step }) {
+  return (
+    <svg
+      className={styles.flowShape}
+      data-kind={step.type}
+      viewBox="0 0 36 28"
+      aria-hidden="true"
+    >
+      {step.type === "decision" ? (
+        <polygon points="18,2 34,14 18,26 2,14" />
+      ) : step.type === "start" || step.type === "end" ? (
+        <rect x="2" y="5" width="32" height="18" rx="9" />
+      ) : (
+        <rect x="2" y="5" width="32" height="18" />
+      )}
+    </svg>
+  );
+}
+
 function display(value: string | undefined): string {
   return value?.trim() || "—";
-}
-
-function stepTypeLabel(step: Step): string {
-  switch (step.type) {
-    case "start":
-      return "Mulai";
-    case "end":
-      return "Selesai";
-    case "decision":
-      return "Decision";
-    case "task":
-      return "Proses";
-  }
-}
-
-function actorNames(step: Step, document: SOPDocument): string {
-  const names = step.actorIds
-    .map(
-      (actorId) => document.actors.find((actor) => actor.id === actorId)?.name,
-    )
-    .filter((name): name is string => Boolean(name?.trim()));
-
-  return names.length > 0 ? names.join(", ") : "—";
 }
 
 function durationLabel(step: Step): string {

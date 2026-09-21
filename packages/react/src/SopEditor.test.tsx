@@ -544,15 +544,17 @@ describe("SopEditor actor mutations", () => {
     );
   });
 
-  it("changes the actor assigned to a step", async () => {
+  it("removes one actor assignment without dropping the others", async () => {
     const user = userEvent.setup();
 
     render(<EditorHarness initial={actorDocument} />);
 
     const row = getStepRow(getField("Review dokumen"));
-    const actorSelect = within(row).getByLabelText(/pelaksana/i);
+    const actorGroup = within(row).getByRole("group", { name: "Pelaksana" });
 
-    await user.selectOptions(actorSelect, "staff");
+    await user.click(
+      within(actorGroup).getByRole("checkbox", { name: "Manager" }),
+    );
 
     const document = readDocument();
     const review = document.steps.find((step) => step.id === "review");

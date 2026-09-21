@@ -19,8 +19,6 @@ export function ActorField({
   readOnly = false,
   error = false,
 }: ActorFieldProps) {
-  const selectedId = value[0] ?? "";
-
   if (readOnly) {
     const names = value
       .map((actorId) => actors.find((actor) => actor.id === actorId)?.name)
@@ -33,27 +31,51 @@ export function ActorField({
     );
   }
 
+  const selected = new Set(value);
+
   return (
-    <select
-      className={styles.select}
-      value={selectedId}
-      disabled={disabled}
-      data-empty={!selectedId || undefined}
+    <fieldset
+      className={styles.group}
       data-error={error || undefined}
       aria-label="Pelaksana"
-      onChange={(event) => {
-        const actorId = event.target.value;
-
-        onChange(actorId ? [actorId] : []);
-      }}
+      disabled={disabled}
     >
-      <option value="">Pilih pelaksana</option>
+      <legend className={styles.srOnly}>Pelaksana</legend>
 
-      {actors.map((actor) => (
-        <option key={actor.id} value={actor.id}>
-          {actor.name}
-        </option>
-      ))}
-    </select>
+      {actors.length === 0 ? (
+        <span className={styles.empty}>Belum ada pelaksana.</span>
+      ) : (
+        actors.map((actor) => {
+          const checked = selected.has(actor.id);
+
+          return (
+            <label key={actor.id} className={styles.option}>
+              <input
+                type="checkbox"
+                className={styles.checkbox}
+                checked={checked}
+                aria-label={actor.name}
+                onChange={(event) => {
+                  const next = new Set(value);
+
+                  if (event.target.checked) {
+                    next.add(actor.id);
+                  } else {
+                    next.delete(actor.id);
+                  }
+
+                  onChange(
+                    actors
+                      .map((candidate) => candidate.id)
+                      .filter((actorId) => next.has(actorId)),
+                  );
+                }}
+              />
+              <span className={styles.optionLabel}>{actor.name}</span>
+            </label>
+          );
+        })
+      )}
+    </fieldset>
   );
 }

@@ -1,7 +1,7 @@
 import type { SOPDocument, StepId } from "@sopflow/core";
 import { useState } from "react";
 
-import { SopDiagram } from "../diagram/SopDiagram.js";
+import { SopFlowchart } from "../diagram/SopFlowchart.js";
 import { SopEditor } from "../SopEditor.js";
 import type { SopHeaderValue } from "../types.js";
 import styles from "./SopWorkspace.module.css";
@@ -84,7 +84,7 @@ export function SopWorkspace({
           {...(onHeaderChange ? { onHeaderChange } : {})}
         />
       ) : (
-        <SopDiagram
+        <SopFlowchart
           document={value}
           selectedStepId={selectedStepId}
           onSelectedStepChange={handleSelectedStepChange}
@@ -109,7 +109,7 @@ function WorkspaceToolbar({ view, onViewChange }: WorkspaceToolbarProps) {
         aria-pressed={view === "editor"}
         onClick={() => onViewChange("editor")}
       >
-        Prosedur
+        Langkah
       </button>
 
       <button
@@ -119,7 +119,7 @@ function WorkspaceToolbar({ view, onViewChange }: WorkspaceToolbarProps) {
         aria-pressed={view === "diagram"}
         onClick={() => onViewChange("diagram")}
       >
-        Diagram
+        Flowchart
       </button>
     </div>
   );
