@@ -1,5 +1,11 @@
 import { useState } from "react";
-import type { SOPDocument, SopOperation, Step } from "@sopflow/core";
+import {
+  buildChangeStepTypeOperations,
+  buildInsertTaskAfterOperations,
+  type SOPDocument,
+  type SopOperation,
+  type Step,
+} from "@sopflow/core";
 import { createStepId } from "../../utils/createStepId.js";
 
 export interface UseStepActionsOptions {
@@ -26,45 +32,15 @@ export function useStepActions({
   }
 
   function changeStepType(type: "task" | "decision") {
-    if (step.type === "start" || step.type === "end" || step.type === type) {
+    const operations = buildChangeStepTypeOperations(document, step.id, type);
+
+    if (operations.length === 1 && operations[0]) {
+      onOperation(operations[0]);
       return;
     }
 
-    const { id, name, actorIds, input, duration, output, note } = step;
-
-    if (step.type === "task" && type === "decision") {
-      updateStep({
-        id,
-        type: "decision",
-        name,
-        actorIds,
-        input,
-        duration,
-        output,
-        note,
-        yes: step.next,
-        no: step.next,
-      });
-
-      return;
-    }
-
-    if (step.type === "decision" && type === "task") {
-      if (step.yes !== step.no) {
-        return;
-      }
-
-      updateStep({
-        id,
-        type: "task",
-        name,
-        actorIds,
-        input,
-        duration,
-        output,
-        note,
-        next: step.yes,
-      });
+    if (operations.length > 1) {
+      onOperations(operations);
     }
   }
 
@@ -73,27 +49,9 @@ export function useStepActions({
       return;
     }
 
-    const newStepId = createStepId();
-    const newStep: Step = {
-      id: newStepId,
-      type: "task",
-      name: "",
-      actorIds: document.actors[0] ? [document.actors[0].id] : [],
-      next: step.next,
-    };
-
-    onOperations([
-      {
-        type: "insert-step",
-        step: newStep,
-        afterStepId: step.id,
-      },
-      {
-        type: "connect",
-        from: step.id,
-        to: newStepId,
-      },
-    ]);
+    onOperations(
+      buildInsertTaskAfterOperations(document, step.id, createStepId()),
+    );
   }
 
   function openDecisionEditor() {

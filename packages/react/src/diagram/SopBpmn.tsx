@@ -1,5 +1,6 @@
-import type { SOPDocument, Step, StepId } from "@sopflow/core";
-import { useMemo, useId } from "react";
+import type { SOPDocument, StepId } from "@sopflow/core";
+import { buildBpmnModel, pointsToPath, type BpmnNode } from "@sopflow/diagram";
+import { useId, useMemo } from "react";
 
 import "../styles/token.css";
 import styles from "./SopBpmn.module.css";
@@ -11,21 +12,6 @@ export interface SopBpmnProps {
   className?: string;
 }
 
-interface BpmnNode {
-  step: Step;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface BpmnEdge {
-  id: string;
-  from: StepId;
-  to: StepId;
-  label?: string;
-}
-
 export function SopBpmn({
   document,
   selectedStepId = null,
@@ -33,50 +19,7 @@ export function SopBpmn({
   className,
 }: SopBpmnProps) {
   const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
-  const actorIndex = useMemo(
-    () => new Map(document.actors.map((actor, index) => [actor.id, index])),
-    [document.actors],
-  );
-
-  const laneCount = Math.max(1, document.actors.length);
-  const laneHeight = 112;
-  const headerWidth = 116;
-  const stepGap = 144;
-  const padding = 24;
-  const width =
-    headerWidth + padding * 2 + Math.max(1, document.steps.length) * stepGap;
-  const height = padding * 2 + laneCount * laneHeight;
-
-  const nodes = document.steps.map<BpmnNode>((step, index) => {
-    const firstActorId = step.actorIds[0];
-    const lane = firstActorId ? (actorIndex.get(firstActorId) ?? 0) : 0;
-    const size =
-      step.type === "decision"
-        ? { width: 48, height: 48 }
-        : step.type === "start" || step.type === "end"
-          ? { width: 38, height: 38 }
-          : { width: 96, height: 48 };
-
-    return {
-      step,
-      x: headerWidth + padding + index * stepGap + stepGap / 2,
-      y: padding + lane * laneHeight + laneHeight / 2,
-      ...size,
-    };
-  });
-
-  const nodeById = new Map(nodes.map((node) => [node.step.id, node]));
-  const edges = document.steps.flatMap<BpmnEdge>((step) => {
-    if (step.type === "end") return [];
-    if (step.type === "decision") {
-      return [
-        { id: `${step.id}:yes`, from: step.id, to: step.yes, label: "Ya" },
-        { id: `${step.id}:no`, from: step.id, to: step.no, label: "Tidak" },
-      ];
-    }
-
-    return [{ id: `${step.id}:next`, from: step.id, to: step.next }];
-  });
+  const model = useMemo(() => buildBpmnModel(document), [document]);
 
   return (
     <section
@@ -87,7 +30,7 @@ export function SopBpmn({
     >
       <svg
         className={styles.svg}
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 ${model.width} ${model.height}`}
         role="img"
         aria-label={`BPMN SOP ${document.title}`}
       >
@@ -105,110 +48,88 @@ export function SopBpmn({
           </marker>
         </defs>
 
-        {Array.from({ length: laneCount }, (_, index) => {
-          const y = padding + index * laneHeight;
-          const actor = document.actors[index];
-
-          return (
-            <g key={actor?.id ?? `lane-${index}`}>
-              <rect
-                x={padding}
-                y={y}
-                width={width - padding * 2}
-                height={laneHeight}
-                className={styles.lane}
-              />
-              <rect
-                x={padding}
-                y={y}
-                width={headerWidth}
-                height={laneHeight}
-                className={styles.laneHeader}
-              />
-              <text
-                x={padding + headerWidth / 2}
-                y={y + laneHeight / 2}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className={styles.laneLabel}
-              >
-                {actor?.name ?? "Pelaksana"}
-              </text>
-            </g>
-          );
-        })}
+        {model.lanes.map((lane) => (
+          <g key={lane.actorId ?? `lane-${lane.index}`}>
+            <rect
+              x={model.padding}
+              y={lane.y}
+              width={model.width - model.padding * 2}
+              height={lane.height}
+              className={styles.lane}
+            />
+            <rect
+              x={model.padding}
+              y={lane.y}
+              width={model.headerWidth}
+              height={lane.height}
+              className={styles.laneHeader}
+            />
+            <text
+              x={model.padding + model.headerWidth / 2}
+              y={lane.y + lane.height / 2}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className={styles.laneLabel}
+            >
+              {lane.label}
+            </text>
+          </g>
+        ))}
 
         <g className={styles.edges}>
-          {edges.map((edge) => {
-            const from = nodeById.get(edge.from);
-            const to = nodeById.get(edge.to);
-            if (!from || !to) return null;
-
-            const start = {
-              x: from.x + from.width / 2,
-              y: from.y,
-            };
-            const end = {
-              x: to.x - to.width / 2,
-              y: to.y,
-            };
-            const midX = start.x + (end.x - start.x) / 2;
-            const d = `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
-
-            return (
-              <g key={edge.id}>
-                <path
-                  d={d}
-                  className={styles.edge}
-                  markerEnd={`url(#${markerId})`}
-                />
-                {edge.label ? (
-                  <text
-                    x={midX + 4}
-                    y={(start.y + end.y) / 2 - 4}
-                    className={styles.edgeLabel}
-                  >
-                    {edge.label}
-                  </text>
-                ) : null}
-              </g>
-            );
-          })}
+          {model.edges.map((edge) => (
+            <g key={edge.id}>
+              <path
+                d={pointsToPath(edge.points)}
+                className={styles.edge}
+                markerEnd={`url(#${markerId})`}
+              />
+              {edge.label && edge.labelPosition ? (
+                <text
+                  x={edge.labelPosition.x}
+                  y={edge.labelPosition.y}
+                  className={styles.edgeLabel}
+                >
+                  {edge.label}
+                </text>
+              ) : null}
+            </g>
+          ))}
         </g>
 
         <g className={styles.nodes}>
-          {nodes.map((node) => {
-            const selected = selectedStepId === node.step.id;
+          {model.nodes.map((node) => {
+            const selected = selectedStepId === node.id;
 
             return (
               // biome-ignore lint/a11y/useSemanticElements: interactive BPMN nodes are SVG groups.
               <g
-                key={node.step.id}
+                key={node.id}
                 role="button"
                 tabIndex={0}
                 aria-pressed={selected}
-                aria-label={`${node.step.name} (${node.step.type})`}
+                aria-label={`${node.label} (${node.kind})`}
                 data-selected={selected || undefined}
                 data-sopflow-diagram-interactive
-                data-sopflow-step-id={node.step.id}
+                data-sopflow-step-id={node.id}
                 className={styles.node}
-                onClick={() => onSelectedStepChange?.(node.step.id)}
+                onClick={() => onSelectedStepChange?.(node.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    onSelectedStepChange?.(node.step.id);
+                    onSelectedStepChange?.(node.id);
                   }
                 }}
               >
                 <BpmnShape node={node} />
-                {node.step.type === "task" ? (
+                {node.kind === "task" ? (
                   <text
                     x={node.x}
                     y={node.y + 4}
                     textAnchor="middle"
                     className={styles.nodeLabel}
                   >
-                    {shortLabel(node.step.name)}
+                    {shortLabel(node.label)}
                   </text>
                 ) : (
                   <text
@@ -217,7 +138,7 @@ export function SopBpmn({
                     textAnchor="middle"
                     className={styles.nodeLabel}
                   >
-                    {shortLabel(node.step.name)}
+                    {shortLabel(node.label)}
                   </text>
                 )}
               </g>
@@ -233,7 +154,7 @@ function BpmnShape({ node }: { node: BpmnNode }) {
   const x = node.x - node.width / 2;
   const y = node.y - node.height / 2;
 
-  if (node.step.type === "decision") {
+  if (node.kind === "decision") {
     return (
       <>
         <polygon
@@ -248,7 +169,7 @@ function BpmnShape({ node }: { node: BpmnNode }) {
     );
   }
 
-  if (node.step.type === "start" || node.step.type === "end") {
+  if (node.kind === "start" || node.kind === "end") {
     return (
       <>
         <circle
@@ -257,7 +178,7 @@ function BpmnShape({ node }: { node: BpmnNode }) {
           r={node.width / 2}
           className={styles.nodeShape}
         />
-        {node.step.type === "end" ? (
+        {node.kind === "end" ? (
           <circle
             cx={node.x}
             cy={node.y}

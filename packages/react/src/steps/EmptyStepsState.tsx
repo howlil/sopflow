@@ -1,4 +1,8 @@
-import type { SOPDocument, SopOperation, Step } from "@sopflow/core";
+import {
+  buildCreateInitialWorkflowOperations,
+  type SOPDocument,
+  type SopOperation,
+} from "@sopflow/core";
 import { createStepId } from "../utils/createStepId.js";
 import styles from "./EmptyStepsState.module.css";
 
@@ -18,50 +22,13 @@ export function EmptyStepsState({
       return;
     }
 
-    const startId = createStepId();
-    const taskId = createStepId();
-    const endId = createStepId();
-    const actorIds = document.actors[0] ? [document.actors[0].id] : [];
-
-    const start: Step = {
-      id: startId,
-      type: "start",
-      name: "Mulai",
-      actorIds,
-      next: taskId,
-    };
-
-    const task: Step = {
-      id: taskId,
-      type: "task",
-      name: "",
-      actorIds,
-      next: endId,
-    };
-
-    const end: Step = {
-      id: endId,
-      type: "end",
-      name: "Selesai",
-      actorIds,
-    };
-
-    onOperations([
-      {
-        type: "add-step",
-        step: end,
-      },
-      {
-        type: "insert-step-before",
-        step: task,
-        beforeStepId: endId,
-      },
-      {
-        type: "insert-step-before",
-        step: start,
-        beforeStepId: taskId,
-      },
-    ]);
+    onOperations(
+      buildCreateInitialWorkflowOperations(document, {
+        startId: createStepId(),
+        taskId: createStepId(),
+        endId: createStepId(),
+      }),
+    );
   }
 
   return (

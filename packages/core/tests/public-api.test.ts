@@ -4,7 +4,10 @@ import {
   applyOperationInput,
   applyValidatedOperations,
   applyValidatedHistoryOperations,
+  buildInsertTaskAfterOperations,
+  createGraphIndex,
   createHistory,
+  getStepRemovalOptions,
   parseSop,
   parseSopOperation,
   validateSop,
@@ -20,5 +23,8 @@ describe("public API", () => {
     expect(applyValidatedHistoryOperations).toBeTypeOf("function");
     expect(parseSopOperation).toBeTypeOf("function");
     expect(createHistory).toBeTypeOf("function");
+    expect(createGraphIndex).toBeTypeOf("function");
+    expect(buildInsertTaskAfterOperations).toBeTypeOf("function");
+    expect(getStepRemovalOptions).toBeTypeOf("function");
   });
 });

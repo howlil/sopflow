@@ -1,10 +1,11 @@
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
-import type {
-  DecisionStep,
-  SOPDocument,
-  SopOperation,
-  StepId,
+import {
+  buildSetDecisionBranchesOperations,
+  type DecisionStep,
+  type SOPDocument,
+  type SopOperation,
+  type StepId,
 } from "@sopflow/core";
 import { useDialogFocus } from "../primitives/dialog/useDialogFocus.js";
 import styles from "./DecisionEditor.module.css";
@@ -57,20 +58,9 @@ export function DecisionEditor({
       return;
     }
 
-    onOperations([
-      {
-        type: "connect-decision",
-        from: step.id,
-        branch: "yes",
-        to: yesId,
-      },
-      {
-        type: "connect-decision",
-        from: step.id,
-        branch: "no",
-        to: noId,
-      },
-    ]);
+    onOperations(
+      buildSetDecisionBranchesOperations(document, step.id, yesId, noId),
+    );
 
     onClose();
   }

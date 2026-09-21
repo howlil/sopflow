@@ -30,14 +30,18 @@ describe("diagram public API", () => {
   it("keeps implementation helpers out of the runtime surface", () => {
     expect(Object.keys(publicApi).sort()).toEqual(
       [
+        "buildBpmnModel",
         "buildDiagram",
         "buildDiagramModel",
+        "buildProcedureModel",
         "buildSopFlowchart",
         "buildSvgRenderModel",
         "getDiamondPoints",
         "layoutDiagram",
         "pointsToPath",
         "routeDiagramEdges",
+        "routeProcedureEdges",
+        "projectWorkflow",
       ].sort(),
     );
   });

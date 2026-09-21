@@ -1,8 +1,8 @@
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  applyValidatedOperations,
-  getIncomingConnections,
+  buildRemoveStepAndReconnectOperations,
+  getStepRemovalOptions,
   type SOPDocument,
   type SopOperation,
   type Step,
@@ -31,8 +31,10 @@ export function DeleteStepDialog({
   const titleId = useId();
   const descriptionId = useId();
   const [replacementId, setReplacementId] = useState<StepId>("");
-  const incoming = getIncomingConnections(document, step.id);
-  const needsReplacement = incoming.length > 0;
+  const removal = getStepRemovalOptions(document, step.id);
+  const needsReplacement = removal.requiresReplacement;
+  const candidates = removal.candidates;
+  const hasNoValidReplacement = needsReplacement && candidates.length === 0;
   const { dialogRef, handleKeyDown } = useDialogFocus({
     open,
     onClose,
@@ -48,53 +50,6 @@ export function DeleteStepDialog({
     return null;
   }
 
-  function buildDeleteOperations(targetId?: StepId): SopOperation[] {
-    const operations: SopOperation[] = [];
-
-    if (targetId) {
-      for (const connection of incoming) {
-        if (connection.type === "next") {
-          operations.push({
-            type: "connect",
-            from: connection.from,
-            to: targetId,
-          });
-          continue;
-        }
-
-        operations.push({
-          type: "connect-decision",
-          from: connection.from,
-          branch: connection.type,
-          to: targetId,
-        });
-      }
-    }
-
-    operations.push({
-      type: "remove-step",
-      stepId: step.id,
-    });
-
-    return operations;
-  }
-
-  function isValidReplacement(targetId: StepId): boolean {
-    try {
-      applyValidatedOperations(document, buildDeleteOperations(targetId));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  const candidates = document.steps.filter(
-    (candidate) =>
-      candidate.id !== step.id &&
-      (!needsReplacement || isValidReplacement(candidate.id)),
-  );
-  const hasNoValidReplacement = needsReplacement && candidates.length === 0;
-
   function handleDelete() {
     if (
       disabled ||
@@ -104,7 +59,13 @@ export function DeleteStepDialog({
       return;
     }
 
-    onOperations(buildDeleteOperations(replacementId || undefined));
+    onOperations(
+      buildRemoveStepAndReconnectOperations(
+        document,
+        step.id,
+        replacementId || undefined,
+      ),
+    );
     onClose();
   }
 
