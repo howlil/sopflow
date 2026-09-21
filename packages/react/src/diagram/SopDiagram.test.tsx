@@ -269,10 +269,10 @@ describe("SopDiagram", () => {
     await user.click(screen.getByRole("button", { name: "Setujui (task)" }));
 
     expect(
-      document.querySelector('[data-sopflow-step-id="approve"]'),
+      document.querySelector('[data-sopflow-procedure-step-id="approve"]'),
     ).toHaveAttribute("data-selected", "true");
 
-    const rejectRow = document.querySelector('[data-sopflow-step-id="reject"]');
+    const rejectRow = document.querySelector('[data-sopflow-procedure-step-id="reject"]');
 
     if (!rejectRow) {
       throw new Error("Expected the reject step row to be rendered");
