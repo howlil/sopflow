@@ -1,0 +1,111 @@
+.root {
+  width: 100%;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+  background: var(--sopflow-surface);
+}
+
+.svg {
+  display: block;
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  border: 1px dashed var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+  color: var(--sopflow-text-muted);
+  font-size: var(--sopflow-font-sm);
+}
+
+.lane {
+  fill: var(--sopflow-surface);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.laneHeader {
+  fill: var(--sopflow-surface-muted);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.laneLabel {
+  fill: var(--sopflow-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.rowLine {
+  stroke: var(--sopflow-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--sopflow-text);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.arrow {
+  fill: var(--sopflow-text);
+}
+
+.edgeLabel {
+  fill: var(--sopflow-text);
+  font-size: 10px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--sopflow-surface);
+  stroke-width: 4px;
+  user-select: none;
+}
+
+.node {
+  cursor: pointer;
+  outline: none;
+}
+
+.nodeShape {
+  fill: var(--sopflow-surface);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.node:hover .nodeShape {
+  fill: var(--sopflow-surface-muted);
+}
+
+.node[data-selected="true"] .nodeShape {
+  fill: var(--sopflow-selected-surface);
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+}
+
+.node:focus-visible .nodeShape {
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+}
+
+.nodeLabel {
+  fill: var(--sopflow-text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  user-select: none;
+}
+
+@media print {
+  .node[data-selected="true"] .nodeShape {
+    fill: var(--sopflow-surface);
+    stroke: var(--sopflow-document-border);
+    stroke-width: 1.5;
+  }
+}
