@@ -74,8 +74,7 @@ describe("formal SOP-AP flowchart routing parity", () => {
     });
     expect(
       trunk.some(
-        (point) =>
-          point.x === pickFormalColumnPipeX("left", staff, 0, 10),
+        (point) => point.x === pickFormalColumnPipeX("left", staff, 0, 10),
       ),
     ).toBe(true);
 
@@ -98,8 +97,7 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(cross).not.toBeNull();
     expect(
       cross?.some(
-        (point) =>
-          point.x === pickFormalColumnGutterBusX(staff, manager, 0),
+        (point) => point.x === pickFormalColumnGutterBusX(staff, manager, 0),
       ),
     ).toBe(true);
 
@@ -246,9 +244,12 @@ describe("formal SOP-AP flowchart routing parity", () => {
     ]);
 
     expect(ordered[0]?.id).toBe("long");
-    expect(ordered.indexOf(ordered.find((item) => item.id === "no")!)).toBeLessThan(
-      ordered.indexOf(ordered.find((item) => item.id === "yes")!),
-    );
+    const noIndex = ordered.findIndex((item) => item.id === "no");
+    const yesIndex = ordered.findIndex((item) => item.id === "yes");
+
+    expect(noIndex).toBeGreaterThanOrEqual(0);
+    expect(yesIndex).toBeGreaterThanOrEqual(0);
+    expect(noIndex).toBeLessThan(yesIndex);
   });
 
   it("detects connector crossings for reconciliation", () => {
