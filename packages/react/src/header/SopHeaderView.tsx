@@ -100,10 +100,7 @@ export function SopHeaderView({
             <HeaderValue strong>{displayValue(document.title)}</HeaderValue>
           </tr>
 
-          <SectionTitleRow
-            left="DASAR HUKUM"
-            right="KUALIFIKASI PELAKSANAAN"
-          />
+          <SectionTitleRow left="DASAR HUKUM" right="KUALIFIKASI PELAKSANAAN" />
           <SectionValueRow
             left={header.lawBasis}
             right={header.qualifications}
@@ -115,10 +112,7 @@ export function SopHeaderView({
           />
           <SectionValueRow left={header.relatedSops} right={header.equipment} />
 
-          <SectionTitleRow
-            left="PERINGATAN"
-            right="PENCATATAN DAN PENDATAAN"
-          />
+          <SectionTitleRow left="PERINGATAN" right="PENCATATAN DAN PENDATAAN" />
           <SectionValueRow left={header.warnings} right={header.records} />
         </tbody>
       </table>
@@ -164,7 +158,11 @@ function HeaderValue({
   );
 }
 
-function SignatoryView({ value }: { value?: SopSignatory }) {
+function SignatoryView({
+  value,
+}: {
+  value: SopSignatory | undefined;
+}) {
   return (
     <div className={styles.signatory}>
       <div className={styles.signatoryRole}>
@@ -173,9 +171,7 @@ function SignatoryView({ value }: { value?: SopSignatory }) {
 
       <div className={styles.signatureSpace} aria-hidden />
 
-      <div className={styles.signatoryName}>
-        {value?.name?.trim() || "—"}
-      </div>
+      <div className={styles.signatoryName}>{value?.name?.trim() || "—"}</div>
 
       <div className={styles.signatoryIdentifier}>
         {value?.identifier?.trim()
@@ -223,11 +219,16 @@ function ReadOnlyList({ value }: { value: readonly string[] }) {
     return <span className={styles.placeholder}>—</span>;
   }
 
+  const occurrences = new Map<string, number>();
+
   return (
     <ol className={styles.list}>
-      {visibleItems.map((item, index) => (
-        <li key={`${index}-${item}`}>{item}</li>
-      ))}
+      {visibleItems.map((item) => {
+        const occurrence = (occurrences.get(item) ?? 0) + 1;
+        occurrences.set(item, occurrence);
+
+        return <li key={`${item}-${occurrence}`}>{item}</li>;
+      })}
     </ol>
   );
 }
