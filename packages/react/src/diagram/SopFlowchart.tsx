@@ -82,7 +82,7 @@ export function SopFlowchart({
         </marker>
       </defs>
 
-      <g className={styles.grid} aria-hidden="true">
+      <g className={styles.grid}>
         {flowchart.lanes.map((lane) => (
           <g key={lane.actorId ?? "fallback"}>
             <rect
@@ -112,8 +112,7 @@ export function SopFlowchart({
         ))}
 
         {document.steps.map((step, row) => {
-          const y =
-            24 + flowchart.headerHeight + row * flowchart.rowHeight;
+          const y = 24 + flowchart.headerHeight + row * flowchart.rowHeight;
 
           return (
             <line
@@ -131,7 +130,7 @@ export function SopFlowchart({
         })}
       </g>
 
-      <g className={styles.edges} aria-hidden="true">
+      <g className={styles.edges}>
         {flowchart.edges.map((edge) => (
           <g key={edge.id}>
             <path
@@ -164,7 +163,6 @@ export function SopFlowchart({
               return (
                 <g
                   key={`${node.id}-${placement.actorId ?? placementIndex}`}
-                  aria-hidden="true"
                   className={styles.node}
                   data-kind={node.kind}
                   data-selected={selected || undefined}
