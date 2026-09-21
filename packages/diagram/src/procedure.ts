@@ -1,4 +1,9 @@
 import type { ActorId, Duration, SOPDocument, StepId } from "@sopflow/core";
+import {
+  routeFlowchartConnections,
+  type FlowchartRouteConnection,
+} from "./flowchart/engine/routeFlowchart.js";
+import type { FlowchartRoutingGeometry } from "./flowchart/engine/types.js";
 import type { DiagramPoint } from "./types.js";
 import {
   projectWorkflow,
@@ -36,6 +41,11 @@ export interface ProcedureGeometry {
   readonly anchors: ReadonlyMap<StepId, DiagramPoint>;
   readonly actorLeft: number;
   readonly actorRight: number;
+  /**
+   * Rich SOP-AP matrix geometry. When present, routing follows the extracted
+   * sop-ta flowchart engine. Kept optional for low-level backwards compatibility.
+   */
+  readonly flowchart?: FlowchartRoutingGeometry;
 }
 
 export type ProcedureManualRoute =
@@ -56,6 +66,7 @@ export type ProcedureManualRoutes = Readonly<
 
 export interface SopDiagramConfig {
   readonly routes?: ProcedureManualRoutes;
+  readonly pathLayoutSeed?: number;
 }
 
 /**
@@ -109,6 +120,116 @@ export function routeProcedureEdges(
   model: ProcedureModel,
   geometry: ProcedureGeometry,
   overrides: ProcedureRoutingOverrides = {},
+): ProcedureRoutedEdge[] {
+  if (!geometry.flowchart) {
+    return routeLegacyProcedureEdges(model, geometry, overrides);
+  }
+
+  const { routes, legacyTrunks } = resolveRoutingOverrides(overrides);
+  const rowById = new Map(
+    model.rows.map((row, index) => [row.stepId, { row, index }] as const),
+  );
+  const connections = model.graph.edges.flatMap<FlowchartRouteConnection>(
+    (edge) => {
+      const source = rowById.get(edge.from);
+      const target = rowById.get(edge.to);
+      if (!source || !target) return [];
+
+      return [
+        {
+          id: edge.id,
+          from: edge.from,
+          to: edge.to,
+          kind: edge.kind,
+          ...(edge.label ? { label: edge.label } : {}),
+          sourceType: flowchartShapeType(source.row.kind),
+          targetType: flowchartShapeType(target.row.kind),
+          fromActorId: source.row.primaryActorId,
+          toActorId: target.row.primaryActorId,
+          fromRow: source.index,
+          toRow: target.index,
+        },
+      ];
+    },
+  );
+
+  const routed = routeFlowchartConnections(
+    connections,
+    geometry.flowchart,
+    {
+      pathLayoutSeed: isDiagramConfig(overrides)
+        ? overrides.pathLayoutSeed
+        : undefined,
+    },
+  );
+  const autoById = new Map(routed.map((edge) => [edge.id, edge] as const));
+
+  return model.graph.edges.flatMap<ProcedureRoutedEdge>((edge) => {
+    const from = geometry.anchors.get(edge.from);
+    const to = geometry.anchors.get(edge.to);
+    const auto = autoById.get(edge.id);
+
+    if (!from || !to || !auto) return [];
+
+    const manualRoute = routes[edge.id];
+    const legacyTrunkX = legacyTrunks[edge.id];
+    let points = [...auto.points];
+
+    if (manualRoute?.kind === "orthogonal") {
+      points = buildManualPath(
+        from,
+        to,
+        manualRoute.bendPoints,
+        geometry,
+      );
+    } else if (manualRoute?.kind === "trunk" || legacyTrunkX !== undefined) {
+      points = buildTrunkPath(
+        from,
+        to,
+        clampTrunkX(
+          manualRoute?.kind === "trunk"
+            ? manualRoute.x
+            : (legacyTrunkX ?? auto.points[0]?.x ?? from.x),
+          geometry,
+        ),
+      );
+    }
+
+    const fallbackHandle = {
+      x: points[1]?.x ?? from.x,
+      y: (from.y + to.y) / 2,
+    };
+    const handlePosition = findRouteHandle(points, fallbackHandle);
+
+    return [
+      {
+        id: edge.id,
+        from: edge.from,
+        to: edge.to,
+        kind: edge.kind,
+        ...(edge.label ? { label: edge.label } : {}),
+        points,
+        trunkX: handlePosition.x,
+        handlePosition,
+        ...(edge.label
+          ? {
+              labelPosition:
+                manualRoute?.labelPosition ??
+                auto.labelPosition ?? {
+                  x: handlePosition.x + 3,
+                  y: handlePosition.y - 4,
+                },
+            }
+          : {}),
+      },
+    ];
+  });
+}
+
+function routeLegacyProcedureEdges(
+  model: ProcedureModel,
+  geometry: ProcedureGeometry,
+  overrides: ProcedureRoutingOverrides,
 ): ProcedureRoutedEdge[] {
   const orderByStepId = new Map(
     model.rows.map((row, index) => [row.stepId, index] as const),
@@ -165,6 +286,16 @@ export function routeProcedureEdges(
       },
     ];
   });
+}
+
+function flowchartShapeType(
+  kind: ProcedureRowModel["kind"],
+): FlowchartRouteConnection["sourceType"] {
+  return kind === "decision"
+    ? "flowchart-decision"
+    : kind === "start" || kind === "end"
+      ? "flowchart-terminator"
+      : "flowchart-process";
 }
 
 export function updateProcedureManualTrunk(
