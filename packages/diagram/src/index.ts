@@ -1,3 +1,10 @@
+export { projectWorkflow } from "./workflow.js";
+export type {
+  WorkflowEdge,
+  WorkflowGraph,
+  WorkflowNode,
+} from "./workflow.js";
+
 export { buildDiagramModel } from "./buildDiagramModel.js";
 export { buildDiagram } from "./buildDiagram.js";
 export type { BuildDiagramOptions } from "./buildDiagram.js";
