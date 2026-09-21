@@ -54,14 +54,16 @@ function WorkspaceHarness() {
   return <SopWorkspace value={document} header={header} />;
 }
 
-function getReviewInput() {
-  const input = screen.getAllByDisplayValue("Review")[0];
+function getReviewRow() {
+  const row = globalThis.document.querySelector<HTMLElement>(
+    '[data-sopflow-procedure-step-id="task"]',
+  );
 
-  if (!input) {
-    throw new Error("Review input not found");
+  if (!row) {
+    throw new Error("Review row not found");
   }
 
-  return input;
+  return row;
 }
 
 describe("SopWorkspace", () => {
@@ -70,7 +72,7 @@ describe("SopWorkspace", () => {
 
     render(<WorkspaceHarness />);
 
-    await user.click(getReviewInput());
+    await user.click(getReviewRow());
     await user.click(screen.getByRole("button", { name: "Diagram" }));
 
     expect(
@@ -87,12 +89,6 @@ describe("SopWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Review (task)" }));
     await user.click(screen.getByRole("button", { name: "Prosedur" }));
 
-    const selectedRow = getReviewInput().closest("[data-sopflow-step-id]");
-
-    if (!selectedRow) {
-      throw new Error("Selected step row not found");
-    }
-
-    expect(selectedRow).toHaveAttribute("aria-selected", "true");
+    expect(getReviewRow()).toHaveAttribute("aria-selected", "true");
   });
 });

@@ -1,18 +1,10 @@
 .panel {
   width: 100%;
-
-  border: 1px solid var(--sopflow-border);
-  border-radius: var(--sopflow-surface-radius);
-
-  padding: 0.75rem;
-
-  background: var(--sopflow-surface);
   color: var(--sopflow-text);
 }
 
 .panel[data-error="true"] {
-  border-color: var(--sopflow-error-border);
-  background: var(--sopflow-error-surface);
+  color: var(--sopflow-error-text);
 }
 
 .panel[data-empty="true"] {
@@ -20,31 +12,27 @@
 }
 
 .header {
-  margin-bottom: 0.5rem;
-
+  margin-bottom: 0.375rem;
   color: var(--sopflow-error-text);
-
-  font-size: var(--sopflow-font-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .list {
   display: grid;
   gap: 0.375rem;
-
   margin: 0;
   padding: 0;
-
   list-style: none;
 }
 
 .issue {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-
-  gap: 0.75rem;
-
+  display: grid;
+  gap: 0.125rem;
   font-size: var(--sopflow-font-xs);
+  line-height: 1.4;
 }
 
 .message {
@@ -52,16 +40,12 @@
 }
 
 .stepId {
-  flex-shrink: 0;
-
   color: var(--sopflow-text-muted);
-
   font-family: monospace;
-  font-size: var(--sopflow-font-xs);
+  font-size: 0.625rem;
 }
 
 .success {
   margin: 0;
-
   font-size: var(--sopflow-font-xs);
 }

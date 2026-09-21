@@ -11,6 +11,8 @@ describe("@sopflow/react public API", () => {
         "SopEditor",
         "SopHeaderFields",
         "SopHeaderView",
+        "SopProcedureView",
+        "SopStepFields",
         "SopWorkspace",
       ].sort(),
     );
@@ -19,6 +21,8 @@ describe("@sopflow/react public API", () => {
     expect(publicApi.SopEditor).toBeTypeOf("function");
     expect(publicApi.SopHeaderFields).toBeTypeOf("function");
     expect(publicApi.SopHeaderView).toBeTypeOf("function");
+    expect(publicApi.SopProcedureView).toBeTypeOf("function");
+    expect(publicApi.SopStepFields).toBeTypeOf("function");
     expect(publicApi.SopWorkspace).toBeTypeOf("function");
   });
 });

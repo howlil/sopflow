@@ -1,4 +1,4 @@
-import { render, within } from "@testing-library/react";
+import { fireEvent, render, within } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -24,6 +24,9 @@ const document: SOPDocument = {
       type: "task",
       name: "Proses",
       actorIds: ["staff"],
+      input: "Formulir",
+      duration: { value: 5, unit: "minute" },
+      output: "Dokumen",
       next: "end",
     },
     {
@@ -64,17 +67,21 @@ function Harness() {
 }
 
 describe("SopEditor default composition", () => {
-  it("keeps A4 header presentation separate from editable inspector controls", () => {
+  it("keeps the A4 document presentation-only", () => {
     const { container } = render(<Harness />);
 
     const main = container.querySelector("[data-sopflow-main-pane]");
     const inspector = container.querySelector("[data-sopflow-inspector]");
     const headerView = container.querySelector("[data-sopflow-header-view]");
+    const procedureView = container.querySelector(
+      "[data-sopflow-procedure-view]",
+    );
 
     expect(main).not.toBeNull();
     expect(inspector).not.toBeNull();
     expect(headerView).not.toBeNull();
-    expect(headerView?.querySelector("input, textarea, button")).toBeNull();
+    expect(procedureView).not.toBeNull();
+    expect(main?.querySelector("input, textarea, select, button")).toBeNull();
 
     expect(
       within(inspector as HTMLElement).getByLabelText("Nomor SOP"),
@@ -87,6 +94,36 @@ describe("SopEditor default composition", () => {
 
     expect(
       within(headerView as HTMLElement).getByText("Layout SOP"),
+    ).toBeInTheDocument();
+    expect(
+      within(procedureView as HTMLElement).getByText("Formulir"),
+    ).toBeInTheDocument();
+    expect(
+      within(procedureView as HTMLElement).getByText("5 menit"),
+    ).toBeInTheDocument();
+  });
+
+  it("opens selected step fields in the inspector", () => {
+    const { container } = render(<Harness />);
+    const inspector = container.querySelector("[data-sopflow-inspector]");
+    const row = container.querySelector<HTMLElement>(
+      '[data-sopflow-procedure-step-id="task"]',
+    );
+
+    expect(row).not.toBeNull();
+    fireEvent.click(row as HTMLElement);
+
+    expect(row).toHaveAttribute("aria-selected", "true");
+    expect(
+      within(inspector as HTMLElement).getByLabelText("Kegiatan"),
+    ).toHaveValue("Proses");
+    expect(
+      within(inspector as HTMLElement).getByLabelText("Pelaksana"),
+    ).toHaveValue("staff");
+    expect(
+      within(inspector as HTMLElement).getByRole("button", {
+        name: "Kembali ke properti dokumen",
+      }),
     ).toBeInTheDocument();
   });
 });

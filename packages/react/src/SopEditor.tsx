@@ -10,7 +10,11 @@ import { useSopHistory } from "./editor/hooks/useSopHistory.js";
 import { SopEditorToolbar } from "./editor/SopEditorToolbar.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
+import { AddStepButton } from "./steps/AddStepButton.js";
+import { EmptyStepsState } from "./steps/EmptyStepsState.js";
+import { SopStepFields } from "./steps/SopStepFields.js";
 import type { SopHeaderValue } from "./types.js";
+import { ValidationPanel } from "./validation/ValidationPanel.js";
 
 export interface SopEditorProps {
   value: SOPDocument;
@@ -68,6 +72,11 @@ export function SopEditor({
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
   const issues = useMemo(() => validateSop(value), [value]);
+  const selectedStepIndex = selectedStepId
+    ? value.steps.findIndex((step) => step.id === selectedStepId)
+    : -1;
+  const selectedStep =
+    selectedStepIndex >= 0 ? value.steps[selectedStepIndex] : undefined;
 
   const handleSelectedStepChange = useCallback(
     (stepId: StepId | null) => {
@@ -113,19 +122,40 @@ export function SopEditor({
               issues={issues}
               selectedStepId={selectedStepId}
               onSelectedStepChange={handleSelectedStepChange}
-              onOperation={applyOperation}
-              onOperations={applyOperations}
-              disabled={mutationDisabled}
             />
           </div>
 
           <aside
             className={styles.inspector}
             data-sopflow-inspector
-            aria-label="Properti SOP"
+            aria-label={selectedStep ? "Properti langkah" : "Properti SOP"}
           >
             <div className={styles.inspectorHeader}>
-              <h2 className={styles.inspectorTitle}>Properti</h2>
+              <div className={styles.inspectorHeading}>
+                {selectedStep ? (
+                  <button
+                    type="button"
+                    className={styles.backButton}
+                    aria-label="Kembali ke properti dokumen"
+                    onClick={() => handleSelectedStepChange(null)}
+                  >
+                    ←
+                  </button>
+                ) : null}
+
+                <div>
+                  <h2 className={styles.inspectorTitle}>
+                    {selectedStep
+                      ? `Langkah ${selectedStepIndex + 1}`
+                      : "Properti"}
+                  </h2>
+                  {selectedStep ? (
+                    <p className={styles.inspectorSubtitle}>
+                      {selectedStep.name || "Tanpa judul"}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
 
               {!mutationDisabled ? (
                 <SopEditorToolbar
@@ -138,25 +168,60 @@ export function SopEditor({
             </div>
 
             <div className={styles.inspectorContent}>
-              <SopHeaderFields
-                document={value}
-                header={header}
-                disabled={readOnly || loading}
-                {...(onChange ? { onDocumentChange: handleChange } : {})}
-                {...(onHeaderChange
-                  ? { onHeaderChange: handleHeaderChange }
-                  : {})}
-              />
+              {selectedStep ? (
+                <SopStepFields
+                  document={value}
+                  stepId={selectedStep.id}
+                  issues={issues}
+                  onOperation={applyOperation}
+                  onOperations={applyOperations}
+                  disabled={mutationDisabled}
+                />
+              ) : (
+                <>
+                  <SopHeaderFields
+                    document={value}
+                    header={header}
+                    disabled={readOnly || loading}
+                    {...(onChange ? { onDocumentChange: handleChange } : {})}
+                    {...(onHeaderChange
+                      ? { onHeaderChange: handleHeaderChange }
+                      : {})}
+                  />
 
-              <ActorsEditor
-                document={value}
-                onOperation={applyOperation}
-                onOperations={applyOperations}
-                disabled={mutationDisabled}
-              />
+                  <ActorsEditor
+                    document={value}
+                    onOperation={applyOperation}
+                    onOperations={applyOperations}
+                    disabled={mutationDisabled}
+                  />
+
+                  <section className={styles.procedureActions}>
+                    <h3 className={styles.sectionTitle}>Prosedur</h3>
+
+                    {value.steps.length === 0 ? (
+                      <EmptyStepsState
+                        document={value}
+                        onOperations={applyOperations}
+                        disabled={mutationDisabled}
+                      />
+                    ) : (
+                      <AddStepButton
+                        document={value}
+                        onOperations={applyOperations}
+                        disabled={mutationDisabled}
+                      />
+                    )}
+                  </section>
+                </>
+              )}
+
+              <div className={styles.validation}>
+                <ValidationPanel issues={issues} />
+              </div>
             </div>
 
-            {headerDisabled && !mutationDisabled ? (
+            {headerDisabled && !mutationDisabled && !selectedStep ? (
               <p className={styles.inspectorNotice}>
                 Header hanya dapat dibaca karena onHeaderChange tidak tersedia.
               </p>

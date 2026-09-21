@@ -1,24 +1,15 @@
-import type {
-  SOPDocument,
-  SopOperation,
-  StepId,
-  ValidationIssue,
-} from "@sopflow/core";
-import type { SopHeaderValue } from "../types.js";
+import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import { SopHeaderView } from "../header/SopHeaderView.js";
-import { SopStepsEditor } from "../steps/SopStepsEditor.js";
-import { ValidationPanel } from "../validation/ValidationPanel.js";
+import { SopProcedureView } from "../steps/SopProcedureView.js";
+import type { SopHeaderValue } from "../types.js";
 import styles from "./SopDocumentCanvas.module.css";
 
 export interface SopDocumentCanvasProps {
   document: SOPDocument;
   header: SopHeaderValue;
-  issues: ValidationIssue[];
+  issues: readonly ValidationIssue[];
   selectedStepId: StepId | null;
-  onSelectedStepChange: (stepId: StepId | null) => void;
-  onOperation: (operation: SopOperation) => void;
-  onOperations: (operations: SopOperation[]) => void;
-  disabled?: boolean;
+  onSelectedStepChange?: (stepId: StepId | null) => void;
 }
 
 export function SopDocumentCanvas({
@@ -27,9 +18,6 @@ export function SopDocumentCanvas({
   issues,
   selectedStepId,
   onSelectedStepChange,
-  onOperation,
-  onOperations,
-  disabled = false,
 }: SopDocumentCanvasProps) {
   return (
     <main className={styles.canvas}>
@@ -37,19 +25,12 @@ export function SopDocumentCanvas({
         <SopHeaderView document={document} header={header} />
 
         <section className={styles.content}>
-          <SopStepsEditor
+          <SopProcedureView
             document={document}
             issues={issues}
             selectedStepId={selectedStepId}
-            onSelectedStepChange={onSelectedStepChange}
-            onOperation={onOperation}
-            onOperations={onOperations}
-            disabled={disabled}
+            {...(onSelectedStepChange ? { onSelectedStepChange } : {})}
           />
-
-          <div className={styles.validation}>
-            <ValidationPanel issues={issues} />
-          </div>
         </section>
       </div>
     </main>
