@@ -1,8 +1,5 @@
 import type { FormalFlowchartOccupiedSegment } from "./types.js";
-import {
-  formalSegmentsCross,
-  formalSegmentsOverlap,
-} from "./orthogonal.js";
+import { formalSegmentsCross, formalSegmentsOverlap } from "./orthogonal.js";
 import type { FormalRouteMeta } from "./dedicated.js";
 
 function labelOrder(label: string | null | undefined): number {
@@ -14,12 +11,14 @@ function labelOrder(label: string | null | undefined): number {
 
 function hashId(seed: number, id: string): number {
   return (
-    id.split("").reduce(
-      (accumulator, char, index) =>
-        accumulator +
-        char.charCodeAt(0) * ((seed + 1) * (index + 31) + seed * 7),
-      0,
-    ) >>> 0
+    id
+      .split("")
+      .reduce(
+        (accumulator, char, index) =>
+          accumulator +
+          char.charCodeAt(0) * ((seed + 1) * (index + 31) + seed * 7),
+        0,
+      ) >>> 0
   );
 }
 
