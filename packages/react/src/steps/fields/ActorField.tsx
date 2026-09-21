@@ -36,7 +36,6 @@ export function ActorField({
       <span
         className={styles.disabled}
         data-error={error || undefined}
-        aria-label="Pelaksana"
       >
         {compactActorLabel(names)}
       </span>
