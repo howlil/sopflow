@@ -288,12 +288,7 @@ export function SopProcedureView({
       if (usesLegacyManualPaths) return;
 
       updateDiagramConfig(
-        setProcedureManualEndpoint(
-          diagramConfig,
-          connectionId,
-          kind,
-          anchor,
-        ),
+        setProcedureManualEndpoint(diagramConfig, connectionId, kind, anchor),
       );
     },
     [diagramConfig, updateDiagramConfig, usesLegacyManualPaths],
