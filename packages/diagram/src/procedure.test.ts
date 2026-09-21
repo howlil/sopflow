@@ -4,6 +4,7 @@ import {
   buildProcedureModel,
   removeProcedureManualRoute,
   routeProcedureEdges,
+  setProcedureManualEndpoint,
   setProcedureManualRoute,
   updateProcedureManualTrunk,
   type ProcedureGeometry,
@@ -156,6 +157,21 @@ describe("procedure model", () => {
     expect(edge?.points[0]).toEqual({ x: 350, y: 260 });
     expect(edge?.points.at(-1)).toEqual({ x: 250, y: 80 });
     expect(edge?.handlePosition).toEqual({ x: 420, y: 170 });
+  });
+
+  it("persists manual endpoint anchors independently from bend points", () => {
+    const model = buildProcedureModel(document);
+    const config = setProcedureManualEndpoint(
+      {},
+      "start:next:review",
+      "start",
+      { side: "right", distance: 0.72 },
+    );
+
+    expect(config.routes?.["start:next:review"]).toMatchObject({
+      kind: "orthogonal",
+      startAnchor: { side: "right", distance: 0.72 },
+    });
   });
 
   it("supports explicit orthogonal manual bend points", () => {
