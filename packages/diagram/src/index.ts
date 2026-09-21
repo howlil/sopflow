@@ -1,3 +1,18 @@
+export { routeFlowchartConnections } from "./flowchart/engine/routeFlowchart.js";
+export type {
+  FlowchartManualRouteInput,
+  FlowchartRoutedConnection,
+  RouteFlowchartConnectionsOptions,
+} from "./flowchart/engine/routeFlowchart.js";
+export type {
+  FlowchartBounds,
+  FlowchartGridLayout,
+  FlowchartRouteConnection,
+  FlowchartRoutingGeometry,
+  FlowchartShapeGeometry,
+  FlowchartSide,
+} from "./flowchart/engine/types.js";
+
 export { buildBpmnModel } from "./bpmn.js";
 export type {
   BpmnLane,
