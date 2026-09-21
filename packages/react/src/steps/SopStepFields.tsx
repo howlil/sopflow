@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type {
   SOPDocument,
   SopOperation,
+  Step,
   StepId,
   ValidationIssue,
 } from "@sopflow/core";
@@ -41,6 +42,38 @@ export function SopStepFields({
 
   if (!step) return null;
 
+  return (
+    <SopStepFieldsContent
+      document={document}
+      step={step}
+      onOperation={onOperation}
+      onOperations={onOperations}
+      issues={issues}
+      disabled={disabled}
+      className={className}
+    />
+  );
+}
+
+interface SopStepFieldsContentProps {
+  document: SOPDocument;
+  step: Step;
+  onOperation: (operation: SopOperation) => void;
+  onOperations: (operations: SopOperation[]) => void;
+  issues: readonly ValidationIssue[];
+  disabled: boolean;
+  className?: string;
+}
+
+function SopStepFieldsContent({
+  document,
+  step,
+  onOperation,
+  onOperations,
+  issues,
+  disabled,
+  className,
+}: SopStepFieldsContentProps) {
   const {
     updateStep,
     changeStepType,
@@ -144,7 +177,6 @@ export function SopStepFields({
 
       <InspectorSection title="Alur">
         <div className={styles.flowSummary}>{flowSummary(step, document)}</div>
-
       </InspectorSection>
 
       {stepIssues.length > 0 ? (
@@ -207,13 +239,7 @@ function InspectorSection({
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className={styles.field}>
       <span className={styles.label}>{label}</span>
@@ -222,10 +248,7 @@ function Field({
   );
 }
 
-function flowSummary(
-  step: SOPDocument["steps"][number],
-  document: SOPDocument,
-): string {
+function flowSummary(step: Step, document: SOPDocument): string {
   const label = (id: StepId) => {
     const index = document.steps.findIndex((candidate) => candidate.id === id);
     const target = document.steps[index];
