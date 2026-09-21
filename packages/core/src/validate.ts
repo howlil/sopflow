@@ -1,15 +1,25 @@
-import { getNextStepIds, getReachableStepIds, canReachEnd } from "./graph.js";
-import type { SOPDocument } from "./types.js";
+import { getNextStepIds, getReachableStepIds } from "./graph.js";
+import type { ActorId, SOPDocument, StepId } from "./types.js";
+
+export type ValidationIssueCode =
+  | "INVALID_START_COUNT"
+  | "MISSING_END"
+  | "DUPLICATE_STEP_ID"
+  | "DUPLICATE_ACTOR_ID"
+  | "UNKNOWN_ACTOR_REFERENCE"
+  | "UNKNOWN_STEP_REFERENCE"
+  | "UNREACHABLE_STEP"
+  | "CANNOT_REACH_END";
 
 export interface ValidationIssue {
-  code: string;
-  message: string;
-  stepId?: string;
+  readonly code: ValidationIssueCode;
+  readonly message: string;
+  readonly stepId?: StepId;
+  readonly actorId?: ActorId;
 }
 
 export function validateSop(document: SOPDocument): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-
   const startSteps = document.steps.filter((step) => step.type === "start");
 
   if (startSteps.length !== 1) {
@@ -38,7 +48,7 @@ export function validateSop(document: SOPDocument): ValidationIssue[] {
   if (startSteps.length === 1) {
     issues.push(
       ...validateReachability(document),
-      ...validateEndReachbilty(document),
+      ...validateEndReachability(document),
     );
   }
 
@@ -47,7 +57,6 @@ export function validateSop(document: SOPDocument): ValidationIssue[] {
 
 export function validateReference(document: SOPDocument): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-
   const ids = new Set(document.steps.map((step) => step.id));
 
   for (const step of document.steps) {
@@ -71,7 +80,7 @@ export function validateReachability(document: SOPDocument): ValidationIssue[] {
   return document.steps
     .filter((step) => !reachable.has(step.id))
     .map((step) => ({
-      code: "UNREACHABLE_STEP",
+      code: "UNREACHABLE_STEP" as const,
       stepId: step.id,
       message: `Step "${step.id}" cannot be reached from start`,
     }));
@@ -80,7 +89,7 @@ export function validateReachability(document: SOPDocument): ValidationIssue[] {
 export function validateUniqueStepIds(
   document: SOPDocument,
 ): ValidationIssue[] {
-  const seen = new Set<string>();
+  const seen = new Set<StepId>();
   const issues: ValidationIssue[] = [];
 
   for (const step of document.steps) {
@@ -91,6 +100,7 @@ export function validateUniqueStepIds(
         message: `Duplicate step id "${step.id}"`,
       });
     }
+
     seen.add(step.id);
   }
 
@@ -100,16 +110,18 @@ export function validateUniqueStepIds(
 export function validateUniqueActorIds(
   document: SOPDocument,
 ): ValidationIssue[] {
-  const seen = new Set<string>();
+  const seen = new Set<ActorId>();
   const issues: ValidationIssue[] = [];
 
   for (const actor of document.actors) {
     if (seen.has(actor.id)) {
       issues.push({
         code: "DUPLICATE_ACTOR_ID",
+        actorId: actor.id,
         message: `Duplicate actor id "${actor.id}"`,
       });
     }
+
     seen.add(actor.id);
   }
 
@@ -120,7 +132,6 @@ export function validateActorReference(
   document: SOPDocument,
 ): ValidationIssue[] {
   const actorIds = new Set(document.actors.map((actor) => actor.id));
-
   const issues: ValidationIssue[] = [];
 
   for (const step of document.steps) {
@@ -129,6 +140,7 @@ export function validateActorReference(
         issues.push({
           code: "UNKNOWN_ACTOR_REFERENCE",
           stepId: step.id,
+          actorId,
           message: `Step "${step.id}" references unknown actor "${actorId}"`,
         });
       }
@@ -138,15 +150,16 @@ export function validateActorReference(
   return issues;
 }
 
-export function validateEndReachbilty(
+export function validateEndReachability(
   document: SOPDocument,
 ): ValidationIssue[] {
+  const canReachEnd = getStepIdsThatCanReachEnd(document);
   const issues: ValidationIssue[] = [];
 
   for (const step of document.steps) {
     if (step.type === "end") continue;
 
-    if (!canReachEnd(document, step.id)) {
+    if (!canReachEnd.has(step.id)) {
       issues.push({
         code: "CANNOT_REACH_END",
         stepId: step.id,
@@ -154,5 +167,46 @@ export function validateEndReachbilty(
       });
     }
   }
+
   return issues;
+}
+
+/** @deprecated Use validateEndReachability. */
+export const validateEndReachbilty = validateEndReachability;
+
+function getStepIdsThatCanReachEnd(document: SOPDocument): Set<StepId> {
+  const reverse = new Map<StepId, StepId[]>();
+  const stack: StepId[] = [];
+
+  for (const step of document.steps) {
+    reverse.set(step.id, []);
+
+    if (step.type === "end") {
+      stack.push(step.id);
+    }
+  }
+
+  for (const step of document.steps) {
+    for (const targetId of getNextStepIds(step)) {
+      reverse.get(targetId)?.push(step.id);
+    }
+  }
+
+  const reachable = new Set<StepId>();
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+
+    if (current === undefined || reachable.has(current)) continue;
+
+    reachable.add(current);
+
+    for (const previous of reverse.get(current) ?? []) {
+      if (!reachable.has(previous)) {
+        stack.push(previous);
+      }
+    }
+  }
+
+  return reachable;
 }
