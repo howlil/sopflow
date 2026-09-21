@@ -55,7 +55,7 @@ function WorkspaceHarness() {
 }
 
 function getReviewRow() {
-  const row = document.querySelector<HTMLElement>(
+  const row = globalThis.document.querySelector<HTMLElement>(
     '[data-sopflow-procedure-step-id="task"]',
   );
 
