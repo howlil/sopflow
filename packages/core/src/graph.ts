@@ -20,7 +20,8 @@ export function createGraphIndex(document: SOPDocument): SopGraphIndex {
       const incoming = incomingByStepId.get(targetId) ?? [];
 
       if (step.type === "decision") {
-        if (step.yes === targetId) incoming.push({ from: step.id, type: "yes" });
+        if (step.yes === targetId)
+          incoming.push({ from: step.id, type: "yes" });
         if (step.no === targetId) incoming.push({ from: step.id, type: "no" });
       } else if (step.type !== "end") {
         incoming.push({ from: step.id, type: "next" });
