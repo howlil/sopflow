@@ -62,7 +62,9 @@ export function StepTypeField({
             ? "Satukan target cabang Ya dan Tidak sebelum mengubah menjadi Task"
             : undefined
         }
-        onChange={(event) => onChange(event.target.value as "task" | "decision")}
+        onChange={(event) =>
+          onChange(event.target.value as "task" | "decision")
+        }
       >
         <option value="task" disabled={cannotCollapseDecision}>
           {cannotCollapseDecision ? "Task — satukan cabang dulu" : "Task"}
