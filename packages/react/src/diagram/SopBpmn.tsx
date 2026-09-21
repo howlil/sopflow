@@ -42,7 +42,7 @@ export function SopBpmn({
 
   const nodes = document.steps.map<BpmnNode>((step, index) => {
     const firstActorId = step.actorIds[0];
-    const lane = firstActorId ? actorIndex.get(firstActorId) ?? 0 : 0;
+    const lane = firstActorId ? (actorIndex.get(firstActorId) ?? 0) : 0;
     const size =
       step.type === "decision"
         ? { width: 48, height: 48 }
