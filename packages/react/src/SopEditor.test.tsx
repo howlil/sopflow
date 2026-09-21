@@ -572,9 +572,7 @@ describe("SopEditor actor mutations", () => {
     expect(actorTrigger).not.toBeNull();
 
     await user.click(actorTrigger as HTMLElement);
-    await user.click(
-      within(row).getByRole("checkbox", { name: "Manager" }),
-    );
+    await user.click(within(row).getByRole("checkbox", { name: "Manager" }));
 
     const document = readDocument();
     const review = document.steps.find((step) => step.id === "review");
