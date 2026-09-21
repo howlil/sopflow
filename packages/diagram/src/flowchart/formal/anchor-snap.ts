@@ -317,8 +317,12 @@ export function resolveFormalConstrainedEdgeSnap(input: {
   readonly shapeIsDiamond?: boolean;
 }): FormalFlowchartEdgeSnapResult | null {
   const side = pickFormalSnapSideForPointer(input.shape, input.x, input.y, {
-    oppositePoint: input.oppositePoint,
-    shapeIsDiamond: input.shapeIsDiamond,
+    ...(input.oppositePoint !== undefined
+      ? { oppositePoint: input.oppositePoint }
+      : {}),
+    ...(input.shapeIsDiamond !== undefined
+      ? { shapeIsDiamond: input.shapeIsDiamond }
+      : {}),
   });
 
   if (input.shapeIsDiamond) {
