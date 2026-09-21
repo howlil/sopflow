@@ -13,6 +13,7 @@ import { StepNameField } from "./fields/StepNameField.js";
 import { StepTypeField } from "./fields/StepTypeField.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
+import { StepActions } from "./StepActions.js";
 import { useStepActions } from "./hooks/useStepActions.js";
 import styles from "./SopStepFields.module.css";
 
@@ -143,15 +144,6 @@ export function SopStepFields({
       <InspectorSection title="Alur">
         <div className={styles.flowSummary}>{flowSummary(step, document)}</div>
 
-        {!disabled && step.type === "decision" ? (
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={openDecisionEditor}
-          >
-            Atur cabang decision
-          </button>
-        ) : null}
       </InspectorSection>
 
       {stepIssues.length > 0 ? (
@@ -166,25 +158,13 @@ export function SopStepFields({
 
       {!disabled ? (
         <section className={styles.actions}>
-          {step.type !== "decision" && step.type !== "end" ? (
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={addAfter}
-            >
-              + Tambah langkah setelah ini
-            </button>
-          ) : null}
-
-          {step.type !== "start" && step.type !== "end" ? (
-            <button
-              type="button"
-              className={styles.dangerButton}
-              onClick={openDeleteDialog}
-            >
-              Hapus langkah
-            </button>
-          ) : null}
+          <span className={styles.actionLabel}>Aksi langkah</span>
+          <StepActions
+            step={step}
+            onAddAfter={addAfter}
+            onDelete={openDeleteDialog}
+            onConfigureDecision={openDecisionEditor}
+          />
         </section>
       ) : null}
 
