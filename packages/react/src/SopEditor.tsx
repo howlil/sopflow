@@ -109,7 +109,8 @@ export function SopEditor({
   const diagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
   const manualEditing = controlledManualEditing ?? internalManualEditing;
   const diagramConfigMutable =
-    controlledDiagramConfig === undefined || onDiagramConfigChange !== undefined;
+    controlledDiagramConfig === undefined ||
+    onDiagramConfigChange !== undefined;
 
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
