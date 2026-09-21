@@ -16,7 +16,15 @@
 }
 
 .content {
+  display: grid;
+  gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+.toolbarRow {
+  display: flex;
+  justify-content: center;
+  padding-inline: 0.25rem;
 }
 
 @page {

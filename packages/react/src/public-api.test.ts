@@ -7,6 +7,7 @@ describe("@sopflow/react public API", () => {
     expect(Object.keys(publicApi).sort()).toEqual(
       [
         "ActorsEditor",
+        "SopBpmn",
         "SopDiagram",
         "SopEditor",
         "SopFlowchart",
@@ -18,6 +19,7 @@ describe("@sopflow/react public API", () => {
       ].sort(),
     );
     expect(publicApi.ActorsEditor).toBeTypeOf("function");
+    expect(publicApi.SopBpmn).toBeTypeOf("function");
     expect(publicApi.SopDiagram).toBeTypeOf("function");
     expect(publicApi.SopEditor).toBeTypeOf("function");
     expect(publicApi.SopFlowchart).toBeTypeOf("function");

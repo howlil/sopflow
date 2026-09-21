@@ -1,7 +1,13 @@
 export { SopEditor } from "./SopEditor.js";
-export type { SopEditorProps } from "./SopEditor.js";
+export type {
+  SopDiagramKind,
+  SopDocumentMode,
+  SopEditorProps,
+} from "./SopEditor.js";
 export { ActorsEditor } from "./actors/ActorsEditor.js";
 export type { ActorsEditorProps } from "./actors/ActorsEditor.js";
+export { SopBpmn } from "./diagram/SopBpmn.js";
+export type { SopBpmnProps } from "./diagram/SopBpmn.js";
 export { SopDiagram } from "./diagram/SopDiagram.js";
 export type { SopDiagramProps } from "./diagram/SopDiagram.js";
 export { SopFlowchart } from "./diagram/SopFlowchart.js";

@@ -4,11 +4,11 @@ React primitives and default compositions for editing and presenting a `SOPDocum
 
 ## Package boundary
 
-The package owns reusable SOP presentation and editing behavior. It does not own application concerns such as routing, backend requests, autosave scheduling, approval workflow, role permissions, comments, version history, or application workbench state.
+The package owns reusable SOP presentation and editing behavior. It does not own routing, backend requests, autosave scheduling, approval workflow, role permissions, comments, version history, or other application state.
 
 ## Default editor
 
-`SopEditor` provides a convenient controlled composition:
+`SopEditor` provides a controlled convenience composition:
 
 ```tsx
 <SopEditor
@@ -19,17 +19,36 @@ The package owns reusable SOP presentation and editing behavior. It does not own
 />
 ```
 
-The default desktop layout uses an A4 document surface and a contextual property inspector:
+Desktop defaults to:
 
 ```text
-A4 document (210mm) | inspector (A4 / 3)
+A4 document (210mm) | property inspector (A4 / 3)
 ```
 
-The A4 surface is presentation-first. Header and procedure values render as document content; editing controls live in the inspector.
+The inspector is intentionally limited to header metadata and actors.
 
-When no procedure row is selected, the inspector edits document metadata and actors. Selecting a row switches the inspector to that step.
+The document owns procedure interaction:
 
-The inspector width is a presentation default, not a domain contract. Consumers can override it:
+```text
+SOP header
+
+[ Langkah / Diagram ] [ Edit Manual ] | [ Flowchart | BPMN ]
+
+preview:
+formal SOP-AP flowchart matrix with path overlay
+or BPMN lanes
+
+Langkah mode:
+inline procedure spreadsheet editor
+```
+
+`Langkah` replaces the diagram preview with the inline procedure editor. It does not open a step editor in the inspector.
+
+`Edit Manual` edits flowchart paths on the formal SOP-AP preview. Manual path state is presentation state, not part of `SOPDocument`.
+
+The default editor does not expose undo/redo or zoom controls.
+
+The inspector width is a presentation default and can be overridden:
 
 ```css
 .my-editor {
@@ -39,7 +58,7 @@ The inspector width is a presentation default, not a domain contract. Consumers 
 
 ## Composable primitives
 
-Consumers that own their own layout can compose the lower-level exports directly:
+Consumers can build another composition from the lower-level exports:
 
 ```tsx
 <SopHeaderView document={document} header={header} />
@@ -50,7 +69,7 @@ Consumers that own their own layout can compose the lower-level exports directly
   onSelectedStepChange={setSelectedStepId}
 />
 
-<SopFlowchart
+<SopBpmn
   document={document}
   selectedStepId={selectedStepId}
   onSelectedStepChange={setSelectedStepId}
@@ -77,25 +96,27 @@ Consumers that own their own layout can compose the lower-level exports directly
 />
 ```
 
-The important boundary is:
+Relevant boundaries:
 
 ```text
-SopHeaderView     = header presentation only
-SopProcedureView  = formal SOP-AP procedure matrix + selection only
-SopFlowchart      = actor-lane SOP flowchart + selection only
-SopHeaderFields   = controlled header editing
-SopStepFields     = controlled selected-step editing
-ActorsEditor      = controlled actor operations
+SopHeaderView     header presentation
+SopProcedureView  formal SOP-AP flowchart matrix + path overlay
+SopBpmn           BPMN presentation
+SopHeaderFields   controlled header editing
+SopStepFields     optional standalone step-fields primitive
+ActorsEditor      controlled actor operations
 ```
 
-Application code decides where those primitives live and what other panels or workflow controls surround them.
+`SopStepFields` remains available for consumers that want a custom master-detail layout, but it is not used by the default Sopflow workbench.
+
+The existing `SopDiagram` and `SopFlowchart` exports remain available as lower-level/alternate diagram primitives for compatibility.
 
 ## Styles
 
-Import the package stylesheet once in the consumer application:
+Import the stylesheet once:
 
 ```ts
 import "@sopflow/react/styles.css";
 ```
 
-The high-level components establish the Sopflow token root. When composing lower-level primitives directly, place them under an element with `data-sopflow-root` so the same CSS token contract applies.
+When composing lower-level primitives directly, place them under an element with `data-sopflow-root` so the token contract applies.

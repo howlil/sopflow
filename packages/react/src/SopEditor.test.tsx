@@ -190,33 +190,6 @@ function ControlledEditor() {
   );
 }
 
-function ExternalValueHarness() {
-  const [document, setDocument] = useState(initialDocument);
-  const [header, setHeader] = useState(initialHeader);
-
-  function replaceDocument() {
-    setDocument({
-      ...initialDocument,
-      id: "external-sop",
-      title: "External SOP",
-    });
-  }
-
-  return (
-    <>
-      <button type="button" onClick={replaceDocument}>
-        Replace
-      </button>
-      <SopEditor
-        value={document}
-        onChange={setDocument}
-        header={header}
-        onHeaderChange={setHeader}
-      />
-    </>
-  );
-}
-
 function EditorHarness({
   initial = initialDocument,
 }: {
@@ -238,36 +211,45 @@ function EditorHarness({
   );
 }
 
-function selectStep(stepId: string) {
-  const row = document.querySelector<HTMLElement>(
-    `[data-sopflow-procedure-step-id="${stepId}"]`,
+function enterStepEditing() {
+  const button = screen.queryByRole("button", { name: "Langkah" });
+  if (button) {
+    fireEvent.click(button);
+  }
+}
+
+function getDesktopStepRow(stepId: string) {
+  enterStepEditing();
+
+  const row = globalThis.document.querySelector<HTMLElement>(
+    `tr[data-sopflow-step-id="${stepId}"]`,
   );
 
   if (!row) {
-    throw new Error(`Procedure row not found: ${stepId}`);
+    throw new Error(`Desktop step row not found: ${stepId}`);
   }
 
-  fireEvent.click(row);
-
-  return screen.getByLabelText("Kegiatan");
+  return row;
 }
 
 function getReviewField() {
-  return selectStep("task");
+  return within(getDesktopStepRow("task")).getByLabelText("Kegiatan");
 }
 
 function getField(value: string) {
+  enterStepEditing();
+
   const row = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-sopflow-procedure-step-id]"),
+    globalThis.document.querySelectorAll<HTMLElement>(
+      "tr[data-sopflow-step-id]",
+    ),
   ).find((candidate) => candidate.textContent?.includes(value));
 
   if (!row) {
-    throw new Error(`Procedure row not found: ${value}`);
+    throw new Error(`Desktop step row not found: ${value}`);
   }
 
-  fireEvent.click(row);
-
-  return screen.getByLabelText("Kegiatan");
+  return within(row).getByLabelText("Kegiatan");
 }
 
 function getStepRow(field: HTMLElement) {
@@ -286,72 +268,61 @@ function readDocument(): SOPDocument {
   ) as SOPDocument;
 }
 
-describe("SopEditor controlled history", () => {
-  it("supports read-only rendering without a change callback", () => {
+describe("SopEditor document workbench", () => {
+  it("renders diagram controls without undo or redo", () => {
+    render(<ControlledEditor />);
+
+    expect(screen.getByRole("button", { name: "Langkah" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Edit Manual" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Flowchart" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /undo/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /redo/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("edits steps inline in the document instead of the inspector", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<ControlledEditor />);
+
+    await user.click(screen.getByRole("button", { name: "Langkah" }));
+
+    expect(screen.getByRole("button", { name: "Diagram" })).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
+
+    const inspector = container.querySelector("[data-sopflow-inspector]");
+    expect(inspector).not.toBeNull();
+    expect(
+      within(inspector as HTMLElement).queryByLabelText("Kegiatan"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps read-only mode free of editing controls", () => {
     render(
       <SopEditor value={initialDocument} header={initialHeader} readOnly />,
     );
 
-    expect(getReviewField()).toHaveAttribute("readonly");
+    expect(
+      screen.queryByRole("button", { name: "Langkah" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit Manual" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /tambah pelaksana/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /undo/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("keeps history when parent echoes emitted value", () => {
-    render(<ControlledEditor />);
-
-    fireEvent.change(getReviewField(), {
-      target: { value: "Review dokumen" },
-    });
-
-    expect(screen.getByRole("button", { name: /undo/i })).toBeEnabled();
-  });
-
-  it("undoes a controlled edit", async () => {
-    const user = userEvent.setup();
-
-    render(<ControlledEditor />);
-
-    fireEvent.change(getReviewField(), {
-      target: { value: "Review baru" },
-    });
-
-    await user.click(screen.getByRole("button", { name: /undo/i }));
-
-    expect(screen.getAllByDisplayValue("Review")).toHaveLength(1);
-  });
-
-  it("redoes an undone controlled edit", async () => {
-    const user = userEvent.setup();
-
-    render(<ControlledEditor />);
-
-    fireEvent.change(getReviewField(), {
-      target: { value: "Review baru" },
-    });
-
-    await user.click(screen.getByRole("button", { name: /undo/i }));
-    await user.click(screen.getByRole("button", { name: /redo/i }));
-
-    expect(screen.getAllByDisplayValue("Review baru")).toHaveLength(1);
-  });
-
-  it("resets history when value changes externally", async () => {
-    const user = userEvent.setup();
-
-    render(<ExternalValueHarness />);
-
-    await user.type(getReviewField(), " changed");
-
-    expect(screen.getByRole("button", { name: /undo/i })).toBeEnabled();
-
-    await user.click(screen.getByRole("button", { name: /replace/i }));
-
-    expect(screen.getByRole("button", { name: /undo/i })).toBeDisabled();
+      screen.getByRole("button", { name: "Flowchart" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
   });
 });
 
@@ -365,6 +336,7 @@ describe("SopEditor graph mutations", () => {
 
     render(<EditorHarness initial={emptyDocument} />);
 
+    await user.click(screen.getByRole("button", { name: "Langkah" }));
     await user.click(
       screen.getByRole("button", { name: /buat langkah awal/i }),
     );
@@ -562,7 +534,7 @@ describe("SopEditor actor mutations", () => {
     expect(review?.actorIds).toEqual(["staff"]);
   });
 
-  it("removes actor references from steps and restores them in one undo", async () => {
+  it("removes actor references from steps without exposing undo", async () => {
     const user = userEvent.setup();
 
     render(<EditorHarness initial={actorDocument} />);
@@ -584,7 +556,7 @@ describe("SopEditor actor mutations", () => {
 
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
-    let document = readDocument();
+    const document = readDocument();
 
     expect(document.actors.some((actor) => actor.id === "manager")).toBe(false);
 
@@ -596,16 +568,9 @@ describe("SopEditor actor mutations", () => {
         (issue) => issue.code === "UNKNOWN_ACTOR_REFERENCE",
       ),
     ).toBe(false);
-
-    await user.click(screen.getByRole("button", { name: /undo/i }));
-
-    document = readDocument();
-
-    expect(document.actors.some((actor) => actor.id === "manager")).toBe(true);
-
-    const restoredReview = document.steps.find((step) => step.id === "review");
-
-    expect(restoredReview?.actorIds).toEqual(["manager", "staff"]);
+    expect(
+      screen.queryByRole("button", { name: /undo/i }),
+    ).not.toBeInTheDocument();
   });
 });
 

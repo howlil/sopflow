@@ -1,0 +1,102 @@
+.root {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--sopflow-document-border);
+  background: var(--sopflow-surface);
+}
+
+.svg {
+  display: block;
+  width: max(100%, 52rem);
+  min-height: 18rem;
+}
+
+.lane {
+  fill: var(--sopflow-surface);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.laneHeader {
+  fill: var(--sopflow-surface-muted);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.laneLabel {
+  fill: var(--sopflow-text);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--sopflow-text);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.arrow {
+  fill: var(--sopflow-text);
+}
+
+.edgeLabel {
+  fill: var(--sopflow-text-muted);
+  font-size: 9px;
+}
+
+.node {
+  cursor: pointer;
+  outline: none;
+}
+
+.nodeShape,
+.endRing {
+  fill: var(--sopflow-surface);
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.endRing {
+  fill: none;
+}
+
+.gatewayMark {
+  fill: none;
+  stroke: var(--sopflow-document-border);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.node[data-selected="true"] .nodeShape {
+  fill: var(--sopflow-selected-surface);
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+}
+
+.node:focus-visible .nodeShape {
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+}
+
+.nodeLabel {
+  fill: var(--sopflow-text);
+  font-size: 9px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+@media print {
+  .root {
+    overflow: visible;
+  }
+
+  .node[data-selected="true"] .nodeShape {
+    fill: var(--sopflow-surface);
+    stroke: var(--sopflow-document-border);
+  }
+}
