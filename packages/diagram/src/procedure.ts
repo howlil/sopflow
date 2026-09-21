@@ -48,6 +48,7 @@ export type ProcedureManualTrunks = Readonly<Record<string, number>>;
 export interface ProcedureRoutedEdge extends WorkflowEdge {
   readonly points: readonly DiagramPoint[];
   readonly trunkX: number;
+  readonly handlePosition: DiagramPoint;
   readonly labelPosition?: DiagramPoint;
 }
 
@@ -118,6 +119,10 @@ export function routeProcedureEdges(
         ...edge,
         points,
         trunkX,
+        handlePosition: {
+          x: trunkX,
+          y: (from.y + to.y) / 2,
+        },
         ...(edge.label
           ? {
               labelPosition: {
