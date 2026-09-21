@@ -38,9 +38,7 @@ export function SopDocumentToolbar({
             className={styles.button}
             data-active={mode === "steps" || undefined}
             aria-pressed={mode === "steps"}
-            onClick={() =>
-              onModeChange(mode === "steps" ? "preview" : "steps")
-            }
+            onClick={() => onModeChange(mode === "steps" ? "preview" : "steps")}
           >
             {mode === "steps" ? "Diagram" : "Langkah"}
           </button>
@@ -58,9 +56,12 @@ export function SopDocumentToolbar({
         </div>
       ) : null}
 
-      {!readOnly ? <span className={styles.divider} aria-hidden="true" /> : null}
+      {!readOnly ? (
+        <span className={styles.divider} aria-hidden="true" />
+      ) : null}
 
-      <div className={styles.tabs} role="group" aria-label="Jenis diagram">
+      <fieldset className={styles.tabs}>
+        <legend className={styles.srOnly}>Jenis diagram</legend>
         <button
           type="button"
           className={styles.tab}
@@ -81,7 +82,7 @@ export function SopDocumentToolbar({
         >
           BPMN
         </button>
-      </div>
+      </fieldset>
     </div>
   );
 }
