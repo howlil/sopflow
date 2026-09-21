@@ -73,7 +73,7 @@ describe("SopWorkspace", () => {
     render(<WorkspaceHarness />);
 
     await user.click(getReviewRow());
-    await user.click(screen.getByRole("button", { name: "Diagram" }));
+    await user.click(screen.getByRole("button", { name: "Flowchart" }));
 
     expect(
       screen.getByRole("button", { name: "Review (task)" }),
@@ -85,9 +85,9 @@ describe("SopWorkspace", () => {
 
     render(<WorkspaceHarness />);
 
-    await user.click(screen.getByRole("button", { name: "Diagram" }));
+    await user.click(screen.getByRole("button", { name: "Flowchart" }));
     await user.click(screen.getByRole("button", { name: "Review (task)" }));
-    await user.click(screen.getByRole("button", { name: "Prosedur" }));
+    await user.click(screen.getByRole("button", { name: "Langkah" }));
 
     expect(getReviewRow()).toHaveAttribute("aria-selected", "true");
   });
