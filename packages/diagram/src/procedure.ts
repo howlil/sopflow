@@ -38,10 +38,17 @@ export interface ProcedureGeometry {
   readonly actorRight: number;
 }
 
-export interface ProcedureManualRoute {
-  readonly bendPoints: readonly DiagramPoint[];
-  readonly labelPosition?: DiagramPoint;
-}
+export type ProcedureManualRoute =
+  | {
+      readonly kind: "trunk";
+      readonly x: number;
+      readonly labelPosition?: DiagramPoint;
+    }
+  | {
+      readonly kind: "orthogonal";
+      readonly bendPoints: readonly DiagramPoint[];
+      readonly labelPosition?: DiagramPoint;
+    };
 
 export type ProcedureManualRoutes = Readonly<
   Record<string, ProcedureManualRoute>
@@ -126,15 +133,20 @@ export function routeProcedureEdges(
 
     const manualRoute = routes[edge.id];
     const legacyTrunkX = legacyTrunks[edge.id];
-    const points = manualRoute
-      ? buildManualPath(from, to, manualRoute.bendPoints, geometry)
-      : buildTrunkPath(
-          from,
-          to,
-          clampTrunkX(legacyTrunkX ?? autoTrunkX, geometry),
-        );
+    const effectiveTrunkX =
+      manualRoute?.kind === "trunk"
+        ? manualRoute.x
+        : (legacyTrunkX ?? autoTrunkX);
+    const points =
+      manualRoute?.kind === "orthogonal"
+        ? buildManualPath(from, to, manualRoute.bendPoints, geometry)
+        : buildTrunkPath(
+            from,
+            to,
+            clampTrunkX(effectiveTrunkX, geometry),
+          );
     const fallbackHandle = {
-      x: clampTrunkX(legacyTrunkX ?? autoTrunkX, geometry),
+      x: clampTrunkX(effectiveTrunkX, geometry),
       y: (from.y + to.y) / 2,
     };
     const handlePosition = findRouteHandle(points, fallbackHandle);
@@ -176,10 +188,8 @@ export function updateProcedureManualTrunk(
   const trunkX = clampTrunkX(requestedX, geometry);
   const currentRoute = config.routes?.[edgeId];
   const nextRoute: ProcedureManualRoute = {
-    bendPoints: compactOrthogonalPoints([
-      { x: trunkX, y: from.y },
-      { x: trunkX, y: to.y },
-    ]),
+    kind: "trunk",
+    x: trunkX,
     ...(currentRoute?.labelPosition
       ? { labelPosition: currentRoute.labelPosition }
       : {}),
@@ -203,12 +213,22 @@ export function setProcedureManualRoute(
     ...config,
     routes: {
       ...config.routes,
-      [edgeId]: {
-        bendPoints: route.bendPoints.map((point) => ({ ...point })),
-        ...(route.labelPosition
-          ? { labelPosition: { ...route.labelPosition } }
-          : {}),
-      },
+      [edgeId]:
+        route.kind === "trunk"
+          ? {
+              kind: "trunk",
+              x: route.x,
+              ...(route.labelPosition
+                ? { labelPosition: { ...route.labelPosition } }
+                : {}),
+            }
+          : {
+              kind: "orthogonal",
+              bendPoints: route.bendPoints.map((point) => ({ ...point })),
+              ...(route.labelPosition
+                ? { labelPosition: { ...route.labelPosition } }
+                : {}),
+            },
     },
   };
 }
@@ -222,10 +242,9 @@ export function removeProcedureManualRoute(
   const routes = { ...config.routes };
   delete routes[edgeId];
 
-  return {
-    ...config,
-    ...(Object.keys(routes).length > 0 ? { routes } : { routes: undefined }),
-  };
+  const { routes: _removedRoutes, ...rest } = config;
+
+  return Object.keys(routes).length > 0 ? { ...rest, routes } : rest;
 }
 
 function resolveRoutingOverrides(overrides: ProcedureRoutingOverrides): {
