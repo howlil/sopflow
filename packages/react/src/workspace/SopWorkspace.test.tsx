@@ -66,9 +66,7 @@ describe("SopWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Langkah" }));
 
     expect(screen.getByDisplayValue("Review")).toBeInTheDocument();
-    expect(
-      document.querySelector("[data-sopflow-procedure-view]"),
-    ).toBeNull();
+    expect(document.querySelector("[data-sopflow-procedure-view]")).toBeNull();
   });
 
   it("preserves step selection between preview and inline editing", async () => {
