@@ -210,20 +210,8 @@ export function planFormalProcedureEdges(
         routingBounds,
       );
 
-      registerSide(
-        usedSides,
-        edge.from,
-        "out",
-        resolved.sourceSide,
-        edge.id,
-      );
-      registerSide(
-        usedSides,
-        edge.to,
-        "in",
-        resolved.targetSide,
-        edge.id,
-      );
+      registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
+      registerSide(usedSides, edge.to, "in", resolved.targetSide, edge.id);
 
       const segments = formalPathToSegments(resolved.points);
       segmentsByConnection.set(edge.id, segments);
@@ -373,10 +361,8 @@ function resolveAutoRoute(input: {
       shapeMargin: 10,
       bounds: boundsRect,
       occupied: input.occupied,
-      sourceJetty:
-        candidate.sourceJettySize ?? candidate.jettySize ?? 10,
-      targetJetty:
-        candidate.targetJettySize ?? candidate.jettySize ?? 10,
+      sourceJetty: candidate.sourceJettySize ?? candidate.jettySize ?? 10,
+      targetJetty: candidate.targetJettySize ?? candidate.jettySize ?? 10,
       lShapeOnly: true,
     });
 
@@ -411,10 +397,8 @@ function resolveAutoRoute(input: {
       loopbackSlot: input.loopbackSlot,
       crossColumnSlot: input.crossColumnSlot,
       columnTrunkSlot: input.columnTrunkSlot,
-      sourceJetty:
-        preferred?.sourceJettySize ?? preferred?.jettySize ?? 16,
-      targetJetty:
-        preferred?.targetJettySize ?? preferred?.jettySize ?? 16,
+      sourceJetty: preferred?.sourceJettySize ?? preferred?.jettySize ?? 16,
+      targetJetty: preferred?.targetJettySize ?? preferred?.jettySize ?? 16,
     });
 
     if (dedicated) best = dedicated;
@@ -439,10 +423,8 @@ function resolveAutoRoute(input: {
         shapeMargin: 10,
         bounds: boundsRect,
         occupied: input.occupied,
-        sourceJetty:
-          candidate.sourceJettySize ?? candidate.jettySize ?? 10,
-        targetJetty:
-          candidate.targetJettySize ?? candidate.jettySize ?? 10,
+        sourceJetty: candidate.sourceJettySize ?? candidate.jettySize ?? 10,
+        targetJetty: candidate.targetJettySize ?? candidate.jettySize ?? 10,
       });
 
       if (path.length < 2) continue;
@@ -486,11 +468,7 @@ function applyManualRoute(
 
     return {
       ...auto,
-      points: normalizeFormalOrthogonalPath([
-        start,
-        ...manual.bendPoints,
-        end,
-      ]),
+      points: normalizeFormalOrthogonalPath([start, ...manual.bendPoints, end]),
     };
   }
 
@@ -576,7 +554,9 @@ function placeFormalEdgeLabel(
             candidate.y >= obstacle.top - 4 &&
             candidate.y <= obstacle.top + obstacle.height + 4,
         ),
-    ) ?? candidates[0] ?? null
+    ) ??
+    candidates[0] ??
+    null
   );
 }
 
@@ -627,12 +607,7 @@ function fallbackPath(
   if (start.x === end.x) return [start, end];
 
   const midX = Math.round((start.x + end.x) / 2);
-  return [
-    start,
-    { x: midX, y: start.y },
-    { x: midX, y: end.y },
-    end,
-  ];
+  return [start, { x: midX, y: start.y }, { x: midX, y: end.y }, end];
 }
 
 function fallbackTrunkPath(
@@ -661,15 +636,14 @@ function fallbackTrunkPath(
 
 function clampX(value: number, bounds: FormalFlowchartBounds | null): number {
   if (!bounds) return Math.round(value);
-  return Math.round(Math.max(bounds.left + 8, Math.min(bounds.right - 8, value)));
+  return Math.round(
+    Math.max(bounds.left + 8, Math.min(bounds.right - 8, value)),
+  );
 }
 
 function shapeType(
   kind: "start" | "task" | "decision" | "end",
-):
-  | "flowchart-terminator"
-  | "flowchart-process"
-  | "flowchart-decision" {
+): "flowchart-terminator" | "flowchart-process" | "flowchart-decision" {
   if (kind === "start" || kind === "end") return "flowchart-terminator";
   if (kind === "decision") return "flowchart-decision";
   return "flowchart-process";
