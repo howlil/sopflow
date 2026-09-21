@@ -218,14 +218,38 @@ function enterStepEditing() {
   }
 }
 
-function getReviewField() {
+function getDesktopStepRow(stepId: string) {
   enterStepEditing();
-  return screen.getByDisplayValue("Review");
+
+  const row = globalThis.document.querySelector<HTMLElement>(
+    `tr[data-sopflow-step-id="${stepId}"]`,
+  );
+
+  if (!row) {
+    throw new Error(`Desktop step row not found: ${stepId}`);
+  }
+
+  return row;
+}
+
+function getReviewField() {
+  return within(getDesktopStepRow("task")).getByLabelText("Kegiatan");
 }
 
 function getField(value: string) {
   enterStepEditing();
-  return screen.getByDisplayValue(value);
+
+  const row = Array.from(
+    globalThis.document.querySelectorAll<HTMLElement>(
+      "tr[data-sopflow-step-id]",
+    ),
+  ).find((candidate) => candidate.textContent?.includes(value));
+
+  if (!row) {
+    throw new Error(`Desktop step row not found: ${value}`);
+  }
+
+  return within(row).getByLabelText("Kegiatan");
 }
 
 function getStepRow(field: HTMLElement) {
