@@ -1,3 +1,12 @@
+export { buildBpmnModel } from "./bpmn.js";
+export type {
+  BpmnLane,
+  BpmnLayoutOptions,
+  BpmnModel,
+  BpmnNode,
+  BpmnRoutedEdge,
+} from "./bpmn.js";
+
 export {
   buildProcedureModel,
   routeProcedureEdges,
