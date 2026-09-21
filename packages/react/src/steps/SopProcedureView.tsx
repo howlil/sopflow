@@ -4,6 +4,9 @@ import {
   pointsToPath,
   routeProcedureEdges,
   updateProcedureManualTrunk,
+  type FlowchartBounds,
+  type FlowchartGridLayout,
+  type FlowchartShapeGeometry,
   type ProcedureGeometry,
   type ProcedureManualTrunks,
   type SopDiagramConfig,
@@ -104,32 +107,174 @@ export function SopProcedureView({
     if (!root) return;
 
     const rootRect = root.getBoundingClientRect();
+    const rowById = new Map(
+      model.rows.map((row, index) => [row.stepId, { row, index }] as const),
+    );
     const anchors = new Map<StepId, { x: number; y: number }>();
+    const shapes = new Map<StepId, FlowchartShapeGeometry>();
 
     for (const [stepId, element] of shapeRefs.current) {
       const rect = element.getBoundingClientRect();
+      const left = rect.left - rootRect.left;
+      const top = rect.top - rootRect.top;
+      const rowEntry = rowById.get(stepId);
+      if (!rowEntry) continue;
+
       anchors.set(stepId, {
-        x: rect.left - rootRect.left + rect.width / 2,
-        y: rect.top - rootRect.top + rect.height / 2,
+        x: left + rect.width / 2,
+        y: top + rect.height / 2,
+      });
+      shapes.set(stepId, {
+        stepId,
+        row: rowEntry.index,
+        kind: rowEntry.row.kind,
+        actorId: rowEntry.row.primaryActorId,
+        rect: {
+          left,
+          top,
+          width: rect.width,
+          height: rect.height,
+        },
       });
     }
 
-    const actorHeaders = Array.from(
-      root.querySelectorAll<HTMLElement>("[data-sopflow-actor-header]"),
+    const actorCells = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-sopflow-actor-cell]"),
     );
-    const firstActorHeader = actorHeaders[0]?.getBoundingClientRect();
-    const lastActorHeader = actorHeaders.at(-1)?.getBoundingClientRect();
+    const rawColumns = new Map<string, FlowchartBounds>();
+    let actorLeft = Number.POSITIVE_INFINITY;
+    let actorRight = Number.NEGATIVE_INFINITY;
+    let actorTop = Number.POSITIVE_INFINITY;
+    let actorBottom = Number.NEGATIVE_INFINITY;
+    const rowBounds = new Map<
+      HTMLElement,
+      { top: number; bottom: number; left: number; right: number }
+    >();
+
+    for (const cell of actorCells) {
+      const rect = cell.getBoundingClientRect();
+      const left = rect.left - rootRect.left;
+      const right = rect.right - rootRect.left;
+      const top = rect.top - rootRect.top;
+      const bottom = rect.bottom - rootRect.top;
+      actorLeft = Math.min(actorLeft, left);
+      actorRight = Math.max(actorRight, right);
+      actorTop = Math.min(actorTop, top);
+      actorBottom = Math.max(actorBottom, bottom);
+
+      const actorId = cell.dataset.sopflowActorId;
+      if (actorId) {
+        const previous = rawColumns.get(actorId);
+        rawColumns.set(
+          actorId,
+          previous
+            ? {
+                left: Math.min(previous.left, left),
+                top: Math.min(previous.top, top),
+                right: Math.max(previous.right, right),
+                bottom: Math.max(previous.bottom, bottom),
+              }
+            : { left, top, right, bottom },
+        );
+      }
+
+      const tableRow = cell.closest("tr");
+      if (tableRow instanceof HTMLElement) {
+        const previous = rowBounds.get(tableRow);
+        rowBounds.set(
+          tableRow,
+          previous
+            ? {
+                left: Math.min(previous.left, left),
+                top: Math.min(previous.top, top),
+                right: Math.max(previous.right, right),
+                bottom: Math.max(previous.bottom, bottom),
+              }
+            : { left, top, right, bottom },
+        );
+      }
+    }
+
+    const fallbackLeft = 0;
+    const fallbackRight = rootRect.width;
+    const fallbackTop = 0;
+    const fallbackBottom = rootRect.height;
+    const resolvedLeft = Number.isFinite(actorLeft) ? actorLeft : fallbackLeft;
+    const resolvedRight = Number.isFinite(actorRight)
+      ? actorRight
+      : fallbackRight;
+    const resolvedTop = Number.isFinite(actorTop) ? actorTop : fallbackTop;
+    const resolvedBottom = Number.isFinite(actorBottom)
+      ? actorBottom
+      : fallbackBottom;
+    const columns = new Map<string, FlowchartBounds>();
+
+    for (const [actorId, bounds] of rawColumns) {
+      columns.set(actorId, {
+        left: Math.max(0, bounds.left + 6),
+        top: Math.max(0, bounds.top + 4),
+        right: bounds.right - 6,
+        bottom: bounds.bottom - 8,
+      });
+    }
+
+    const sortedRows = [...rowBounds.values()].sort(
+      (left, right) => left.top - right.top,
+    );
+    const horizontalLines = [
+      ...new Set(
+        sortedRows.flatMap((row) => [
+          Math.round(row.top),
+          Math.round(row.bottom),
+        ]),
+      ),
+    ].sort((left, right) => left - right);
+    const verticalLines = [
+      ...new Set(
+        [...rawColumns.values()].flatMap((column) => [
+          Math.round(column.left),
+          Math.round(column.right),
+        ]),
+      ),
+    ].sort((left, right) => left - right);
+    const rowGutters = sortedRows.slice(0, -1).map((row, index) => {
+      const next = sortedRows[index + 1];
+      return Math.round((row.bottom + (next?.top ?? row.bottom)) / 2);
+    });
+    const grid: FlowchartGridLayout | null =
+      sortedRows.length > 0 && verticalLines.length > 0
+        ? {
+            horizontalLines,
+            verticalLines,
+            rowGutters,
+            minGridX: verticalLines[0] ?? resolvedLeft,
+            maxGridX: verticalLines.at(-1) ?? resolvedRight,
+            minGridY: horizontalLines[0] ?? resolvedTop,
+            maxGridY: horizontalLines.at(-1) ?? resolvedBottom,
+          }
+        : null;
 
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
-      actorLeft: firstActorHeader ? firstActorHeader.left - rootRect.left : 0,
-      actorRight: lastActorHeader
-        ? lastActorHeader.right - rootRect.left
-        : rootRect.width,
+      actorLeft: resolvedLeft,
+      actorRight: resolvedRight,
+      flowchart: {
+        width: root.scrollWidth,
+        height: root.scrollHeight,
+        shapes,
+        columns,
+        pelaksanaBounds: {
+          left: Math.max(0, resolvedLeft + 8),
+          top: Math.max(0, resolvedTop + 4),
+          right: resolvedRight - 8,
+          bottom: resolvedBottom + 8,
+        },
+        grid,
+      },
     });
-  }, []);
+  }, [model.rows]);
 
   useLayoutEffect(() => {
     measure();
@@ -317,29 +462,26 @@ export function SopProcedureView({
                   </td>
 
                   {model.actorColumns.map((actor, actorIndex) => {
-                    const assigned =
-                      actor.actorId === null
-                        ? model.actorColumns.length === 1 &&
-                          model.actorColumns[0]?.actorId === null
-                        : row.actorIds.includes(actor.actorId);
                     const primary =
-                      assigned && actor.actorId === row.primaryActorId;
+                      actor.actorId === row.primaryActorId ||
+                      (actor.actorId === null &&
+                        row.primaryActorId === null &&
+                        model.actorColumns.length === 1);
 
                     return (
                       <td
                         key={actor.actorId ?? `fallback-${actorIndex}`}
                         className={styles.actorCell}
-                        data-sopflow-actor-id={actor.actorId ?? undefined}
+                        data-sopflow-actor-cell
+                        data-sopflow-actor-id={
+                          actor.actorId ?? "__fallback__"
+                        }
                       >
-                        {assigned ? (
+                        {primary ? (
                           <span
-                            ref={(element) => {
-                              if (primary) setShapeRef(row.stepId, element);
-                            }}
+                            ref={(element) => setShapeRef(row.stepId, element)}
                             className={styles.shapeAnchor}
-                            data-sopflow-primary-shape={
-                              primary ? row.stepId : undefined
-                            }
+                            data-sopflow-primary-shape={row.stepId}
                           >
                             <ProcedureShape kind={row.kind} />
                           </span>
@@ -434,20 +576,46 @@ export function SopProcedureView({
 }
 
 function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
+  if (kind === "decision") {
+    return (
+      <svg
+        className={styles.flowShape}
+        data-kind={kind}
+        width={66}
+        height={66}
+        viewBox="-2 -2 64 64"
+        aria-hidden="true"
+      >
+        <polygon points="30,1 59,30 30,59 1,30" />
+      </svg>
+    );
+  }
+
+  if (kind === "start" || kind === "end") {
+    return (
+      <svg
+        className={styles.flowShape}
+        data-kind={kind}
+        width={86}
+        height={42}
+        viewBox="-2 -2 82 42"
+        aria-hidden="true"
+      >
+        <rect width={76} height={36} x={0.8} y={0.8} rx={19.2} ry={19.2} />
+      </svg>
+    );
+  }
+
   return (
     <svg
       className={styles.flowShape}
       data-kind={kind}
-      viewBox="0 0 36 28"
+      width={82}
+      height={42}
+      viewBox="0 -2 82 42"
       aria-hidden="true"
     >
-      {kind === "decision" ? (
-        <polygon points="18,2 34,14 18,26 2,14" />
-      ) : kind === "start" || kind === "end" ? (
-        <rect x="2" y="5" width="32" height="18" rx="9" />
-      ) : (
-        <rect x="2" y="5" width="32" height="18" />
-      )}
+      <rect width={76} height={36} x={1} y={1} />
     </svg>
   );
 }
