@@ -20,7 +20,10 @@ export function routeDiagramEdges(
   model: DiagramModel,
   options: EdgeRoutingOptions = {},
 ): DiagramModel {
-  const config = { ...DEFAULT_OPTIONS, ...options };
+  const config: Required<EdgeRoutingOptions> = {
+    edgeGap: resolveGap(options.edgeGap, DEFAULT_OPTIONS.edgeGap),
+    backEdgeGap: resolveGap(options.backEdgeGap, DEFAULT_OPTIONS.backEdgeGap),
+  };
   const nodes = new Map(model.nodes.map((node) => [node.id, node]));
   let backEdgeIndex = 0;
 
@@ -45,6 +48,12 @@ export function routeDiagramEdges(
   });
 
   return { ...model, routedEdges };
+}
+
+function resolveGap(value: number | undefined, fallback: number): number {
+  const resolved = value ?? fallback;
+
+  return Number.isFinite(resolved) ? Math.max(0, resolved) : fallback;
 }
 
 function topCenter(node: DiagramNode): DiagramPoint {

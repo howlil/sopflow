@@ -216,6 +216,9 @@ importers:
       '@sopflow/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@sopflow/diagram':
+        specifier: workspace:*
+        version: link:../../packages/diagram
       '@sopflow/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -291,6 +294,9 @@ importers:
       '@sopflow/core':
         specifier: workspace:*
         version: link:../core
+      '@sopflow/diagram':
+        specifier: workspace:*
+        version: link:../diagram
       react:
         specifier: '>=18'
         version: 19.3.0

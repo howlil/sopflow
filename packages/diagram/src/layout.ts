@@ -19,8 +19,28 @@ export function layoutDiagram(
   options: DiagramLayoutOptions = {},
 ): DiagramModel {
   const config: Required<DiagramLayoutOptions> = {
-    ...DEFAULT_OPTIONS,
-    ...options,
+    direction: DEFAULT_OPTIONS.direction,
+    nodeGap: Math.max(
+      0,
+      safeNumber(
+        options.nodeGap ?? DEFAULT_OPTIONS.nodeGap,
+        DEFAULT_OPTIONS.nodeGap,
+      ),
+    ),
+    layerGap: Math.max(
+      0,
+      safeNumber(
+        options.layerGap ?? DEFAULT_OPTIONS.layerGap,
+        DEFAULT_OPTIONS.layerGap,
+      ),
+    ),
+    padding: Math.max(
+      0,
+      safeNumber(
+        options.padding ?? DEFAULT_OPTIONS.padding,
+        DEFAULT_OPTIONS.padding,
+      ),
+    ),
   };
 
   if (model.nodes.length === 0) {
@@ -291,9 +311,20 @@ function positionNodes(
   options: Required<DiagramLayoutOptions>,
   nodeOrder: Map<string, number>,
 ): DiagramModel {
+  const safeNodes = model.nodes.map((node) => ({
+    ...node,
+    position: {
+      x: safeNumber(node.position.x, 0),
+      y: safeNumber(node.position.y, 0),
+    },
+    size: {
+      width: Math.max(1, safeNumber(node.size.width, 160)),
+      height: Math.max(1, safeNumber(node.size.height, 64)),
+    },
+  }));
   const layers = new Map<number, DiagramNode[]>();
 
-  for (const node of model.nodes) {
+  for (const node of safeNodes) {
     const rank = nodeRanks.get(node.id) ?? 0;
     const layer = layers.get(rank) ?? [];
 
@@ -346,10 +377,14 @@ function positionNodes(
 
   return {
     ...model,
-    nodes: model.nodes.map((node) => positioned.get(node.id) ?? node),
+    nodes: safeNodes.map((node) => positioned.get(node.id) ?? node),
     width,
     height,
   };
+}
+
+function safeNumber(value: number, fallback: number): number {
+  return Number.isFinite(value) ? value : fallback;
 }
 
 function compareNodeIds(

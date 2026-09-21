@@ -73,6 +73,18 @@ function getNode(model: DiagramModel, id: string) {
   return node;
 }
 
+function overlaps(
+  a: ReturnType<typeof getNode>,
+  b: ReturnType<typeof getNode>,
+) {
+  return !(
+    a.position.x + a.size.width <= b.position.x ||
+    b.position.x + b.size.width <= a.position.x ||
+    a.position.y + a.size.height <= b.position.y ||
+    b.position.y + b.size.height <= a.position.y
+  );
+}
+
 describe("layoutDiagram", () => {
   it("places a linear workflow on consecutive layers", () => {
     const model = layoutDiagram(buildDiagramModel(linearDocument));
@@ -115,6 +127,7 @@ describe("layoutDiagram", () => {
         nodes: [],
         edges: [],
         routedEdges: [],
+        diagnostics: [],
         width: 320,
         height: 240,
       }),
@@ -122,8 +135,76 @@ describe("layoutDiagram", () => {
       nodes: [],
       edges: [],
       routedEdges: [],
+      diagnostics: [],
       width: 0,
       height: 0,
     });
+  });
+
+  it("accounts for dynamic node heights during layout", () => {
+    const model = layoutDiagram(
+      buildDiagramModel({
+        ...linearDocument,
+        id: "long-label",
+        steps: linearDocument.steps.map((step) =>
+          step.id === "task"
+            ? {
+                ...step,
+                name: "Verifikasi seluruh kelengkapan dokumen pengajuan sebelum diteruskan",
+              }
+            : step,
+        ),
+      }),
+    );
+    const task = getNode(model, "task");
+    const end = getNode(model, "end");
+
+    expect(task.position.y + task.size.height).toBeLessThan(end.position.y);
+  });
+
+  it("does not overlap sibling nodes in one layer", () => {
+    const model = layoutDiagram(buildDiagramModel(decisionDocument));
+    const approve = getNode(model, "approve");
+    const reject = getNode(model, "reject");
+
+    expect(overlaps(approve, reject)).toBe(false);
+  });
+
+  it("sanitizes invalid node dimensions and layout options", () => {
+    const model = layoutDiagram(
+      {
+        nodes: [
+          {
+            id: "invalid",
+            kind: "task",
+            label: "Invalid",
+            text: { lines: ["Invalid"], lineHeight: 18 },
+            position: { x: Number.POSITIVE_INFINITY, y: Number.NaN },
+            size: { width: Number.NaN, height: -20 },
+          },
+        ],
+        edges: [],
+        routedEdges: [],
+        diagnostics: [],
+        width: Number.NaN,
+        height: Number.POSITIVE_INFINITY,
+      },
+      {
+        nodeGap: Number.NaN,
+        layerGap: -10,
+        padding: Number.POSITIVE_INFINITY,
+      },
+    );
+
+    const [node] = model.nodes;
+    expect(node).toBeDefined();
+    expect(node?.size.width).toBe(160);
+    expect(node?.size.height).toBe(1);
+    expect(node?.position.x).toBe(48);
+    expect(node?.position.y).toBe(48);
+    expect(Number.isFinite(model.width)).toBe(true);
+    expect(Number.isFinite(model.height)).toBe(true);
+    expect(model.width).toBeGreaterThanOrEqual(0);
+    expect(model.height).toBeGreaterThanOrEqual(0);
   });
 });

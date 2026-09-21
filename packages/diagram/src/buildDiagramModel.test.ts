@@ -108,7 +108,7 @@ describe("buildDiagramModel", () => {
     );
   });
 
-  it("preserves explicit references even when validation has not run", () => {
+  it("skips edges whose target does not exist and reports a diagnostic", () => {
     const invalidDocument: SOPDocument = {
       ...document,
       steps: [
@@ -124,12 +124,14 @@ describe("buildDiagramModel", () => {
 
     const model = buildDiagramModel(invalidDocument);
 
-    expect(model.edges).toEqual([
+    expect(model.nodes).toHaveLength(1);
+    expect(model.edges).toHaveLength(0);
+    expect(model.diagnostics).toEqual([
       {
-        id: "start:next:missing",
+        code: "MISSING_EDGE_TARGET",
+        edgeId: "start:next:missing",
         from: "start",
         to: "missing",
-        kind: "next",
       },
     ]);
   });

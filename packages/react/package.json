@@ -19,7 +19,8 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@sopflow/core": "workspace:*"
+    "@sopflow/core": "workspace:*",
+    "@sopflow/diagram": "workspace:*"
   },
   "scripts": {
     "build": "tsdown",

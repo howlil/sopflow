@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { SopEditor, type SopHeaderValue } from "@sopflow/react";
+import { useMemo, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
+import { buildDiagram } from "@sopflow/diagram";
+import { SopWorkspace, type SopHeaderValue } from "@sopflow/react";
 import "@sopflow/react/styles.css";
 
 const smokeDocument: SOPDocument = {
@@ -64,6 +65,7 @@ const smokeHeader: SopHeaderValue = {
 export function ReactPackageSmoke() {
   const [document, setDocument] = useState(smokeDocument);
   const [header, setHeader] = useState(smokeHeader);
+  const diagram = useMemo(() => buildDiagram(document), [document]);
 
   return (
     <section
@@ -79,15 +81,24 @@ export function ReactPackageSmoke() {
             id="react-package-smoke-title"
             className="text-balance text-[clamp(1.125rem,2vw,1.5rem)] font-semibold leading-tight tracking-[-0.025em] text-ink"
           >
-            React package smoke
+            Core + diagram + React smoke
           </h2>
         </div>
         <span className="font-mono text-[0.625rem] uppercase leading-snug tracking-[0.08em] text-muted sm:text-right">
-          @SOPFLOW/REACT · CONSUMER CHECK
+          @SOPFLOW/CORE · DIAGRAM · REACT
         </span>
       </div>
       <div className="min-w-0 overflow-x-auto p-3.5 sm:p-5">
-        <SopEditor
+        <output
+          className="mb-3 block font-mono text-[0.6875rem] text-muted"
+          aria-label="Ringkasan model diagram"
+        >
+          {diagram.nodes.length} node · {diagram.edges.length} edge
+          {diagram.diagnostics.length > 0
+            ? ` · ${diagram.diagnostics.length} diagnostic`
+            : " · graph valid"}
+        </output>
+        <SopWorkspace
           value={document}
           onChange={setDocument}
           header={header}

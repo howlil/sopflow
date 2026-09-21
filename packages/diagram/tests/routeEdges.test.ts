@@ -146,12 +146,14 @@ describe("routeDiagramEdges", () => {
           id: "from",
           kind: "task",
           label: "From",
+          text: { lines: ["From"], lineHeight: 18 },
           position: { x: 0, y: 0 },
           size: { width: 100, height: 50 },
         },
       ],
       edges: [{ id: "dangling", from: "from", to: "missing", kind: "next" }],
       routedEdges: [],
+      diagnostics: [],
       width: 100,
       height: 50,
     };
@@ -166,5 +168,33 @@ describe("routeDiagramEdges", () => {
     const second = routed(cyclicDocument);
 
     expect(second.routedEdges).toEqual(first.routedEdges);
+  });
+
+  it("produces finite routed coordinates", () => {
+    const model = routed(cyclicDocument);
+
+    for (const edge of model.routedEdges) {
+      for (const point of edge.points) {
+        expect(Number.isFinite(point.x)).toBe(true);
+        expect(Number.isFinite(point.y)).toBe(true);
+      }
+    }
+  });
+
+  it("sanitizes invalid routing gaps", () => {
+    const model = routeDiagramEdges(
+      layoutDiagram(buildDiagramModel(cyclicDocument)),
+      {
+        edgeGap: Number.NaN,
+        backEdgeGap: Number.POSITIVE_INFINITY,
+      },
+    );
+
+    for (const edge of model.routedEdges) {
+      for (const point of edge.points) {
+        expect(Number.isFinite(point.x)).toBe(true);
+        expect(Number.isFinite(point.y)).toBe(true);
+      }
+    }
   });
 });
