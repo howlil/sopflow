@@ -26,9 +26,7 @@ export function AddStepButton({
       return;
     }
 
-    onOperations(
-      buildInsertTaskBeforeEndOperations(document, createStepId()),
-    );
+    onOperations(buildInsertTaskBeforeEndOperations(document, createStepId()));
   }
 
   return (
