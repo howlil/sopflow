@@ -1,9 +1,5 @@
 import type { SOPDocument, StepId } from "@sopflow/core";
-import {
-  buildBpmnModel,
-  pointsToPath,
-  type BpmnNode,
-} from "@sopflow/diagram";
+import { buildBpmnModel, pointsToPath, type BpmnNode } from "@sopflow/diagram";
 import { useId, useMemo } from "react";
 
 import "../styles/token.css";
