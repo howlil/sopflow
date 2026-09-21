@@ -1,5 +1,6 @@
 export {
   canReachEnd,
+  createGraphIndex,
   findCycleStepIds,
   findDeadEndStepIds,
   getIncomingConnections,
@@ -10,7 +11,7 @@ export {
   getReachableStepIds,
   getStep,
 } from "./graph.js";
-export type { IncomingConnection } from "./graph.js";
+export type { IncomingConnection, SopGraphIndex } from "./graph.js";
 
 export { parseSop } from "./parse.js";
 export type {
@@ -105,3 +106,18 @@ export type {
   ParseOperationResult,
   ParseOperationSuccess,
 } from "./operation-schema.js";
+
+export {
+  buildChangeStepTypeOperations,
+  buildCreateInitialWorkflowOperations,
+  buildInsertTaskAfterOperations,
+  buildInsertTaskBeforeEndOperations,
+  buildRemoveActorAndReferencesOperations,
+  buildRemoveStepAndReconnectOperations,
+  buildSetDecisionBranchesOperations,
+  getStepRemovalOptions,
+} from "./commands.js";
+export type {
+  InitialWorkflowIds,
+  StepRemovalOptions,
+} from "./commands.js";
