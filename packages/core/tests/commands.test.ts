@@ -33,7 +33,11 @@ describe("graph commands", () => {
       }),
     );
 
-    expect(result.steps.map((step) => step.id)).toEqual(["start", "task", "end"]);
+    expect(result.steps.map((step) => step.id)).toEqual([
+      "start",
+      "task",
+      "end",
+    ]);
     expect(validateSop(result)).toEqual([]);
   });
 
@@ -48,10 +52,14 @@ describe("graph commands", () => {
     );
 
     expect(result.steps.map((step) => step.id)).toContain("collect-attachment");
-    expect(result.steps.find((step) => step.id === "prepare-document")).toMatchObject({
+    expect(
+      result.steps.find((step) => step.id === "prepare-document"),
+    ).toMatchObject({
       next: "collect-attachment",
     });
-    expect(result.steps.find((step) => step.id === "collect-attachment")).toMatchObject({
+    expect(
+      result.steps.find((step) => step.id === "collect-attachment"),
+    ).toMatchObject({
       next: "check-document",
     });
   });
@@ -113,7 +121,9 @@ describe("graph commands", () => {
     );
 
     const result = applyOperations(exampleSop, operations);
-    expect(result.steps.find((step) => step.id === "prepare-document")).toMatchObject({
+    expect(
+      result.steps.find((step) => step.id === "prepare-document"),
+    ).toMatchObject({
       type: "decision",
       yes: "check-document",
       no: "check-document",
@@ -131,7 +141,9 @@ describe("graph commands", () => {
       ),
     );
 
-    expect(result.steps.find((step) => step.id === "check-document")).toMatchObject({
+    expect(
+      result.steps.find((step) => step.id === "check-document"),
+    ).toMatchObject({
       yes: "approve-document",
       no: "prepare-document",
     });
@@ -157,8 +169,12 @@ describe("graph commands", () => {
       ),
     );
 
-    expect(result.steps.some((step) => step.id === "approve-document")).toBe(false);
-    expect(result.steps.find((step) => step.id === "check-document")).toMatchObject({
+    expect(result.steps.some((step) => step.id === "approve-document")).toBe(
+      false,
+    );
+    expect(
+      result.steps.find((step) => step.id === "check-document"),
+    ).toMatchObject({
       yes: "end",
     });
     expect(validateSop(result)).toEqual([]);
@@ -171,6 +187,8 @@ describe("graph commands", () => {
     );
 
     expect(result.actors.some((actor) => actor.id === "staff")).toBe(false);
-    expect(result.steps.every((step) => !step.actorIds.includes("staff"))).toBe(true);
+    expect(result.steps.every((step) => !step.actorIds.includes("staff"))).toBe(
+      true,
+    );
   });
 });
