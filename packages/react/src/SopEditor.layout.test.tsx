@@ -1,4 +1,5 @@
-import { fireEvent, render, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -16,7 +17,7 @@ const document: SOPDocument = {
       id: "start",
       type: "start",
       name: "Mulai",
-      actorIds: [],
+      actorIds: ["staff"],
       next: "task",
     },
     {
@@ -33,7 +34,7 @@ const document: SOPDocument = {
       id: "end",
       type: "end",
       name: "Selesai",
-      actorIds: [],
+      actorIds: ["staff"],
     },
   ],
 };
@@ -67,7 +68,7 @@ function Harness() {
 }
 
 describe("SopEditor default composition", () => {
-  it("keeps the A4 document presentation-only", () => {
+  it("keeps header and actors in the inspector while diagram controls live in the document", () => {
     const { container } = render(<Harness />);
 
     const main = container.querySelector("[data-sopflow-main-pane]");
@@ -81,7 +82,19 @@ describe("SopEditor default composition", () => {
     expect(inspector).not.toBeNull();
     expect(headerView).not.toBeNull();
     expect(procedureView).not.toBeNull();
-    expect(main?.querySelector("input, textarea, select, button")).toBeNull();
+
+    expect(
+      within(main as HTMLElement).getByRole("button", { name: "Langkah" }),
+    ).toBeInTheDocument();
+    expect(
+      within(main as HTMLElement).getByRole("button", { name: "Edit Manual" }),
+    ).toBeInTheDocument();
+    expect(
+      within(main as HTMLElement).getByRole("button", { name: "Flowchart" }),
+    ).toBeInTheDocument();
+    expect(
+      within(main as HTMLElement).getByRole("button", { name: "BPMN" }),
+    ).toBeInTheDocument();
 
     expect(
       within(inspector as HTMLElement).getByLabelText("Nomor SOP"),
@@ -91,6 +104,9 @@ describe("SopEditor default composition", () => {
         name: "Nama pelaksana 1",
       }),
     ).toHaveValue("Staff");
+    expect(
+      within(inspector as HTMLElement).queryByLabelText("Kegiatan"),
+    ).not.toBeInTheDocument();
 
     expect(
       within(headerView as HTMLElement).getByText("Layout SOP"),
@@ -103,30 +119,39 @@ describe("SopEditor default composition", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens selected step fields in the inspector", () => {
+  it("switches to the inline procedure editor without changing the inspector", async () => {
+    const user = userEvent.setup();
     const { container } = render(<Harness />);
+    const main = container.querySelector("[data-sopflow-main-pane]");
     const inspector = container.querySelector("[data-sopflow-inspector]");
-    const row = container.querySelector<HTMLElement>(
-      '[data-sopflow-procedure-step-id="task"]',
+
+    await user.click(
+      within(main as HTMLElement).getByRole("button", { name: "Langkah" }),
     );
 
-    expect(row).not.toBeNull();
-    fireEvent.click(row as HTMLElement);
-
-    expect(row).toHaveAttribute("aria-selected", "true");
     expect(
-      within(inspector as HTMLElement).getByLabelText("Kegiatan"),
-    ).toHaveValue("Proses");
-    const actorGroup = within(inspector as HTMLElement).getByRole("group", {
-      name: "Pelaksana",
-    });
-    expect(
-      within(actorGroup).getByRole("checkbox", { name: "Staff" }),
-    ).toBeChecked();
-    expect(
-      within(inspector as HTMLElement).getByRole("button", {
-        name: "Kembali ke properti dokumen",
-      }),
+      within(main as HTMLElement).getByRole("button", { name: "Diagram" }),
     ).toBeInTheDocument();
+    expect(
+      within(main as HTMLElement).getByDisplayValue("Proses"),
+    ).toBeInTheDocument();
+    expect(
+      within(inspector as HTMLElement).queryByLabelText("Kegiatan"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(inspector as HTMLElement).getByLabelText("Nomor SOP"),
+    ).toBeInTheDocument();
+  });
+
+  it("switches the preview between Flowchart and BPMN", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+
+    await user.click(screen.getByRole("button", { name: "BPMN" }));
+
+    expect(container.querySelector("[data-sopflow-bpmn]")).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "BPMN" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 });
