@@ -107,8 +107,8 @@ describe("procedure model", () => {
       "review:no:start": 420,
     });
 
-    expect(
-      edges.find((edge) => edge.id === "review:no:start")?.trunkX,
-    ).toBe(420);
+    expect(edges.find((edge) => edge.id === "review:no:start")?.trunkX).toBe(
+      420,
+    );
   });
 });
