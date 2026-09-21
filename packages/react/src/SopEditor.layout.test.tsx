@@ -133,7 +133,7 @@ describe("SopEditor default composition", () => {
       within(main as HTMLElement).getByRole("button", { name: "Diagram" }),
     ).toBeInTheDocument();
     expect(
-      within(main as HTMLElement).getByDisplayValue("Proses"),
+      within(main as HTMLElement).getAllByDisplayValue("Proses")[0],
     ).toBeInTheDocument();
     expect(
       within(inspector as HTMLElement).queryByLabelText("Kegiatan"),
