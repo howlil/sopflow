@@ -268,9 +268,7 @@ export function EditableFormalFlowchartPath({
                   tabIndex={0}
                   aria-label={`Waypoint ${index} route ${connectionId}`}
                   onKeyDown={(event) => handleWaypointKeyDown(index, event)}
-                  onPointerDown={(event) =>
-                    startDrag(event, "waypoint", index)
-                  }
+                  onPointerDown={(event) => startDrag(event, "waypoint", index)}
                   onPointerMove={handlePointerMove}
                   onPointerUp={finishDrag}
                   onPointerCancel={finishDrag}
