@@ -1,9 +1,4 @@
-import type {
-  ActorId,
-  Duration,
-  SOPDocument,
-  StepId,
-} from "@sopflow/core";
+import type { ActorId, Duration, SOPDocument, StepId } from "@sopflow/core";
 import type { DiagramPoint } from "./types.js";
 import {
   projectWorkflow,
