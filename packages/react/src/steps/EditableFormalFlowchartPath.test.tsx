@@ -53,6 +53,45 @@ describe("EditableFormalFlowchartPath", () => {
     ).toHaveLength(0);
   });
 
+  it("renders endpoint handles and emits snapped endpoint anchors", () => {
+    const onEndpointChange = vi.fn();
+
+    render(
+      <svg>
+        <title>Editable route test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          endpointTargets={{
+            start: { left: 60, top: 80, width: 40, height: 40 },
+            end: { left: 220, top: 220, width: 40, height: 40 },
+          }}
+          onSelect={() => undefined}
+          onChange={() => undefined}
+          onEndpointChange={onEndpointChange}
+        />
+      </svg>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Start endpoint route edge-1" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "End endpoint route edge-1" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(
+      screen.getByRole("button", { name: "Start endpoint route edge-1" }),
+      { key: "ArrowLeft" },
+    );
+
+    expect(onEndpointChange).toHaveBeenCalledWith("start", {
+      side: "right",
+      distance: 0.5,
+    });
+  });
+
   it("supports keyboard route selection and waypoint editing", () => {
     const onSelect = vi.fn();
     const onChange = vi.fn();
