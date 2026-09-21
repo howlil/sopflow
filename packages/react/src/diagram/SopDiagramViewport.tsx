@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { calculateFitScale } from "./calculateFitScale.js";
 import { useDragPan } from "./hooks/useDragPan.js";
