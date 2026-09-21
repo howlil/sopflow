@@ -29,7 +29,7 @@ export function SopDocumentCanvas({
             document={document}
             issues={issues}
             selectedStepId={selectedStepId}
-            onSelectedStepChange={onSelectedStepChange}
+            {...(onSelectedStepChange ? { onSelectedStepChange } : {})}
           />
         </section>
       </div>
