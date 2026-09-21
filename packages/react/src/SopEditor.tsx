@@ -12,9 +12,9 @@ import "./styles/token.css";
 
 import { ActorsEditor } from "./actors/ActorsEditor.js";
 import { SopDocumentCanvas } from "./editor/SopDocumentCanvas.js";
-import {
-  type SopDiagramKind,
-  type SopDocumentMode,
+import type {
+  SopDiagramKind,
+  SopDocumentMode,
 } from "./editor/SopDocumentToolbar.js";
 import { EditorStatus } from "./editor/EditorStatus.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
@@ -88,8 +88,7 @@ export function SopEditor({
 
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
-  const [internalMode, setInternalMode] =
-    useState<SopDocumentMode>("preview");
+  const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
   const [internalDiagramKind, setInternalDiagramKind] =
     useState<SopDiagramKind>("flowchart");
   const [internalManualEditing, setInternalManualEditing] = useState(false);
@@ -149,11 +148,7 @@ export function SopEditor({
         handleManualEditingChange(false);
       }
     },
-    [
-      controlledDiagramKind,
-      handleManualEditingChange,
-      onDiagramKindChange,
-    ],
+    [controlledDiagramKind, handleManualEditingChange, onDiagramKindChange],
   );
 
   return (
