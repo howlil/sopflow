@@ -1,3 +1,4 @@
+import type { ActorId, StepId } from "./types.js";
 import type { ValidationIssue } from "./validate.js";
 
 export type CoreErrorCode =
@@ -15,12 +16,12 @@ export type CoreErrorCode =
   | "INVALID_DOCUMENT";
 
 export interface CoreErrorDetails {
-  stepId?: string;
-  actorId?: string;
-  sourceId?: string;
-  targetId?: string;
-  issues?: ValidationIssue[];
-  operationErrors?: string[];
+  readonly stepId?: StepId;
+  readonly actorId?: ActorId;
+  readonly sourceId?: StepId;
+  readonly targetId?: StepId;
+  readonly issues?: readonly ValidationIssue[];
+  readonly operationErrors?: readonly string[];
 }
 
 export class SopCoreError extends Error {
@@ -43,7 +44,9 @@ export function isSopCoreError(error: unknown): error is SopCoreError {
   return error instanceof SopCoreError;
 }
 
-export function invalidDocumentError(issues: ValidationIssue[]): SopCoreError {
+export function invalidDocumentError(
+  issues: readonly ValidationIssue[],
+): SopCoreError {
   return new SopCoreError(
     "INVALID_DOCUMENT",
     "Operation would produce an invalid SOP document",
