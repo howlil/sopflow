@@ -270,8 +270,7 @@ export function layoutFormalOpcEndpoints(
   const placements: FormalOpcPlacement[] = [];
 
   for (const [columnKey, group] of byColumn) {
-    const actorId =
-      columnKey === "__default__" ? null : (columnKey as ActorId);
+    const actorId = columnKey === "__default__" ? null : (columnKey as ActorId);
     const actorIndex = resolveActorIndex(actorId, options.actors);
     const centerPercent = computeFormalActorColumnCenterPercent(
       actorIndex,
