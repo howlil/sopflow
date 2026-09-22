@@ -30,6 +30,19 @@ describe("diagram public API", () => {
   it("keeps implementation helpers out of the runtime surface", () => {
     expect(Object.keys(publicApi).sort()).toEqual(
       [
+        "buildFormalTableColumnPercents",
+        "classifyFormalFlowchartRouteComplexity",
+        "computeFormalActorColumnCenterPercent",
+        "formalOpcCenterXToLeftPx",
+        "formalOpcStackTopPx",
+        "formalRowSpan",
+        "getFormalOpcEndpointsForPage",
+        "getFormalPageForRow",
+        "isSimpleSequentialFormalFlow",
+        "layoutFormalOpcEndpoints",
+        "placeFormalEdgeLabel",
+        "splitFormalCrossPageConnections",
+        "splitFormalRowsIntoPages",
         "buildBpmnModel",
         "buildDiagram",
         "buildDiagramModel",

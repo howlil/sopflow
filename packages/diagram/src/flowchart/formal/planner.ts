@@ -18,6 +18,7 @@ import {
   routeFormalOrthogonal,
   scoreFormalPath,
 } from "./orthogonal.js";
+import { placeFormalEdgeLabel } from "./labels.js";
 import {
   findFormalRouteCrossingIds,
   sortFormalRoutesForPlanning,
@@ -213,7 +214,11 @@ export function planFormalProcedureEdges(
 
       const labelPosition =
         manual?.labelPosition ??
-        placeFormalEdgeLabel(resolved.points, edge.label, obstacles);
+        placeFormalEdgeLabel({
+          path: resolved.points,
+          ...(edge.label ? { label: edge.label } : {}),
+          obstacles,
+        });
       const handlePosition = routeHandlePosition(resolved.points);
 
       planned.set(edge.id, {
@@ -479,57 +484,6 @@ function applyManualRoute(
       end,
     ]),
   };
-}
-
-function placeFormalEdgeLabel(
-  path: readonly DiagramPoint[],
-  label: string | undefined,
-  obstacles: readonly FormalFlowchartRect[],
-): DiagramPoint | null {
-  if (!label || path.length < 2) return null;
-
-  const start = path[0];
-  const next = path[1];
-  if (!start || !next) return null;
-
-  const dx = next.x - start.x;
-  const dy = next.y - start.y;
-  const length = Math.hypot(dx, dy);
-  if (length < 1) return { ...start };
-
-  const distance = 30;
-  const t = Math.min(1, distance / length);
-  const x = start.x + dx * t;
-  const y = start.y + dy * t;
-  const decisionLabel = ["ya", "yes", "y", "tidak", "no", "n"].includes(
-    label.trim().toLowerCase(),
-  );
-  const offset = decisionLabel ? 22 : 19;
-  const nx = -dy / length;
-  const ny = dx / length;
-
-  const candidates = [
-    { x: x + nx * offset, y: y + ny * offset },
-    { x: x - nx * offset, y: y - ny * offset },
-    { x: x + nx * (offset + 12), y: y + ny * (offset + 12) },
-    { x, y: y - offset },
-    { x, y: y + offset },
-  ];
-
-  return (
-    candidates.find(
-      (candidate) =>
-        !obstacles.some(
-          (obstacle) =>
-            candidate.x >= obstacle.left - 4 &&
-            candidate.x <= obstacle.left + obstacle.width + 4 &&
-            candidate.y >= obstacle.top - 4 &&
-            candidate.y <= obstacle.top + obstacle.height + 4,
-        ),
-    ) ??
-    candidates[0] ??
-    null
-  );
 }
 
 function routeHandlePosition(path: readonly DiagramPoint[]): DiagramPoint {

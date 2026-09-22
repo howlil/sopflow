@@ -1,4 +1,39 @@
 export {
+  classifyFormalFlowchartRouteComplexity,
+  formalRowSpan,
+  isSimpleSequentialFormalFlow,
+} from "./flowchart/formal/complexity.js";
+export type {
+  FormalFlowchartRouteComplexity,
+  FormalRouteComplexityInput,
+} from "./flowchart/formal/complexity.js";
+
+export { placeFormalEdgeLabel } from "./flowchart/formal/labels.js";
+export type { FormalEdgeLabelPlacementInput } from "./flowchart/formal/labels.js";
+
+export {
+  buildFormalTableColumnPercents,
+  computeFormalActorColumnCenterPercent,
+  formalOpcCenterXToLeftPx,
+  formalOpcStackTopPx,
+  getFormalOpcEndpointsForPage,
+  getFormalPageForRow,
+  layoutFormalOpcEndpoints,
+  splitFormalCrossPageConnections,
+  splitFormalRowsIntoPages,
+} from "./flowchart/formal/pagination.js";
+export type {
+  FormalOpcEndpointVariant,
+  FormalOpcPair,
+  FormalOpcPlacement,
+  FormalPageConnections,
+  FormalPagedConnection,
+  FormalPageRow,
+  FormalPositionedOpcEndpoint,
+  FormalTableColumnPercents,
+} from "./flowchart/formal/pagination.js";
+
+export {
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
