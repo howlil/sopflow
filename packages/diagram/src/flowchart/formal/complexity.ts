@@ -1,9 +1,6 @@
 import type { FormalRouteMeta } from "./dedicated.js";
 
-export type FormalFlowchartRouteComplexity =
-  | "simple"
-  | "medium"
-  | "complex";
+export type FormalFlowchartRouteComplexity = "simple" | "medium" | "complex";
 
 export interface FormalRouteComplexityInput {
   readonly fromRow: number;
