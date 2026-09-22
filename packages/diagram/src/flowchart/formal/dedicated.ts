@@ -1,5 +1,10 @@
 import type { DiagramPoint } from "../../types.js";
 import {
+  classifyFormalFlowchartRouteComplexity,
+  formalRowSpan,
+  isSimpleSequentialFormalFlow,
+} from "./complexity.js";
+import {
   computeFormalConnectionRoutingBounds,
   extrudeFormalShapePoint,
   findFormalRowPipeY,
@@ -349,7 +354,7 @@ export function tryBuildFormalDedicatedRoute(input: {
   const crossColumn = !sameColumn;
   const destinationAbove = meta.toRow < meta.fromRow;
   const destinationBelow = meta.toRow > meta.fromRow;
-  const rowSpan = Math.abs(meta.toRow - meta.fromRow);
+  const rowSpan = formalRowSpan(meta);
   const sourceDecision = meta.sourceType === "flowchart-decision";
   const targetDecision = meta.targetType === "flowchart-decision";
   const routingBounds = computeFormalConnectionRoutingBounds({
@@ -358,12 +363,27 @@ export function tryBuildFormalDedicatedRoute(input: {
     targetColumn: input.targetColumn,
     isCrossColumn: crossColumn,
   });
+  const complexityInput = {
+    fromRow: meta.fromRow,
+    toRow: meta.toRow,
+    sameColumn,
+    crossColumn,
+    sourceType: meta.sourceType,
+    targetType: meta.targetType,
+    ...(meta.label ? { label: meta.label } : {}),
+  };
+  const complexity =
+    classifyFormalFlowchartRouteComplexity(complexityInput);
 
   const usable = (path: readonly DiagramPoint[]) =>
     path.length >= 2 &&
     pathWithinFormalBounds(path, routingBounds) &&
     !formalPathIntersectsRectangles(path, input.obstacles, 2) &&
     !formalPathOverlapsSegments(path, input.occupied);
+
+  if (isSimpleSequentialFormalFlow(complexityInput)) {
+    return null;
+  }
 
   if (destinationAbove && input.sourceColumn) {
     const corridor =
@@ -410,7 +430,7 @@ export function tryBuildFormalDedicatedRoute(input: {
     if (best) return best;
   }
 
-  if (crossColumn && rowSpan >= 2) {
+  if (complexity === "complex" && crossColumn && rowSpan >= 2) {
     const sidePairs: Array<[FormalFlowchartSide, FormalFlowchartSide]> = [
       ["bottom", "top"],
       ["right", "top"],
