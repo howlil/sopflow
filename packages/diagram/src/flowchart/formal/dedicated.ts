@@ -372,8 +372,7 @@ export function tryBuildFormalDedicatedRoute(input: {
     targetType: meta.targetType,
     ...(meta.label ? { label: meta.label } : {}),
   };
-  const complexity =
-    classifyFormalFlowchartRouteComplexity(complexityInput);
+  const complexity = classifyFormalFlowchartRouteComplexity(complexityInput);
 
   const usable = (path: readonly DiagramPoint[]) =>
     path.length >= 2 &&
