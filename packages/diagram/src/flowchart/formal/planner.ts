@@ -216,7 +216,7 @@ export function planFormalProcedureEdges(
         manual?.labelPosition ??
         placeFormalEdgeLabel({
           path: resolved.points,
-          label: edge.label,
+          ...(edge.label ? { label: edge.label } : {}),
           obstacles,
         });
       const handlePosition = routeHandlePosition(resolved.points);
