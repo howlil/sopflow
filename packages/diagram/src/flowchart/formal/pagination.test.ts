@@ -21,11 +21,9 @@ const rows: FormalPageRow[] = [
 
 describe("formal flowchart pagination parity", () => {
   it("splits the first page and following pages deterministically", () => {
-    expect(splitFormalRowsIntoPages(rows, 2, 2).map((page) => page.length)).toEqual([
-      2,
-      2,
-      1,
-    ]);
+    expect(
+      splitFormalRowsIntoPages(rows, 2, 2).map((page) => page.length),
+    ).toEqual([2, 2, 1]);
 
     expect(getFormalPageForRow(1, 2, 2)).toBe(0);
     expect(getFormalPageForRow(2, 2, 2)).toBe(0);
@@ -104,10 +102,7 @@ describe("formal flowchart pagination parity", () => {
     const result = splitFormalCrossPageConnections(edges, rows, 2, 2);
     const endpoints = getFormalOpcEndpointsForPage(0, result.opcPairs).bottom;
     const placements = layoutFormalOpcEndpoints(endpoints, {
-      actors: [
-        { id: "staff" as ActorId },
-        { id: "manager" as ActorId },
-      ],
+      actors: [{ id: "staff" as ActorId }, { id: "manager" as ActorId }],
       columnBounds: {
         staff: { left: 200, top: 0, right: 300, bottom: 500 },
         manager: { left: 300, top: 0, right: 400, bottom: 500 },
@@ -122,11 +117,7 @@ describe("formal flowchart pagination parity", () => {
   });
 });
 
-function row(
-  stepId: StepId,
-  number: number,
-  actorId: ActorId,
-): FormalPageRow {
+function row(stepId: StepId, number: number, actorId: ActorId): FormalPageRow {
   return {
     stepId,
     number,
