@@ -1,6 +1,6 @@
 import type { SOPDocument } from "@sopflow/core";
 import { describe, expect, it } from "vitest";
-import { layoutBpmnGraph } from "./bpmnLayout.js";
+import { buildBpmnMainSpine, layoutBpmnGraph } from "./bpmnLayout.js";
 import { projectWorkflow } from "./workflow.js";
 
 function columns(document: SOPDocument): Record<string, number> {
@@ -135,6 +135,120 @@ describe("layoutBpmnGraph", () => {
     expect(result.end).toBeGreaterThan(
       Math.max(result["yes-task"] ?? -1, result["no-task"] ?? -1),
     );
+  });
+
+  it("chooses the shortest deterministic forward path to End as the main spine", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "main-spine",
+      title: "Main spine",
+      actors: [{ id: "actor", name: "Actor" }],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["actor"],
+          next: "decision",
+        },
+        {
+          id: "decision",
+          type: "decision",
+          name: "Decision",
+          actorIds: ["actor"],
+          yes: "long-a",
+          no: "quick",
+        },
+        {
+          id: "long-a",
+          type: "task",
+          name: "Long A",
+          actorIds: ["actor"],
+          next: "long-b",
+        },
+        {
+          id: "long-b",
+          type: "task",
+          name: "Long B",
+          actorIds: ["actor"],
+          next: "end",
+        },
+        {
+          id: "quick",
+          type: "task",
+          name: "Quick",
+          actorIds: ["actor"],
+          next: "end",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "End",
+          actorIds: ["actor"],
+        },
+      ],
+    };
+    const graph = projectWorkflow(document);
+
+    expect(buildBpmnMainSpine(graph)).toEqual(
+      new Set(["start", "decision", "quick", "end"]),
+    );
+  });
+
+  it("keeps the main-spine branch ahead when same-lane branches compete for a column", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "main-spine-collision",
+      title: "Main spine collision",
+      actors: [{ id: "actor", name: "Actor" }],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["actor"],
+          next: "decision",
+        },
+        {
+          id: "decision",
+          type: "decision",
+          name: "Decision",
+          actorIds: ["actor"],
+          yes: "long-a",
+          no: "quick",
+        },
+        {
+          id: "long-a",
+          type: "task",
+          name: "Long A",
+          actorIds: ["actor"],
+          next: "long-b",
+        },
+        {
+          id: "long-b",
+          type: "task",
+          name: "Long B",
+          actorIds: ["actor"],
+          next: "end",
+        },
+        {
+          id: "quick",
+          type: "task",
+          name: "Quick",
+          actorIds: ["actor"],
+          next: "end",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "End",
+          actorIds: ["actor"],
+        },
+      ],
+    };
+
+    const result = columns(document);
+    expect(result.quick).toBeLessThan(result["long-a"] ?? Number.MAX_SAFE_INTEGER);
   });
 
   it("does not let a feedback edge push the forward graph to the right", () => {
