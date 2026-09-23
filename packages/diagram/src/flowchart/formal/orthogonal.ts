@@ -1,6 +1,7 @@
 import {
   isOrthogonalPath,
   pathToSegments,
+  scoreRouteDirectness,
   segmentsCross,
   segmentsNearby,
   segmentsOverlap,
@@ -270,6 +271,7 @@ export function scoreFormalPath(
   }
 
   score += Math.max(0, normalized.length - 2) * 180;
+  score += scoreRouteDirectness(normalized) * 2;
   return score;
 }
 
