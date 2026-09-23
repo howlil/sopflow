@@ -1,4 +1,9 @@
-import { getOrderedSteps, type SOPDocument, type Step, type StepId } from "@sopflow/core";
+import {
+  getOrderedSteps,
+  type SOPDocument,
+  type Step,
+  type StepId,
+} from "@sopflow/core";
 import type { DiagramDiagnostic, DiagramEdgeKind } from "./types.js";
 
 export interface WorkflowNode {
