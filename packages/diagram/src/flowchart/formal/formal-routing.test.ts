@@ -573,13 +573,7 @@ describe("formal SOP-AP flowchart routing parity", () => {
         "yes",
         "Approved",
       ),
-      edge(
-        "decision:no:no-target",
-        "decision",
-        "no-target",
-        "no",
-        "Rejected",
-      ),
+      edge("decision:no:no-target", "decision", "no-target", "no", "Rejected"),
     ];
 
     const planned = planFormalProcedureEdges({ rows, edges }, geometry);
