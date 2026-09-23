@@ -6,7 +6,12 @@ import {
   type SopOperation,
   type StepId,
 } from "@sopflow/core";
-import type { SopDiagramConfig } from "@sopflow/diagram";
+import {
+  diagramConfigEquals,
+  projectWorkflow,
+  pruneSopDiagramConfig,
+  type SopDiagramConfig,
+} from "@sopflow/diagram";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./styles/token.css";
@@ -162,6 +167,24 @@ export function SopEditor({
     [controlledDiagramConfig, onDiagramConfigChange],
   );
 
+  const diagramWorkflow = useMemo(() => projectWorkflow(value), [value]);
+  const effectiveDiagramConfig = useMemo(
+    () => pruneSopDiagramConfig(diagramWorkflow, diagramConfig),
+    [diagramConfig, diagramWorkflow],
+  );
+
+  useEffect(() => {
+    if (!diagramConfigMutable) return;
+    if (diagramConfigEquals(effectiveDiagramConfig, diagramConfig)) return;
+
+    handleDiagramConfigChange(effectiveDiagramConfig);
+  }, [
+    diagramConfig,
+    diagramConfigMutable,
+    effectiveDiagramConfig,
+    handleDiagramConfigChange,
+  ]);
+
   const handleManualEditingChange = useCallback(
     (editing: boolean) => {
       if (controlledManualEditing === undefined) {
@@ -248,7 +271,7 @@ export function SopEditor({
               onDiagramKindChange={handleDiagramKindChange}
               manualEditing={manualEditing}
               onManualEditingChange={handleManualEditingChange}
-              diagramConfig={diagramConfig}
+              diagramConfig={effectiveDiagramConfig}
               onDiagramConfigChange={handleDiagramConfigChange}
               manualEditingSupported={diagramConfigMutable}
               disabled={mutationDisabled}
