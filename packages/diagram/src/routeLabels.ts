@@ -35,8 +35,13 @@ export function placeRouteLabel(
   const trimmed = label.trim();
   if (!trimmed || path.length < 2) return null;
 
-  const width = Math.max(18, trimmed.length * charWidth + horizontalPadding * 2);
-  const height = fontHeight + verticalPadding * 2;
+  const dimensions = routeLabelDimensions(trimmed, {
+    charWidth,
+    fontHeight,
+    horizontalPadding,
+    verticalPadding,
+  });
+  const { width, height } = dimensions;
   const segments = pathToSegments(path)
     .map((segment, index) => ({
       segment,
@@ -89,6 +94,44 @@ export function placeRouteLabel(
     candidates[0] ??
     null
   );
+}
+
+export function routeLabelBounds(
+  label: string,
+  position: DiagramPoint,
+  options: {
+    readonly fontHeight?: number;
+    readonly charWidth?: number;
+    readonly horizontalPadding?: number;
+    readonly verticalPadding?: number;
+  } = {},
+): DiagramRect {
+  const { width, height } = routeLabelDimensions(label.trim(), options);
+  return {
+    left: position.x - width / 2,
+    top: position.y - height / 2,
+    width,
+    height,
+  };
+}
+
+function routeLabelDimensions(
+  label: string,
+  options: {
+    readonly fontHeight?: number;
+    readonly charWidth?: number;
+    readonly horizontalPadding?: number;
+    readonly verticalPadding?: number;
+  },
+): { width: number; height: number } {
+  const charWidth = options.charWidth ?? 6.5;
+  const fontHeight = options.fontHeight ?? 12;
+  const horizontalPadding = options.horizontalPadding ?? 8;
+  const verticalPadding = options.verticalPadding ?? 4;
+  return {
+    width: Math.max(18, label.length * charWidth + horizontalPadding * 2),
+    height: fontHeight + verticalPadding * 2,
+  };
 }
 
 export function rectsOverlap(left: DiagramRect, right: DiagramRect): boolean {
