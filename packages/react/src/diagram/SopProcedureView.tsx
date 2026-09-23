@@ -624,8 +624,7 @@ function SinglePageSopProcedureView({
                             )
                             .map((shape) => shape.rect)
                         : [];
-                      const pelaksanaBounds =
-                        geometry.formal?.pelaksanaBounds;
+                      const pelaksanaBounds = geometry.formal?.pelaksanaBounds;
                       const formalBounds = pelaksanaBounds
                         ? {
                             left: pelaksanaBounds.left,
