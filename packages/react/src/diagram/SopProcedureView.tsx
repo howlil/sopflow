@@ -50,6 +50,8 @@ export interface SopProcedureViewProps {
   onManualPathOffsetsChange?: (offsets: SopManualPathOffsets) => void;
   firstPageRows?: number;
   nextPageRows?: number;
+  firstPageHeightPx?: number;
+  nextPageHeightPx?: number;
   className?: string;
 }
 
@@ -67,8 +69,20 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         ...(props.nextPageRows !== undefined
           ? { nextPageRows: props.nextPageRows }
           : {}),
+        ...(props.firstPageHeightPx !== undefined
+          ? { firstPageHeightPx: props.firstPageHeightPx }
+          : {}),
+        ...(props.nextPageHeightPx !== undefined
+          ? { nextPageHeightPx: props.nextPageHeightPx }
+          : {}),
       }),
-    [model, props.firstPageRows, props.nextPageRows],
+    [
+      model,
+      props.firstPageHeightPx,
+      props.firstPageRows,
+      props.nextPageHeightPx,
+      props.nextPageRows,
+    ],
   );
   const [internalDiagramConfig, setInternalDiagramConfig] =
     useState<SopDiagramConfig>({});
