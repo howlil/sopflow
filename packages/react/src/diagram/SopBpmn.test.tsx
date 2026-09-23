@@ -70,9 +70,7 @@ describe("SopBpmn", () => {
     };
 
     const { container } = render(<SopBpmn document={longDocument} />);
-    const node = container.querySelector(
-      '[data-sopflow-step-id="fix"]',
-    );
+    const node = container.querySelector('[data-sopflow-step-id="fix"]');
 
     expect(node?.textContent).toContain("Verifikasi dokumen");
     expect(node?.textContent).toContain("kelengkapan administrasi");
