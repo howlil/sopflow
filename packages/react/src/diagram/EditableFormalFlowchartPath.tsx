@@ -12,6 +12,7 @@ import {
   snapFormalEndpoint,
   validateFormalManualRoute,
   type DiagramPoint,
+  type FormalFlowchartOccupiedSegment,
   type FormalFlowchartRect,
   type FormalFlowchartSide,
   type FormalRouteChange,
@@ -37,6 +38,7 @@ export interface EditableFormalFlowchartPathProps {
   sourceIsDiamond?: boolean;
   targetIsDiamond?: boolean;
   obstacles?: readonly FormalFlowchartRect[];
+  occupiedSegments?: readonly FormalFlowchartOccupiedSegment[];
   routingBounds?: FormalFlowchartRect | null;
   onSelect: (connectionId: string) => void;
   onChange: (route: FormalRouteChange) => void;
@@ -64,6 +66,7 @@ export function EditableFormalFlowchartPath({
   sourceIsDiamond = false,
   targetIsDiamond = false,
   obstacles = [],
+  occupiedSegments = [],
   routingBounds = null,
   onSelect,
   onChange,
@@ -96,6 +99,7 @@ export function EditableFormalFlowchartPath({
       sourceSide: nextSourceSide,
       targetSide: nextTargetSide,
       obstacles,
+      occupied: occupiedSegments,
       bounds: routingBounds,
     });
     const effectivePath = validation.valid
