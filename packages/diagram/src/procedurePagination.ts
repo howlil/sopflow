@@ -187,10 +187,9 @@ export function buildFormalProcedurePages(
   const nextPageHeight =
     positiveNumber(options.nextPageHeightPx) ?? firstPageHeight;
   const estimatedHeightByStepId = new Map(
-    model.rows.map((row) => [
-      row.stepId,
-      estimateFormalProcedureRowHeight(row),
-    ] as const),
+    model.rows.map(
+      (row) => [row.stepId, estimateFormalProcedureRowHeight(row)] as const,
+    ),
   );
   const rowPages =
     useHeightBudget && firstPageHeight !== null && nextPageHeight !== null
@@ -201,15 +200,14 @@ export function buildFormalProcedurePages(
           nextPageHeight,
         )
       : splitFormalRowsIntoPages(paginationRows, firstPageRows, nextPageRows);
-  const connections =
-    useHeightBudget
-      ? splitFormalConnectionsForPages(model.graph.edges, rowPages)
-      : splitFormalCrossPageConnections(
-          model.graph.edges,
-          paginationRows,
-          firstPageRows,
-          nextPageRows,
-        );
+  const connections = useHeightBudget
+    ? splitFormalConnectionsForPages(model.graph.edges, rowPages)
+    : splitFormalCrossPageConnections(
+        model.graph.edges,
+        paginationRows,
+        firstPageRows,
+        nextPageRows,
+      );
   const procedureRowById = new Map(
     model.rows.map((row) => [row.stepId, row] as const),
   );
