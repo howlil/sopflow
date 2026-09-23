@@ -2,10 +2,9 @@ import type { FormalFlowchartOccupiedSegment } from "./types.js";
 import { formalSegmentsCross, formalSegmentsOverlap } from "./orthogonal.js";
 import type { FormalRouteMeta } from "./dedicated.js";
 
-function labelOrder(label: string | null | undefined): number {
-  const value = (label ?? "").trim().toLowerCase();
-  if (value === "ya" || value === "yes" || value === "y") return 1;
-  if (value === "tidak" || value === "no" || value === "n") return 2;
+function branchOrder(kind: FormalRouteMeta["kind"]): number {
+  if (kind === "yes") return 1;
+  if (kind === "no") return 2;
   return 0;
 }
 
@@ -58,11 +57,11 @@ export function sortFormalRoutesForPlanning(
     const spanB = Math.abs(b.toRow - b.fromRow);
     if (spanA !== spanB) return spanB - spanA;
 
-    const labelA = labelOrder(a.label);
-    const labelB = labelOrder(b.label);
-    if (labelA !== labelB) return labelB - labelA;
+    const branchA = branchOrder(a.kind);
+    const branchB = branchOrder(b.kind);
+    if (branchA !== branchB) return branchB - branchA;
 
-    if (labelA === 2) {
+    if (branchA === 2) {
       const loopbackA = a.toRow < a.fromRow ? 0 : 1;
       const loopbackB = b.toRow < b.fromRow ? 0 : 1;
       if (loopbackA !== loopbackB) return loopbackA - loopbackB;
