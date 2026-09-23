@@ -172,10 +172,9 @@ describe("SopProcedureView", () => {
     expect(
       container.querySelectorAll("[data-sopflow-procedure-page]"),
     ).toHaveLength(3);
-    expect(container.querySelectorAll("[data-sopflow-opc]").length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      container.querySelectorAll("[data-sopflow-opc]").length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("Step 6")).toBeInTheDocument();
   });
-
 });
