@@ -19,6 +19,14 @@ describe("buildFormalProcedurePages", () => {
     const outgoing = pages[0]?.edges.find((edge) => edge.id.endsWith("__out"));
     const incoming = pages[1]?.edges.find((edge) => edge.id.endsWith("__in"));
 
+    expect(outgoing).toMatchObject({
+      semanticEdgeId: "step-4:next:step-5",
+      segment: "source-to-opc",
+    });
+    expect(incoming).toMatchObject({
+      semanticEdgeId: "step-4:next:step-5",
+      segment: "opc-to-target",
+    });
     expect(outgoing?.from).toBe("step-4");
     expect(outgoing?.to).toBe("opc-out-step-4:next:step-5");
     expect(incoming?.from).toBe("opc-in-step-4:next:step-5");
