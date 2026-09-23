@@ -120,4 +120,15 @@ describe("buildSopFlowchart", () => {
       true,
     );
   });
+
+  it("keeps flowchart layout stable when step storage order changes", () => {
+    const original = buildSopFlowchart(document);
+    const shuffled = buildSopFlowchart({
+      ...document,
+      steps: [...document.steps].reverse(),
+    });
+
+    expect(shuffled).toEqual(original);
+  });
+
 });
