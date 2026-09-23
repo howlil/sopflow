@@ -20,7 +20,7 @@ import type {
 import { EditorStatus } from "./editor/EditorStatus.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
-import type { SopHeaderValue } from "./types.js";
+import type { SopHeaderValue } from "./header/types.js";
 import { getSopReadinessIssues } from "./validation/readiness.js";
 import type { SopReadinessIssue } from "./validation/readiness.js";
 import { ValidationPanel } from "./validation/ValidationPanel.js";
