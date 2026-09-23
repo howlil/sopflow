@@ -374,7 +374,9 @@ function positiveInteger(value: number | undefined, fallback: number): number {
 }
 
 function positiveNumber(value: number | undefined, fallback: number): number {
-  return Number.isFinite(value) && (value ?? 0) > 0 ? (value as number) : fallback;
+  return Number.isFinite(value) && (value ?? 0) > 0
+    ? (value as number)
+    : fallback;
 }
 
 function positiveOptionalNumber(value: number | undefined): number | null {
