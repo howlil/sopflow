@@ -10,7 +10,7 @@ import {
 } from "./procedure.js";
 import {
   getFormalOpcEndpointsForPage,
-  splitFormalCrossPageConnections,
+  splitFormalConnectionsByPage,
   splitFormalRowsIntoPages,
   type FormalPagedConnectionSegment,
   type FormalPositionedOpcEndpoint,
@@ -18,8 +18,20 @@ import {
 import type { FormalProcedureRowLike } from "./flowchart/formal/planner.js";
 
 export interface FormalProcedurePaginationOptions {
+  /** Legacy deterministic row-count pagination. */
   readonly firstPageRows?: number;
+  /** Legacy deterministic row-count pagination. */
   readonly nextPageRows?: number;
+  /**
+   * Enables height-aware pagination when provided. The budget is for the
+   * procedure region only; callers that compose a document header should pass
+   * the measured reserved height separately.
+   */
+  readonly pageHeightPx?: number;
+  readonly firstPageReservedHeightPx?: number;
+  readonly nextPageReservedHeightPx?: number;
+  readonly minimumRowHeightPx?: number;
+  readonly lineHeightPx?: number;
 }
 
 export interface FormalProcedurePageEdge extends WorkflowEdge {
@@ -132,38 +144,25 @@ function cloneManualRoute(route: ProcedureManualRoute): ProcedureManualRoute {
 
 const DEFAULT_FIRST_PAGE_ROWS = 7;
 const DEFAULT_NEXT_PAGE_ROWS = 8;
+const DEFAULT_MINIMUM_ROW_HEIGHT_PX = 110;
+const DEFAULT_LINE_HEIGHT_PX = 12;
+const ESTIMATED_TEXT_VERTICAL_PADDING_PX = 8;
+const ESTIMATED_ACTIVITY_CHARS_PER_LINE = 42;
+const ESTIMATED_MUTU_CHARS_PER_LINE = 24;
 
 export function buildFormalProcedurePages(
   model: ProcedureModel,
   options: FormalProcedurePaginationOptions = {},
 ): FormalProcedurePageModel[] {
-  const firstPageRows = positiveInteger(
-    options.firstPageRows,
-    DEFAULT_FIRST_PAGE_ROWS,
-  );
-  const nextPageRows = positiveInteger(
-    options.nextPageRows,
-    DEFAULT_NEXT_PAGE_ROWS,
-  );
   const paginationRows = model.rows.map((row) => ({
     stepId: row.stepId,
     number: row.number,
     primaryActorId: row.primaryActorId,
   }));
-  const rowPages = splitFormalRowsIntoPages(
-    paginationRows,
-    firstPageRows,
-    nextPageRows,
-  );
-  const connections = splitFormalCrossPageConnections(
-    model.graph.edges,
-    paginationRows,
-    firstPageRows,
-    nextPageRows,
-  );
   const procedureRowById = new Map(
     model.rows.map((row) => [row.stepId, row] as const),
   );
+  const rowPages = buildProcedureRowPages(model.rows, paginationRows, options);
 
   if (rowPages.length === 0) {
     return [
@@ -177,6 +176,19 @@ export function buildFormalProcedurePages(
       },
     ];
   }
+
+  const pageByStepId = new Map<string, number>();
+  rowPages.forEach((pageRows, pageIndex) => {
+    for (const row of pageRows) {
+      pageByStepId.set(row.stepId, pageIndex);
+    }
+  });
+  const connections = splitFormalConnectionsByPage(
+    model.graph.edges,
+    paginationRows,
+    pageByStepId,
+    rowPages.length,
+  );
 
   return rowPages.map((pageRows, pageIndex) => {
     const rows = pageRows.flatMap((row) => {
@@ -217,6 +229,125 @@ export function buildFormalProcedurePages(
   });
 }
 
+export function estimateProcedureRowHeight(
+  row: ProcedureRowModel,
+  options: Pick<
+    FormalProcedurePaginationOptions,
+    "minimumRowHeightPx" | "lineHeightPx"
+  > = {},
+): number {
+  const minimumRowHeight = positiveNumber(
+    options.minimumRowHeightPx,
+    DEFAULT_MINIMUM_ROW_HEIGHT_PX,
+  );
+  const lineHeight = positiveNumber(options.lineHeightPx, DEFAULT_LINE_HEIGHT_PX);
+  const activityLines =
+    estimateWrappedLines(row.activity, ESTIMATED_ACTIVITY_CHARS_PER_LINE) +
+    (row.kind === "decision" ? 1 : 0);
+  const maxTextLines = Math.max(
+    activityLines,
+    estimateWrappedLines(row.input, ESTIMATED_MUTU_CHARS_PER_LINE),
+    estimateWrappedLines(row.output, ESTIMATED_MUTU_CHARS_PER_LINE),
+    estimateWrappedLines(row.note, ESTIMATED_MUTU_CHARS_PER_LINE),
+    1,
+  );
+
+  return Math.ceil(
+    Math.max(
+      minimumRowHeight,
+      maxTextLines * lineHeight + ESTIMATED_TEXT_VERTICAL_PADDING_PX,
+    ),
+  );
+}
+
+function buildProcedureRowPages(
+  rows: readonly ProcedureRowModel[],
+  paginationRows: readonly {
+    readonly stepId: string;
+    readonly number: number;
+    readonly primaryActorId: string | null;
+  }[],
+  options: FormalProcedurePaginationOptions,
+): Array<readonly { readonly stepId: string }[]> {
+  const pageHeightPx = positiveOptionalNumber(options.pageHeightPx);
+
+  if (pageHeightPx !== null) {
+    return splitProcedureRowsByEstimatedHeight(rows, pageHeightPx, options);
+  }
+
+  const firstPageRows = positiveInteger(
+    options.firstPageRows,
+    DEFAULT_FIRST_PAGE_ROWS,
+  );
+  const nextPageRows = positiveInteger(
+    options.nextPageRows,
+    DEFAULT_NEXT_PAGE_ROWS,
+  );
+
+  return splitFormalRowsIntoPages(
+    paginationRows,
+    firstPageRows,
+    nextPageRows,
+  );
+}
+
+function splitProcedureRowsByEstimatedHeight(
+  rows: readonly ProcedureRowModel[],
+  pageHeightPx: number,
+  options: FormalProcedurePaginationOptions,
+): ProcedureRowModel[][] {
+  if (rows.length === 0) return [];
+
+  const pages: ProcedureRowModel[][] = [];
+  let current: ProcedureRowModel[] = [];
+  let usedHeight = 0;
+
+  const pageBudget = (pageIndex: number) => {
+    const reserved = positiveOptionalNumber(
+      pageIndex === 0
+        ? options.firstPageReservedHeightPx
+        : options.nextPageReservedHeightPx,
+    ) ?? 0;
+    return Math.max(1, pageHeightPx - Math.min(pageHeightPx - 1, reserved));
+  };
+
+  for (const row of rows) {
+    const rowHeight = estimateProcedureRowHeight(row, options);
+    let budget = pageBudget(pages.length);
+
+    if (current.length > 0 && usedHeight + rowHeight > budget) {
+      pages.push(current);
+      current = [];
+      usedHeight = 0;
+      budget = pageBudget(pages.length);
+    }
+
+    current.push(row);
+    usedHeight += rowHeight;
+
+    if (rowHeight >= budget) {
+      pages.push(current);
+      current = [];
+      usedHeight = 0;
+    }
+  }
+
+  if (current.length > 0) pages.push(current);
+  return pages;
+}
+
+function estimateWrappedLines(
+  value: string | undefined,
+  charsPerLine: number,
+): number {
+  if (!value?.trim()) return 0;
+
+  return value
+    .split(/\r?\n/)
+    .map((line) => Math.max(1, Math.ceil(line.trim().length / charsPerLine)))
+    .reduce((total, lines) => total + lines, 0);
+}
+
 function opcRoutingRow(
   endpoint: FormalPositionedOpcEndpoint,
   number: number,
@@ -240,4 +371,12 @@ function positiveInteger(value: number | undefined, fallback: number): number {
   return Number.isFinite(value) && (value ?? 0) > 0
     ? Math.floor(value as number)
     : fallback;
+}
+
+function positiveNumber(value: number | undefined, fallback: number): number {
+  return Number.isFinite(value) && (value ?? 0) > 0 ? (value as number) : fallback;
+}
+
+function positiveOptionalNumber(value: number | undefined): number | null {
+  return Number.isFinite(value) && (value ?? 0) > 0 ? (value as number) : null;
 }
