@@ -7,10 +7,15 @@ import {
 import type { DiagramPoint } from "../../types.js";
 import {
   formalPathIntersectsRectangles,
+  formalPathOverlapsSegments,
   isFormalOrthogonalPath,
   normalizeFormalOrthogonalPath,
 } from "./orthogonal.js";
-import type { FormalFlowchartRect, FormalFlowchartSide } from "./types.js";
+import type {
+  FormalFlowchartOccupiedSegment,
+  FormalFlowchartRect,
+  FormalFlowchartSide,
+} from "./types.js";
 
 const DEFAULT_GRID = 4;
 
@@ -238,6 +243,8 @@ export type FormalManualRouteValidation =
         | "NON_ORTHOGONAL"
         | "OUT_OF_BOUNDS"
         | "CROSSES_SHAPE"
+        | "OVERLAPS_ROUTE"
+        | "CROSSES_ROUTE"
         | "INVALID_ENDPOINT_DIRECTION";
     };
 
@@ -340,6 +347,7 @@ export function repairFormalManualRoute(input: {
   readonly sourceSide: FormalFlowchartSide;
   readonly targetSide: FormalFlowchartSide;
   readonly obstacles?: readonly FormalFlowchartRect[];
+  readonly occupied?: readonly FormalFlowchartOccupiedSegment[];
   readonly bounds?: FormalFlowchartRect | null;
   readonly clearance?: number;
   readonly jetty?: number;
@@ -349,6 +357,7 @@ export function repairFormalManualRoute(input: {
     sourceSide,
     targetSide,
     obstacles = [],
+    occupied = [],
     bounds = null,
     clearance = 2,
     jetty = 12,
@@ -360,6 +369,7 @@ export function repairFormalManualRoute(input: {
       sourceSide,
       targetSide,
       obstacles,
+      occupied,
       bounds,
       clearance,
     }).valid
@@ -382,6 +392,12 @@ export function repairFormalManualRoute(input: {
       rect.left - detour,
       rect.left + rect.width + detour,
     ]),
+    ...occupied.flatMap((segment) => [
+      segment.x1 - detour,
+      segment.x1 + detour,
+      segment.x2 - detour,
+      segment.x2 + detour,
+    ]),
     ...(bounds
       ? [bounds.left + detour, bounds.left + bounds.width - detour]
       : []),
@@ -393,6 +409,12 @@ export function repairFormalManualRoute(input: {
     ...obstacles.flatMap((rect) => [
       rect.top - detour,
       rect.top + rect.height + detour,
+    ]),
+    ...occupied.flatMap((segment) => [
+      segment.y1 - detour,
+      segment.y1 + detour,
+      segment.y2 - detour,
+      segment.y2 + detour,
     ]),
     ...(bounds
       ? [bounds.top + detour, bounds.top + bounds.height - detour]
@@ -433,6 +455,7 @@ export function repairFormalManualRoute(input: {
         sourceSide,
         targetSide,
         obstacles,
+        occupied,
         bounds,
         clearance,
       }).valid,
@@ -549,6 +572,14 @@ export function validateFormalManualRoute(input: {
 
   if (formalPathIntersectsRectangles(path, obstacles, clearance)) {
     return { valid: false, reason: "CROSSES_SHAPE" };
+  }
+
+  if (formalPathOverlapsSegments(path, occupied, false)) {
+    return { valid: false, reason: "OVERLAPS_ROUTE" };
+  }
+
+  if (formalPathOverlapsSegments(path, occupied, true)) {
+    return { valid: false, reason: "CROSSES_ROUTE" };
   }
 
   const start = path[0];
