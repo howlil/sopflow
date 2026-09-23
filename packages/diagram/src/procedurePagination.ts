@@ -1,5 +1,13 @@
 import type { WorkflowEdge } from "./workflow.js";
-import type { ProcedureModel, ProcedureRowModel } from "./procedure.js";
+import {
+  removeProcedureManualRoute,
+  setProcedureManualRoute,
+  type ProcedureManualRoute,
+  type ProcedureManualRoutes,
+  type ProcedureModel,
+  type ProcedureRowModel,
+  type SopDiagramConfig,
+} from "./procedure.js";
 import {
   getFormalOpcEndpointsForPage,
   splitFormalCrossPageConnections,
@@ -27,6 +35,99 @@ export interface FormalProcedurePageModel {
   readonly edges: readonly FormalProcedurePageEdge[];
   readonly topOpc: readonly FormalPositionedOpcEndpoint[];
   readonly bottomOpc: readonly FormalPositionedOpcEndpoint[];
+}
+
+export function resolveProcedurePageRouteOverrides(
+  edges: readonly FormalProcedurePageEdge[],
+  config: SopDiagramConfig,
+): ProcedureManualRoutes {
+  const routes: Record<string, ProcedureManualRoute> = {};
+
+  for (const edge of edges) {
+    const route =
+      edge.segment === "local"
+        ? config.routes?.[edge.semanticEdgeId]
+        : edge.segment === "source-to-opc"
+          ? config.pagedRoutes?.[edge.semanticEdgeId]?.source
+          : config.pagedRoutes?.[edge.semanticEdgeId]?.target;
+
+    if (route) routes[edge.id] = route;
+  }
+
+  return routes;
+}
+
+export function setProcedurePageManualRoute(
+  config: SopDiagramConfig,
+  edge: FormalProcedurePageEdge,
+  route: ProcedureManualRoute,
+): SopDiagramConfig {
+  if (edge.segment === "local") {
+    return setProcedureManualRoute(config, edge.semanticEdgeId, route);
+  }
+
+  const current = config.pagedRoutes?.[edge.semanticEdgeId] ?? {};
+  const segmentKey = edge.segment === "source-to-opc" ? "source" : "target";
+
+  return {
+    ...config,
+    pagedRoutes: {
+      ...config.pagedRoutes,
+      [edge.semanticEdgeId]: {
+        ...current,
+        [segmentKey]: cloneManualRoute(route),
+      },
+    },
+  };
+}
+
+export function removeProcedurePageManualRoute(
+  config: SopDiagramConfig,
+  edge: FormalProcedurePageEdge,
+): SopDiagramConfig {
+  if (edge.segment === "local") {
+    return removeProcedureManualRoute(config, edge.semanticEdgeId);
+  }
+
+  const current = config.pagedRoutes?.[edge.semanticEdgeId];
+  if (!current) return config;
+
+  const nextEntry = { ...current };
+  if (edge.segment === "source-to-opc") delete nextEntry.source;
+  else delete nextEntry.target;
+
+  const pagedRoutes = { ...config.pagedRoutes };
+  if (nextEntry.source || nextEntry.target) {
+    pagedRoutes[edge.semanticEdgeId] = nextEntry;
+  } else {
+    delete pagedRoutes[edge.semanticEdgeId];
+  }
+
+  const { pagedRoutes: _removedPagedRoutes, ...rest } = config;
+  return Object.keys(pagedRoutes).length > 0 ? { ...rest, pagedRoutes } : rest;
+}
+
+function cloneManualRoute(route: ProcedureManualRoute): ProcedureManualRoute {
+  if (route.kind === "trunk") {
+    return {
+      ...route,
+      ...(route.labelPosition
+        ? { labelPosition: { ...route.labelPosition } }
+        : {}),
+      ...(route.startPoint ? { startPoint: { ...route.startPoint } } : {}),
+      ...(route.endPoint ? { endPoint: { ...route.endPoint } } : {}),
+    };
+  }
+
+  return {
+    ...route,
+    bendPoints: route.bendPoints.map((point) => ({ ...point })),
+    ...(route.labelPosition
+      ? { labelPosition: { ...route.labelPosition } }
+      : {}),
+    ...(route.startPoint ? { startPoint: { ...route.startPoint } } : {}),
+    ...(route.endPoint ? { endPoint: { ...route.endPoint } } : {}),
+  };
 }
 
 const DEFAULT_FIRST_PAGE_ROWS = 7;
@@ -63,6 +164,19 @@ export function buildFormalProcedurePages(
   const procedureRowById = new Map(
     model.rows.map((row) => [row.stepId, row] as const),
   );
+
+  if (rowPages.length === 0) {
+    return [
+      {
+        pageIndex: 0,
+        rows: [],
+        routingRows: [],
+        edges: [],
+        topOpc: [],
+        bottomOpc: [],
+      },
+    ];
+  }
 
   return rowPages.map((pageRows, pageIndex) => {
     const rows = pageRows.flatMap((row) => {
