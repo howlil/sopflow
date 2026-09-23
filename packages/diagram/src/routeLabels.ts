@@ -12,6 +12,7 @@ export interface RouteLabelPlacementInput {
   readonly obstacles?: readonly DiagramRect[];
   readonly occupiedLabels?: readonly DiagramRect[];
   readonly perpendicularOffset?: number;
+  readonly distanceAlongFirstSegment?: number;
   readonly fontHeight?: number;
   readonly charWidth?: number;
   readonly horizontalPadding?: number;
@@ -27,6 +28,7 @@ export function placeRouteLabel(
     obstacles = [],
     occupiedLabels = [],
     perpendicularOffset = 18,
+    distanceAlongFirstSegment,
     fontHeight = 12,
     charWidth = 6.5,
     horizontalPadding = 8,
@@ -55,10 +57,15 @@ export function placeRouteLabel(
   if (segments.length === 0) return null;
 
   const candidates: RouteLabelPlacement[] = [];
-  for (const { segment } of segments) {
+  for (const { segment, index, length } of segments) {
+    const distance =
+      index === 0 && distanceAlongFirstSegment !== undefined
+        ? Math.max(0, Math.min(length, distanceAlongFirstSegment))
+        : length / 2;
+    const ratio = length <= 0 ? 0.5 : distance / length;
     const midpoint = {
-      x: (segment.x1 + segment.x2) / 2,
-      y: (segment.y1 + segment.y2) / 2,
+      x: segment.x1 + (segment.x2 - segment.x1) * ratio,
+      y: segment.y1 + (segment.y2 - segment.y1) * ratio,
     };
     const horizontal = segment.y1 === segment.y2;
     const offsets = [
