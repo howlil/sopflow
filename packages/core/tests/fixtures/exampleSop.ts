@@ -1,4 +1,4 @@
-import type { SOPDocument } from "./types.js";
+import type { SOPDocument } from "../../src/types.js";
 
 export const exampleSop: SOPDocument = {
   schemaVersion: "1",
