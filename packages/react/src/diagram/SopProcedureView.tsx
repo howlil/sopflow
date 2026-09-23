@@ -13,6 +13,7 @@ import {
   type FormalFlowchartGridLayout,
   type FormalFlowchartRect,
   type FormalFlowchartShapeGeometry,
+  type FormalRouteChange,
   type DiagramPoint,
   type ProcedureGeometry,
   type ProcedureLaneGeometry,
@@ -380,14 +381,18 @@ function SinglePageSopProcedureView({
   );
 
   const updateManualPath = useCallback(
-    (connectionId: string, points: readonly DiagramPoint[]) => {
-      if (usesLegacyManualPaths || points.length < 2) return;
+    (connectionId: string, route: FormalRouteChange) => {
+      if (usesLegacyManualPaths) return;
 
       const currentRoute = diagramConfig.routes?.[connectionId];
       updateDiagramConfig(
         setProcedureManualRoute(diagramConfig, connectionId, {
           kind: "orthogonal",
-          bendPoints: points.slice(1, -1).map((point) => ({ ...point })),
+          bendPoints: route.bendPoints.map((point) => ({ ...point })),
+          sSide: route.sourceSide,
+          eSide: route.targetSide,
+          startPoint: { ...route.startPoint },
+          endPoint: { ...route.endPoint },
           ...(currentRoute?.labelPosition
             ? { labelPosition: currentRoute.labelPosition }
             : {}),
@@ -605,16 +610,54 @@ function SinglePageSopProcedureView({
 
             return (
               <g key={edge.id}>
-                {manualEditing && !usesLegacyManualPaths ? (
-                  <EditableFormalFlowchartPath
-                    path={edge.points}
-                    connectionId={edge.id}
-                    selected={selected}
-                    onSelect={setSelectedConnectionId}
-                    onChange={(points) => updateManualPath(edge.id, points)}
-                    onReset={() => resetManualPath(edge.id)}
-                  />
-                ) : null}
+                {manualEditing && !usesLegacyManualPaths ? (() => {
+                  const sourceShape = geometry.formal?.shapes.get(edge.from);
+                  const targetShape = geometry.formal?.shapes.get(edge.to);
+                  const obstacles = geometry.formal
+                    ? [...geometry.formal.shapes.values()]
+                        .filter(
+                          (shape) =>
+                            shape.stepId !== edge.from &&
+                            shape.stepId !== edge.to,
+                        )
+                        .map((shape) => shape.rect)
+                    : [];
+                  const formalBounds = geometry.formal
+                    ? {
+                        left: geometry.formal.pelaksanaBounds.left,
+                        top: geometry.formal.pelaksanaBounds.top,
+                        width:
+                          geometry.formal.pelaksanaBounds.right -
+                          geometry.formal.pelaksanaBounds.left,
+                        height:
+                          geometry.formal.pelaksanaBounds.bottom -
+                          geometry.formal.pelaksanaBounds.top,
+                      }
+                    : null;
+
+                  return (
+                    <EditableFormalFlowchartPath
+                      path={edge.points}
+                      connectionId={edge.id}
+                      selected={selected}
+                      sourceSide={edge.sourceSide ?? "bottom"}
+                      targetSide={edge.targetSide ?? "top"}
+                      {...(sourceShape
+                        ? { sourceRect: sourceShape.rect }
+                        : {})}
+                      {...(targetShape
+                        ? { targetRect: targetShape.rect }
+                        : {})}
+                      sourceIsDiamond={sourceShape?.kind === "decision"}
+                      targetIsDiamond={targetShape?.kind === "decision"}
+                      obstacles={obstacles}
+                      routingBounds={formalBounds}
+                      onSelect={setSelectedConnectionId}
+                      onChange={(route) => updateManualPath(edge.id, route)}
+                      onReset={() => resetManualPath(edge.id)}
+                    />
+                  );
+                })() : null}
 
                 <path
                   d={pointsToPath(edge.points)}
