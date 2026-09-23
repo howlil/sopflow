@@ -62,6 +62,12 @@ export type {
   FormalFlowchartSide,
 } from "./flowchart/formal/types.js";
 
+export {
+  diagramConfigEquals,
+  pruneSopDiagramConfig,
+  resetDiagramRoutes,
+} from "./diagramConfig.js";
+
 export { buildBpmnModel } from "./bpmn.js";
 export type {
   BpmnLane,
