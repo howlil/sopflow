@@ -384,8 +384,7 @@ export function repairFormalManualRoute(input: {
       ? [bounds.left + detour, bounds.left + bounds.width - detour]
       : []),
   ]).sort(
-    (left, right) =>
-      Math.abs(left - preferredX) - Math.abs(right - preferredX),
+    (left, right) => Math.abs(left - preferredX) - Math.abs(right - preferredX),
   );
   const yCandidates = uniqueNumbers([
     preferredY,
@@ -397,25 +396,12 @@ export function repairFormalManualRoute(input: {
       ? [bounds.top + detour, bounds.top + bounds.height - detour]
       : []),
   ]).sort(
-    (left, right) =>
-      Math.abs(left - preferredY) - Math.abs(right - preferredY),
+    (left, right) => Math.abs(left - preferredY) - Math.abs(right - preferredY),
   );
 
   const candidates: DiagramPoint[][] = [
-    [
-      start,
-      startJetty,
-      { x: endJetty.x, y: startJetty.y },
-      endJetty,
-      end,
-    ],
-    [
-      start,
-      startJetty,
-      { x: startJetty.x, y: endJetty.y },
-      endJetty,
-      end,
-    ],
+    [start, startJetty, { x: endJetty.x, y: startJetty.y }, endJetty, end],
+    [start, startJetty, { x: startJetty.x, y: endJetty.y }, endJetty, end],
     ...xCandidates.map((x) => [
       start,
       startJetty,
@@ -452,10 +438,12 @@ export function repairFormalManualRoute(input: {
 
   if (validCandidates.length === 0) return null;
 
-  return validCandidates.sort(
-    (left, right) =>
-      formalRepairScore(left, path) - formalRepairScore(right, path),
-  )[0] ?? null;
+  return (
+    validCandidates.sort(
+      (left, right) =>
+        formalRepairScore(left, path) - formalRepairScore(right, path),
+    )[0] ?? null
+  );
 }
 
 function formalRepairScore(
@@ -490,7 +478,11 @@ function formalRepairScore(
 }
 
 function uniqueNumbers(values: readonly number[]): number[] {
-  return [...new Set(values.filter(Number.isFinite).map((value) => Math.round(value)))];
+  return [
+    ...new Set(
+      values.filter(Number.isFinite).map((value) => Math.round(value)),
+    ),
+  ];
 }
 
 export function formalRouteChangeFromPath(
