@@ -4,6 +4,7 @@ import {
   getFormalOpcEndpointsForPage,
   splitFormalCrossPageConnections,
   splitFormalRowsIntoPages,
+  type FormalPagedConnectionSegment,
   type FormalPositionedOpcEndpoint,
 } from "./flowchart/formal/pagination.js";
 import type { FormalProcedureRowLike } from "./flowchart/formal/planner.js";
@@ -13,11 +14,17 @@ export interface FormalProcedurePaginationOptions {
   readonly nextPageRows?: number;
 }
 
+export interface FormalProcedurePageEdge extends WorkflowEdge {
+  /** Canonical workflow edge identity independent of pagination. */
+  readonly semanticEdgeId: string;
+  readonly segment: FormalPagedConnectionSegment;
+}
+
 export interface FormalProcedurePageModel {
   readonly pageIndex: number;
   readonly rows: readonly ProcedureRowModel[];
   readonly routingRows: readonly FormalProcedureRowLike[];
-  readonly edges: readonly WorkflowEdge[];
+  readonly edges: readonly FormalProcedurePageEdge[];
   readonly topOpc: readonly FormalPositionedOpcEndpoint[];
   readonly bottomOpc: readonly FormalPositionedOpcEndpoint[];
 }
@@ -73,9 +80,11 @@ export function buildFormalProcedurePages(
       })),
       ...opc.bottom.map((endpoint) => opcRoutingRow(endpoint, rows.length + 1)),
     ];
-    const edges = (connections.pages[pageIndex] ?? []).map<WorkflowEdge>(
+    const edges = (connections.pages[pageIndex] ?? []).map<FormalProcedurePageEdge>(
       (edge) => ({
         id: edge.id,
+        semanticEdgeId: edge.semanticEdgeId,
+        segment: edge.segment,
         from: edge.from,
         to: edge.to,
         kind: edge.kind,
