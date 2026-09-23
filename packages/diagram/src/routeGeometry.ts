@@ -74,10 +74,7 @@ function inflatedRect(rect: DiagramRect, clearance: number): DiagramRect {
   };
 }
 
-function segmentHitsRect(
-  segment: RouteSegment,
-  rect: DiagramRect,
-): boolean {
+function segmentHitsRect(segment: RouteSegment, rect: DiagramRect): boolean {
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;
 
@@ -232,9 +229,7 @@ export function pathToSegments(
   const normalized = compactOrthogonalPath(points);
   return normalized.slice(0, -1).flatMap((from, index) => {
     const to = normalized[index + 1];
-    return to
-      ? [{ x1: from.x, y1: from.y, x2: to.x, y2: to.y }]
-      : [];
+    return to ? [{ x1: from.x, y1: from.y, x2: to.x, y2: to.y }] : [];
   });
 }
 
