@@ -1,3 +1,8 @@
+import {
+  distanceOnRectSide,
+  nearestRectSide,
+  pointOnRectSide,
+} from "../../routeAnchors.js";
 import type { DiagramPoint } from "../../types.js";
 import {
   formalPathIntersectsRectangles,
@@ -238,24 +243,7 @@ export function pointOnFormalShapeSide(
   side: FormalFlowchartSide,
   distance = 0.5,
 ): DiagramPoint {
-  const ratio = Math.max(0, Math.min(1, distance));
-
-  switch (side) {
-    case "top":
-      return { x: rect.left + rect.width * ratio, y: rect.top };
-    case "right":
-      return {
-        x: rect.left + rect.width,
-        y: rect.top + rect.height * ratio,
-      };
-    case "bottom":
-      return {
-        x: rect.left + rect.width * ratio,
-        y: rect.top + rect.height,
-      };
-    case "left":
-      return { x: rect.left, y: rect.top + rect.height * ratio };
-  }
+  return pointOnRectSide(rect, side, distance);
 }
 
 export function distanceOnFormalShapeSide(
@@ -263,26 +251,14 @@ export function distanceOnFormalShapeSide(
   side: FormalFlowchartSide,
   point: DiagramPoint,
 ): number {
-  if (side === "top" || side === "bottom") {
-    return rect.width <= 0 ? 0.5 : (point.x - rect.left) / rect.width;
-  }
-
-  return rect.height <= 0 ? 0.5 : (point.y - rect.top) / rect.height;
+  return distanceOnRectSide(rect, side, point);
 }
 
 export function resolveNearestFormalShapeSide(
   rect: FormalFlowchartRect,
   point: DiagramPoint,
 ): FormalFlowchartSide {
-  const distances: Array<readonly [FormalFlowchartSide, number]> = [
-    ["top", Math.abs(point.y - rect.top)],
-    ["right", Math.abs(point.x - (rect.left + rect.width))],
-    ["bottom", Math.abs(point.y - (rect.top + rect.height))],
-    ["left", Math.abs(point.x - rect.left)],
-  ];
-
-  distances.sort((left, right) => left[1] - right[1]);
-  return distances[0]?.[0] ?? "top";
+  return nearestRectSide(rect, point);
 }
 
 export function snapFormalEndpoint(
