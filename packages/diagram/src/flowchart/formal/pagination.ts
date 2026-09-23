@@ -173,9 +173,7 @@ export function splitFormalConnectionsForPages(
   );
   const opcPairs: FormalOpcPair[] = [];
   const rowById = new Map(
-    rowPages.flatMap((rows) =>
-      rows.map((row) => [row.stepId, row] as const),
-    ),
+    rowPages.flatMap((rows) => rows.map((row) => [row.stepId, row] as const)),
   );
   const pageByStepId = new Map<StepId, number>();
 
