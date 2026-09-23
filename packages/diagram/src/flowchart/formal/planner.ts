@@ -514,7 +514,8 @@ function resolveManualPoint(
     return { ...fallback };
   }
 
-  if (!bounds) return { x: Math.round(configured.x), y: Math.round(configured.y) };
+  if (!bounds)
+    return { x: Math.round(configured.x), y: Math.round(configured.y) };
 
   return {
     x: Math.round(Math.max(bounds.left, Math.min(bounds.right, configured.x))),
