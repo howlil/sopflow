@@ -12,6 +12,7 @@ describe("formal flowchart route complexity parity", () => {
       toRow: 2,
       sameColumn: true,
       crossColumn: false,
+      kind: "next" as const,
       sourceType: "flowchart-process" as const,
       targetType: "flowchart-process" as const,
     };
@@ -27,9 +28,9 @@ describe("formal flowchart route complexity parity", () => {
         toRow: 1,
         sameColumn: true,
         crossColumn: false,
+        kind: "no",
         sourceType: "flowchart-decision",
         targetType: "flowchart-process",
-        label: "Tidak",
       }),
     ).toBe("complex");
   });
@@ -41,6 +42,7 @@ describe("formal flowchart route complexity parity", () => {
         toRow: 4,
         sameColumn: false,
         crossColumn: true,
+        kind: "next",
         sourceType: "flowchart-process",
         targetType: "flowchart-process",
       }),
