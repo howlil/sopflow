@@ -122,13 +122,34 @@ export function splitFormalCrossPageConnections(
   nextPageRows: number,
   opcIdPrefix = "",
 ): FormalPageConnections {
-  const totalPages = splitFormalRowsIntoPages(
+  const rowPages = splitFormalRowsIntoPages(rows, firstPageRows, nextPageRows);
+  const pageByStepId = new Map<StepId, number>();
+
+  rowPages.forEach((pageRows, pageIndex) => {
+    for (const row of pageRows) {
+      pageByStepId.set(row.stepId, pageIndex);
+    }
+  });
+
+  return splitFormalConnectionsByPage(
+    edges,
     rows,
-    firstPageRows,
-    nextPageRows,
-  ).length;
+    pageByStepId,
+    rowPages.length,
+    opcIdPrefix,
+  );
+}
+
+export function splitFormalConnectionsByPage(
+  edges: readonly WorkflowEdge[],
+  rows: readonly FormalPageRow[],
+  pageByStepId: ReadonlyMap<StepId, number>,
+  totalPages: number,
+  opcIdPrefix = "",
+): FormalPageConnections {
+  const pageCount = Math.max(0, Math.floor(totalPages));
   const pages: FormalPagedConnection[][] = Array.from(
-    { length: totalPages },
+    { length: pageCount },
     () => [],
   );
   const opcPairs: FormalOpcPair[] = [];
@@ -137,18 +158,21 @@ export function splitFormalCrossPageConnections(
   for (const edge of edges) {
     const source = rowById.get(edge.from);
     const target = rowById.get(edge.to);
-    if (!source || !target || totalPages === 0) continue;
+    const fromPage = pageByStepId.get(edge.from);
+    const toPage = pageByStepId.get(edge.to);
 
-    const fromPage = getFormalPageForRow(
-      source.number,
-      firstPageRows,
-      nextPageRows,
-    );
-    const toPage = getFormalPageForRow(
-      target.number,
-      firstPageRows,
-      nextPageRows,
-    );
+    if (
+      !source ||
+      !target ||
+      fromPage === undefined ||
+      toPage === undefined ||
+      fromPage < 0 ||
+      toPage < 0 ||
+      fromPage >= pageCount ||
+      toPage >= pageCount
+    ) {
+      continue;
+    }
 
     if (fromPage === toPage) {
       pages[fromPage]?.push(toPagedConnection(edge, source, target));
