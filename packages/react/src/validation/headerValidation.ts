@@ -1,5 +1,5 @@
 import type { SOPDocument } from "@sopflow/core";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 
 export type SopHeaderField =
   | "institutionName"
