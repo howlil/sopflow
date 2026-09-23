@@ -186,10 +186,9 @@ function LegacySinglePageSopProcedureView({
   const routeSegmentsById = useMemo(
     () =>
       new Map(
-        routedEdges.map((edge) => [
-          edge.id,
-          formalPathToSegments(edge.points),
-        ] as const),
+        routedEdges.map(
+          (edge) => [edge.id, formalPathToSegments(edge.points)] as const,
+        ),
       ),
     [routedEdges],
   );
