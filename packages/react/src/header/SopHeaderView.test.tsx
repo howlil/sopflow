@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { SOPDocument } from "@sopflow/core";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "./types.js";
 import { SopHeaderView } from "./SopHeaderView.js";
 
 const document: SOPDocument = {
