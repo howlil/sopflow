@@ -458,21 +458,19 @@ function formalRepairScore(
   }, 0);
   const bends = Math.max(0, candidate.length - 2);
   const originalInterior = original.slice(1, -1);
-  const displacement = candidate
-    .slice(1, -1)
-    .reduce((total, point) => {
-      if (originalInterior.length === 0) return total;
+  const displacement = candidate.slice(1, -1).reduce((total, point) => {
+    if (originalInterior.length === 0) return total;
 
-      return (
-        total +
-        Math.min(
-          ...originalInterior.map(
-            (origin) =>
-              Math.abs(point.x - origin.x) + Math.abs(point.y - origin.y),
-          ),
-        )
-      );
-    }, 0);
+    return (
+      total +
+      Math.min(
+        ...originalInterior.map(
+          (origin) =>
+            Math.abs(point.x - origin.x) + Math.abs(point.y - origin.y),
+        ),
+      )
+    );
+  }, 0);
 
   return routeLength + bends * 24 + displacement * 0.25;
 }
