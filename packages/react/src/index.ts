@@ -52,4 +52,4 @@ export type {
   SopWorkspaceProps,
   SopWorkspaceView,
 } from "./workspace/SopWorkspace.js";
-export type { SopHeaderValue, SopSignatory } from "./types.js";
+export type { SopHeaderValue, SopSignatory } from "./header/types.js";
