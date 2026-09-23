@@ -34,11 +34,21 @@ export type {
 } from "./flowchart/formal/pagination.js";
 
 export {
+  distanceOnFormalShapeSide,
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
+  formalRouteChangeFromPath,
   insertFormalRouteWaypointAtSegmentMidpoint,
+  pointOnFormalShapeSide,
+  rebuildFormalPathForEndpoint,
   removeFormalRouteWaypoint,
+  resolveNearestFormalShapeSide,
+  snapFormalEndpoint,
+  validateFormalManualRoute,
+  type FormalManualRouteValidation,
+  type FormalRouteChange,
+  type FormalRouteEndpoint,
 } from "./flowchart/formal/edit.js";
 
 export { planFormalProcedureEdges } from "./flowchart/formal/planner.js";

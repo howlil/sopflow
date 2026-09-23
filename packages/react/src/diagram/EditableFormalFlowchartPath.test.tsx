@@ -20,6 +20,10 @@ describe("EditableFormalFlowchartPath", () => {
           path={path}
           connectionId="edge-1"
           selected
+          sourceSide="bottom"
+          targetSide="top"
+          sourceRect={{ left: 80, top: 60, width: 40, height: 40 }}
+          targetRect={{ left: 200, top: 240, width: 40, height: 40 }}
           onSelect={() => undefined}
           onChange={() => undefined}
         />
@@ -32,6 +36,9 @@ describe("EditableFormalFlowchartPath", () => {
     expect(
       container.querySelectorAll("[data-sopflow-route-waypoint]"),
     ).toHaveLength(3);
+    expect(
+      container.querySelectorAll("[data-sopflow-route-endpoint]"),
+    ).toHaveLength(2);
   });
 
   it("does not show waypoint handles for an unselected route", () => {
@@ -42,6 +49,8 @@ describe("EditableFormalFlowchartPath", () => {
           path={path}
           connectionId="edge-1"
           selected={false}
+          sourceSide="bottom"
+          targetSide="top"
           onSelect={() => undefined}
           onChange={() => undefined}
         />
@@ -64,6 +73,8 @@ describe("EditableFormalFlowchartPath", () => {
           path={path}
           connectionId="edge-1"
           selected
+          sourceSide="bottom"
+          targetSide="top"
           onSelect={onSelect}
           onChange={onChange}
         />
@@ -121,6 +132,8 @@ describe("EditableFormalFlowchartPath", () => {
           path={path}
           connectionId="edge-1"
           selected
+          sourceSide="bottom"
+          targetSide="top"
           onSelect={() => undefined}
           onChange={() => undefined}
           onReset={onReset}

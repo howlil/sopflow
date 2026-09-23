@@ -2,10 +2,17 @@ import {
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
+  formalRouteChangeFromPath,
   insertFormalRouteWaypointAtSegmentMidpoint,
   pointsToPath,
+  rebuildFormalPathForEndpoint,
   removeFormalRouteWaypoint,
+  snapFormalEndpoint,
+  validateFormalManualRoute,
   type DiagramPoint,
+  type FormalFlowchartRect,
+  type FormalFlowchartSide,
+  type FormalRouteChange,
 } from "@sopflow/diagram";
 import {
   useEffect,
@@ -21,12 +28,20 @@ export interface EditableFormalFlowchartPathProps {
   path: readonly DiagramPoint[];
   connectionId: string;
   selected: boolean;
+  sourceSide?: FormalFlowchartSide;
+  targetSide?: FormalFlowchartSide;
+  sourceRect?: FormalFlowchartRect;
+  targetRect?: FormalFlowchartRect;
+  sourceIsDiamond?: boolean;
+  targetIsDiamond?: boolean;
+  obstacles?: readonly FormalFlowchartRect[];
+  routingBounds?: FormalFlowchartRect | null;
   onSelect: (connectionId: string) => void;
-  onChange: (path: readonly DiagramPoint[]) => void;
+  onChange: (route: FormalRouteChange) => void;
   onReset?: () => void;
 }
 
-type DragMode = "segment" | "waypoint";
+type DragMode = "segment" | "waypoint" | "source-endpoint" | "target-endpoint";
 
 interface DragSession {
   readonly pointerId: number;
@@ -40,6 +55,14 @@ export function EditableFormalFlowchartPath({
   path,
   connectionId,
   selected,
+  sourceSide = "bottom",
+  targetSide = "top",
+  sourceRect,
+  targetRect,
+  sourceIsDiamond = false,
+  targetIsDiamond = false,
+  obstacles = [],
+  routingBounds = null,
   onSelect,
   onChange,
   onReset,
@@ -60,6 +83,28 @@ export function EditableFormalFlowchartPath({
     globalThis.addEventListener("keydown", handleKeyDown);
     return () => globalThis.removeEventListener("keydown", handleKeyDown);
   }, [onReset, selected]);
+
+  const emitPath = (
+    nextPath: readonly DiagramPoint[],
+    nextSourceSide = sourceSide,
+    nextTargetSide = targetSide,
+  ) => {
+    const validation = validateFormalManualRoute({
+      path: nextPath,
+      sourceSide: nextSourceSide,
+      targetSide: nextTargetSide,
+      obstacles,
+      bounds: routingBounds,
+    });
+    if (!validation.valid) return;
+
+    const change = formalRouteChangeFromPath(
+      nextPath,
+      nextSourceSide,
+      nextTargetSide,
+    );
+    if (change) onChange(change);
+  };
 
   const startDrag = (
     event: ReactPointerEvent<SVGElement>,
@@ -105,6 +150,30 @@ export function EditableFormalFlowchartPath({
 
     event.preventDefault();
 
+    if (session.mode === "source-endpoint" && sourceRect) {
+      const endpoint = snapFormalEndpoint(sourceRect, point, {
+        diamond: sourceIsDiamond,
+      });
+      emitPath(
+        rebuildFormalPathForEndpoint(session.originPath, "start", endpoint),
+        endpoint.side,
+        targetSide,
+      );
+      return;
+    }
+
+    if (session.mode === "target-endpoint" && targetRect) {
+      const endpoint = snapFormalEndpoint(targetRect, point, {
+        diamond: targetIsDiamond,
+      });
+      emitPath(
+        rebuildFormalPathForEndpoint(session.originPath, "end", endpoint),
+        sourceSide,
+        endpoint.side,
+      );
+      return;
+    }
+
     const dx = point.x - session.originPoint.x;
     const dy = point.y - session.originPoint.y;
     const next =
@@ -122,7 +191,7 @@ export function EditableFormalFlowchartPath({
             dy,
           );
 
-    onChange(next);
+    emitPath(next);
   };
 
   const finishDrag = (event: ReactPointerEvent<SVGElement>) => {
@@ -157,7 +226,7 @@ export function EditableFormalFlowchartPath({
     );
     if (segmentIndex < 0) return;
 
-    onChange(insertFormalRouteWaypointAtSegmentMidpoint(path, segmentIndex));
+    emitPath(insertFormalRouteWaypointAtSegmentMidpoint(path, segmentIndex));
   };
 
   const handlePathPointerDown = (event: ReactPointerEvent<SVGPathElement>) => {
@@ -190,7 +259,7 @@ export function EditableFormalFlowchartPath({
     event.preventDefault();
     event.stopPropagation();
 
-    onChange(removeFormalRouteWaypoint(path, index));
+    emitPath(removeFormalRouteWaypoint(path, index));
   };
 
   const handlePathKeyDown = (event: ReactKeyboardEvent<SVGPathElement>) => {
@@ -208,7 +277,7 @@ export function EditableFormalFlowchartPath({
     if (event.key === "Delete" || event.key === "Backspace") {
       event.preventDefault();
       event.stopPropagation();
-      onChange(removeFormalRouteWaypoint(path, index));
+      emitPath(removeFormalRouteWaypoint(path, index));
       return;
     }
 
@@ -228,9 +297,18 @@ export function EditableFormalFlowchartPath({
     event.preventDefault();
     event.stopPropagation();
     onSelect(connectionId);
-    onChange(
+    emitPath(
       dragFormalRouteWaypointFromOrigin(path, index, delta.dx, delta.dy),
     );
+  };
+
+  const handleEndpointKeyDown = (
+    event: ReactKeyboardEvent<SVGCircleElement>,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    event.stopPropagation();
+    onSelect(connectionId);
   };
 
   return (
@@ -250,6 +328,46 @@ export function EditableFormalFlowchartPath({
         onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
       />
+
+      {selected && sourceRect && path[0] ? (
+        // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
+        <circle
+          cx={path[0].x}
+          cy={path[0].y}
+          r={7}
+          className={styles.endpoint}
+          data-sopflow-route-endpoint="source"
+          role="button"
+          tabIndex={0}
+          aria-label={`Source endpoint route ${connectionId}`}
+          onKeyDown={handleEndpointKeyDown}
+          onPointerDown={(event) => startDrag(event, "source-endpoint", 0)}
+          onPointerMove={handlePointerMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+        />
+      ) : null}
+
+      {selected && targetRect && path.at(-1) ? (
+        // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
+        <circle
+          cx={path.at(-1)?.x}
+          cy={path.at(-1)?.y}
+          r={7}
+          className={styles.endpoint}
+          data-sopflow-route-endpoint="target"
+          role="button"
+          tabIndex={0}
+          aria-label={`Target endpoint route ${connectionId}`}
+          onKeyDown={handleEndpointKeyDown}
+          onPointerDown={(event) =>
+            startDrag(event, "target-endpoint", path.length - 1)
+          }
+          onPointerMove={handlePointerMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+        />
+      ) : null}
 
       {selected
         ? path.slice(1, -1).map((point, offset) => {
