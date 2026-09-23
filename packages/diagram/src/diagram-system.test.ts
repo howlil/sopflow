@@ -51,9 +51,9 @@ describe("diagram system contract", () => {
     const graph = projectWorkflow(document);
     const semanticIds = graph.edges.map((edge) => edge.id);
 
-    expect(buildProcedureModel(document).graph.edges.map((edge) => edge.id)).toEqual(
-      semanticIds,
-    );
+    expect(
+      buildProcedureModel(document).graph.edges.map((edge) => edge.id),
+    ).toEqual(semanticIds);
     expect(buildSopFlowchart(document).edges.map((edge) => edge.id)).toEqual(
       semanticIds,
     );
