@@ -189,6 +189,17 @@ function BpmnNodeLabel({ node }: { node: BpmnNode }) {
   const firstY = insideTask
     ? node.y - ((node.labelLines.length - 1) * node.labelLineHeight) / 2 + 4
     : node.y + node.height / 2 + 16;
+  const occurrences = new Map<string, number>();
+  const labelLines = node.labelLines.map((line, index) => {
+    const occurrence = (occurrences.get(line) ?? 0) + 1;
+    occurrences.set(line, occurrence);
+
+    return {
+      line,
+      key: `${node.id}:${line}:${occurrence}`,
+      first: index === 0,
+    };
+  });
 
   return (
     <text
@@ -197,11 +208,11 @@ function BpmnNodeLabel({ node }: { node: BpmnNode }) {
       textAnchor="middle"
       className={styles.nodeLabel}
     >
-      {node.labelLines.map((line, index) => (
+      {labelLines.map(({ line, key, first }) => (
         <tspan
-          key={`${node.id}-label-${index}`}
+          key={key}
           x={node.x}
-          dy={index === 0 ? 0 : node.labelLineHeight}
+          dy={first ? 0 : node.labelLineHeight}
         >
           {line}
         </tspan>
