@@ -101,11 +101,14 @@ describe("buildFormalProcedurePages", () => {
   });
 
   it("packs rows by estimated height when a page height budget is provided", () => {
-    const document = linearDocument(5);
+    const baseDocument = linearDocument(5);
     const longNote = "Catatan panjang ".repeat(28);
-    document.steps = document.steps.map((step) =>
-      step.id === "step-2" ? { ...step, note: longNote } : step,
-    );
+    const document: SOPDocument = {
+      ...baseDocument,
+      steps: baseDocument.steps.map((step) =>
+        step.id === "step-2" ? { ...step, note: longNote } : step,
+      ),
+    };
     const model = buildProcedureModel(document);
     const longRow = model.rows.find((row) => row.stepId === "step-2");
     const shortRow = model.rows.find((row) => row.stepId === "step-3");
