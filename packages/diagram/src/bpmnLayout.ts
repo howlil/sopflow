@@ -19,8 +19,11 @@ export function layoutBpmnGraph(
   const actorIndex = new Map(
     document.actors.map((actor, index) => [actor.id, index] as const),
   );
-  const fallbackLaneIndex = document.actors.length > 0 ? document.actors.length : 0;
-  const stepById = new Map(document.steps.map((step) => [step.id, step] as const));
+  const fallbackLaneIndex =
+    document.actors.length > 0 ? document.actors.length : 0;
+  const stepById = new Map(
+    document.steps.map((step) => [step.id, step] as const),
+  );
   const orderById = new Map(
     graph.nodes.map((node, index) => [node.id, index] as const),
   );
@@ -31,7 +34,9 @@ export function layoutBpmnGraph(
     const actorId = step?.actorIds[0];
     laneById.set(
       node.id,
-      actorId ? (actorIndex.get(actorId) ?? fallbackLaneIndex) : fallbackLaneIndex,
+      actorId
+        ? (actorIndex.get(actorId) ?? fallbackLaneIndex)
+        : fallbackLaneIndex,
     );
   }
 
@@ -128,8 +133,7 @@ function minimumColumnAdvance(
   if (source?.kind === "decision") return 1;
 
   const simpleCrossLaneHandoff =
-    (outgoing.get(edge.from) ?? 0) === 1 &&
-    (incoming.get(edge.to) ?? 0) === 1;
+    (outgoing.get(edge.from) ?? 0) === 1 && (incoming.get(edge.to) ?? 0) === 1;
 
   return simpleCrossLaneHandoff ? 0 : 1;
 }
