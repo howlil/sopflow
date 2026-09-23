@@ -655,9 +655,7 @@ function SinglePageSopProcedureView({
                           obstacles={obstacles}
                           routingBounds={formalBounds}
                           onSelect={setSelectedConnectionId}
-                          onChange={(route) =>
-                            updateManualPath(edge.id, route)
-                          }
+                          onChange={(route) => updateManualPath(edge.id, route)}
                           onReset={() => resetManualPath(edge.id)}
                         />
                       );
