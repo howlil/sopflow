@@ -107,7 +107,6 @@ function buildBpmnModelPass(
     return !actorId || !actorIndex.has(actorId);
   });
   const hasExplicitActors = document.actors.length > 0;
-  const fallbackLaneIndex = hasExplicitActors ? document.actors.length : 0;
   const laneCount = Math.max(
     1,
     document.actors.length + (needsFallbackLane && hasExplicitActors ? 1 : 0),
@@ -124,15 +123,12 @@ function buildBpmnModelPass(
     };
   });
   const layoutNodes = layoutBpmnGraph(document, graph);
-  const layoutById = new Map(layoutNodes.map((node) => [node.id, node] as const));
-  const maxColumn = Math.max(
-    0,
-    ...layoutNodes.map((node) => node.columnIndex),
+  const layoutById = new Map(
+    layoutNodes.map((node) => [node.id, node] as const),
   );
+  const maxColumn = Math.max(0, ...layoutNodes.map((node) => node.columnIndex));
   const width =
-    config.headerWidth +
-    config.padding * 2 +
-    (maxColumn + 1) * config.stepGap;
+    config.headerWidth + config.padding * 2 + (maxColumn + 1) * config.stepGap;
   const height = config.padding * 2 + laneCount * config.laneHeight;
 
   const stepById = new Map(document.steps.map((step) => [step.id, step]));
