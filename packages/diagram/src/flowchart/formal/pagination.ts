@@ -103,6 +103,39 @@ export function splitFormalRowsIntoPages(
   return pages;
 }
 
+export function splitFormalRowsIntoHeightPages(
+  rows: readonly FormalPageRow[],
+  rowHeight: (row: FormalPageRow) => number,
+  firstPageHeight: number,
+  nextPageHeight: number,
+): FormalPageRow[][] {
+  if (rows.length === 0) return [];
+
+  const firstBudget = positiveNumber(firstPageHeight, 1);
+  const nextBudget = positiveNumber(nextPageHeight, firstBudget);
+  const pages: FormalPageRow[][] = [];
+  let current: FormalPageRow[] = [];
+  let usedHeight = 0;
+  let budget = firstBudget;
+
+  for (const row of rows) {
+    const height = positiveNumber(rowHeight(row), 1);
+
+    if (current.length > 0 && usedHeight + height > budget) {
+      pages.push(current);
+      current = [];
+      usedHeight = 0;
+      budget = nextBudget;
+    }
+
+    current.push(row);
+    usedHeight += height;
+  }
+
+  if (current.length > 0) pages.push(current);
+  return pages;
+}
+
 export function getFormalPageForRow(
   rowNumber: number,
   firstPageRows: number,
@@ -122,33 +155,48 @@ export function splitFormalCrossPageConnections(
   nextPageRows: number,
   opcIdPrefix = "",
 ): FormalPageConnections {
-  const totalPages = splitFormalRowsIntoPages(
-    rows,
-    firstPageRows,
-    nextPageRows,
-  ).length;
+  return splitFormalConnectionsForPages(
+    edges,
+    splitFormalRowsIntoPages(rows, firstPageRows, nextPageRows),
+    opcIdPrefix,
+  );
+}
+
+export function splitFormalConnectionsForPages(
+  edges: readonly WorkflowEdge[],
+  rowPages: readonly (readonly FormalPageRow[])[],
+  opcIdPrefix = "",
+): FormalPageConnections {
   const pages: FormalPagedConnection[][] = Array.from(
-    { length: totalPages },
+    { length: rowPages.length },
     () => [],
   );
   const opcPairs: FormalOpcPair[] = [];
-  const rowById = new Map(rows.map((row) => [row.stepId, row] as const));
+  const rowById = new Map(
+    rowPages.flatMap((rows) =>
+      rows.map((row) => [row.stepId, row] as const),
+    ),
+  );
+  const pageByStepId = new Map<StepId, number>();
+
+  rowPages.forEach((rows, pageIndex) => {
+    for (const row of rows) pageByStepId.set(row.stepId, pageIndex);
+  });
 
   for (const edge of edges) {
     const source = rowById.get(edge.from);
     const target = rowById.get(edge.to);
-    if (!source || !target || totalPages === 0) continue;
-
-    const fromPage = getFormalPageForRow(
-      source.number,
-      firstPageRows,
-      nextPageRows,
-    );
-    const toPage = getFormalPageForRow(
-      target.number,
-      firstPageRows,
-      nextPageRows,
-    );
+    const fromPage = pageByStepId.get(edge.from);
+    const toPage = pageByStepId.get(edge.to);
+    if (
+      !source ||
+      !target ||
+      fromPage === undefined ||
+      toPage === undefined ||
+      rowPages.length === 0
+    ) {
+      continue;
+    }
 
     if (fromPage === toPage) {
       pages[fromPage]?.push(toPagedConnection(edge, source, target));
@@ -375,6 +423,10 @@ function resolveActorIndex(
 
   const index = actors.findIndex((actor) => actor.id === actorId);
   return index >= 0 ? index : 0;
+}
+
+function positiveNumber(value: number, fallback: number): number {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
 function positiveInteger(value: number, fallback: number): number {
