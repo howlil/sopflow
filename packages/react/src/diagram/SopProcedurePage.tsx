@@ -2,6 +2,9 @@ import type { StepId, ValidationIssue } from "@sopflow/core";
 import {
   planFormalProcedureEdges,
   pointsToPath,
+  removeProcedurePageManualRoute,
+  resolveProcedurePageRouteOverrides,
+  setProcedurePageManualRoute,
   type FormalFlowchartBounds,
   type FormalFlowchartColumnBounds,
   type FormalFlowchartGeometry,
@@ -9,12 +12,14 @@ import {
   type FormalFlowchartRect,
   type FormalFlowchartShapeGeometry,
   type FormalProcedurePageModel,
+  type FormalRouteChange,
   type ProcedureModel,
   type ProcedureRowModel,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
 import styles from "./SopProcedureView.module.css";
 
 export interface SopProcedurePageProps {
@@ -23,7 +28,9 @@ export interface SopProcedurePageProps {
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
   issues?: readonly ValidationIssue[];
+  manualEditing?: boolean;
   diagramConfig?: SopDiagramConfig;
+  onDiagramConfigChange?: (config: SopDiagramConfig) => void;
 }
 
 export function SopProcedurePage({
@@ -32,13 +39,18 @@ export function SopProcedurePage({
   selectedStepId = null,
   onSelectedStepChange,
   issues = [],
+  manualEditing = false,
   diagramConfig = {},
+  onDiagramConfigChange,
 }: SopProcedurePageProps) {
   const rootRef = useRef<HTMLElement>(null);
   const shapeRefs = useRef(new Map<string, HTMLSpanElement>());
   const [geometry, setGeometry] = useState<FormalFlowchartGeometry | null>(
     null,
   );
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null);
   const actorWidth = Math.max(10, 70 / model.actorColumns.length);
   const totalColumns = model.actorColumns.length + 6;
   const routingRowById = useMemo(
@@ -105,18 +117,76 @@ export function SopProcedurePage({
     return () => observer.disconnect();
   }, [measure]);
 
+  const manualRoutes = useMemo(
+    () => resolveProcedurePageRouteOverrides(page.edges, diagramConfig),
+    [diagramConfig, page.edges],
+  );
   const routedEdges = useMemo(
     () =>
       geometry
         ? planFormalProcedureEdges(
             { rows: page.routingRows, edges: page.edges },
             geometry,
-            diagramConfig.routes ?? {},
+            manualRoutes,
             { pathLayoutSeed: diagramConfig.pathLayoutSeed ?? 0 },
           )
         : [],
-    [diagramConfig.pathLayoutSeed, diagramConfig.routes, geometry, page],
+    [
+      diagramConfig.pathLayoutSeed,
+      geometry,
+      manualRoutes,
+      page.edges,
+      page.routingRows,
+    ],
   );
+  const pageEdgeById = useMemo(
+    () => new Map(page.edges.map((edge) => [edge.id, edge] as const)),
+    [page.edges],
+  );
+
+  const updateManualPath = useCallback(
+    (connectionId: string, route: FormalRouteChange) => {
+      if (!onDiagramConfigChange) return;
+
+      const edge = pageEdgeById.get(connectionId);
+      if (!edge) return;
+
+      const currentRoute = manualRoutes[connectionId];
+      onDiagramConfigChange(
+        setProcedurePageManualRoute(diagramConfig, edge, {
+          kind: "orthogonal",
+          bendPoints: route.bendPoints.map((point) => ({ ...point })),
+          sSide: route.sourceSide,
+          eSide: route.targetSide,
+          startPoint: { ...route.startPoint },
+          endPoint: { ...route.endPoint },
+          ...(currentRoute?.labelPosition
+            ? { labelPosition: currentRoute.labelPosition }
+            : {}),
+        }),
+      );
+    },
+    [
+      diagramConfig,
+      manualRoutes,
+      onDiagramConfigChange,
+      pageEdgeById,
+    ],
+  );
+
+  const resetManualPath = useCallback(
+    (connectionId: string) => {
+      if (!onDiagramConfigChange) return;
+
+      const edge = pageEdgeById.get(connectionId);
+      if (!edge) return;
+
+      onDiagramConfigChange(removeProcedurePageManualRoute(diagramConfig, edge));
+    },
+    [diagramConfig, onDiagramConfigChange, pageEdgeById],
+  );
+
+  const editingEnabled = manualEditing && onDiagramConfigChange !== undefined;
 
   const setShapeRef = useCallback(
     (shapeId: string, element: HTMLSpanElement | null) => {
@@ -131,6 +201,7 @@ export function SopProcedurePage({
       ref={rootRef}
       className={styles.page}
       data-sopflow-procedure-page={page.pageIndex}
+      data-manual-editing={editingEnabled || undefined}
       aria-label={`Prosedur SOP halaman ${page.pageIndex + 1}`}
     >
       <table className={styles.table}>
@@ -183,7 +254,14 @@ export function SopProcedurePage({
             setShapeRef={setShapeRef}
           />
 
-          {page.rows.map((row) => {
+          {page.rows.length === 0 ? (
+            <tr>
+              <td colSpan={totalColumns} className={styles.empty}>
+                Belum ada langkah SOP.
+              </td>
+            </tr>
+          ) : (
+            page.rows.map((row) => {
             const selected = selectedStepId === row.stepId;
             const issueCount = issues.filter(
               (issue) => issue.stepId === row.stepId,
@@ -264,7 +342,8 @@ export function SopProcedurePage({
                 <td>{display(row.note)}</td>
               </tr>
             );
-          })}
+          })
+          )}
 
           <OpcTableRow
             endpoints={page.bottomOpc}
@@ -279,10 +358,12 @@ export function SopProcedurePage({
       {geometry && routedEdges.length > 0 ? (
         <svg
           className={styles.overlay}
+          data-editing={editingEnabled || undefined}
           width={geometry.width}
           height={geometry.height}
           viewBox={`0 0 ${geometry.width} ${geometry.height}`}
-          aria-hidden="true"
+          aria-label={editingEnabled ? "Editor jalur flowchart SOP" : undefined}
+          aria-hidden={editingEnabled ? undefined : true}
         >
           <defs>
             <marker
@@ -298,26 +379,68 @@ export function SopProcedurePage({
             </marker>
           </defs>
 
-          {routedEdges.map((edge) => (
-            <g key={edge.id}>
-              <path
-                d={pointsToPath(edge.points)}
-                className={styles.edge}
-                markerEnd={`url(#sopflow-procedure-arrow-${page.pageIndex})`}
-              />
-              {edge.label && edge.labelPosition ? (
-                <text
-                  x={edge.labelPosition.x}
-                  y={edge.labelPosition.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className={styles.edgeLabel}
-                >
-                  {edge.label}
-                </text>
-              ) : null}
-            </g>
-          ))}
+          {routedEdges.map((edge) => {
+            const selected = selectedConnectionId === edge.id;
+            const sourceShape = geometry.shapes.get(edge.from);
+            const targetShape = geometry.shapes.get(edge.to);
+            const obstacles = [...geometry.shapes.values()]
+              .filter(
+                (shape) =>
+                  shape.stepId !== edge.from && shape.stepId !== edge.to,
+              )
+              .map((shape) => shape.rect);
+            const formalBounds = {
+              left: geometry.pelaksanaBounds.left,
+              top: geometry.pelaksanaBounds.top,
+              width:
+                geometry.pelaksanaBounds.right -
+                geometry.pelaksanaBounds.left,
+              height:
+                geometry.pelaksanaBounds.bottom -
+                geometry.pelaksanaBounds.top,
+            };
+
+            return (
+              <g key={edge.id}>
+                {editingEnabled ? (
+                  <EditableFormalFlowchartPath
+                    path={edge.points}
+                    connectionId={edge.id}
+                    selected={selected}
+                    sourceSide={edge.sourceSide}
+                    targetSide={edge.targetSide}
+                    {...(sourceShape ? { sourceRect: sourceShape.rect } : {})}
+                    {...(targetShape ? { targetRect: targetShape.rect } : {})}
+                    sourceIsDiamond={sourceShape?.kind === "decision"}
+                    targetIsDiamond={targetShape?.kind === "decision"}
+                    obstacles={obstacles}
+                    routingBounds={formalBounds}
+                    onSelect={setSelectedConnectionId}
+                    onChange={(route) => updateManualPath(edge.id, route)}
+                    onReset={() => resetManualPath(edge.id)}
+                  />
+                ) : null}
+
+                <path
+                  d={pointsToPath(edge.points)}
+                  className={styles.edge}
+                  data-selected={selected || undefined}
+                  markerEnd={`url(#sopflow-procedure-arrow-${page.pageIndex})`}
+                />
+                {edge.label && edge.labelPosition ? (
+                  <text
+                    x={edge.labelPosition.x}
+                    y={edge.labelPosition.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className={styles.edgeLabel}
+                  >
+                    {edge.label}
+                  </text>
+                ) : null}
+              </g>
+            );
+          })}
         </svg>
       ) : null}
     </section>
