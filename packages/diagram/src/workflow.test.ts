@@ -114,4 +114,15 @@ describe("projectWorkflow", () => {
       },
     ]);
   });
+
+  it("keeps projection stable when document step storage order changes", () => {
+    const original = projectWorkflow(document);
+    const shuffled = projectWorkflow({
+      ...document,
+      steps: [...document.steps].reverse(),
+    });
+
+    expect(shuffled).toEqual(original);
+  });
+
 });
