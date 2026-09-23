@@ -67,6 +67,7 @@ describe("diagram public API", () => {
         "pointOnFormalShapeSide",
         "rebuildFormalPathForEndpoint",
         "removeFormalRouteWaypoint",
+        "repairFormalManualRoute",
         "removeProcedureManualRoute",
         "removeProcedurePageManualRoute",
         "resolveNearestFormalShapeSide",
