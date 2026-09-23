@@ -122,25 +122,7 @@ export function SopBpmn({
                 }}
               >
                 <BpmnShape node={node} />
-                {node.kind === "task" ? (
-                  <text
-                    x={node.x}
-                    y={node.y + 4}
-                    textAnchor="middle"
-                    className={styles.nodeLabel}
-                  >
-                    {shortLabel(node.label)}
-                  </text>
-                ) : (
-                  <text
-                    x={node.x}
-                    y={node.y + node.height / 2 + 16}
-                    textAnchor="middle"
-                    className={styles.nodeLabel}
-                  >
-                    {shortLabel(node.label)}
-                  </text>
-                )}
+                <BpmnNodeLabel node={node} />
               </g>
             );
           })}
@@ -202,6 +184,28 @@ function BpmnShape({ node }: { node: BpmnNode }) {
   );
 }
 
-function shortLabel(value: string): string {
-  return value.length > 18 ? `${value.slice(0, 17)}…` : value;
+function BpmnNodeLabel({ node }: { node: BpmnNode }) {
+  const insideTask = node.kind === "task";
+  const firstY = insideTask
+    ? node.y - ((node.labelLines.length - 1) * node.labelLineHeight) / 2 + 4
+    : node.y + node.height / 2 + 16;
+
+  return (
+    <text
+      x={node.x}
+      y={firstY}
+      textAnchor="middle"
+      className={styles.nodeLabel}
+    >
+      {node.labelLines.map((line, index) => (
+        <tspan
+          key={`${node.id}-label-${index}`}
+          x={node.x}
+          dy={index === 0 ? 0 : node.labelLineHeight}
+        >
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
 }
