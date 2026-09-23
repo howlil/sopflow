@@ -360,5 +360,4 @@ describe("procedure model", () => {
 
     expect(shuffled).toEqual(original);
   });
-
 });
