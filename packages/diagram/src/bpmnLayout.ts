@@ -109,9 +109,7 @@ export function layoutBpmnGraph(
   }));
 }
 
-export function buildBpmnMainSpine(
-  graph: WorkflowGraph,
-): ReadonlySet<StepId> {
+export function buildBpmnMainSpine(graph: WorkflowGraph): ReadonlySet<StepId> {
   const orderById = new Map(
     graph.nodes.map((node, index) => [node.id, index] as const),
   );
@@ -247,9 +245,7 @@ function ensureUniqueLaneColumns(
     const rightPriority = mainSpine.has(right.id) ? 0 : 1;
     if (leftPriority !== rightPriority) return leftPriority - rightPriority;
 
-    return (
-      (orderById.get(left.id) ?? 0) - (orderById.get(right.id) ?? 0)
-    );
+    return (orderById.get(left.id) ?? 0) - (orderById.get(right.id) ?? 0);
   });
 
   for (const node of nodes) {
