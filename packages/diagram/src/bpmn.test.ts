@@ -153,4 +153,15 @@ describe("buildBpmnModel", () => {
       }),
     );
   });
+
+  it("keeps BPMN layout stable when step storage order changes", () => {
+    const original = buildBpmnModel(document);
+    const shuffled = buildBpmnModel({
+      ...document,
+      steps: [...document.steps].reverse(),
+    });
+
+    expect(shuffled).toEqual(original);
+  });
+
 });
