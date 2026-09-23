@@ -106,9 +106,7 @@ describe("buildBpmnModel", () => {
       ],
     };
     const model = buildBpmnModel(feedbackDocument);
-    const feedback = model.edges.find(
-      (edge) => edge.id === "review:no:task",
-    );
+    const feedback = model.edges.find((edge) => edge.id === "review:no:task");
     const source = model.nodes.find((node) => node.id === "review");
     const target = model.nodes.find((node) => node.id === "task");
 
