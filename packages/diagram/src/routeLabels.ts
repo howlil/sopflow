@@ -52,7 +52,9 @@ export function placeRouteLabel(
         Math.abs(segment.x2 - segment.x1) + Math.abs(segment.y2 - segment.y1),
     }))
     .filter(({ length }) => length > 0)
-    .sort((left, right) => right.length - left.length || left.index - right.index);
+    .sort(
+      (left, right) => right.length - left.length || left.index - right.index,
+    );
 
   if (segments.length === 0) return null;
 
