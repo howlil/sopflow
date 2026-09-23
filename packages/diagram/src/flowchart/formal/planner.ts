@@ -134,10 +134,7 @@ export function planFormalProcedureEdges(
 
   let priorityIds = new Set<string>();
   let bestPlan: Map<string, FormalPlannedEdge> | null = null;
-  let bestSegments = new Map<
-    string,
-    ReturnType<typeof formalPathToSegments>
-  >();
+  let bestSegments = new Map<string, ReturnType<typeof formalPathToSegments>>();
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (let pass = 0; pass < maxReconcilePasses; pass += 1) {
@@ -295,11 +292,7 @@ export function planFormalProcedureEdges(
     const routed = selected.get(edge.id);
     if (!routed) return [];
 
-    const quality = measureFormalEdgeQuality(
-      routed,
-      geometry,
-      bestSegments,
-    );
+    const quality = measureFormalEdgeQuality(routed, geometry, bestSegments);
     const routeDiagnostics = formalRouteDiagnostics(
       routed,
       quality,
@@ -352,9 +345,7 @@ function measureFormalEdgeQuality(
   >,
 ): DiagramRouteQuality {
   const obstacles = [...geometry.shapes.values()]
-    .filter(
-      (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
-    )
+    .filter((shape) => shape.stepId !== edge.from && shape.stepId !== edge.to)
     .map((shape) => shape.rect);
   const occupied = [...segmentsByConnection.entries()]
     .filter(([connectionId]) => connectionId !== edge.id)
