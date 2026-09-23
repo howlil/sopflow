@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
 import { InspectorSection } from "../primitives/InspectorSection.js";
-import type { SopHeaderValue, SopSignatory } from "../types.js";
+import type { SopHeaderValue, SopSignatory } from "./types.js";
 import styles from "./SopHeaderFields.module.css";
 
 export interface SopHeaderFieldsProps {
