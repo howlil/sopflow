@@ -222,14 +222,113 @@ function buildBpmnModelPass(
     ];
   });
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const routing = reconcileBpmnRoutes({
+    semanticEdges: graph.edges,
+    nodes,
+    nodeById,
+    width,
+    height,
+    order,
+  });
+  diagnostics.push(...routing.diagnostics);
+  const edges = routing.edges;
+
+  return {
+    lanes,
+    nodes,
+    connections: graph.connections,
+    edges,
+    diagnostics,
+    width,
+    height,
+    padding: config.padding,
+    headerWidth: config.headerWidth,
+    laneHeight: config.laneHeight,
+  };
+}
+
+interface BpmnRoutingPassResult {
+  readonly edges: readonly BpmnRoutedEdge[];
+  readonly diagnostics: readonly DiagramDiagnostic[];
+}
+
+function reconcileBpmnRoutes(input: {
+  readonly semanticEdges: readonly WorkflowEdge[];
+  readonly nodes: readonly BpmnNode[];
+  readonly nodeById: ReadonlyMap<StepId, BpmnNode>;
+  readonly width: number;
+  readonly height: number;
+  readonly order: "feedback-first" | "branch-first";
+}): BpmnRoutingPassResult {
+  const MAX_RECONCILE_PASSES = 4;
+  let priorityIds = new Set<string>();
+  let best: BpmnRoutingPassResult | null = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let pass = 0; pass < MAX_RECONCILE_PASSES; pass += 1) {
+    const planned = routeBpmnEdgesPass({
+      ...input,
+      priorityIds,
+      reconcilePass: pass,
+    });
+    const score = scoreBpmnEdges(planned.edges);
+
+    if (score < bestScore) {
+      best = planned;
+      bestScore = score;
+    }
+
+    const nextPriorityIds = new Set(
+      planned.edges
+        .filter((edge) => bpmnEdgeNeedsReconciliation(edge))
+        .map((edge) => edge.id),
+    );
+    if (nextPriorityIds.size === 0) break;
+
+    priorityIds = nextPriorityIds;
+  }
+
+  return best ?? { edges: [], diagnostics: [] };
+}
+
+function routeBpmnEdgesPass(input: {
+  readonly semanticEdges: readonly WorkflowEdge[];
+  readonly nodes: readonly BpmnNode[];
+  readonly nodeById: ReadonlyMap<StepId, BpmnNode>;
+  readonly width: number;
+  readonly height: number;
+  readonly order: "feedback-first" | "branch-first";
+  readonly priorityIds: ReadonlySet<string>;
+  readonly reconcilePass: number;
+}): BpmnRoutingPassResult {
+  const {
+    semanticEdges,
+    nodes,
+    nodeById,
+    width,
+    height,
+    order,
+    priorityIds,
+    reconcilePass,
+  } = input;
   const occupied: RouteSegment[] = [];
   const parallelCounts = new Map<string, number>();
   const portLedger = new BpmnPortLedger();
+  const diagnostics: DiagramDiagnostic[] = [];
   let selfLoopIndex = 0;
 
-  const orderedEdges = [...graph.edges].sort((first, second) =>
-    compareBpmnRoutingPriority(first, second, nodeById, order),
-  );
+  const orderedEdges = [...semanticEdges].sort((first, second) => {
+    const firstPriority = priorityIds.has(first.id) ? 1 : 0;
+    const secondPriority = priorityIds.has(second.id) ? 1 : 0;
+    if (firstPriority !== secondPriority) return firstPriority - secondPriority;
+
+    const priority = compareBpmnRoutingPriority(first, second, nodeById, order);
+    if (priority !== 0) return priority;
+
+    return reconcilePass % 2 === 0
+      ? first.id.localeCompare(second.id)
+      : second.id.localeCompare(first.id);
+  });
 
   const routedEdges = orderedEdges.flatMap<BpmnRoutedEdge>((edge) => {
     const from = nodeById.get(edge.from);
@@ -291,6 +390,7 @@ function buildBpmnModelPass(
     portLedger.reserve(edge.from, "out", route.sourceSide);
     portLedger.reserve(edge.to, "in", route.targetSide);
     const routeDiagnostics = [...route.diagnostics];
+
     for (const [code, count] of [
       ["PATH_INTERSECTS_NODE", quality.obstacleHits],
       ["PATH_OVERLAPS_EDGE", quality.overlaps],
@@ -305,6 +405,7 @@ function buildBpmnModelPass(
         });
       }
     }
+
     diagnostics.push(...routeDiagnostics);
     const labelPosition = edge.label
       ? routeLabelPosition(
@@ -327,29 +428,27 @@ function buildBpmnModelPass(
     ];
   });
 
-  const edges = graph.edges.flatMap((edge) =>
+  const edges = semanticEdges.flatMap((edge) =>
     routedEdges.filter((routedEdge) => routedEdge.id === edge.id),
   );
-
-  return {
-    lanes,
-    nodes,
-    connections: graph.connections,
-    edges,
-    diagnostics,
-    width,
-    height,
-    padding: config.padding,
-    headerWidth: config.headerWidth,
-    laneHeight: config.laneHeight,
-  };
+  return { edges, diagnostics };
 }
 
-function scoreBpmnPlan(model: BpmnModel): number {
-  return model.edges.reduce((score, edge) => {
+function bpmnEdgeNeedsReconciliation(edge: BpmnRoutedEdge): boolean {
+  return (
+    edge.routeKind === "fallback" ||
+    (edge.quality?.obstacleHits ?? 0) > 0 ||
+    (edge.quality?.overlaps ?? 0) > 0 ||
+    (edge.quality?.crossings ?? 0) > 0
+  );
+}
+
+function scoreBpmnEdges(edges: readonly BpmnRoutedEdge[]): number {
+  return edges.reduce((score, edge) => {
     if (edge.points.length < 2) return score + 1_000_000_000;
     const quality = edge.quality;
     if (!quality) return score + 500_000;
+
     return (
       score +
       quality.obstacleHits * 100_000 +
@@ -360,6 +459,10 @@ function scoreBpmnPlan(model: BpmnModel): number {
       (edge.routeKind === "fallback" ? 50_000 : 0)
     );
   }, 0);
+}
+
+function scoreBpmnPlan(model: BpmnModel): number {
+  return scoreBpmnEdges(model.edges);
 }
 
 interface BpmnRouteResult {
