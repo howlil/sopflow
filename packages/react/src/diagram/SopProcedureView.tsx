@@ -14,7 +14,6 @@ import {
   type FormalFlowchartRect,
   type FormalFlowchartShapeGeometry,
   type FormalRouteChange,
-  type DiagramPoint,
   type ProcedureGeometry,
   type ProcedureLaneGeometry,
   type ProcedureNodeGeometry,
