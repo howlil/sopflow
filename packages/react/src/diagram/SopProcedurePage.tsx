@@ -388,14 +388,15 @@ export function SopProcedurePage({
                   shape.stepId !== edge.from && shape.stepId !== edge.to,
               )
               .map((shape) => shape.rect);
-            const formalBounds = {
-              left: geometry.pelaksanaBounds.left,
-              top: geometry.pelaksanaBounds.top,
-              width:
-                geometry.pelaksanaBounds.right - geometry.pelaksanaBounds.left,
-              height:
-                geometry.pelaksanaBounds.bottom - geometry.pelaksanaBounds.top,
-            };
+            const pelaksanaBounds = geometry.pelaksanaBounds;
+            const formalBounds = pelaksanaBounds
+              ? {
+                  left: pelaksanaBounds.left,
+                  top: pelaksanaBounds.top,
+                  width: pelaksanaBounds.right - pelaksanaBounds.left,
+                  height: pelaksanaBounds.bottom - pelaksanaBounds.top,
+                }
+              : null;
 
             return (
               <g key={edge.id}>
