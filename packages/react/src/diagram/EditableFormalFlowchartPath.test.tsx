@@ -48,9 +48,9 @@ describe("EditableFormalFlowchartPath", () => {
         <EditableFormalFlowchartPath
           path={path}
           connectionId="edge-1"
-          selected
+          selected={false}
           sourceSide="bottom"
-          targetSide="top"={false}
+          targetSide="top"
           onSelect={() => undefined}
           onChange={() => undefined}
         />
