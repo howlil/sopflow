@@ -13,7 +13,7 @@
   color: var(--sopflow-text);
 
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.25rem;
 
   resize: none;

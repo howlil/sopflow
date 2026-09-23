@@ -1,0 +1,112 @@
+.backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.75rem;
+
+  background: rgb(23 23 23 / 46%);
+  backdrop-filter: blur(2px);
+  isolation: isolate;
+}
+
+.backdropClose {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+
+  border: 0;
+  padding: 0;
+
+  background: transparent;
+}
+
+.dialog {
+  position: relative;
+  z-index: 1;
+
+  width: min(100%, 26rem);
+  max-height: calc(100dvh - 1.5rem);
+  box-sizing: border-box;
+  overflow: auto;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-surface-radius);
+
+  background: var(--sopflow-surface, #fff);
+  color: var(--sopflow-text);
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 22%);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  padding: 0.75rem 0.875rem;
+
+  border-bottom: 1px solid var(--sopflow-border);
+}
+
+.heading {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--sopflow-font-sm);
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0.1875rem 0 0;
+  color: var(--sopflow-text-muted);
+  font-size: var(--sopflow-font-xs);
+  line-height: 1.35;
+}
+
+.closeButton {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+  padding: 0;
+
+  background: transparent;
+  color: var(--sopflow-text-muted);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
+}
+
+.body {
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  padding: 0.625rem 0.875rem 0.75rem;
+
+  border-top: 1px solid var(--sopflow-border);
+}

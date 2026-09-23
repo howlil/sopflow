@@ -6,6 +6,7 @@ export type ValidationIssueCode =
   | "MISSING_END"
   | "DUPLICATE_STEP_ID"
   | "DUPLICATE_ACTOR_ID"
+  | "INVALID_DECISION_BRANCH"
   | "UNKNOWN_ACTOR_REFERENCE"
   | "UNKNOWN_STEP_REFERENCE"
   | "UNREACHABLE_STEP"
@@ -41,6 +42,7 @@ export function validateSop(document: SOPDocument): ValidationIssue[] {
   issues.push(
     ...validateUniqueStepIds(document),
     ...validateUniqueActorIds(document),
+    ...validateDecisionBranches(document),
     ...validateActorReference(document),
     ...validateReference(document),
   );
@@ -53,6 +55,34 @@ export function validateSop(document: SOPDocument): ValidationIssue[] {
   }
 
   return issues;
+}
+
+export function validateDecisionBranches(
+  document: SOPDocument,
+): ValidationIssue[] {
+  return document.steps.flatMap((step) => {
+    if (step.type !== "decision") return [];
+
+    const issues: ValidationIssue[] = [];
+
+    if (!step.yes.trim()) {
+      issues.push({
+        code: "INVALID_DECISION_BRANCH",
+        stepId: step.id,
+        message: `Decision step "${step.id}" must have a Ya branch`,
+      });
+    }
+
+    if (!step.no.trim()) {
+      issues.push({
+        code: "INVALID_DECISION_BRANCH",
+        stepId: step.id,
+        message: `Decision step "${step.id}" must have a Tidak branch`,
+      });
+    }
+
+    return issues;
+  });
 }
 
 export function validateReference(document: SOPDocument): ValidationIssue[] {

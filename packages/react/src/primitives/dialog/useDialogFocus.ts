@@ -102,10 +102,10 @@ export function useDialogFocus({ open, onClose }: UseDialogFocusOptions) {
 function getFocusableElements(root: HTMLElement): HTMLElement[] {
   const elements = root.querySelectorAll<HTMLElement>(
     [
-      "button:not([disabled])",
-      "input:not([disabled])",
-      "select:not([disabled])",
-      "textarea:not([disabled])",
+      'button:not([disabled]):not([tabindex="-1"])',
+      'input:not([disabled]):not([tabindex="-1"])',
+      'select:not([disabled]):not([tabindex="-1"])',
+      'textarea:not([disabled]):not([tabindex="-1"])',
       "a[href]",
       '[tabindex]:not([tabindex="-1"])',
     ].join(","),

@@ -1,43 +1,62 @@
-import type { ValidationIssue } from "@sopflow/core";
+import { useState } from "react";
+
+import type { SopReadinessIssue } from "./readiness.js";
 import styles from "./ValidationPanel.module.css";
 
 export interface ValidationPanelProps {
-  issues: ValidationIssue[];
+  issues: readonly SopReadinessIssue[];
 }
 
 export function ValidationPanel({ issues }: ValidationPanelProps) {
-  if (issues.length === 0) {
-    return (
-      <section className={styles.panel} data-empty="true">
-        <p className={styles.success}>Tidak ada masalah pada workflow.</p>
-      </section>
-    );
-  }
+  const ready = issues.length === 0;
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <section
-      className={styles.panel}
-      data-error="true"
-      aria-label="Validasi SOP"
+      className={[styles.root, ready ? styles.ready : styles.invalid].join(" ")}
+      data-sopflow-validation-panel
+      data-ready={ready}
+      aria-live="polite"
     >
-      <header className={styles.header}>
-        <strong>{issues.length} masalah</strong>
-      </header>
+      <div className={styles.heading}>
+        <div className={styles.headingText}>
+          <h2 className={styles.title}>Validasi SOP</h2>
+          <span className={styles.status}>
+            {ready ? "Siap" : `${issues.length} masalah`}
+          </span>
+        </div>
 
-      <ul className={styles.list}>
-        {issues.map((issue) => (
-          <li
-            key={`${issue.code}-${issue.stepId ?? "document"}-${issue.message}`}
-            className={styles.issue}
+        {!ready ? (
+          <button
+            type="button"
+            className={styles.toggle}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}
           >
-            <span className={styles.message}>{issue.message}</span>
+            {expanded ? "Sembunyikan masalah" : "Lihat masalah"}
+          </button>
+        ) : null}
+      </div>
 
-            {issue.stepId ? (
-              <code className={styles.stepId}>{issue.stepId}</code>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {ready ? (
+        <p className={styles.message}>
+          Header dan alur SOP lengkap untuk preview atau cetak.
+        </p>
+      ) : expanded ? (
+        <ul className={styles.issues}>
+          {issues.map((issue) => (
+            <li
+              key={`${issue.kind}:${issue.code}:${issueDetail(issue)}:${issue.message}`}
+            >
+              {issue.message}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
+}
+
+function issueDetail(issue: SopReadinessIssue): string {
+  return "field" in issue ? issue.field : (issue.stepId ?? "");
 }

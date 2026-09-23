@@ -1,51 +1,77 @@
-.panel {
-  width: 100%;
-  color: var(--sopflow-text);
-}
-
-.panel[data-error="true"] {
-  color: var(--sopflow-error-text);
-}
-
-.panel[data-empty="true"] {
-  color: var(--sopflow-text-muted);
-}
-
-.header {
-  margin-bottom: 0.375rem;
-  color: var(--sopflow-error-text);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.list {
+.root {
   display: grid;
   gap: 0.375rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin: 0 1rem;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--sopflow-font-xs);
 }
 
-.issue {
+.invalid {
+  border-color: var(--sopflow-error-border);
+  background: var(--sopflow-error-surface);
+  color: var(--sopflow-error-text);
+}
+
+.ready {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text-muted);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.headingText {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title,
+.message {
+  margin: 0;
+}
+
+.title {
+  color: inherit;
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.status {
+  font-weight: 600;
+}
+
+.toggle {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.25rem 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.issues {
   display: grid;
   gap: 0.125rem;
-  font-size: var(--sopflow-font-xs);
-  line-height: 1.4;
-}
-
-.message {
-  min-width: 0;
-}
-
-.stepId {
-  color: var(--sopflow-text-muted);
-  font-family: monospace;
-  font-size: 0.625rem;
-}
-
-.success {
   margin: 0;
-  font-size: var(--sopflow-font-xs);
+  padding-inline-start: 1.125rem;
 }

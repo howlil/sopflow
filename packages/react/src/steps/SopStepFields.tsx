@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type {
   SOPDocument,
   SopOperation,
@@ -6,6 +5,7 @@ import type {
   StepId,
   ValidationIssue,
 } from "@sopflow/core";
+import { FormField as Field } from "../primitives/FormField.js";
 import { ActorField } from "./fields/ActorField.js";
 import { DurationField } from "./fields/DurationField.js";
 import { InputField } from "./fields/InputField.js";
@@ -16,7 +16,8 @@ import { StepTypeField } from "./fields/StepTypeField.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
 import { StepActions } from "./StepActions.js";
-import { useStepActions } from "./hooks/useStepActions.js";
+import { useStepEditorController } from "./hooks/useStepEditorController.js";
+import { InspectorSection } from "../primitives/InspectorSection.js";
 import styles from "./SopStepFields.module.css";
 
 export interface SopStepFieldsProps {
@@ -75,7 +76,6 @@ function SopStepFieldsContent({
   className,
 }: SopStepFieldsContentProps) {
   const {
-    updateStep,
     changeStepType,
     addAfter,
     isDecisionEditorOpen,
@@ -84,14 +84,20 @@ function SopStepFieldsContent({
     isDeleteDialogOpen,
     openDeleteDialog,
     closeDeleteDialog,
-  } = useStepActions({
+    stepIssues,
+    updateName,
+    updateActorIds,
+    updateInput,
+    updateDuration,
+    updateOutput,
+    updateNote,
+  } = useStepEditorController({
     step,
     document,
+    issues,
     onOperation,
     onOperations,
   });
-
-  const stepIssues = issues.filter((issue) => issue.stepId === step.id);
 
   return (
     <div
@@ -99,15 +105,15 @@ function SopStepFieldsContent({
       data-sopflow-step-fields={step.id}
       data-sopflow-step-id={step.id}
     >
-      <InspectorSection title="Kegiatan">
+      <InspectorSection title="Kegiatan" headingLevel="h3">
         <StepNameField
           value={step.name}
           readOnly={disabled}
-          onChange={(name) => updateStep({ ...step, name })}
+          onChange={updateName}
         />
       </InspectorSection>
 
-      <InspectorSection title="Tipe dan pelaksana">
+      <InspectorSection title="Tipe dan pelaksana" headingLevel="h3">
         <Field label="Tipe">
           <StepTypeField
             step={step}
@@ -122,22 +128,17 @@ function SopStepFieldsContent({
             value={step.actorIds}
             actors={document.actors}
             readOnly={disabled}
-            onChange={(actorIds) => updateStep({ ...step, actorIds })}
+            onChange={updateActorIds}
           />
         </Field>
       </InspectorSection>
 
-      <InspectorSection title="Mutu baku">
+      <InspectorSection title="Mutu baku" headingLevel="h3">
         <Field label="Kelengkapan">
           <InputField
             value={step.input}
             readOnly={disabled}
-            onChange={(input) =>
-              updateStep({
-                ...step,
-                input: input || undefined,
-              })
-            }
+            onChange={updateInput}
           />
         </Field>
 
@@ -145,7 +146,7 @@ function SopStepFieldsContent({
           <DurationField
             value={step.duration}
             readOnly={disabled}
-            onChange={(duration) => updateStep({ ...step, duration })}
+            onChange={updateDuration}
           />
         </Field>
 
@@ -153,35 +154,25 @@ function SopStepFieldsContent({
           <OutputField
             value={step.output}
             readOnly={disabled}
-            onChange={(output) =>
-              updateStep({
-                ...step,
-                output: output || undefined,
-              })
-            }
+            onChange={updateOutput}
           />
         </Field>
       </InspectorSection>
 
-      <InspectorSection title="Keterangan">
+      <InspectorSection title="Keterangan" headingLevel="h3">
         <NoteField
           value={step.note}
           readOnly={disabled}
-          onChange={(note) =>
-            updateStep({
-              ...step,
-              note: note || undefined,
-            })
-          }
+          onChange={updateNote}
         />
       </InspectorSection>
 
-      <InspectorSection title="Alur">
+      <InspectorSection title="Alur" headingLevel="h3">
         <div className={styles.flowSummary}>{flowSummary(step, document)}</div>
       </InspectorSection>
 
       {stepIssues.length > 0 ? (
-        <InspectorSection title="Masalah">
+        <InspectorSection title="Masalah" headingLevel="h3">
           <ul className={styles.issueList}>
             {stepIssues.map((issue) => (
               <li key={`${issue.code}-${issue.message}`}>{issue.message}</li>
@@ -221,30 +212,6 @@ function SopStepFieldsContent({
         onOperations={onOperations}
         onClose={closeDeleteDialog}
       />
-    </div>
-  );
-}
-
-function InspectorSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className={styles.section}>
-      <h3 className={styles.sectionTitle}>{title}</h3>
-      <div className={styles.sectionBody}>{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      {children}
     </div>
   );
 }

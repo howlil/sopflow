@@ -1,0 +1,38 @@
+.section {
+  border-bottom: 1px solid var(--sopflow-border);
+  padding: 0.75rem 0;
+}
+
+.section:first-child {
+  padding-top: 0;
+}
+
+.section:last-child {
+  border-bottom: 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--sopflow-text-muted);
+  font-size: var(--sopflow-font-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.heading:not([data-has-actions="true"]) .title {
+  margin-bottom: 0;
+}
+
+.body {
+  display: grid;
+  gap: 0.625rem;
+}

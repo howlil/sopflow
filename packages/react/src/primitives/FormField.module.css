@@ -1,0 +1,10 @@
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.label {
+  color: var(--sopflow-text);
+  font-size: var(--sopflow-font-xs);
+  font-weight: 500;
+}

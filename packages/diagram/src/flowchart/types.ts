@@ -1,9 +1,14 @@
 import type { ActorId, StepId } from "@sopflow/core";
 import type {
+  DiagramDiagnostic,
   DiagramEdgeKind,
   DiagramNodeKind,
   DiagramPoint,
+  DiagramRouteKind,
+  DiagramRouteQuality,
+  DiagramSide,
 } from "../types.js";
+import type { WorkflowConnection } from "../workflow.js";
 
 export interface SopFlowchartLane {
   actorId: ActorId | null;
@@ -37,12 +42,19 @@ export interface SopFlowchartEdge {
   label?: string;
   points: DiagramPoint[];
   labelPosition?: DiagramPoint;
+  routeKind?: DiagramRouteKind;
+  sourceSide?: DiagramSide;
+  targetSide?: DiagramSide;
+  quality?: DiagramRouteQuality;
+  routeDiagnostics?: readonly DiagramDiagnostic[];
 }
 
 export interface SopFlowchartModel {
   lanes: SopFlowchartLane[];
   nodes: SopFlowchartNode[];
+  connections: readonly WorkflowConnection[];
   edges: SopFlowchartEdge[];
+  diagnostics: readonly DiagramDiagnostic[];
   width: number;
   height: number;
   headerHeight: number;

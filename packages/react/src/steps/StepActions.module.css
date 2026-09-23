@@ -64,7 +64,7 @@
 
   text-align: left;
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--sopflow-font-xs);
 
   cursor: pointer;
 }

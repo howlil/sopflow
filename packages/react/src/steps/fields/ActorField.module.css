@@ -22,7 +22,7 @@
   background: var(--sopflow-surface);
   color: var(--sopflow-text);
 
-  font-size: 0.8125rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.25rem;
 }
 
@@ -105,11 +105,52 @@
 }
 
 .checkbox {
+  appearance: none;
   width: 0.875rem;
   height: 0.875rem;
   margin: 0;
 
-  accent-color: var(--sopflow-selected-border);
+  display: grid;
+  flex: 0 0 auto;
+  place-content: center;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: 3px;
+
+  background: var(--sopflow-surface);
+  color: white;
+  cursor: pointer;
+}
+
+.checkbox::before {
+  width: 0.45rem;
+  height: 0.25rem;
+
+  content: "";
+
+  border-bottom: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+
+  transform: translateY(-0.0625rem) rotate(-45deg) scale(0);
+  transition: transform 100ms ease;
+}
+
+.checkbox:checked {
+  border-color: var(--sopflow-selected-border);
+  background: var(--sopflow-selected-border);
+}
+
+.checkbox:checked::before {
+  transform: translateY(-0.0625rem) rotate(-45deg) scale(1);
+}
+
+.checkbox:hover {
+  border-color: var(--sopflow-selected-border);
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .checkbox:focus-visible {

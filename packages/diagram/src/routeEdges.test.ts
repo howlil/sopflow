@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildDiagramModel } from "../src/buildDiagramModel.js";
-import { layoutDiagram } from "../src/layout.js";
-import { routeDiagramEdges } from "../src/routeEdges.js";
-import type { DiagramModel, DiagramPoint } from "../src/types.js";
+import { buildDiagramModel } from "./buildDiagramModel.js";
+import { layoutDiagram } from "./layout.js";
+import { routeDiagramEdges } from "./routeEdges.js";
+import type { DiagramModel, DiagramPoint } from "./types.js";
 import type { SOPDocument } from "@sopflow/core";
 
 const linearDocument: SOPDocument = {
@@ -64,6 +64,31 @@ const cyclicDocument: SOPDocument = {
   ],
 };
 
+const selfLoopDocument: SOPDocument = {
+  schemaVersion: "1",
+  id: "self-loop",
+  title: "Self loop",
+  actors: [],
+  steps: [
+    {
+      id: "start",
+      type: "start",
+      name: "Start",
+      actorIds: [],
+      next: "decision",
+    },
+    {
+      id: "decision",
+      type: "decision",
+      name: "Retry?",
+      actorIds: [],
+      yes: "decision",
+      no: "end",
+    },
+    { id: "end", type: "end", name: "End", actorIds: [] },
+  ],
+};
+
 function routed(document: SOPDocument) {
   return routeDiagramEdges(layoutDiagram(buildDiagramModel(document)));
 }
@@ -108,6 +133,23 @@ describe("routeDiagramEdges", () => {
     expect(branches.map((edge) => edge.label)).toEqual(["Ya", "Tidak"]);
   });
 
+  it("keeps converging Ya and Tidak branches visually distinct", () => {
+    const model = routed({
+      ...decisionDocument,
+      id: "shared-target",
+      steps: decisionDocument.steps.map((step) =>
+        step.id === "decision" ? { ...step, yes: "approve", no: "approve" } : step,
+      ),
+    });
+    const branches = model.routedEdges.filter(
+      (edge) => edge.from === "decision" && edge.to === "approve",
+    );
+
+    expect(branches).toHaveLength(2);
+    expect(branches[0]?.id).not.toBe(branches[1]?.id);
+    expect(branches[0]?.points).not.toEqual(branches[1]?.points);
+  });
+
   it("routes merge edges orthogonally", () => {
     const model = routed(decisionDocument);
     const mergeEdges = model.routedEdges.filter((edge) => edge.to === "end");
@@ -137,6 +179,27 @@ describe("routeDiagramEdges", () => {
     );
     expect(routeX).toBeGreaterThan(nodeRight);
     expect(isOrthogonal(backEdge.points)).toBe(true);
+  });
+
+  it("routes a self-loop around its node", () => {
+    const model = routed(selfLoopDocument);
+    const edge = model.routedEdges.find(
+      (candidate) => candidate.id === "decision:yes:decision",
+    );
+    const node = model.nodes.find((candidate) => candidate.id === "decision");
+
+    expect(edge).toBeDefined();
+    expect(node).toBeDefined();
+    if (!edge || !node) return;
+
+    expect(edge.points.length).toBeGreaterThan(2);
+    expect(isOrthogonal(edge.points)).toBe(true);
+    expect(Math.max(...edge.points.map((point) => point.x))).toBeGreaterThan(
+      node.position.x + node.size.width,
+    );
+    expect(Math.min(...edge.points.map((point) => point.y))).toBeLessThan(
+      node.position.y,
+    );
   });
 
   it("returns empty points for a missing endpoint", () => {

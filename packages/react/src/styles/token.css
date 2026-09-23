@@ -26,9 +26,13 @@
 
   --sopflow-font-size-sm: 0.875rem;
   --sopflow-font-size-xs: 0.75rem;
+  --sopflow-font-size-document: 0.625rem;
 
-  --sopflow-page-width: 210mm;
-  --sopflow-page-height: 297mm;
+  --sopflow-page-width: 297mm;
+  --sopflow-page-height: 210mm;
+  --sopflow-page-margin: 15mm;
+  --sopflow-content-width: 267mm;
+  --sopflow-content-height: 180mm;
   --sopflow-inspector-width: calc(var(--sopflow-page-width) / 3);
 
   /* Component aliases keep field styles readable while preserving the token names above. */
@@ -51,4 +55,5 @@
   --sopflow-surface-radius: var(--sopflow-radius-surface);
   --sopflow-font-sm: var(--sopflow-font-size-sm);
   --sopflow-font-xs: var(--sopflow-font-size-xs);
+  --sopflow-font-document: var(--sopflow-font-size-document);
 }

@@ -3,6 +3,7 @@ import {
   type SOPDocument,
   type SopOperation,
 } from "@sopflow/core";
+import { Button } from "../primitives/Button.js";
 import { createStepId } from "../utils/createStepId.js";
 import styles from "./AddStepButton.module.css";
 
@@ -31,14 +32,14 @@ export function AddStepButton({
 
   return (
     <div className={styles.container}>
-      <button
+      <Button
         type="button"
         className={styles.button}
         disabled={disabled || !canAdd}
         onClick={handleAdd}
       >
         + Tambah langkah
-      </button>
+      </Button>
 
       {hasMultipleEnds ? (
         <p className={styles.hint}>

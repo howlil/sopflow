@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import type {
   SOPDocument,
   SopOperation,
@@ -58,56 +60,72 @@ export function SopDocumentCanvas({
   disabled = false,
   readOnly = false,
 }: SopDocumentCanvasProps) {
+  const diagramPanelId = useId();
+
   return (
-    <main className={styles.canvas}>
-      <div className={styles.document} data-sopflow-page="a4">
-        <SopHeaderView document={document} header={header} />
+    <div className={styles.canvasStage} data-sopflow-canvas-stage>
+      <main className={styles.canvas}>
+        <div className={styles.document} data-sopflow-page="a4">
+          <SopHeaderView document={document} header={header} />
 
-        <section className={styles.content}>
-          <div className={styles.toolbarRow}>
-            <SopDocumentToolbar
-              mode={mode}
-              onModeChange={onModeChange}
-              diagramKind={diagramKind}
-              onDiagramKindChange={onDiagramKindChange}
-              manualEditing={manualEditing}
-              onManualEditingChange={onManualEditingChange}
-              readOnly={readOnly}
-              manualEditingSupported={
-                diagramKind === "flowchart" && manualEditingSupported
-              }
-            />
-          </div>
+          <section className={styles.content}>
+            <div className={styles.toolbarRow}>
+              <SopDocumentToolbar
+                mode={mode}
+                onModeChange={onModeChange}
+                diagramKind={diagramKind}
+                onDiagramKindChange={onDiagramKindChange}
+                manualEditing={manualEditing}
+                onManualEditingChange={onManualEditingChange}
+                diagramPanelId={diagramPanelId}
+                readOnly={readOnly}
+                manualEditingSupported={
+                  diagramKind === "flowchart" && manualEditingSupported
+                }
+              />
+            </div>
 
-          {mode === "steps" ? (
-            <SopStepsEditor
-              document={document}
-              issues={[...issues]}
-              selectedStepId={selectedStepId}
-              onSelectedStepChange={onSelectedStepChange}
-              onOperation={onOperation}
-              onOperations={onOperations}
-              disabled={disabled}
-            />
-          ) : diagramKind === "bpmn" ? (
-            <SopBpmn
-              document={document}
-              selectedStepId={selectedStepId}
-              onSelectedStepChange={onSelectedStepChange}
-            />
-          ) : (
-            <SopProcedureView
-              document={document}
-              issues={issues}
-              selectedStepId={selectedStepId}
-              onSelectedStepChange={onSelectedStepChange}
-              manualEditing={manualEditing}
-              diagramConfig={diagramConfig}
-              onDiagramConfigChange={onDiagramConfigChange}
-            />
-          )}
-        </section>
-      </div>
-    </main>
+            {mode === "steps" ? (
+              <SopStepsEditor
+                document={document}
+                issues={[...issues]}
+                selectedStepId={selectedStepId}
+                onSelectedStepChange={onSelectedStepChange}
+                onOperation={onOperation}
+                onOperations={onOperations}
+                disabled={disabled}
+              />
+            ) : (
+              <section
+                id={diagramPanelId}
+                className={styles.diagramPanel}
+                role="tabpanel"
+                aria-labelledby={`${diagramPanelId}-tab-${diagramKind}`}
+                data-sopflow-diagram-panel
+                data-diagram-kind={diagramKind}
+              >
+                {diagramKind === "bpmn" ? (
+                  <SopBpmn
+                    document={document}
+                    selectedStepId={selectedStepId}
+                    onSelectedStepChange={onSelectedStepChange}
+                  />
+                ) : (
+                  <SopProcedureView
+                    document={document}
+                    issues={issues}
+                    selectedStepId={selectedStepId}
+                    onSelectedStepChange={onSelectedStepChange}
+                    manualEditing={manualEditing}
+                    diagramConfig={diagramConfig}
+                    onDiagramConfigChange={onDiagramConfigChange}
+                  />
+                )}
+              </section>
+            )}
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }

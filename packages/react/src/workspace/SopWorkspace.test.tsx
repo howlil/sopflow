@@ -55,7 +55,7 @@ function WorkspaceHarness() {
 }
 
 describe("SopWorkspace", () => {
-  it("opens the procedure editor inside the document", async () => {
+  it("opens the step editor inside the document", async () => {
     const user = userEvent.setup();
     render(<WorkspaceHarness />);
 
@@ -63,7 +63,7 @@ describe("SopWorkspace", () => {
       globalThis.document.querySelector("[data-sopflow-procedure-view]"),
     ).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Langkah" }));
+    await user.click(screen.getByRole("button", { name: "Edit langkah" }));
 
     expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
     expect(
@@ -75,20 +75,20 @@ describe("SopWorkspace", () => {
     const user = userEvent.setup();
     render(<WorkspaceHarness />);
 
-    const previewRow = globalThis.document.querySelector<HTMLElement>(
+    const previewNode = globalThis.document.querySelector<HTMLElement>(
       '[data-sopflow-procedure-step-id="task"]',
     );
-    if (!previewRow) throw new Error("Review preview row not found");
+    if (!previewNode) throw new Error("Review preview node not found");
 
-    await user.click(previewRow);
-    await user.click(screen.getByRole("button", { name: "Langkah" }));
+    await user.click(previewNode);
+    await user.click(screen.getByRole("button", { name: "Edit langkah" }));
 
     const editRow = globalThis.document.querySelector<HTMLElement>(
       '[data-sopflow-step-id="task"]',
     );
     expect(editRow).toHaveAttribute("aria-selected", "true");
 
-    await user.click(screen.getByRole("button", { name: "Diagram" }));
+    await user.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(
       globalThis.document.querySelector(

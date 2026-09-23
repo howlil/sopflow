@@ -14,8 +14,7 @@ import { StepTypeField } from "./fields/StepTypeField.js";
 import { StepNameField } from "./fields/StepNameField.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
-import { useStepActions } from "./hooks/useStepActions.js";
-import { getStepIssues, hasStepIssue } from "../validation/getStepIssues.js";
+import { useStepEditorController } from "./hooks/useStepEditorController.js";
 import styles from "./SopStepRow.module.css";
 
 export interface SopStepRowProps {
@@ -42,7 +41,6 @@ export function SopStepRow({
   disabled = false,
 }: SopStepRowProps) {
   const {
-    updateStep,
     changeStepType,
     addAfter,
     isDecisionEditorOpen,
@@ -51,23 +49,22 @@ export function SopStepRow({
     isDeleteDialogOpen,
     openDeleteDialog,
     closeDeleteDialog,
-  } = useStepActions({
+    stepIssues,
+    hasActorError,
+    hasError,
+    updateName,
+    updateActorIds,
+    updateInput,
+    updateDuration,
+    updateOutput,
+    updateNote,
+  } = useStepEditorController({
     step,
     document,
+    issues,
     onOperation,
     onOperations,
   });
-
-  const stepIssues = getStepIssues(issues, step.id);
-  const hasActorError = hasStepIssue(issues, step.id, [
-    "UNKNOWN_ACTOR_REFERENCE",
-  ]);
-  const hasWorkflowError = hasStepIssue(issues, step.id, [
-    "UNKNOWN_STEP_REFERENCE",
-    "CANNOT_REACH_END",
-    "UNREACHABLE_STEP",
-  ]);
-  const hasError = stepIssues.length > 0 || hasWorkflowError;
 
   return (
     <>
@@ -93,12 +90,7 @@ export function SopStepRow({
           <StepNameField
             value={step.name}
             readOnly={disabled}
-            onChange={(name) =>
-              updateStep({
-                ...step,
-                name,
-              })
-            }
+            onChange={updateName}
           />
 
           {stepIssues.length > 0 ? (
@@ -130,12 +122,7 @@ export function SopStepRow({
             actors={document.actors}
             readOnly={disabled}
             error={hasActorError}
-            onChange={(actorIds) =>
-              updateStep({
-                ...step,
-                actorIds,
-              })
-            }
+            onChange={updateActorIds}
           />
         </td>
 
@@ -143,12 +130,7 @@ export function SopStepRow({
           <InputField
             value={step.input}
             readOnly={disabled}
-            onChange={(input) =>
-              updateStep({
-                ...step,
-                input: input || undefined,
-              })
-            }
+            onChange={updateInput}
           />
         </td>
 
@@ -156,12 +138,7 @@ export function SopStepRow({
           <DurationField
             value={step.duration}
             readOnly={disabled}
-            onChange={(duration) =>
-              updateStep({
-                ...step,
-                duration,
-              })
-            }
+            onChange={updateDuration}
           />
         </td>
 
@@ -169,12 +146,7 @@ export function SopStepRow({
           <OutputField
             value={step.output}
             readOnly={disabled}
-            onChange={(output) =>
-              updateStep({
-                ...step,
-                output: output || undefined,
-              })
-            }
+            onChange={updateOutput}
           />
         </td>
 
@@ -182,12 +154,7 @@ export function SopStepRow({
           <NoteField
             value={step.note}
             readOnly={disabled}
-            onChange={(note) =>
-              updateStep({
-                ...step,
-                note: note || undefined,
-              })
-            }
+            onChange={updateNote}
           />
         </td>
 

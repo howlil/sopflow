@@ -6,7 +6,9 @@ import {
   getReachableStepIds,
   getStep,
   getPreviousStepIds,
+  getPreviousConnections,
   getIncomingConnections,
+  createGraphIndex,
   canReachEnd,
   findCycleStepIds,
 } from "../src/graph.js";
@@ -141,6 +143,40 @@ describe("getPreviousStepIds", () => {
   });
 });
 
+describe("getPreviousConnections", () => {
+  it("preserves Ya and Tidak when both branches converge", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "converging-previous",
+      title: "Converging Previous",
+      actors: [],
+      steps: [
+        {
+          id: "decision",
+          type: "decision",
+          name: "Lanjut?",
+          actorIds: [],
+          yes: "target",
+          no: "target",
+        },
+        {
+          id: "target",
+          type: "task",
+          name: "Target",
+          actorIds: [],
+          next: "end",
+        },
+        { id: "end", type: "end", name: "Selesai", actorIds: [] },
+      ],
+    };
+
+    expect(getPreviousConnections(document, "target")).toEqual([
+      { from: "decision", type: "yes" },
+      { from: "decision", type: "no" },
+    ]);
+  });
+});
+
 describe("getIncomingConnections", () => {
   it("returns incoming next and branch edges", () => {
     const connections = getIncomingConnections(exampleSop, "prepare-document");
@@ -167,6 +203,40 @@ describe("getIncomingConnections", () => {
     };
 
     expect(getIncomingConnections(document, "orphan")).toEqual([]);
+  });
+});
+
+describe("createGraphIndex", () => {
+  it("records converging decision branches once each", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "converging",
+      title: "Converging",
+      actors: [],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Mulai",
+          actorIds: [],
+          next: "decision",
+        },
+        {
+          id: "decision",
+          type: "decision",
+          name: "Lanjut?",
+          actorIds: [],
+          yes: "end",
+          no: "end",
+        },
+        { id: "end", type: "end", name: "Selesai", actorIds: [] },
+      ],
+    };
+
+    expect(createGraphIndex(document).incomingByStepId.get("end")).toEqual([
+      { from: "decision", type: "yes" },
+      { from: "decision", type: "no" },
+    ]);
   });
 });
 

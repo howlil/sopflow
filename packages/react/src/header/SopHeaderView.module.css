@@ -1,6 +1,14 @@
 .viewport {
   width: 100%;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .header {
@@ -11,7 +19,7 @@
   border: 2px solid var(--sopflow-color-document-border);
   background: var(--sopflow-color-surface);
   color: var(--sopflow-color-text);
-  font-size: var(--sopflow-font-size-xs);
+  font-size: var(--sopflow-font-document);
   line-height: 1.25;
 }
 
@@ -73,7 +81,7 @@
   justify-content: center;
   border: 1px solid var(--sopflow-color-border);
   color: var(--sopflow-color-text-muted);
-  font-size: 0.625rem;
+  font-size: var(--sopflow-font-document);
   font-weight: 500;
 }
 
@@ -127,7 +135,7 @@
 }
 
 .signatoryIdentifier {
-  font-size: 0.6875rem;
+  font-size: var(--sopflow-font-document);
 }
 
 .sectionTitle {

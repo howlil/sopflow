@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -43,6 +43,7 @@ function Harness() {
       />
       <output data-testid="title">{document.title}</output>
       <output data-testid="number">{header.number}</output>
+      <output data-testid="logo">{header.logoUrl ?? ""}</output>
       <output data-testid="law-count">{header.lawBasis.length}</output>
     </>
   );
@@ -56,17 +57,25 @@ describe("SopHeaderFields", () => {
 
     const title = screen.getByLabelText("Nama SOP");
     const number = screen.getByLabelText("Nomor SOP");
+    const logo = screen.getByLabelText("Logo instansi");
 
     await user.clear(title);
     await user.type(title, "SOP Baru");
     await user.clear(number);
     await user.type(number, "002");
+    const logoFile = new File(["logo"], "logo.png", { type: "image/png" });
+    await user.upload(logo, logoFile);
     await user.click(
       screen.getByRole("button", { name: "Tambah dasar hukum" }),
     );
 
     expect(screen.getByTestId("title")).toHaveTextContent("SOP Baru");
     expect(screen.getByTestId("number")).toHaveTextContent("002");
+    await waitFor(() =>
+      expect(screen.getByTestId("logo")).toHaveTextContent(
+        "data:image/png;base64,",
+      ),
+    );
     expect(screen.getByTestId("law-count")).toHaveTextContent("1");
   });
 
@@ -81,6 +90,7 @@ describe("SopHeaderFields", () => {
 
     expect(screen.getByLabelText("Nama SOP")).toBeDisabled();
     expect(screen.getByLabelText("Nomor SOP")).toBeDisabled();
+    expect(screen.getByLabelText("Logo instansi")).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: "Tambah dasar hukum" }),
     ).not.toBeInTheDocument();

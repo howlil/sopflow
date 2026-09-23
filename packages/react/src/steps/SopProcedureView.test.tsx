@@ -80,4 +80,29 @@ describe("SopProcedureView", () => {
     expect(manager?.querySelector("svg[data-kind='decision']")).not.toBeNull();
     expect(within(row as HTMLElement).getByText("Valid?")).toBeInTheDocument();
   });
+
+  it("keeps edges for an unassigned row by using the explicit fallback lane", () => {
+    const unassignedDocument: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "review" ? { ...step, actorIds: [] } : step,
+      ),
+    };
+    const { container } = render(
+      <SopProcedureView document={unassignedDocument} manualEditing />,
+    );
+
+    const reviewRow = container.querySelector(
+      '[data-sopflow-procedure-step-id="review"]',
+    );
+    const overlay = container.querySelector('svg[data-editing="true"]');
+
+    expect(
+      reviewRow?.querySelector(
+        '[data-sopflow-actor-id="fallback"] svg[data-kind="decision"]',
+      ),
+    ).not.toBeNull();
+    expect(overlay).not.toBeNull();
+    expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(0);
+  });
 });

@@ -1,7 +1,19 @@
+.canvasStage {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: var(--sopflow-page-width);
+  min-height: 100%;
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .canvas {
   box-sizing: border-box;
+  flex: 0 0 var(--sopflow-page-width);
   min-height: 100%;
   width: var(--sopflow-page-width);
+  margin-inline: auto;
   overflow: visible;
   background: var(--sopflow-color-background);
 }
@@ -11,29 +23,43 @@
   width: var(--sopflow-page-width);
   min-height: var(--sopflow-page-height);
   margin: 0;
-  padding: 1rem;
+  padding: var(--sopflow-page-margin);
   background: var(--sopflow-color-surface);
 }
 
 .content {
   display: grid;
   gap: 0.75rem;
+  min-width: 0;
   margin-top: 1.25rem;
 }
 
 .toolbarRow {
   display: flex;
+  min-width: 0;
   justify-content: center;
   padding-inline: 0.25rem;
 }
 
+.diagramPanel {
+  min-width: 0;
+}
+
 @page {
-  size: A4 portrait;
+  size: A4 landscape;
   margin: 0;
 }
 
 @media print {
+  .canvasStage {
+    display: block;
+    width: var(--sopflow-page-width);
+    min-width: 0;
+    min-height: 0;
+  }
+
   .canvas {
+    flex: none;
     width: var(--sopflow-page-width);
     min-height: var(--sopflow-page-height);
     overflow: visible;

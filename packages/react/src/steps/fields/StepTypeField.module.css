@@ -3,7 +3,6 @@
   gap: 0.25rem;
 }
 
-.select,
 .fixedType,
 .value {
   width: 100%;
@@ -19,30 +18,8 @@
   color: var(--sopflow-text);
 
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.25rem;
-}
-
-.select {
-  outline: none;
-}
-
-.select:hover:not(:disabled) {
-  border-color: var(--sopflow-text-muted);
-}
-
-.select:focus-visible {
-  border-color: var(--sopflow-selected-border);
-
-  outline: 2px solid var(--sopflow-selected-border);
-  outline-offset: 1px;
-}
-
-.select:disabled {
-  cursor: not-allowed;
-
-  background: var(--sopflow-disabled-surface);
-  color: var(--sopflow-disabled-text);
 }
 
 .fixedType {
@@ -64,6 +41,6 @@
 .branchSummary {
   color: var(--sopflow-text-muted);
 
-  font-size: 0.6875rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.25;
 }

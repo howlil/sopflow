@@ -79,6 +79,7 @@ describe("projectWorkflow", () => {
         },
       ]),
     );
+    expect(graph.connections).toHaveLength(4);
   });
 
   it("reports a missing target once at the projection boundary", () => {
@@ -96,6 +97,14 @@ describe("projectWorkflow", () => {
     });
 
     expect(graph.edges).toEqual([]);
+    expect(graph.connections).toEqual([
+      {
+        id: "start:next:missing",
+        from: "start",
+        to: "missing",
+        kind: "next",
+      },
+    ]);
     expect(graph.diagnostics).toEqual([
       {
         code: "MISSING_EDGE_TARGET",

@@ -7,6 +7,7 @@ export {
   getNextStepIds,
   getOrderedStepIds,
   getOrderedSteps,
+  getPreviousConnections,
   getPreviousStepIds,
   getReachableStepIds,
   getStep,
@@ -48,6 +49,7 @@ export type {
 
 export {
   validateActorReference,
+  validateDecisionBranches,
   validateEndReachability,
   validateEndReachbilty,
   validateReachability,

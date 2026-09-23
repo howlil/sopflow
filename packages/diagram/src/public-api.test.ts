@@ -36,6 +36,7 @@ describe("diagram public API", () => {
         "buildProcedureModel",
         "buildSopFlowchart",
         "buildSvgRenderModel",
+        "buildWorkflowEdgeId",
         "getDiamondPoints",
         "layoutDiagram",
         "pointsToPath",

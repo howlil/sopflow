@@ -1,6 +1,7 @@
 import type { SOPDocument, Step } from "@sopflow/core";
-import { buildDiagramModel } from "../buildDiagramModel.js";
-import type { DiagramPoint } from "../types.js";
+import { routeDiagramEdges } from "../routeEdges.js";
+import { projectWorkflow } from "../workflow.js";
+import type { DiagramModel } from "../types.js";
 import type {
   SopFlowchartEdge,
   SopFlowchartLane,
@@ -90,58 +91,91 @@ export function buildSopFlowchart(
     };
   });
 
-  const nodeById = new Map(nodes.map((node) => [node.id, node]));
-  const graph = buildDiagramModel(document);
-  let backEdgeIndex = 0;
-
   const laneAreaRight = config.padding + lanes.length * config.laneWidth;
-
-  const edges = graph.edges.flatMap<SopFlowchartEdge>((edge) => {
-    const from = nodeById.get(edge.from);
-    const to = nodeById.get(edge.to);
-    const source = from?.placements[0];
-    const target = to?.placements[0];
-
-    if (!from || !to || !source || !target) return [];
-
-    const routed =
-      to.row <= from.row
-        ? routeBackEdge(
-            source,
-            target,
-            from,
-            to,
-            laneAreaRight,
-            backEdgeIndex++,
-          )
-        : routeForwardEdge(source, target, from, to);
-
-    return [
-      {
-        id: edge.id,
-        from: edge.from,
-        to: edge.to,
-        kind: edge.kind,
-        ...(edge.label ? { label: edge.label } : {}),
-        points: routed.points,
-        ...(routed.labelPosition
-          ? { labelPosition: routed.labelPosition }
-          : {}),
-      },
-    ];
-  });
-
-  const backEdgeExtra = backEdgeIndex > 0 ? 72 + backEdgeIndex * 20 : 0;
+  const backEdgeCount = document.steps.reduce((count, step) => {
+    const outgoing =
+      step.type === "decision"
+        ? [step.yes, step.no]
+        : step.type === "start" || step.type === "task"
+          ? [step.next]
+          : [];
+    return (
+      count +
+      outgoing.filter((target) => {
+        const fromRow = document.steps.findIndex(
+          (candidate) => candidate.id === step.id,
+        );
+        const targetRow = document.steps.findIndex(
+          (candidate) => candidate.id === target,
+        );
+        return targetRow >= 0 && targetRow <= fromRow;
+      }).length
+    );
+  }, 0);
+  const backEdgeExtra = backEdgeCount > 0 ? 72 + backEdgeCount * 20 : 0;
   const width = laneAreaRight + config.padding + backEdgeExtra;
   const height =
     config.padding * 2 +
     config.headerHeight +
     Math.max(1, document.steps.length) * config.rowHeight;
 
+  const graph = projectWorkflow(document);
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const diagramModel: DiagramModel = {
+    nodes: nodes.map((node) => {
+      const placement = node.placements[0];
+      return {
+        id: node.id,
+        kind: node.kind,
+        label: node.label,
+        text: { lines: [node.label], lineHeight: 14 },
+        position: {
+          x: (placement?.x ?? 0) - node.width / 2,
+          y: (placement?.y ?? 0) - node.height / 2,
+        },
+        size: { width: node.width, height: node.height },
+      };
+    }),
+    connections: graph.connections.map((edge) => ({ ...edge })),
+    edges: graph.edges.map((edge) => ({ ...edge })),
+    routedEdges: [],
+    diagnostics: graph.diagnostics.map((diagnostic) => ({ ...diagnostic })),
+    width,
+    height,
+  };
+  const routed = routeDiagramEdges(diagramModel, {
+    edgeGap: Math.max(16, config.padding),
+    backEdgeGap: Math.max(32, config.padding + 16),
+    routingBounds: { left: 0, top: 0, width, height },
+  });
+  const routedById = new Map(routed.routedEdges.map((edge) => [edge.id, edge]));
+  const edges = graph.edges.flatMap<SopFlowchartEdge>((edge) => {
+    const route = routedById.get(edge.id);
+    const node = nodeById.get(edge.from);
+    if (!route || !node) return [];
+
+    return [
+      {
+        ...edge,
+        points: route.points,
+        ...(route.labelPosition ? { labelPosition: route.labelPosition } : {}),
+        ...(route.routeKind ? { routeKind: route.routeKind } : {}),
+        ...(route.sourceSide ? { sourceSide: route.sourceSide } : {}),
+        ...(route.targetSide ? { targetSide: route.targetSide } : {}),
+        ...(route.quality ? { quality: route.quality } : {}),
+        ...(route.routeDiagnostics
+          ? { routeDiagnostics: route.routeDiagnostics }
+          : {}),
+      },
+    ];
+  });
+
   return {
     lanes,
     nodes,
+    connections: graph.connections,
     edges,
+    diagnostics: routed.diagnostics,
     width,
     height,
     headerHeight: config.headerHeight,
@@ -194,99 +228,4 @@ function nodeSize(
     width: config.nodeWidth,
     height: config.nodeHeight,
   };
-}
-
-function routeForwardEdge(
-  source: SopFlowchartNodePlacement,
-  target: SopFlowchartNodePlacement,
-  from: SopFlowchartNode,
-  to: SopFlowchartNode,
-): { points: DiagramPoint[]; labelPosition?: DiagramPoint } {
-  const start = {
-    x: source.x,
-    y: source.y + from.height / 2,
-  };
-  const end = {
-    x: target.x,
-    y: target.y - to.height / 2,
-  };
-  const middleY = start.y + (end.y - start.y) / 2;
-  const points = compact([
-    start,
-    { x: start.x, y: middleY },
-    { x: end.x, y: middleY },
-    end,
-  ]);
-
-  return {
-    points,
-    labelPosition: {
-      x: (start.x + end.x) / 2,
-      y: middleY - 6,
-    },
-  };
-}
-
-function routeBackEdge(
-  source: SopFlowchartNodePlacement,
-  target: SopFlowchartNodePlacement,
-  from: SopFlowchartNode,
-  to: SopFlowchartNode,
-  laneAreaRight: number,
-  index: number,
-): { points: DiagramPoint[]; labelPosition?: DiagramPoint } {
-  const start = {
-    x: source.x + from.width / 2,
-    y: source.y,
-  };
-  const end = {
-    x: target.x + to.width / 2,
-    y: target.y,
-  };
-  const routeX = laneAreaRight + 40 + index * 20;
-  const points = compact([
-    start,
-    { x: routeX, y: start.y },
-    { x: routeX, y: end.y },
-    end,
-  ]);
-
-  return {
-    points,
-    labelPosition: {
-      x: routeX - 8,
-      y: (start.y + end.y) / 2,
-    },
-  };
-}
-
-function compact(points: DiagramPoint[]): DiagramPoint[] {
-  const result: DiagramPoint[] = [];
-
-  for (const point of points) {
-    const previous = result[result.length - 1];
-    if (previous && previous.x === point.x && previous.y === point.y) continue;
-    result.push(point);
-  }
-
-  if (result.length <= 2) return result;
-
-  const simplified: DiagramPoint[] = [result[0] as DiagramPoint];
-
-  for (let index = 1; index < result.length - 1; index += 1) {
-    const previous = simplified[simplified.length - 1];
-    const current = result[index];
-    const next = result[index + 1];
-
-    if (!previous || !current || !next) continue;
-
-    const collinear =
-      (previous.x === current.x && current.x === next.x) ||
-      (previous.y === current.y && current.y === next.y);
-
-    if (!collinear) simplified.push(current);
-  }
-
-  simplified.push(result[result.length - 1] as DiagramPoint);
-  return simplified;
 }

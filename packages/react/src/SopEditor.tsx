@@ -7,7 +7,7 @@ import {
   type StepId,
 } from "@sopflow/core";
 import type { SopDiagramConfig } from "@sopflow/diagram";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./styles/token.css";
 
@@ -21,6 +21,9 @@ import { EditorStatus } from "./editor/EditorStatus.js";
 import { SopHeaderFields } from "./header/SopHeaderFields.js";
 import styles from "./SopEditor.module.css";
 import type { SopHeaderValue } from "./types.js";
+import { getSopReadinessIssues } from "./validation/readiness.js";
+import type { SopReadinessIssue } from "./validation/readiness.js";
+import { ValidationPanel } from "./validation/ValidationPanel.js";
 
 export interface SopEditorProps {
   value: SOPDocument;
@@ -40,6 +43,8 @@ export interface SopEditorProps {
   readOnly?: boolean;
   loading?: boolean;
   error?: string | null;
+  onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
+  showValidationPanel?: boolean;
   className?: string;
 }
 
@@ -61,6 +66,8 @@ export function SopEditor({
   readOnly = false,
   loading = false,
   error = null,
+  onReadinessChange,
+  showValidationPanel = true,
   className,
 }: SopEditorProps) {
   const handleChange = useCallback(
@@ -99,6 +106,17 @@ export function SopEditor({
   const [internalDiagramConfig, setInternalDiagramConfig] =
     useState<SopDiagramConfig>({});
   const [internalManualEditing, setInternalManualEditing] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const openInspectorRef = useRef<HTMLButtonElement>(null);
+  const closeInspectorRef = useRef<HTMLButtonElement>(null);
+  const previousInspectorOpen = useRef(inspectorOpen);
+
+  useEffect(() => {
+    if (previousInspectorOpen.current !== inspectorOpen) {
+      (inspectorOpen ? closeInspectorRef : openInspectorRef).current?.focus();
+      previousInspectorOpen.current = inspectorOpen;
+    }
+  }, [inspectorOpen]);
 
   const selectedStepId =
     controlledSelectedStepId !== undefined
@@ -115,6 +133,14 @@ export function SopEditor({
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
   const issues = useMemo(() => validateSop(value), [value]);
+  const readinessIssues = useMemo(
+    () => getSopReadinessIssues(value, header, issues),
+    [header, issues, value],
+  );
+
+  useEffect(() => {
+    onReadinessChange?.(readinessIssues);
+  }, [onReadinessChange, readinessIssues]);
 
   const handleSelectedStepChange = useCallback(
     (stepId: StepId | null) => {
@@ -179,14 +205,35 @@ export function SopEditor({
       data-readonly={readOnly || undefined}
       data-loading={loading || undefined}
       data-error={error ? "true" : undefined}
+      data-sopflow-ready={readinessIssues.length === 0 ? "true" : "false"}
       aria-busy={loading || undefined}
       className={[styles.root, className].filter(Boolean).join(" ")}
     >
       <EditorStatus loading={loading} error={error} />
+      {showValidationPanel ? (
+        <ValidationPanel issues={readinessIssues} />
+      ) : null}
 
       <div className={styles.workspaceScroll}>
-        <div className={styles.workspace} data-sopflow-editor-layout>
+        <div
+          className={styles.workspace}
+          data-sopflow-editor-layout
+          data-mode={mode}
+          data-inspector-open={inspectorOpen}
+        >
           <div className={styles.mainPane} data-sopflow-main-pane>
+            {!inspectorOpen ? (
+              <button
+                type="button"
+                className={styles.openInspector}
+                aria-label="Buka panel properti"
+                title="Buka panel properti"
+                ref={openInspectorRef}
+                onClick={() => setInspectorOpen(true)}
+              >
+                <InspectorIcon />
+              </button>
+            ) : null}
             <SopDocumentCanvas
               document={value}
               header={header}
@@ -209,40 +256,53 @@ export function SopEditor({
             />
           </div>
 
-          <aside
-            className={styles.inspector}
-            data-sopflow-inspector
-            aria-label="Properti SOP"
-          >
-            <div className={styles.inspectorHeader}>
-              <h2 className={styles.inspectorTitle}>Properti</h2>
-            </div>
+          {inspectorOpen ? (
+            <aside
+              className={styles.inspector}
+              data-sopflow-inspector
+              aria-label="Properti SOP"
+            >
+              <div className={styles.inspectorHeader}>
+                <h2 className={styles.inspectorTitle}>Properti</h2>
+                <button
+                  type="button"
+                  className={styles.inspectorToggle}
+                  aria-label="Tutup panel properti"
+                  title="Tutup panel properti"
+                  ref={closeInspectorRef}
+                  onClick={() => setInspectorOpen(false)}
+                >
+                  <InspectorIcon />
+                </button>
+              </div>
 
-            <div className={styles.inspectorContent}>
-              <SopHeaderFields
-                document={value}
-                header={header}
-                disabled={readOnly || loading}
-                {...(onChange ? { onDocumentChange: handleChange } : {})}
-                {...(onHeaderChange
-                  ? { onHeaderChange: handleHeaderChange }
-                  : {})}
-              />
+              <div className={styles.inspectorContent}>
+                <SopHeaderFields
+                  document={value}
+                  header={header}
+                  disabled={readOnly || loading}
+                  {...(onChange ? { onDocumentChange: handleChange } : {})}
+                  {...(onHeaderChange
+                    ? { onHeaderChange: handleHeaderChange }
+                    : {})}
+                />
 
-              <ActorsEditor
-                document={value}
-                onOperation={applyOperation}
-                onOperations={applyOperations}
-                disabled={mutationDisabled}
-              />
-            </div>
+                <ActorsEditor
+                  document={value}
+                  onOperation={applyOperation}
+                  onOperations={applyOperations}
+                  disabled={mutationDisabled}
+                />
+              </div>
 
-            {headerDisabled && !mutationDisabled ? (
-              <p className={styles.inspectorNotice}>
-                Header hanya dapat dibaca karena onHeaderChange tidak tersedia.
-              </p>
-            ) : null}
-          </aside>
+              {headerDisabled && !mutationDisabled ? (
+                <p className={styles.inspectorNotice}>
+                  Header hanya dapat dibaca karena onHeaderChange tidak
+                  tersedia.
+                </p>
+              ) : null}
+            </aside>
+          ) : null}
         </div>
       </div>
     </div>
@@ -250,3 +310,32 @@ export function SopEditor({
 }
 
 export type { SopDiagramConfig, SopDiagramKind, SopDocumentMode };
+
+function InspectorIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="2.25"
+        y="2.25"
+        width="11.5"
+        height="11.5"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M6 2.75V13.25M9.25 6.25H11.5M9.25 8H11.5M9.25 9.75H11.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

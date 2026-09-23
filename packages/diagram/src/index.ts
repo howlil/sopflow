@@ -17,9 +17,11 @@ export {
 export type {
   ProcedureActorColumn,
   ProcedureGeometry,
+  ProcedureLaneGeometry,
   ProcedureManualRoute,
   ProcedureManualRoutes,
   ProcedureManualTrunks,
+  ProcedureNodeGeometry,
   ProcedureModel,
   ProcedureRoutingOverrides,
   SopDiagramConfig,
@@ -27,8 +29,9 @@ export type {
   ProcedureRowModel,
 } from "./procedure.js";
 
-export { projectWorkflow } from "./workflow.js";
+export { buildWorkflowEdgeId, projectWorkflow } from "./workflow.js";
 export type {
+  WorkflowConnection,
   WorkflowEdge,
   WorkflowGraph,
   WorkflowNode,
@@ -72,6 +75,11 @@ export type {
   DiagramNodeKind,
   DiagramPoint,
   DiagramRoutedEdge,
+  DiagramRouteKind,
+  DiagramRouteQuality,
+  DiagramSide,
   DiagramSize,
   DiagramTextLayout,
 } from "./types.js";
+
+export type { DiagramRect, RouteSegment } from "./routeGeometry.js";

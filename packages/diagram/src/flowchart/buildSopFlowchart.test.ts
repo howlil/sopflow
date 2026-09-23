@@ -86,6 +86,27 @@ describe("buildSopFlowchart", () => {
     expect(flowchart.height).toBeGreaterThan(0);
   });
 
+  it("routes a self-loop around the node", () => {
+    const selfLoop = buildSopFlowchart({
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "review" ? { ...step, yes: "review" } : step,
+      ),
+    });
+    const edge = selfLoop.edges.find(
+      (candidate) => candidate.from === "review" && candidate.to === "review",
+    );
+    const node = selfLoop.nodes.find((candidate) => candidate.id === "review");
+    const placement = node?.placements[0];
+
+    expect(edge?.points.length).toBeGreaterThan(2);
+    expect(
+      edge?.points.some(
+        (point) => point.x > (placement?.x ?? 0) + (node?.width ?? 0) / 2,
+      ),
+    ).toBe(true);
+  });
+
   it("provides a fallback lane when the document has no actors", () => {
     const flowchart = buildSopFlowchart({
       ...document,

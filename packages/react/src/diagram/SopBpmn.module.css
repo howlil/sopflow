@@ -3,6 +3,14 @@
   overflow-x: auto;
   border: 1px solid var(--sopflow-document-border);
   background: var(--sopflow-surface);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.root::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .svg {
@@ -27,7 +35,7 @@
 
 .laneLabel {
   fill: var(--sopflow-text);
-  font-size: 10px;
+  font-size: var(--sopflow-font-document);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -45,7 +53,7 @@
 
 .edgeLabel {
   fill: var(--sopflow-text-muted);
-  font-size: 9px;
+  font-size: var(--sopflow-font-document);
 }
 
 .node {
@@ -85,7 +93,7 @@
 
 .nodeLabel {
   fill: var(--sopflow-text);
-  font-size: 9px;
+  font-size: var(--sopflow-font-document);
   font-weight: 500;
   pointer-events: none;
 }

@@ -16,16 +16,20 @@ export function createGraphIndex(document: SOPDocument): SopGraphIndex {
   );
 
   for (const step of document.steps) {
-    for (const targetId of getNextStepIds(step)) {
+    const connections =
+      step.type === "decision"
+        ? [
+            { targetId: step.yes, type: "yes" as const },
+            { targetId: step.no, type: "no" as const },
+          ]
+        : step.type === "end"
+          ? []
+          : [{ targetId: step.next, type: "next" as const }];
+
+    for (const { targetId, type } of connections) {
       const incoming = incomingByStepId.get(targetId) ?? [];
 
-      if (step.type === "decision") {
-        if (step.yes === targetId)
-          incoming.push({ from: step.id, type: "yes" });
-        if (step.no === targetId) incoming.push({ from: step.id, type: "no" });
-      } else if (step.type !== "end") {
-        incoming.push({ from: step.id, type: "next" });
-      }
+      incoming.push({ from: step.id, type });
 
       incomingByStepId.set(targetId, incoming);
     }
@@ -153,6 +157,20 @@ export function getPreviousStepIds(
       ),
     ),
   ];
+}
+
+/**
+ * Returns incoming connections without collapsing Ya/Tidak branches.
+ *
+ * `getPreviousStepIds` is intentionally source-oriented and therefore
+ * deduplicates a decision that points both branches at the same target. Route
+ * and label planners must use this branch-preserving view instead.
+ */
+export function getPreviousConnections(
+  document: SOPDocument,
+  targetId: StepId,
+): IncomingConnection[] {
+  return getIncomingConnections(document, targetId);
 }
 
 export type IncomingConnection =

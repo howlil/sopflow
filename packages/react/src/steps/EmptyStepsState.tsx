@@ -3,6 +3,7 @@ import {
   type SOPDocument,
   type SopOperation,
 } from "@sopflow/core";
+import { Button } from "../primitives/Button.js";
 import { createStepId } from "../utils/createStepId.js";
 import styles from "./EmptyStepsState.module.css";
 
@@ -56,14 +57,15 @@ export function EmptyStepsState({
           Buat struktur awal SOP untuk mulai mengisi prosedur.
         </p>
 
-        <button
+        <Button
           type="button"
+          size="default"
           className={styles.button}
           disabled={disabled}
           onClick={handleCreate}
         >
           Buat langkah awal
-        </button>
+        </Button>
       </div>
     </div>
   );

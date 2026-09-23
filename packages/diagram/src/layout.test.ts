@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildDiagramModel } from "../src/buildDiagramModel.js";
-import { layoutDiagram } from "../src/layout.js";
-import type { DiagramModel } from "../src/types.js";
+import { buildDiagramModel } from "./buildDiagramModel.js";
+import { layoutDiagram } from "./layout.js";
+import type { DiagramModel } from "./types.js";
 import type { SOPDocument } from "@sopflow/core";
 
 const linearDocument: SOPDocument = {

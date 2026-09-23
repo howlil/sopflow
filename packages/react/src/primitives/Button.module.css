@@ -1,0 +1,61 @@
+.button {
+  min-height: 2rem;
+  box-sizing: border-box;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.25rem 0.625rem;
+
+  font: inherit;
+  font-size: var(--sopflow-font-xs);
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.default {
+  min-height: 2.25rem;
+  padding-inline: 0.75rem;
+}
+
+.secondary {
+  background: var(--sopflow-surface);
+  color: var(--sopflow-text);
+}
+
+.primary {
+  border-color: var(--sopflow-selected-border);
+  background: var(--sopflow-selected-border);
+  color: white;
+}
+
+.danger {
+  border-color: var(--sopflow-error-border);
+  background: var(--sopflow-error-border);
+  color: white;
+}
+
+.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--sopflow-text-muted);
+}
+
+.secondary:hover:not(:disabled),
+.ghost:hover:not(:disabled) {
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

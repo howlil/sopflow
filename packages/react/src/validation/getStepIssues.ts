@@ -1,14 +1,14 @@
 import type { StepId, ValidationIssue } from "@sopflow/core";
 
 export function getStepIssues(
-  issues: ValidationIssue[],
+  issues: readonly ValidationIssue[],
   stepId: StepId,
 ): ValidationIssue[] {
   return issues.filter((issue) => issue.stepId === stepId);
 }
 
 export function hasStepIssue(
-  issues: ValidationIssue[],
+  issues: readonly ValidationIssue[],
   stepId: StepId,
   codes?: string[],
 ): boolean {

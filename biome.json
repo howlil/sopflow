@@ -4,7 +4,6 @@
       "packages/core/src/**/*.ts",
       "packages/core/tests/**/*.ts",
       "packages/diagram/src/**/*.ts",
-      "packages/diagram/tests/**/*.ts",
       "packages/react/src/**/*.ts",
       "packages/react/src/**/*.tsx",
       "apps/**/*.ts",

@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { SopEditor, type SopDiagramKind } from "../SopEditor.js";
 import type { SopHeaderValue } from "../types.js";
+import type { SopReadinessIssue } from "../validation/readiness.js";
 
 export type SopWorkspaceView = "editor" | "diagram";
 
@@ -20,6 +21,8 @@ export interface SopWorkspaceProps {
   readOnly?: boolean;
   loading?: boolean;
   error?: string | null;
+  onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
+  showValidationPanel?: boolean;
   className?: string;
 }
 
@@ -37,6 +40,8 @@ export function SopWorkspace({
   readOnly = false,
   loading = false,
   error = null,
+  onReadinessChange,
+  showValidationPanel = true,
   className,
 }: SopWorkspaceProps) {
   const [internalView, setInternalView] = useState<SopWorkspaceView>("diagram");
@@ -62,6 +67,8 @@ export function SopWorkspace({
       readOnly={readOnly}
       loading={loading}
       error={error}
+      {...(onReadinessChange ? { onReadinessChange } : {})}
+      {...(showValidationPanel !== undefined ? { showValidationPanel } : {})}
       {...(onChange ? { onChange } : {})}
       {...(onHeaderChange ? { onHeaderChange } : {})}
       {...(diagramKind ? { diagramKind } : {})}

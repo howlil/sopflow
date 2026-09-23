@@ -1,5 +1,4 @@
-import { useEffect, useId, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import {
   buildRemoveStepAndReconnectOperations,
   getStepRemovalOptions,
@@ -8,7 +7,10 @@ import {
   type Step,
   type StepId,
 } from "@sopflow/core";
-import { useDialogFocus } from "../primitives/dialog/useDialogFocus.js";
+import { Button } from "../primitives/Button.js";
+import { Dialog } from "../primitives/Dialog.js";
+import { FormField as Field } from "../primitives/FormField.js";
+import { Select } from "../primitives/Select.js";
 import styles from "./DeleteStepDialog.module.css";
 
 export interface DeleteStepDialogProps {
@@ -28,17 +30,11 @@ export function DeleteStepDialog({
   onOperations,
   disabled = false,
 }: DeleteStepDialogProps) {
-  const titleId = useId();
-  const descriptionId = useId();
   const [replacementId, setReplacementId] = useState<StepId>("");
   const removal = getStepRemovalOptions(document, step.id);
   const needsReplacement = removal.requiresReplacement;
   const candidates = removal.candidates;
   const hasNoValidReplacement = needsReplacement && candidates.length === 0;
-  const { dialogRef, handleKeyDown } = useDialogFocus({
-    open,
-    onClose,
-  });
 
   useEffect(() => {
     if (!open) return;
@@ -69,75 +65,21 @@ export function DeleteStepDialog({
     onClose();
   }
 
-  return createPortal(
-    <div className={styles.backdrop}>
-      <div
-        ref={dialogRef}
-        className={styles.dialog}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={descriptionId}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-      >
-        <header className={styles.header}>
-          <h2 id={titleId} className={styles.title}>
-            Hapus langkah
-          </h2>
-
-          <p id={descriptionId} className={styles.description}>
-            Langkah &quot;{step.name || "Tanpa judul"}&quot; akan dihapus.
-          </p>
-        </header>
-
-        {needsReplacement ? (
-          <>
-            <label className={styles.field}>
-              <span className={styles.label}>
-                Sambungkan langkah sebelumnya ke
-              </span>
-
-              <select
-                className={styles.select}
-                value={replacementId}
-                disabled={disabled || hasNoValidReplacement}
-                onChange={(event) => setReplacementId(event.target.value)}
-              >
-                <option value="">Pilih langkah</option>
-
-                {candidates.map((candidate, index) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {index + 1}. {candidate.name || "Tanpa judul"}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {hasNoValidReplacement ? (
-              <p className={styles.notice}>
-                Tidak ada target pengganti yang menjaga workflow tetap valid.
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <p className={styles.notice}>
-            Langkah ini tidak direferensikan oleh langkah lain.
-          </p>
-        )}
-
-        <footer className={styles.footer}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={onClose}
-          >
+  return (
+    <Dialog
+      open={open}
+      role="alertdialog"
+      title="Hapus langkah"
+      description={`Langkah "${step.name || "Tanpa judul"}" akan dihapus.`}
+      onClose={onClose}
+      footer={
+        <>
+          <Button type="button" onClick={onClose}>
             Batal
-          </button>
-
-          <button
+          </Button>
+          <Button
             type="button"
-            className={styles.dangerButton}
+            variant="danger"
             disabled={
               disabled ||
               hasNoValidReplacement ||
@@ -146,16 +88,43 @@ export function DeleteStepDialog({
             onClick={handleDelete}
           >
             Hapus
-          </button>
-        </footer>
-      </div>
-      <button
-        type="button"
-        className={styles.backdropClose}
-        aria-label="Tutup dialog"
-        onClick={onClose}
-      />
-    </div>,
-    globalThis.document.body,
+          </Button>
+        </>
+      }
+    >
+      {needsReplacement ? (
+        <>
+          <Field
+            label="Sambungkan langkah sebelumnya ke"
+            className={styles.field}
+          >
+            <Select
+              aria-label="Sambungkan langkah sebelumnya ke"
+              value={replacementId}
+              disabled={disabled || hasNoValidReplacement}
+              onChange={(event) => setReplacementId(event.target.value)}
+            >
+              <option value="">Pilih langkah</option>
+
+              {candidates.map((candidate, index) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {index + 1}. {candidate.name || "Tanpa judul"}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          {hasNoValidReplacement ? (
+            <p className={styles.notice}>
+              Tidak ada target pengganti yang menjaga workflow tetap valid.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p className={styles.notice}>
+          Langkah ini tidak direferensikan oleh langkah lain.
+        </p>
+      )}
+    </Dialog>
   );
 }

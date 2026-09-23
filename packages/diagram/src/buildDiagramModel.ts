@@ -20,6 +20,7 @@ export function buildDiagramModel(document: SOPDocument): DiagramModel {
 
   return {
     nodes,
+    connections: workflow.connections.map((edge) => ({ ...edge })),
     edges: workflow.edges.map((edge) => ({ ...edge })),
     routedEdges: [],
     diagnostics: workflow.diagnostics.map((diagnostic) => ({ ...diagnostic })),

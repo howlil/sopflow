@@ -266,24 +266,34 @@ describe("SopDiagram", () => {
 
     render(<Harness />);
 
-    await user.click(screen.getByRole("button", { name: "Setujui (task)" }));
+    const approveNodes = screen.getAllByRole("button", {
+      name: "Setujui (task)",
+    });
+    const approveNode = approveNodes[0];
+    if (!approveNode) throw new Error("Expected the approve step node");
+    await user.click(approveNode);
 
     expect(
-      document.querySelector('[data-sopflow-procedure-step-id="approve"]'),
-    ).toHaveAttribute("data-selected", "true");
+      document.querySelector(
+        '[data-sopflow-diagram-interactive][data-sopflow-step-id="approve"]',
+      ),
+    ).toHaveAttribute("aria-pressed", "true");
 
-    const rejectRow = document.querySelector(
-      '[data-sopflow-procedure-step-id="reject"]',
+    const rejectNodes = document.querySelectorAll(
+      '[data-sopflow-step-id="reject"]',
     );
+    const rejectNode = rejectNodes[rejectNodes.length - 1];
 
-    if (!rejectRow) {
-      throw new Error("Expected the reject step row to be rendered");
+    if (!rejectNode) {
+      throw new Error("Expected the reject step node to be rendered");
     }
 
-    await user.click(rejectRow);
+    await user.click(rejectNode);
 
     expect(
-      screen.getByRole("button", { name: "Tolak (task)" }),
-    ).toHaveAttribute("data-selected", "true");
+      document.querySelector(
+        '[data-sopflow-diagram-interactive][data-sopflow-step-id="reject"]',
+      ),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 });

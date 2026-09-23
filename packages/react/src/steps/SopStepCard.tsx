@@ -15,8 +15,7 @@ import { StepTypeField } from "./fields/StepTypeField.js";
 import { StepActions } from "./StepActions.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
-import { useStepActions } from "./hooks/useStepActions.js";
-import { getStepIssues, hasStepIssue } from "../validation/getStepIssues.js";
+import { useStepEditorController } from "./hooks/useStepEditorController.js";
 import styles from "./SopStepCard.module.css";
 
 export interface SopStepCardProps {
@@ -43,7 +42,6 @@ export function SopStepCard({
   disabled = false,
 }: SopStepCardProps) {
   const {
-    updateStep,
     changeStepType,
     addAfter,
     isDecisionEditorOpen,
@@ -52,23 +50,22 @@ export function SopStepCard({
     isDeleteDialogOpen,
     openDeleteDialog,
     closeDeleteDialog,
-  } = useStepActions({
+    stepIssues,
+    hasActorError,
+    hasError,
+    updateName,
+    updateActorIds,
+    updateInput,
+    updateDuration,
+    updateOutput,
+    updateNote,
+  } = useStepEditorController({
     step,
     document,
+    issues,
     onOperation,
     onOperations,
   });
-
-  const stepIssues = getStepIssues(issues, step.id);
-  const hasActorError = hasStepIssue(issues, step.id, [
-    "UNKNOWN_ACTOR_REFERENCE",
-  ]);
-  const hasWorkflowError = hasStepIssue(issues, step.id, [
-    "UNKNOWN_STEP_REFERENCE",
-    "CANNOT_REACH_END",
-    "UNREACHABLE_STEP",
-  ]);
-  const hasError = stepIssues.length > 0 || hasWorkflowError;
 
   return (
     <section
@@ -101,12 +98,7 @@ export function SopStepCard({
         <StepNameField
           value={step.name}
           readOnly={disabled}
-          onChange={(name) =>
-            updateStep({
-              ...step,
-              name,
-            })
-          }
+          onChange={updateName}
         />
       </Field>
 
@@ -136,12 +128,7 @@ export function SopStepCard({
             actors={document.actors}
             readOnly={disabled}
             error={hasActorError}
-            onChange={(actorIds) =>
-              updateStep({
-                ...step,
-                actorIds,
-              })
-            }
+            onChange={updateActorIds}
           />
         </Field>
       </div>
@@ -150,12 +137,7 @@ export function SopStepCard({
         <InputField
           value={step.input}
           readOnly={disabled}
-          onChange={(input) =>
-            updateStep({
-              ...step,
-              input: input || undefined,
-            })
-          }
+          onChange={updateInput}
         />
       </Field>
 
@@ -163,12 +145,7 @@ export function SopStepCard({
         <DurationField
           value={step.duration}
           readOnly={disabled}
-          onChange={(duration) =>
-            updateStep({
-              ...step,
-              duration,
-            })
-          }
+          onChange={updateDuration}
         />
       </Field>
 
@@ -176,12 +153,7 @@ export function SopStepCard({
         <OutputField
           value={step.output}
           readOnly={disabled}
-          onChange={(output) =>
-            updateStep({
-              ...step,
-              output: output || undefined,
-            })
-          }
+          onChange={updateOutput}
         />
       </Field>
 
@@ -189,12 +161,7 @@ export function SopStepCard({
         <NoteField
           value={step.note}
           readOnly={disabled}
-          onChange={(note) =>
-            updateStep({
-              ...step,
-              note: note || undefined,
-            })
-          }
+          onChange={updateNote}
         />
       </Field>
 

@@ -9,6 +9,14 @@
   border-radius: var(--sopflow-surface-radius);
   background: var(--sopflow-surface);
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .viewport[data-pannable="true"] {

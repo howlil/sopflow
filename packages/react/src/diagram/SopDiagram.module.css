@@ -37,7 +37,7 @@
 
 .edgeLabel {
   fill: var(--sopflow-text-muted);
-  font-size: var(--sopflow-font-xs);
+  font-size: var(--sopflow-font-document);
   user-select: none;
 }
 
@@ -70,7 +70,7 @@
 
 .nodeLabel {
   fill: var(--sopflow-text);
-  font-size: var(--sopflow-font-xs);
+  font-size: var(--sopflow-font-document);
   font-weight: 500;
   user-select: none;
 }

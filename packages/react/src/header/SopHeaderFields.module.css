@@ -3,56 +3,6 @@
   min-width: 0;
 }
 
-.section {
-  border-bottom: 1px solid var(--sopflow-border);
-  padding: 0.75rem 0;
-}
-
-.section:first-child {
-  padding-top: 0;
-}
-
-.section:last-child {
-  border-bottom: 0;
-}
-
-.sectionHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.sectionTitle {
-  margin: 0 0 0.5rem;
-  color: var(--sopflow-text-muted);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.sectionHeading .sectionTitle {
-  margin-bottom: 0;
-}
-
-.sectionBody {
-  display: grid;
-  gap: 0.625rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.label {
-  color: var(--sopflow-text);
-  font-size: var(--sopflow-font-xs);
-  font-weight: 500;
-}
-
 .input,
 .textarea,
 .listInput {
@@ -71,6 +21,131 @@
 .input {
   min-height: 2.25rem;
   padding: 0.375rem 0.5rem;
+}
+
+.filePicker {
+  display: flex;
+  min-height: 2.25rem;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.1875rem;
+
+  background: var(--sopflow-surface);
+}
+
+.filePicker:focus-within {
+  border-color: var(--sopflow-selected-border);
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
+}
+
+.filePicker[data-disabled="true"] {
+  cursor: not-allowed;
+  background: var(--sopflow-disabled-surface);
+}
+
+.fileInput {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 0;
+
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.fileButton {
+  flex: 0 0 auto;
+
+  border: 1px solid var(--sopflow-border);
+  border-radius: calc(var(--sopflow-control-radius) - 1px);
+  padding: 0.25rem 0.5rem;
+
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+
+  font-size: var(--sopflow-font-xs);
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.fileButton:hover {
+  border-color: var(--sopflow-text-muted);
+  background: var(--sopflow-surface);
+}
+
+.filePicker[data-disabled="true"] .fileButton {
+  color: var(--sopflow-disabled-text);
+  cursor: not-allowed;
+}
+
+.fileName {
+  min-width: 0;
+  overflow: hidden;
+
+  color: var(--sopflow-text-muted);
+
+  font-size: var(--sopflow-font-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logoPreview {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-control-radius);
+  background: var(--sopflow-surface-muted);
+}
+
+.logoPreviewImage {
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  background: var(--sopflow-surface);
+}
+
+.logoRemove {
+  border: 0;
+  border-radius: var(--sopflow-control-radius);
+  padding: 0.25rem 0.375rem;
+  background: transparent;
+  color: var(--sopflow-error-text);
+  font: inherit;
+  font-size: var(--sopflow-font-xs);
+  cursor: pointer;
+}
+
+.logoRemove:hover {
+  background: var(--sopflow-error-surface);
+}
+
+.logoRemove:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 1px;
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--sopflow-error-text);
+  font-size: var(--sopflow-font-xs);
+  line-height: 1.35;
 }
 
 .textarea,
@@ -94,6 +169,15 @@
   cursor: not-allowed;
   background: var(--sopflow-disabled-surface);
   color: var(--sopflow-disabled-text);
+}
+
+.input[type="date"] {
+  color-scheme: light;
+}
+
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
 }
 
 .list {

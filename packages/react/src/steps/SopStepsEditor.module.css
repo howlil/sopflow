@@ -1,4 +1,6 @@
 .editor {
+  box-sizing: border-box;
+  min-width: 0;
   width: 100%;
 
   outline: none;
@@ -33,7 +35,7 @@
 
   color: var(--sopflow-text-muted);
 
-  font-size: 0.6875rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.4;
 }
 
@@ -47,7 +49,8 @@
 
   background: var(--sopflow-surface);
 
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .tableViewport:focus-visible {
@@ -56,17 +59,9 @@
 }
 
 .tableViewport::-webkit-scrollbar {
-  height: 8px;
-}
-
-.tableViewport::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-
-  background: var(--sopflow-border);
-}
-
-.tableViewport::-webkit-scrollbar-track {
-  background: var(--sopflow-surface-muted);
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .desktop {
@@ -86,7 +81,7 @@
 
   color: var(--sopflow-text);
 
-  font-size: 0.8125rem;
+  font-size: var(--sopflow-font-xs);
   line-height: 1.25rem;
 }
 

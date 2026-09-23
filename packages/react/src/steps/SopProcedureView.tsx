@@ -5,6 +5,8 @@ import {
   routeProcedureEdges,
   updateProcedureManualTrunk,
   type ProcedureGeometry,
+  type ProcedureLaneGeometry,
+  type ProcedureNodeGeometry,
   type ProcedureManualTrunks,
   type SopDiagramConfig,
   type ProcedureModel,
@@ -105,6 +107,17 @@ export function SopProcedureView({
 
     const rootRect = root.getBoundingClientRect();
     const anchors = new Map<StepId, { x: number; y: number }>();
+    const nodeGeometry = new Map<StepId, ProcedureNodeGeometry>();
+    const obstacles: ProcedureNodeGeometry["rect"][] = [];
+    const rowElements = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-sopflow-procedure-step-id]"),
+    );
+    const rowByStepId = new Map(
+      rowElements.flatMap((element) => {
+        const stepId = element.dataset.sopflowProcedureStepId;
+        return stepId ? [[stepId, element] as const] : [];
+      }),
+    );
 
     for (const [stepId, element] of shapeRefs.current) {
       const rect = element.getBoundingClientRect();
@@ -112,6 +125,19 @@ export function SopProcedureView({
         x: rect.left - rootRect.left + rect.width / 2,
         y: rect.top - rootRect.top + rect.height / 2,
       });
+      const row = rowByStepId.get(stepId);
+      const localRect = {
+        left: rect.left - rootRect.left,
+        top: rect.top - rootRect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+      nodeGeometry.set(stepId, {
+        stepId,
+        rect: localRect,
+        laneId: row?.dataset.sopflowPrimaryActorId || null,
+      });
+      obstacles.push(localRect);
     }
 
     const actorHeaders = Array.from(
@@ -119,17 +145,65 @@ export function SopProcedureView({
     );
     const firstActorHeader = actorHeaders[0]?.getBoundingClientRect();
     const lastActorHeader = actorHeaders.at(-1)?.getBoundingClientRect();
+    const actorLeft = firstActorHeader
+      ? firstActorHeader.left - rootRect.left
+      : 0;
+    const actorRight = lastActorHeader
+      ? lastActorHeader.right - rootRect.left
+      : rootRect.width;
+    const fallbackX = actorLeft + (actorRight - actorLeft) / 2;
+    const actorLanes = new Map<string | null, ProcedureLaneGeometry>();
+    actorHeaders.forEach((header, index) => {
+      const rect = header.getBoundingClientRect();
+      const actor = model.actorColumns[index];
+      actorLanes.set(actor?.actorId ?? null, {
+        actorId: actor?.actorId ?? null,
+        left: rect.left - rootRect.left,
+        right: rect.right - rootRect.left,
+        top: rect.top - rootRect.top,
+        bottom: rect.bottom - rootRect.top,
+      });
+    });
+
+    for (const rowElement of rowElements) {
+      const stepId = rowElement.dataset.sopflowProcedureStepId;
+      if (!stepId || anchors.has(stepId)) continue;
+
+      const rowRect = rowElement.getBoundingClientRect();
+      anchors.set(stepId, {
+        x: fallbackX,
+        y: rowRect.top - rootRect.top + rowRect.height / 2,
+      });
+      const row = model.rows.find((candidate) => candidate.stepId === stepId);
+      nodeGeometry.set(stepId, {
+        stepId,
+        rect: {
+          left: actorLeft,
+          top: rowRect.top - rootRect.top,
+          width: Math.max(0, actorRight - actorLeft),
+          height: rowRect.height,
+        },
+        laneId: row?.primaryActorId ?? null,
+      });
+    }
 
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
       anchors,
-      actorLeft: firstActorHeader ? firstActorHeader.left - rootRect.left : 0,
-      actorRight: lastActorHeader
-        ? lastActorHeader.right - rootRect.left
-        : rootRect.width,
+      actorLeft,
+      actorRight,
+      actorLanes,
+      nodes: nodeGeometry,
+      obstacles,
+      routingBounds: {
+        left: 0,
+        top: 0,
+        width: root.scrollWidth || rootRect.width,
+        height: root.scrollHeight || rootRect.height,
+      },
     });
-  }, []);
+  }, [model]);
 
   useLayoutEffect(() => {
     measure();
@@ -253,6 +327,7 @@ export function SopProcedureView({
                 key={actor.actorId ?? `fallback-${index}`}
                 className={styles.actorHeader}
                 data-sopflow-actor-header
+                data-sopflow-actor-id={actor.actorId ?? ""}
               >
                 {actor.label}
               </th>
@@ -282,6 +357,7 @@ export function SopProcedureView({
                   key={row.stepId}
                   className={styles.row}
                   data-sopflow-procedure-step-id={row.stepId}
+                  data-sopflow-primary-actor-id={row.primaryActorId ?? ""}
                   data-selected={selected || undefined}
                   data-error={issueCount > 0 || undefined}
                   tabIndex={onSelectedStepChange ? 0 : undefined}
@@ -319,9 +395,10 @@ export function SopProcedureView({
                   {model.actorColumns.map((actor, actorIndex) => {
                     const assigned =
                       actor.actorId === null
-                        ? model.actorColumns.length === 1 &&
-                          model.actorColumns[0]?.actorId === null
-                        : row.actorIds.includes(actor.actorId);
+                        ? row.primaryActorId === null
+                        : row.actorIds.length > 0
+                          ? row.actorIds.includes(actor.actorId)
+                          : actor.actorId === row.primaryActorId;
                     const primary =
                       assigned && actor.actorId === row.primaryActorId;
 
@@ -329,7 +406,7 @@ export function SopProcedureView({
                       <td
                         key={actor.actorId ?? `fallback-${actorIndex}`}
                         className={styles.actorCell}
-                        data-sopflow-actor-id={actor.actorId ?? undefined}
+                        data-sopflow-actor-id={actor.actorId ?? "fallback"}
                       >
                         {assigned ? (
                           <span

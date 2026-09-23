@@ -212,7 +212,7 @@ function EditorHarness({
 }
 
 function enterStepEditing() {
-  const button = screen.queryByRole("button", { name: "Langkah" });
+  const button = screen.queryByRole("button", { name: "Edit langkah" });
   if (button) {
     fireEvent.click(button);
   }
@@ -272,15 +272,21 @@ describe("SopEditor document workbench", () => {
   it("renders diagram controls without undo or redo", () => {
     render(<ControlledEditor />);
 
-    expect(screen.getByRole("button", { name: "Langkah" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Edit langkah" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Edit Manual" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Flowchart" })).toHaveAttribute(
-      "aria-pressed",
+    expect(screen.getByRole("tab", { name: "Flowchart" })).toHaveAttribute(
+      "aria-selected",
       "true",
     );
-    expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Prosedur SOP" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "BPMN" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /undo/i }),
     ).not.toBeInTheDocument();
@@ -320,9 +326,15 @@ describe("SopEditor document workbench", () => {
     const user = userEvent.setup();
     const { container } = render(<ControlledEditor />);
 
-    await user.click(screen.getByRole("button", { name: "Langkah" }));
+    await user.click(screen.getByRole("button", { name: "Edit langkah" }));
 
-    expect(screen.getByRole("button", { name: "Diagram" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Edit langkah" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      container.querySelector("[data-sopflow-editor-layout]"),
+    ).toHaveAttribute("data-mode", "steps");
     expect(screen.getAllByDisplayValue("Review")[0]).toBeInTheDocument();
     expect(
       screen.getByRole("region", {
@@ -346,7 +358,7 @@ describe("SopEditor document workbench", () => {
     );
 
     expect(
-      screen.queryByRole("button", { name: "Langkah" }),
+      screen.queryByRole("button", { name: "Edit langkah" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Edit Manual" }),
@@ -354,10 +366,8 @@ describe("SopEditor document workbench", () => {
     expect(
       screen.queryByRole("button", { name: /tambah pelaksana/i }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Flowchart" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "BPMN" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Flowchart" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "BPMN" })).toBeInTheDocument();
   });
 });
 
@@ -371,7 +381,7 @@ describe("SopEditor graph mutations", () => {
 
     render(<EditorHarness initial={emptyDocument} />);
 
-    await user.click(screen.getByRole("button", { name: "Langkah" }));
+    await user.click(screen.getByRole("button", { name: "Edit langkah" }));
     await user.click(
       screen.getByRole("button", { name: /buat langkah awal/i }),
     );

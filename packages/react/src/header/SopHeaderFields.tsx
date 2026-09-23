@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
+import { useId, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
+import { FormField as Field } from "../primitives/FormField.js";
+import { InspectorSection } from "../primitives/InspectorSection.js";
 import type { SopHeaderValue, SopSignatory } from "../types.js";
 import styles from "./SopHeaderFields.module.css";
 
@@ -22,6 +24,9 @@ export function SopHeaderFields({
 }: SopHeaderFieldsProps) {
   const headerDisabled = disabled || !onHeaderChange;
   const documentDisabled = disabled || !onDocumentChange;
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const logoInputId = useId();
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   function updateHeader<K extends keyof SopHeaderValue>(
     key: K,
@@ -69,6 +74,79 @@ export function SopHeaderFields({
               updateHeader("institutionName", event.target.value)
             }
           />
+        </Field>
+
+        <Field label="Logo instansi">
+          <div
+            className={styles.filePicker}
+            data-disabled={headerDisabled || undefined}
+          >
+            <input
+              id={logoInputId}
+              ref={logoInputRef}
+              className={styles.fileInput}
+              type="file"
+              accept="image/*"
+              disabled={headerDisabled}
+              aria-label="Logo instansi"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+
+                if (!file.type.startsWith("image/")) {
+                  setLogoError("File logo harus berupa gambar.");
+                  event.target.value = "";
+                  return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                  if (typeof reader.result !== "string") {
+                    setLogoError("Logo tidak dapat dibaca.");
+                    return;
+                  }
+
+                  updateHeader("logoUrl", reader.result);
+                  setLogoError(null);
+                };
+                reader.onerror = () => setLogoError("Logo tidak dapat dibaca.");
+                reader.readAsDataURL(file);
+              }}
+            />
+            <label className={styles.fileButton} htmlFor={logoInputId}>
+              Pilih logo
+            </label>
+            <span className={styles.fileName}>
+              {header.logoUrl ? "Logo tersimpan" : "Belum ada file"}
+            </span>
+          </div>
+          {header.logoUrl ? (
+            <div className={styles.logoPreview}>
+              <img
+                src={header.logoUrl}
+                alt="Pratinjau logo instansi"
+                className={styles.logoPreviewImage}
+              />
+              {!headerDisabled ? (
+                <button
+                  type="button"
+                  className={styles.logoRemove}
+                  onClick={() => {
+                    updateHeader("logoUrl", "");
+                    setLogoError(null);
+                    if (logoInputRef.current) logoInputRef.current.value = "";
+                  }}
+                >
+                  Hapus logo
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          {logoError ? (
+            <p className={styles.fieldError} role="alert">
+              {logoError}
+            </p>
+          ) : null}
         </Field>
       </InspectorSection>
 
@@ -229,30 +307,6 @@ export function SopHeaderFields({
   );
 }
 
-function InspectorSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>{title}</h2>
-      <div className={styles.sectionBody}>{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      {children}
-    </div>
-  );
-}
-
 function ListSection({
   title,
   value,
@@ -275,11 +329,10 @@ function ListSection({
   }
 
   return (
-    <section className={styles.section}>
-      <div className={styles.sectionHeading}>
-        <h2 className={styles.sectionTitle}>{title}</h2>
-
-        {!disabled ? (
+    <InspectorSection
+      title={title}
+      actions={
+        !disabled ? (
           <button
             type="button"
             className={styles.addButton}
@@ -288,9 +341,9 @@ function ListSection({
           >
             +
           </button>
-        ) : null}
-      </div>
-
+        ) : null
+      }
+    >
       {value.length > 0 ? (
         <div className={styles.list}>
           {value.map((item, index) => (
@@ -328,6 +381,6 @@ function ListSection({
       ) : (
         <p className={styles.empty}>Belum ada data.</p>
       )}
-    </section>
+    </InspectorSection>
   );
 }

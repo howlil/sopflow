@@ -213,6 +213,40 @@ describe("validateSop", () => {
     expect(validateSop(sop)).toEqual([]);
   });
 
+  it("requires both named branches on a decision", () => {
+    const sop: SOPDocument = {
+      schemaVersion: "1",
+      id: "missing-branch",
+      title: "Missing Branch",
+      actors: [],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Mulai",
+          actorIds: [],
+          next: "decision",
+        },
+        {
+          id: "decision",
+          type: "decision",
+          name: "Valid?",
+          actorIds: [],
+          yes: "end",
+          no: "",
+        },
+        { id: "end", type: "end", name: "Selesai", actorIds: [] },
+      ],
+    };
+
+    expect(validateSop(sop)).toContainEqual(
+      expect.objectContaining({
+        code: "INVALID_DECISION_BRANCH",
+        stepId: "decision",
+      }),
+    );
+  });
+
   it("detects steps taht cannot reach end", () => {
     const sop: SOPDocument = {
       schemaVersion: "1",

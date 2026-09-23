@@ -67,4 +67,90 @@ describe("buildBpmnModel", () => {
     expect(model.edges.find((edge) => edge.kind === "yes")?.label).toBe("Ya");
     expect(model.edges.find((edge) => edge.kind === "no")?.label).toBe("Tidak");
   });
+
+  it("routes a self-loop around the BPMN node", () => {
+    const selfLoopDocument: SOPDocument = {
+      ...document,
+      id: "bpmn-self-loop",
+      steps: [
+        document.steps[0] as SOPDocument["steps"][number],
+        {
+          id: "review",
+          type: "decision",
+          name: "Valid?",
+          actorIds: ["manager"],
+          yes: "review",
+          no: "end",
+        },
+        document.steps[2] as SOPDocument["steps"][number],
+        document.steps[3] as SOPDocument["steps"][number],
+      ],
+    };
+    const model = buildBpmnModel(selfLoopDocument);
+    const edge = model.edges.find(
+      (candidate) => candidate.id === "review:yes:review",
+    );
+    const node = model.nodes.find((candidate) => candidate.id === "review");
+
+    expect(edge).toBeDefined();
+    expect(node).toBeDefined();
+    if (!edge || !node) return;
+    expect(edge.points.length).toBeGreaterThan(2);
+    expect(Math.max(...edge.points.map((point) => point.x))).toBeGreaterThan(
+      node.x + node.width / 2,
+    );
+    expect(Math.min(...edge.points.map((point) => point.y))).toBeLessThan(
+      node.y - node.height / 2,
+    );
+  });
+
+  it("keeps Ya and Tidak labels separated for a shared self-loop target", () => {
+    const model = buildBpmnModel({
+      ...document,
+      id: "bpmn-shared-self-loop",
+      steps: document.steps.map((step) =>
+        step.id === "review" ? { ...step, yes: "review", no: "review" } : step,
+      ),
+    });
+    const loops = model.edges.filter((edge) => edge.from === "review");
+
+    expect(loops.map((edge) => edge.label)).toEqual(["Ya", "Tidak"]);
+    expect(loops[0]?.labelPosition?.x).not.toBe(loops[1]?.labelPosition?.x);
+  });
+
+  it("uses an explicit fallback lane for an unassigned step", () => {
+    const model = buildBpmnModel({
+      ...document,
+      id: "bpmn-fallback-lane",
+      steps: document.steps.map((step) =>
+        step.id === "review" ? { ...step, actorIds: [] } : step,
+      ),
+    });
+
+    expect(model.lanes.at(-1)?.label).toBe("Pelaksana");
+    expect(model.nodes.find((node) => node.id === "review")?.laneIndex).toBe(2);
+    expect(model.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "UNASSIGNED_ACTOR",
+        from: "review",
+      }),
+    );
+  });
+
+  it("preserves projection diagnostics when an edge target is missing", () => {
+    const model = buildBpmnModel({
+      ...document,
+      id: "bpmn-missing-target",
+      steps: document.steps.map((step) =>
+        step.id === "start" ? { ...step, next: "missing" } : step,
+      ),
+    });
+
+    expect(model.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_EDGE_TARGET",
+        edgeId: "start:next:missing",
+      }),
+    );
+  });
 });

@@ -1,4 +1,5 @@
 import type { Step } from "@sopflow/core";
+import { Select } from "../../primitives/Select.js";
 import styles from "./StepTypeField.module.css";
 
 export interface StepTypeFieldProps {
@@ -52,8 +53,7 @@ export function StepTypeField({
 
   return (
     <div className={styles.stack}>
-      <select
-        className={styles.select}
+      <Select
         value={step.type}
         disabled={disabled}
         aria-label="Tipe langkah"
@@ -71,7 +71,7 @@ export function StepTypeField({
         </option>
 
         <option value="decision">Decision</option>
-      </select>
+      </Select>
 
       {branchSummary ? (
         <span className={styles.branchSummary}>{branchSummary}</span>

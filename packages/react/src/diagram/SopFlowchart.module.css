@@ -35,7 +35,7 @@
 
 .laneLabel {
   fill: var(--sopflow-text);
-  font-size: 11px;
+  font-size: var(--sopflow-font-document);
   font-weight: 700;
   text-transform: uppercase;
   user-select: none;
@@ -60,7 +60,7 @@
 
 .edgeLabel {
   fill: var(--sopflow-text);
-  font-size: 10px;
+  font-size: var(--sopflow-font-document);
   font-weight: 600;
   paint-order: stroke;
   stroke: var(--sopflow-surface);
@@ -97,7 +97,7 @@
 
 .nodeLabel {
   fill: var(--sopflow-text-muted);
-  font-size: 10px;
+  font-size: var(--sopflow-font-document);
   font-weight: 500;
   user-select: none;
 }
