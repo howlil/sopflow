@@ -31,6 +31,23 @@ describe("formal flowchart pagination parity", () => {
     expect(getFormalPageForRow(5, 2, 2)).toBe(2);
   });
 
+  it("marks same-page connections as local semantic edges", () => {
+    const edge: WorkflowEdge = {
+      id: "s1:next:s2",
+      from: "s1",
+      to: "s2",
+      kind: "next",
+    };
+
+    const result = splitFormalCrossPageConnections([edge], rows, 2, 2);
+
+    expect(result.pages[0]?.[0]).toMatchObject({
+      id: edge.id,
+      semanticEdgeId: edge.id,
+      segment: "local",
+    });
+  });
+
   it("splits forward cross-page edges into OPC out and in endpoints", () => {
     const edge: WorkflowEdge = {
       id: "s2:next:s4",
@@ -44,11 +61,15 @@ describe("formal flowchart pagination parity", () => {
     expect(result.opcPairs).toHaveLength(1);
     expect(result.pages[0]?.[0]).toMatchObject({
       id: "s2:next:s4__out",
+      semanticEdgeId: "s2:next:s4",
+      segment: "source-to-opc",
       targetType: "flowchart-opc",
       toActorId: "staff",
     });
     expect(result.pages[1]?.[0]).toMatchObject({
       id: "s2:next:s4__in",
+      semanticEdgeId: "s2:next:s4",
+      segment: "opc-to-target",
       sourceType: "flowchart-opc",
       fromActorId: "manager",
     });

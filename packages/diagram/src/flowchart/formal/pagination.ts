@@ -10,8 +10,17 @@ export interface FormalPageRow {
   readonly primaryActorId: ActorId | null;
 }
 
+export type FormalPagedConnectionSegment =
+  | "local"
+  | "source-to-opc"
+  | "opc-to-target";
+
 export interface FormalPagedConnection {
+  /** Renderer-local edge identity. */
   readonly id: string;
+  /** Canonical workflow edge identity used by persisted configuration. */
+  readonly semanticEdgeId: string;
+  readonly segment: FormalPagedConnectionSegment;
   readonly from: string;
   readonly to: string;
   readonly kind: WorkflowEdge["kind"];
@@ -153,6 +162,7 @@ export function splitFormalCrossPageConnections(
     pages[fromPage]?.push({
       ...toPagedConnection(edge, source, target),
       id: `${edge.id}__out`,
+      segment: "source-to-opc",
       to: opcOutId,
       targetType: "flowchart-opc",
       toActorId: source.primaryActorId,
@@ -161,6 +171,7 @@ export function splitFormalCrossPageConnections(
     pages[toPage]?.push({
       ...toPagedConnection(edge, source, target),
       id: `${edge.id}__in`,
+      segment: "opc-to-target",
       from: opcInId,
       sourceType: "flowchart-opc",
       fromActorId: target.primaryActorId,
@@ -345,6 +356,8 @@ function toPagedConnection(
 ): FormalPagedConnection {
   return {
     id: edge.id,
+    semanticEdgeId: edge.id,
+    segment: "local",
     from: edge.from,
     to: edge.to,
     kind: edge.kind,

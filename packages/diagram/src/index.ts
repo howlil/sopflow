@@ -28,6 +28,7 @@ export type {
   FormalOpcPlacement,
   FormalPageConnections,
   FormalPagedConnection,
+  FormalPagedConnectionSegment,
   FormalPageRow,
   FormalPositionedOpcEndpoint,
   FormalTableColumnPercents,
@@ -156,6 +157,7 @@ export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
 
 export {
   buildFormalProcedurePages,
+  type FormalProcedurePageEdge,
   type FormalProcedurePageModel,
   type FormalProcedurePaginationOptions,
 } from "./procedurePagination.js";
