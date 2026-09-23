@@ -1,5 +1,6 @@
 import type { StepId } from "@sopflow/core";
 import type { DiagramPoint } from "../../types.js";
+import { clampAnchorDistance, pointOnRectSide } from "../../routeAnchors.js";
 import type { WorkflowEdge } from "../../workflow.js";
 import {
   assignFormalColumnTrunkSlots,
@@ -10,6 +11,7 @@ import {
 } from "./dedicated.js";
 import {
   computeFormalConnectionRoutingBounds,
+  pointOnFormalDecisionVertex,
   resolveFormalColumnForConnection,
 } from "./geometry.js";
 import {
@@ -55,6 +57,8 @@ export type FormalManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: FormalFlowchartSide;
       readonly eSide?: FormalFlowchartSide;
+      readonly sourceDistance?: number;
+      readonly targetDistance?: number;
       readonly startPoint?: DiagramPoint;
       readonly endPoint?: DiagramPoint;
     }
@@ -64,6 +68,8 @@ export type FormalManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: FormalFlowchartSide;
       readonly eSide?: FormalFlowchartSide;
+      readonly sourceDistance?: number;
+      readonly targetDistance?: number;
       readonly startPoint?: DiagramPoint;
       readonly endPoint?: DiagramPoint;
     };
@@ -211,7 +217,15 @@ export function planFormalProcedureEdges(
         crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
         columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
       });
-      const resolved = applyManualRoute(auto, manual, routingBounds);
+      const resolved = applyManualRoute(
+        auto,
+        manual,
+        source,
+        target,
+        sourceGeometry.kind === "decision",
+        targetGeometry.kind === "decision",
+        routingBounds,
+      );
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
       registerSide(usedSides, edge.to, "in", resolved.targetSide, edge.id);
@@ -462,6 +476,10 @@ function resolveAutoRoute(input: {
 function applyManualRoute(
   auto: FormalFlowchartRouteResult,
   manual: FormalManualRoute | undefined,
+  source: FormalFlowchartRect,
+  target: FormalFlowchartRect,
+  sourceDecision: boolean,
+  targetDecision: boolean,
   bounds: FormalFlowchartBounds | null,
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
@@ -470,10 +488,24 @@ function applyManualRoute(
   const autoEnd = auto.points.at(-1);
   if (!autoStart || !autoEnd) return auto;
 
-  const start = resolveManualPoint(manual.startPoint, autoStart);
-  const end = resolveManualPoint(manual.endPoint, autoEnd);
   const sourceSide = manual.sSide ?? auto.sourceSide;
   const targetSide = manual.eSide ?? auto.targetSide;
+  const start = resolveManualAnchorPoint(
+    manual.startPoint,
+    manual.sourceDistance,
+    sourceSide,
+    source,
+    sourceDecision,
+    autoStart,
+  );
+  const end = resolveManualAnchorPoint(
+    manual.endPoint,
+    manual.targetDistance,
+    targetSide,
+    target,
+    targetDecision,
+    autoEnd,
+  );
 
   if (manual.kind === "orthogonal") {
     return {
@@ -501,22 +533,31 @@ function applyManualRoute(
   };
 }
 
-function resolveManualPoint(
+function resolveManualAnchorPoint(
   configured: DiagramPoint | undefined,
+  distance: number | undefined,
+  side: FormalFlowchartSide,
+  shape: FormalFlowchartRect,
+  decision: boolean,
   fallback: DiagramPoint,
 ): DiagramPoint {
-  if (
-    !configured ||
-    !Number.isFinite(configured.x) ||
-    !Number.isFinite(configured.y)
-  ) {
-    return { ...fallback };
+  if (Number.isFinite(distance)) {
+    if (decision) return pointOnFormalDecisionVertex(shape, side);
+
+    const point = pointOnRectSide(shape, side, clampAnchorDistance(distance as number));
+    return { x: Math.round(point.x), y: Math.round(point.y) };
   }
 
-  // Persisted endpoints describe shape anchors. They may legitimately sit
-  // outside the inner routing corridor, so replay them exactly instead of
-  // clamping them to routing bounds.
-  return { x: Math.round(configured.x), y: Math.round(configured.y) };
+  if (
+    configured &&
+    Number.isFinite(configured.x) &&
+    Number.isFinite(configured.y)
+  ) {
+    // Backward-compatible replay for pre-semantic-anchor configs.
+    return { x: Math.round(configured.x), y: Math.round(configured.y) };
+  }
+
+  return { ...fallback };
 }
 
 function routeHandlePosition(path: readonly DiagramPoint[]): DiagramPoint {
