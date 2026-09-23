@@ -41,11 +41,7 @@ export interface EditableFormalFlowchartPathProps {
   onReset?: () => void;
 }
 
-type DragMode =
-  | "segment"
-  | "waypoint"
-  | "source-endpoint"
-  | "target-endpoint";
+type DragMode = "segment" | "waypoint" | "source-endpoint" | "target-endpoint";
 
 interface DragSession {
   readonly pointerId: number;
