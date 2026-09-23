@@ -53,7 +53,11 @@ export function diagramConfigEquals(
 
     const leftRoute = leftRoutes[leftId];
     const rightRoute = rightRoutes[leftId];
-    if (!leftRoute || !rightRoute || !manualRouteEquals(leftRoute, rightRoute)) {
+    if (
+      !leftRoute ||
+      !rightRoute ||
+      !manualRouteEquals(leftRoute, rightRoute)
+    ) {
       return false;
     }
   }
