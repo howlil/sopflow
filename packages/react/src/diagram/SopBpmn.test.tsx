@@ -72,10 +72,13 @@ describe("SopBpmn", () => {
     const { container } = render(<SopBpmn document={longDocument} />);
     const node = container.querySelector('[data-sopflow-step-id="fix"]');
 
-    expect(node?.textContent).toContain("Verifikasi dokumen");
-    expect(node?.textContent).toContain("kelengkapan administrasi");
-    expect(node?.textContent).not.toContain("…");
-    expect(node?.querySelectorAll("tspan").length).toBeGreaterThan(1);
+    const lines = Array.from(node?.querySelectorAll("tspan") ?? []).map(
+      (line) => line.textContent ?? "",
+    );
+
+    expect(lines.join(" ")).toBe(longLabel);
+    expect(lines.join(" ")).not.toContain("…");
+    expect(lines.length).toBeGreaterThan(1);
   });
 
   it("uses the shared controlled selection contract", () => {
