@@ -248,7 +248,9 @@ describe("layoutBpmnGraph", () => {
     };
 
     const result = columns(document);
-    expect(result.quick).toBeLessThan(result["long-a"] ?? Number.MAX_SAFE_INTEGER);
+    expect(result.quick).toBeLessThan(
+      result["long-a"] ?? Number.MAX_SAFE_INTEGER,
+    );
   });
 
   it("does not let a feedback edge push the forward graph to the right", () => {
