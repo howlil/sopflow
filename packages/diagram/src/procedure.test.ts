@@ -274,6 +274,8 @@ describe("procedure model", () => {
       x: 300,
       sSide: "bottom",
       eSide: "top",
+      sourceDistance: 0.4,
+      targetDistance: 0.6,
       startPoint: { x: 250, y: 100 },
       endPoint: { x: 350, y: 200 },
     });
@@ -281,6 +283,8 @@ describe("procedure model", () => {
     expect(config.routes?.["start:next:review"]).toMatchObject({
       sSide: "bottom",
       eSide: "top",
+      sourceDistance: 0.4,
+      targetDistance: 0.6,
     });
     expect(
       pruneProcedureManualRoutes(
