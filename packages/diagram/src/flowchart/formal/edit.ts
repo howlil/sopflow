@@ -415,8 +415,8 @@ export function validateFormalManualRoute(input: {
     !afterStart ||
     !beforeEnd ||
     !end ||
-    !endpointDirectionValid(start, afterStart, sourceSide, "source") ||
-    !endpointDirectionValid(end, beforeEnd, targetSide, "target")
+    !endpointDirectionValid(start, afterStart, sourceSide) ||
+    !endpointDirectionValid(end, beforeEnd, targetSide)
   ) {
     return { valid: false, reason: "INVALID_ENDPOINT_DIRECTION" };
   }
@@ -428,17 +428,15 @@ function endpointDirectionValid(
   endpoint: DiagramPoint,
   adjacent: DiagramPoint,
   side: FormalFlowchartSide,
-  kind: "source" | "target",
 ): boolean {
-  const sign = kind === "source" ? 1 : -1;
   switch (side) {
     case "top":
-      return (adjacent.y - endpoint.y) * sign <= 0;
+      return adjacent.y <= endpoint.y;
     case "right":
-      return (adjacent.x - endpoint.x) * sign >= 0;
+      return adjacent.x >= endpoint.x;
     case "bottom":
-      return (adjacent.y - endpoint.y) * sign >= 0;
+      return adjacent.y >= endpoint.y;
     case "left":
-      return (adjacent.x - endpoint.x) * sign <= 0;
+      return adjacent.x <= endpoint.x;
   }
 }
