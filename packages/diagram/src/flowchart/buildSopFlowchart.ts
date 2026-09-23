@@ -108,9 +108,7 @@ export function buildSopFlowchart(
     const fromRow = orderByStepId.get(edge.from);
     const targetRow = orderByStepId.get(edge.to);
     return (
-      fromRow !== undefined &&
-      targetRow !== undefined &&
-      targetRow <= fromRow
+      fromRow !== undefined && targetRow !== undefined && targetRow <= fromRow
     );
   }).length;
   const backEdgeExtra = backEdgeCount > 0 ? 72 + backEdgeCount * 20 : 0;
