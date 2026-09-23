@@ -30,6 +30,7 @@ describe("diagram public API", () => {
   it("keeps implementation helpers out of the runtime surface", () => {
     expect(Object.keys(publicApi).sort()).toEqual(
       [
+        "buildFormalProcedurePages",
         "buildFormalTableColumnPercents",
         "classifyFormalFlowchartRouteComplexity",
         "computeFormalActorColumnCenterPercent",

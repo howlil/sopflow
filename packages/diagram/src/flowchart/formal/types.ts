@@ -35,7 +35,7 @@ export interface FormalFlowchartShapeGeometry {
   readonly stepId: StepId;
   readonly actorId: ActorId | null;
   readonly row: number;
-  readonly kind: "start" | "task" | "decision" | "end";
+  readonly kind: "start" | "task" | "decision" | "end" | "opc";
   readonly rect: FormalFlowchartRect;
 }
 

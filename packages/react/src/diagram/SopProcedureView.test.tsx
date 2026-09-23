@@ -118,4 +118,63 @@ describe("SopProcedureView", () => {
     expect(overlay).not.toBeNull();
     expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(0);
   });
+
+  it("renders long procedures as pages with off-page connectors", () => {
+    const longDocument: SOPDocument = {
+      schemaVersion: "1",
+      id: "long-procedure",
+      title: "Long Procedure",
+      actors: [{ id: "staff", name: "Staff" }],
+      steps: Array.from({ length: 6 }, (_, index) => {
+        const number = index + 1;
+        const id = `step-${number}`;
+
+        if (number === 1) {
+          return {
+            id,
+            type: "start" as const,
+            name: `Step ${number}`,
+            actorIds: ["staff"],
+            next: "step-2",
+          };
+        }
+
+        if (number === 6) {
+          return {
+            id,
+            type: "end" as const,
+            name: `Step ${number}`,
+            actorIds: ["staff"],
+          };
+        }
+
+        return {
+          id,
+          type: "task" as const,
+          name: `Step ${number}`,
+          actorIds: ["staff"],
+          next: `step-${number + 1}`,
+        };
+      }),
+    };
+
+    const { container } = render(
+      <SopProcedureView
+        document={longDocument}
+        firstPageRows={2}
+        nextPageRows={2}
+      />,
+    );
+
+    expect(
+      container.querySelector("[data-sopflow-procedure-pages='3']"),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll("[data-sopflow-procedure-page]"),
+    ).toHaveLength(3);
+    expect(
+      container.querySelectorAll("[data-sopflow-opc]").length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText("Step 6")).toBeInTheDocument();
+  });
 });

@@ -1,5 +1,6 @@
 import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import {
+  buildFormalProcedurePages,
   buildProcedureModel,
   pointsToPath,
   removeProcedureManualRoute,
@@ -30,6 +31,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
+import { SopProcedurePage } from "./SopProcedurePage.js";
 import styles from "./SopProcedureView.module.css";
 
 export type SopManualPathOffsets = ProcedureManualTrunks;
@@ -46,10 +48,64 @@ export interface SopProcedureViewProps {
   manualPathOffsets?: SopManualPathOffsets;
   /** @deprecated Use onDiagramConfigChange. */
   onManualPathOffsetsChange?: (offsets: SopManualPathOffsets) => void;
+  firstPageRows?: number;
+  nextPageRows?: number;
   className?: string;
 }
 
-export function SopProcedureView({
+export function SopProcedureView(props: SopProcedureViewProps) {
+  const model = useMemo(
+    () => buildProcedureModel(props.document),
+    [props.document],
+  );
+  const pages = useMemo(
+    () =>
+      buildFormalProcedurePages(model, {
+        ...(props.firstPageRows !== undefined
+          ? { firstPageRows: props.firstPageRows }
+          : {}),
+        ...(props.nextPageRows !== undefined
+          ? { nextPageRows: props.nextPageRows }
+          : {}),
+      }),
+    [model, props.firstPageRows, props.nextPageRows],
+  );
+
+  if (pages.length <= 1) {
+    return <SinglePageSopProcedureView {...props} />;
+  }
+
+  return (
+    <section
+      className={[styles.paginatedRoot, props.className]
+        .filter(Boolean)
+        .join(" ")}
+      data-sopflow-procedure-view
+      data-sopflow-procedure-pages={pages.length}
+      aria-label="Prosedur SOP"
+    >
+      {pages.map((page) => (
+        <SopProcedurePage
+          key={page.pageIndex}
+          model={model}
+          page={page}
+          {...(props.selectedStepId !== undefined
+            ? { selectedStepId: props.selectedStepId }
+            : {})}
+          {...(props.onSelectedStepChange !== undefined
+            ? { onSelectedStepChange: props.onSelectedStepChange }
+            : {})}
+          {...(props.issues !== undefined ? { issues: props.issues } : {})}
+          {...(props.diagramConfig !== undefined
+            ? { diagramConfig: props.diagramConfig }
+            : {})}
+        />
+      ))}
+    </section>
+  );
+}
+
+function SinglePageSopProcedureView({
   document,
   selectedStepId = null,
   onSelectedStepChange,

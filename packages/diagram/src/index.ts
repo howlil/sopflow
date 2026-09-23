@@ -137,3 +137,9 @@ export type {
 } from "./types.js";
 
 export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
+
+export {
+  buildFormalProcedurePages,
+  type FormalProcedurePageModel,
+  type FormalProcedurePaginationOptions,
+} from "./procedurePagination.js";
