@@ -240,7 +240,10 @@ export function estimateProcedureRowHeight(
     options.minimumRowHeightPx,
     DEFAULT_MINIMUM_ROW_HEIGHT_PX,
   );
-  const lineHeight = positiveNumber(options.lineHeightPx, DEFAULT_LINE_HEIGHT_PX);
+  const lineHeight = positiveNumber(
+    options.lineHeightPx,
+    DEFAULT_LINE_HEIGHT_PX,
+  );
   const activityLines =
     estimateWrappedLines(row.activity, ESTIMATED_ACTIVITY_CHARS_PER_LINE) +
     (row.kind === "decision" ? 1 : 0);
@@ -284,11 +287,7 @@ function buildProcedureRowPages(
     DEFAULT_NEXT_PAGE_ROWS,
   );
 
-  return splitFormalRowsIntoPages(
-    paginationRows,
-    firstPageRows,
-    nextPageRows,
-  );
+  return splitFormalRowsIntoPages(paginationRows, firstPageRows, nextPageRows);
 }
 
 function splitProcedureRowsByEstimatedHeight(
@@ -303,11 +302,12 @@ function splitProcedureRowsByEstimatedHeight(
   let usedHeight = 0;
 
   const pageBudget = (pageIndex: number) => {
-    const reserved = positiveOptionalNumber(
-      pageIndex === 0
-        ? options.firstPageReservedHeightPx
-        : options.nextPageReservedHeightPx,
-    ) ?? 0;
+    const reserved =
+      positiveOptionalNumber(
+        pageIndex === 0
+          ? options.firstPageReservedHeightPx
+          : options.nextPageReservedHeightPx,
+      ) ?? 0;
     return Math.max(1, pageHeightPx - Math.min(pageHeightPx - 1, reserved));
   };
 
