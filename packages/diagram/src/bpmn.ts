@@ -6,7 +6,11 @@ import type {
   DiagramRouteQuality,
   DiagramSide,
 } from "./types.js";
-import { extrudePoint, pointOnRectSide } from "./routeAnchors.js";
+import {
+  channelAnchorDistance,
+  extrudePoint,
+  pointOnRectSide,
+} from "./routeAnchors.js";
 import {
   compactOrthogonalPath,
   measureRouteQuality,
@@ -248,8 +252,18 @@ function buildBpmnModelPass(
                 from,
                 currentSelfLoopIndex,
                 Math.max(
-                  portLedger.peek(from.id, "out", "right"),
-                  portLedger.peek(from.id, "in", "right"),
+                  portLedger.peek(
+                    from.id,
+                    "out",
+                    "right",
+                    sideLength(nodeRect(from), "right"),
+                  ),
+                  portLedger.peek(
+                    from.id,
+                    "in",
+                    "right",
+                    sideLength(nodeRect(from), "right"),
+                  ),
                 ),
               ),
               sourceSide: "right",
@@ -440,8 +454,18 @@ function buildBpmnRoute(
         : targetBelow
           ? "top"
           : "bottom";
-  const sourceDistance = portLedger.peek(from.id, "out", sourceSide);
-  const targetDistance = portLedger.peek(to.id, "in", targetSide);
+  const sourceDistance = portLedger.peek(
+    from.id,
+    "out",
+    sourceSide,
+    sideLength(nodeRect(from), sourceSide),
+  );
+  const targetDistance = portLedger.peek(
+    to.id,
+    "in",
+    targetSide,
+    sideLength(nodeRect(to), targetSide),
+  );
 
   if (sameLane && targetRight) {
     candidates.push({
@@ -730,9 +754,15 @@ function routeSelfLoop(
 class BpmnPortLedger {
   private readonly counts = new Map<string, number>();
 
-  peek(nodeId: StepId, direction: "in" | "out", side: DiagramSide): number {
-    return portDistance(
+  peek(
+    nodeId: StepId,
+    direction: "in" | "out",
+    side: DiagramSide,
+    sideLengthPx: number,
+  ): number {
+    return channelAnchorDistance(
       this.counts.get(this.key(nodeId, direction, side)) ?? 0,
+      sideLengthPx,
     );
   }
 
@@ -750,9 +780,8 @@ class BpmnPortLedger {
   }
 }
 
-function portDistance(index: number): number {
-  const slots = [0.5, 0.34, 0.66, 0.2, 0.8];
-  return slots[index] ?? (index % 2 === 0 ? 0.14 : 0.86);
+function sideLength(rect: DiagramRect, side: DiagramSide): number {
+  return side === "top" || side === "bottom" ? rect.width : rect.height;
 }
 
 function compareBpmnRoutingPriority(

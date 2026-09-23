@@ -1,6 +1,10 @@
 import type { StepId } from "@sopflow/core";
 import type { DiagramPoint } from "../../types.js";
-import { clampAnchorDistance, pointOnRectSide } from "../../routeAnchors.js";
+import {
+  channelAnchorDistance,
+  clampAnchorDistance,
+  pointOnRectSide,
+} from "../../routeAnchors.js";
 import type { WorkflowEdge } from "../../workflow.js";
 import {
   assignFormalColumnTrunkSlots,
@@ -213,6 +217,7 @@ export function planFormalProcedureEdges(
         obstacles,
         occupied,
         routeCandidates,
+        usedSides,
         loopbackSlot: loopbackSlots.get(edge.id) ?? 0,
         crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
         columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
@@ -283,6 +288,7 @@ function resolveAutoRoute(input: {
     y2: number;
   }[];
   readonly routeCandidates: ReturnType<typeof selectFormalFlowchartSidePairs>;
+  readonly usedSides: FormalFlowchartUsedSides;
   readonly loopbackSlot: number;
   readonly crossColumnSlot: number;
   readonly columnTrunkSlot: number;
@@ -367,16 +373,40 @@ function resolveAutoRoute(input: {
   for (const [index, candidate] of input.routeCandidates
     .slice(0, MAX_TRIES)
     .entries()) {
+    const sourceUsage = formalSideUsageCount(
+      input.usedSides,
+      input.edge.from,
+      "out",
+      candidate.sourceSide,
+    );
+    const targetUsage = formalSideUsageCount(
+      input.usedSides,
+      input.edge.to,
+      "in",
+      candidate.targetSide,
+    );
+    const sourceDistance = formalAutoAnchorDistance(
+      input.source,
+      candidate.sourceSide,
+      sourceUsage,
+      input.meta.sourceType === "flowchart-decision",
+    );
+    const targetDistance = formalAutoAnchorDistance(
+      input.target,
+      candidate.targetSide,
+      targetUsage,
+      input.meta.targetType === "flowchart-decision",
+    );
     const path = routeFormalOrthogonal({
       source: {
         shape: input.source,
         side: candidate.sourceSide,
-        distance: 0.5,
+        distance: sourceDistance,
       },
       target: {
         shape: input.target,
         side: candidate.targetSide,
-        distance: 0.5,
+        distance: targetDistance,
       },
       obstacles: input.obstacles,
       shapeMargin: 10,
@@ -429,16 +459,40 @@ function resolveAutoRoute(input: {
     for (const [index, candidate] of input.routeCandidates
       .slice(0, MAX_TRIES)
       .entries()) {
+      const sourceUsage = formalSideUsageCount(
+        input.usedSides,
+        input.edge.from,
+        "out",
+        candidate.sourceSide,
+      );
+      const targetUsage = formalSideUsageCount(
+        input.usedSides,
+        input.edge.to,
+        "in",
+        candidate.targetSide,
+      );
+      const sourceDistance = formalAutoAnchorDistance(
+        input.source,
+        candidate.sourceSide,
+        sourceUsage,
+        input.meta.sourceType === "flowchart-decision",
+      );
+      const targetDistance = formalAutoAnchorDistance(
+        input.target,
+        candidate.targetSide,
+        targetUsage,
+        input.meta.targetType === "flowchart-decision",
+      );
       const path = routeFormalOrthogonal({
         source: {
           shape: input.source,
           side: candidate.sourceSide,
-          distance: 0.5,
+          distance: sourceDistance,
         },
         target: {
           shape: input.target,
           side: candidate.targetSide,
-          distance: 0.5,
+          distance: targetDistance,
         },
         obstacles: input.obstacles,
         shapeMargin: 10,
@@ -471,6 +525,27 @@ function resolveAutoRoute(input: {
       targetSide: "top",
     }
   );
+}
+
+function formalSideUsageCount(
+  usedSides: FormalFlowchartUsedSides,
+  shapeId: string,
+  direction: "in" | "out",
+  side: FormalFlowchartSide,
+): number {
+  return usedSides[shapeId]?.[direction]?.[side]?.length ?? 0;
+}
+
+function formalAutoAnchorDistance(
+  rect: FormalFlowchartRect,
+  side: FormalFlowchartSide,
+  usageIndex: number,
+  decision: boolean,
+): number {
+  if (decision) return 0.5;
+  const sideLength =
+    side === "top" || side === "bottom" ? rect.width : rect.height;
+  return channelAnchorDistance(usageIndex, sideLength);
 }
 
 function applyManualRoute(
