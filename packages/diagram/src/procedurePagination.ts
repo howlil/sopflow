@@ -80,17 +80,17 @@ export function buildFormalProcedurePages(
       })),
       ...opc.bottom.map((endpoint) => opcRoutingRow(endpoint, rows.length + 1)),
     ];
-    const edges = (connections.pages[pageIndex] ?? []).map<FormalProcedurePageEdge>(
-      (edge) => ({
-        id: edge.id,
-        semanticEdgeId: edge.semanticEdgeId,
-        segment: edge.segment,
-        from: edge.from,
-        to: edge.to,
-        kind: edge.kind,
-        ...(edge.label ? { label: edge.label } : {}),
-      }),
-    );
+    const edges = (
+      connections.pages[pageIndex] ?? []
+    ).map<FormalProcedurePageEdge>((edge) => ({
+      id: edge.id,
+      semanticEdgeId: edge.semanticEdgeId,
+      segment: edge.segment,
+      from: edge.from,
+      to: edge.to,
+      kind: edge.kind,
+      ...(edge.label ? { label: edge.label } : {}),
+    }));
 
     return {
       pageIndex,
