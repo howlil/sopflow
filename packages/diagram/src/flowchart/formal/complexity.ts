@@ -1,3 +1,4 @@
+import type { DiagramEdgeKind } from "../../types.js";
 import type { FormalRouteMeta } from "./dedicated.js";
 
 export type FormalFlowchartRouteComplexity = "simple" | "medium" | "complex";
@@ -7,9 +8,9 @@ export interface FormalRouteComplexityInput {
   readonly toRow: number;
   readonly sameColumn: boolean;
   readonly crossColumn: boolean;
+  readonly kind: DiagramEdgeKind;
   readonly sourceType: FormalRouteMeta["sourceType"];
   readonly targetType: FormalRouteMeta["targetType"];
-  readonly label?: string | null;
 }
 
 export function formalRowSpan(input: {
@@ -24,7 +25,7 @@ export function isSimpleSequentialFormalFlow(
 ): boolean {
   if (input.toRow !== input.fromRow + 1) return false;
   if (input.sourceType === "flowchart-decision") return false;
-  if (input.label) return false;
+  if (input.kind !== "next") return false;
   return true;
 }
 
