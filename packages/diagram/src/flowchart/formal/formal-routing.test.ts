@@ -397,26 +397,16 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points.at(-1)).toEqual({ x: 250, y: 318 });
   });
 
-  it("routes automatic edges around locked manual geometry", () => {
+  it("reports unresolved conflicts between locked manual routes", () => {
     const rows = [
-      row("manual-source", 1, "task", "staff"),
-      row("auto-source", 2, "task", "manager"),
-      row("manual-target", 3, "task", "manager"),
-      row("auto-target", 4, "task", "staff"),
+      row("a", 1, "task", "staff"),
+      row("b", 2, "task", "manager"),
+      row("c", 3, "task", "staff"),
+      row("d", 4, "task", "manager"),
     ] as const;
     const edges: WorkflowEdge[] = [
-      edge(
-        "manual-source:next:manual-target",
-        "manual-source",
-        "manual-target",
-        "next",
-      ),
-      edge(
-        "auto-source:next:auto-target",
-        "auto-source",
-        "auto-target",
-        "next",
-      ),
+      edge("a:next:d", "a", "d", "next"),
+      edge("b:next:c", "b", "c", "next"),
     ];
     const geometry: FormalFlowchartGeometry = {
       width: 800,
@@ -426,8 +416,8 @@ describe("formal SOP-AP flowchart routing parity", () => {
       gridLayout: grid,
       shapes: new Map([
         [
-          "manual-source",
-          shape("manual-source", "staff", 0, "task", {
+          "a",
+          shape("a", "staff", 0, "task", {
             left: 249,
             top: 100,
             width: 82,
@@ -435,8 +425,8 @@ describe("formal SOP-AP flowchart routing parity", () => {
           }),
         ],
         [
-          "auto-source",
-          shape("auto-source", "manager", 1, "task", {
+          "b",
+          shape("b", "manager", 1, "task", {
             left: 349,
             top: 180,
             width: 82,
@@ -444,18 +434,18 @@ describe("formal SOP-AP flowchart routing parity", () => {
           }),
         ],
         [
-          "manual-target",
-          shape("manual-target", "manager", 2, "task", {
-            left: 349,
+          "c",
+          shape("c", "staff", 2, "task", {
+            left: 249,
             top: 300,
             width: 82,
             height: 42,
           }),
         ],
         [
-          "auto-target",
-          shape("auto-target", "staff", 3, "task", {
-            left: 249,
+          "d",
+          shape("d", "manager", 3, "task", {
+            left: 349,
             top: 400,
             width: 82,
             height: 42,
@@ -468,7 +458,7 @@ describe("formal SOP-AP flowchart routing parity", () => {
       { rows, edges },
       geometry,
       {
-        "manual-source:next:manual-target": {
+        "a:next:d": {
           kind: "orthogonal",
           sSide: "right",
           eSide: "left",
@@ -476,29 +466,44 @@ describe("formal SOP-AP flowchart routing parity", () => {
           targetDistance: 0.5,
           bendPoints: [
             { x: 380, y: 121 },
-            { x: 380, y: 321 },
+            { x: 380, y: 421 },
+          ],
+        },
+        "b:next:c": {
+          kind: "orthogonal",
+          sSide: "left",
+          eSide: "right",
+          sourceDistance: 0.5,
+          targetDistance: 0.5,
+          bendPoints: [
+            { x: 349, y: 250 },
+            { x: 420, y: 250 },
+            { x: 420, y: 321 },
           ],
         },
       },
-      { maxReconcilePasses: 1 },
+      { maxReconcilePasses: 4 },
     );
 
-    const segments = new Map(
-      planned.map((route) => [
-        route.id,
-        route.points.slice(1).map((point, index) => {
-          const previous = route.points[index] as { x: number; y: number };
-          return {
-            x1: previous.x,
-            y1: previous.y,
-            x2: point.x,
-            y2: point.y,
-          };
-        }),
-      ]),
+    const conflicted = planned.filter(
+      (route) => (route.quality.crossings ?? 0) > 0,
     );
 
-    expect(findFormalRouteCrossingIds(segments)).toEqual([]);
+    expect(conflicted.length).toBeGreaterThan(0);
+    expect(
+      conflicted.some((route) =>
+        route.routeDiagnostics?.some(
+          (diagnostic) => diagnostic.code === "PATH_CROSSES_EDGE",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      conflicted.some((route) =>
+        route.routeDiagnostics?.some(
+          (diagnostic) => diagnostic.code === "INVALID_MANUAL_ROUTE",
+        ),
+      ),
+    ).toBe(true);
   });
 
   it("orders long and Tidak routes before simpler connections", () => {

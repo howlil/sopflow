@@ -1,5 +1,10 @@
 import type { StepId } from "@sopflow/core";
-import type { DiagramPoint } from "../../types.js";
+import type {
+  DiagramDiagnostic,
+  DiagramPoint,
+  DiagramRouteQuality,
+} from "../../types.js";
+import { measureRouteQuality } from "../../routeGeometry.js";
 import {
   channelAnchorDistance,
   clampAnchorDistance,
@@ -85,6 +90,8 @@ export interface FormalPlannedEdge extends WorkflowEdge {
   readonly labelPosition?: DiagramPoint;
   readonly handlePosition: DiagramPoint;
   readonly trunkX: number;
+  readonly quality: DiagramRouteQuality;
+  readonly routeDiagnostics?: readonly DiagramDiagnostic[];
 }
 
 export interface FormalFlowchartPlanOptions {
@@ -126,7 +133,12 @@ export function planFormalProcedureEdges(
   const maxReconcilePasses = Math.max(1, options.maxReconcilePasses ?? 4);
 
   let priorityIds = new Set<string>();
-  let latest = new Map<string, FormalPlannedEdge>();
+  let bestPlan: Map<string, FormalPlannedEdge> | null = null;
+  let bestSegments = new Map<
+    string,
+    ReturnType<typeof formalPathToSegments>
+  >();
+  let bestScore = Number.POSITIVE_INFINITY;
 
   for (let pass = 0; pass < maxReconcilePasses; pass += 1) {
     const orderedMetas = prioritizeLockedFormalRoutes(
@@ -254,20 +266,147 @@ export function planFormalProcedureEdges(
         targetSide: resolved.targetSide,
         handlePosition,
         trunkX: handlePosition.x,
+        quality: {
+          length: 0,
+          bends: 0,
+          obstacleHits: 0,
+          overlaps: 0,
+          crossings: 0,
+        },
         ...(labelPosition ? { labelPosition } : {}),
       });
     }
 
-    latest = planned;
+    const passScore = scoreFormalPlan(planned, segmentsByConnection, geometry);
+    if (passScore < bestScore) {
+      bestScore = passScore;
+      bestPlan = planned;
+      bestSegments = segmentsByConnection;
+    }
+
     const violators = findFormalRouteCrossingIds(segmentsByConnection);
     if (violators.length === 0) break;
     priorityIds = new Set(violators);
   }
 
+  const selected = bestPlan ?? new Map<string, FormalPlannedEdge>();
+
   return model.edges.flatMap((edge) => {
-    const routed = latest.get(edge.id);
-    return routed ? [routed] : [];
+    const routed = selected.get(edge.id);
+    if (!routed) return [];
+
+    const quality = measureFormalEdgeQuality(
+      routed,
+      geometry,
+      bestSegments,
+    );
+    const routeDiagnostics = formalRouteDiagnostics(
+      routed,
+      quality,
+      manualRoutes[edge.id] !== undefined,
+    );
+
+    return [
+      {
+        ...routed,
+        quality,
+        ...(routeDiagnostics.length > 0 ? { routeDiagnostics } : {}),
+      },
+    ];
   });
+}
+
+function scoreFormalPlan(
+  planned: ReadonlyMap<string, FormalPlannedEdge>,
+  segmentsByConnection: ReadonlyMap<
+    string,
+    ReturnType<typeof formalPathToSegments>
+  >,
+  geometry: FormalFlowchartGeometry,
+): number {
+  let score = 0;
+
+  for (const edge of planned.values()) {
+    const quality = measureFormalEdgeQuality(
+      edge,
+      geometry,
+      segmentsByConnection,
+    );
+    score +=
+      quality.obstacleHits * 100_000 +
+      quality.overlaps * 25_000 +
+      quality.crossings * 10_000 +
+      quality.bends * 120 +
+      quality.length;
+  }
+
+  return score;
+}
+
+function measureFormalEdgeQuality(
+  edge: FormalPlannedEdge,
+  geometry: FormalFlowchartGeometry,
+  segmentsByConnection: ReadonlyMap<
+    string,
+    ReturnType<typeof formalPathToSegments>
+  >,
+): DiagramRouteQuality {
+  const obstacles = [...geometry.shapes.values()]
+    .filter(
+      (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
+    )
+    .map((shape) => shape.rect);
+  const occupied = [...segmentsByConnection.entries()]
+    .filter(([connectionId]) => connectionId !== edge.id)
+    .flatMap(([, segments]) => [...segments]);
+
+  return measureRouteQuality(edge.points, obstacles, occupied);
+}
+
+function formalRouteDiagnostics(
+  edge: FormalPlannedEdge,
+  quality: DiagramRouteQuality,
+  manual: boolean,
+): DiagramDiagnostic[] {
+  const diagnostics: DiagramDiagnostic[] = [];
+
+  if (quality.obstacleHits > 0) {
+    diagnostics.push({
+      code: "PATH_INTERSECTS_NODE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (quality.overlaps > 0) {
+    diagnostics.push({
+      code: "PATH_OVERLAPS_EDGE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (quality.crossings > 0) {
+    diagnostics.push({
+      code: "PATH_CROSSES_EDGE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (
+    manual &&
+    (quality.obstacleHits > 0 || quality.overlaps > 0 || quality.crossings > 0)
+  ) {
+    diagnostics.push({
+      code: "INVALID_MANUAL_ROUTE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+
+  return diagnostics;
 }
 
 function prioritizeLockedFormalRoutes(
