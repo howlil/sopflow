@@ -308,6 +308,64 @@ describe("SopEditor document workbench", () => {
     expect(screen.getByRole("button", { name: "Edit Manual" })).toBeDisabled();
   });
 
+  it("prunes stale semantic and paged route config against current topology", async () => {
+    const onDiagramConfigChange = vi.fn();
+
+    render(
+      <SopEditor
+        value={initialDocument}
+        header={initialHeader}
+        diagramConfig={{
+          routes: {
+            "start:next:task": { kind: "trunk", x: 300 },
+            "task:next:missing": { kind: "trunk", x: 500 },
+          },
+          pagedRoutes: {
+            "start:next:task": {
+              source: { kind: "trunk", x: 320 },
+            },
+            "task:next:missing": {
+              target: { kind: "trunk", x: 520 },
+            },
+          },
+        }}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onDiagramConfigChange).toHaveBeenCalledWith({
+        routes: {
+          "start:next:task": { kind: "trunk", x: 300 },
+        },
+        pagedRoutes: {
+          "start:next:task": {
+            source: { kind: "trunk", x: 320 },
+          },
+        },
+      });
+    });
+  });
+
+  it("does not emit diagram config changes when topology config is already valid", () => {
+    const onDiagramConfigChange = vi.fn();
+
+    render(
+      <SopEditor
+        value={initialDocument}
+        header={initialHeader}
+        diagramConfig={{
+          routes: {
+            "start:next:task": { kind: "trunk", x: 300 },
+          },
+        }}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+  });
+
   it("allows manual route editing when controlled config has a change handler", () => {
     render(
       <SopEditor
