@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
 
 import type {
   SOPDocument,
@@ -18,6 +18,14 @@ import {
   type SopDocumentMode,
 } from "./SopDocumentToolbar.js";
 import styles from "./SopDocumentCanvas.module.css";
+
+interface ProcedurePageBudget {
+  readonly pageHeightPx: number;
+  readonly firstPageReservedHeightPx: number;
+  readonly nextPageReservedHeightPx: number;
+}
+
+const PROCEDURE_TABLE_CHROME_RESERVE_PX = 120;
 
 export interface SopDocumentCanvasProps {
   document: SOPDocument;
@@ -61,11 +69,85 @@ export function SopDocumentCanvas({
   readOnly = false,
 }: SopDocumentCanvasProps) {
   const diagramPanelId = useId();
+  const documentRef = useRef<HTMLDivElement>(null);
+  const diagramPanelRef = useRef<HTMLElement>(null);
+  const [procedurePageBudget, setProcedurePageBudget] =
+    useState<ProcedurePageBudget | null>(null);
+
+  const measureProcedurePageBudget = useCallback(() => {
+    if (mode === "steps" || diagramKind !== "flowchart") {
+      setProcedurePageBudget(null);
+      return;
+    }
+
+    const page = documentRef.current;
+    const panel = diagramPanelRef.current;
+    if (!page || !panel) return;
+
+    const style = getComputedStyle(page);
+    const pageHeight = Number.parseFloat(style.minHeight);
+    const paddingTop = Number.parseFloat(style.paddingTop);
+    const paddingBottom = Number.parseFloat(style.paddingBottom);
+    if (
+      !Number.isFinite(pageHeight) ||
+      !Number.isFinite(paddingTop) ||
+      !Number.isFinite(paddingBottom)
+    ) {
+      return;
+    }
+
+    const contentHeight = Math.max(1, pageHeight - paddingTop - paddingBottom);
+    const pageRect = page.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const consumedBeforeDiagram = Math.max(
+      0,
+      panelRect.top - (pageRect.top + paddingTop),
+    );
+    const firstPageReservedHeightPx = Math.min(
+      contentHeight - 1,
+      consumedBeforeDiagram + PROCEDURE_TABLE_CHROME_RESERVE_PX,
+    );
+    const nextPageReservedHeightPx = Math.min(
+      contentHeight - 1,
+      PROCEDURE_TABLE_CHROME_RESERVE_PX,
+    );
+    const next: ProcedurePageBudget = {
+      pageHeightPx: contentHeight,
+      firstPageReservedHeightPx,
+      nextPageReservedHeightPx,
+    };
+
+    setProcedurePageBudget((current) =>
+      current &&
+      current.pageHeightPx === next.pageHeightPx &&
+      current.firstPageReservedHeightPx === next.firstPageReservedHeightPx &&
+      current.nextPageReservedHeightPx === next.nextPageReservedHeightPx
+        ? current
+        : next,
+    );
+  }, [diagramKind, mode]);
+
+  useLayoutEffect(() => {
+    measureProcedurePageBudget();
+
+    const page = documentRef.current;
+    const panel = diagramPanelRef.current;
+    if (!page || !panel || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measureProcedurePageBudget);
+    observer.observe(page);
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [measureProcedurePageBudget]);
 
   return (
     <div className={styles.canvasStage} data-sopflow-canvas-stage>
       <main className={styles.canvas}>
-        <div className={styles.document} data-sopflow-page="a4">
+        <div
+          ref={documentRef}
+          className={styles.document}
+          data-sopflow-page="a4"
+        >
           <SopHeaderView document={document} header={header} />
 
           <section className={styles.content}>
@@ -97,6 +179,7 @@ export function SopDocumentCanvas({
               />
             ) : (
               <section
+                ref={diagramPanelRef}
                 id={diagramPanelId}
                 className={styles.diagramPanel}
                 role="tabpanel"
@@ -119,6 +202,15 @@ export function SopDocumentCanvas({
                     manualEditing={manualEditing}
                     diagramConfig={diagramConfig}
                     onDiagramConfigChange={onDiagramConfigChange}
+                    {...(procedurePageBudget
+                      ? {
+                          pageHeightPx: procedurePageBudget.pageHeightPx,
+                          firstPageReservedHeightPx:
+                            procedurePageBudget.firstPageReservedHeightPx,
+                          nextPageReservedHeightPx:
+                            procedurePageBudget.nextPageReservedHeightPx,
+                        }
+                      : {})}
                   />
                 )}
               </section>
