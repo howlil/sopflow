@@ -28,8 +28,8 @@ export interface EditableFormalFlowchartPathProps {
   path: readonly DiagramPoint[];
   connectionId: string;
   selected: boolean;
-  sourceSide: FormalFlowchartSide;
-  targetSide: FormalFlowchartSide;
+  sourceSide?: FormalFlowchartSide;
+  targetSide?: FormalFlowchartSide;
   sourceRect?: FormalFlowchartRect;
   targetRect?: FormalFlowchartRect;
   sourceIsDiamond?: boolean;
@@ -55,8 +55,8 @@ export function EditableFormalFlowchartPath({
   path,
   connectionId,
   selected,
-  sourceSide,
-  targetSide,
+  sourceSide = "bottom",
+  targetSide = "top",
   sourceRect,
   targetRect,
   sourceIsDiamond = false,
