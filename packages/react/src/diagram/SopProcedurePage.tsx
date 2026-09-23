@@ -166,12 +166,7 @@ export function SopProcedurePage({
         }),
       );
     },
-    [
-      diagramConfig,
-      manualRoutes,
-      onDiagramConfigChange,
-      pageEdgeById,
-    ],
+    [diagramConfig, manualRoutes, onDiagramConfigChange, pageEdgeById],
   );
 
   const resetManualPath = useCallback(
@@ -181,7 +176,9 @@ export function SopProcedurePage({
       const edge = pageEdgeById.get(connectionId);
       if (!edge) return;
 
-      onDiagramConfigChange(removeProcedurePageManualRoute(diagramConfig, edge));
+      onDiagramConfigChange(
+        removeProcedurePageManualRoute(diagramConfig, edge),
+      );
     },
     [diagramConfig, onDiagramConfigChange, pageEdgeById],
   );
@@ -262,87 +259,89 @@ export function SopProcedurePage({
             </tr>
           ) : (
             page.rows.map((row) => {
-            const selected = selectedStepId === row.stepId;
-            const issueCount = issues.filter(
-              (issue) => issue.stepId === row.stepId,
-            ).length;
+              const selected = selectedStepId === row.stepId;
+              const issueCount = issues.filter(
+                (issue) => issue.stepId === row.stepId,
+              ).length;
 
-            return (
-              <tr
-                key={row.stepId}
-                className={styles.row}
-                data-sopflow-procedure-step-id={row.stepId}
-                data-sopflow-primary-actor-id={row.primaryActorId ?? ""}
-                data-selected={selected || undefined}
-                data-error={issueCount > 0 || undefined}
-                tabIndex={onSelectedStepChange ? 0 : undefined}
-                aria-selected={selected || undefined}
-                onClick={() => onSelectedStepChange?.(row.stepId)}
-                onKeyDown={(event) => {
-                  if (
-                    onSelectedStepChange &&
-                    (event.key === "Enter" || event.key === " ")
-                  ) {
-                    event.preventDefault();
-                    onSelectedStepChange(row.stepId);
-                  }
-                }}
-              >
-                <td className={styles.number}>{row.number}</td>
-                <td className={styles.activity}>
-                  <div className={styles.activityName}>
-                    {row.activity.trim() || "—"}
-                  </div>
-                  {row.kind === "decision" || issueCount > 0 ? (
-                    <div className={styles.activityMeta}>
-                      {row.kind === "decision" ? (
-                        <span>{decisionSummary(row.stepId, model)}</span>
-                      ) : null}
-                      {issueCount > 0 ? (
-                        <span className={styles.issue}>
-                          {issueCount} masalah
-                        </span>
-                      ) : null}
+              return (
+                <tr
+                  key={row.stepId}
+                  className={styles.row}
+                  data-sopflow-procedure-step-id={row.stepId}
+                  data-sopflow-primary-actor-id={row.primaryActorId ?? ""}
+                  data-selected={selected || undefined}
+                  data-error={issueCount > 0 || undefined}
+                  tabIndex={onSelectedStepChange ? 0 : undefined}
+                  aria-selected={selected || undefined}
+                  onClick={() => onSelectedStepChange?.(row.stepId)}
+                  onKeyDown={(event) => {
+                    if (
+                      onSelectedStepChange &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      onSelectedStepChange(row.stepId);
+                    }
+                  }}
+                >
+                  <td className={styles.number}>{row.number}</td>
+                  <td className={styles.activity}>
+                    <div className={styles.activityName}>
+                      {row.activity.trim() || "—"}
                     </div>
-                  ) : null}
-                </td>
-
-                {model.actorColumns.map((actor, actorIndex) => {
-                  const primary =
-                    actor.actorId === row.primaryActorId ||
-                    (actor.actorId === null &&
-                      row.primaryActorId === null &&
-                      model.actorColumns.length === 1);
-
-                  return (
-                    <td
-                      key={actor.actorId ?? `fallback-${actorIndex}`}
-                      className={styles.actorCell}
-                      data-sopflow-actor-cell
-                      data-sopflow-actor-id={actor.actorId ?? "fallback"}
-                    >
-                      {primary ? (
-                        <div className={styles.shapeSlot}>
-                          <span
-                            ref={(element) => setShapeRef(row.stepId, element)}
-                            className={styles.shapeAnchor}
-                            data-sopflow-primary-shape={row.stepId}
-                          >
-                            <ProcedureShape kind={row.kind} />
+                    {row.kind === "decision" || issueCount > 0 ? (
+                      <div className={styles.activityMeta}>
+                        {row.kind === "decision" ? (
+                          <span>{decisionSummary(row.stepId, model)}</span>
+                        ) : null}
+                        {issueCount > 0 ? (
+                          <span className={styles.issue}>
+                            {issueCount} masalah
                           </span>
-                        </div>
-                      ) : null}
-                    </td>
-                  );
-                })}
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </td>
 
-                <td>{display(row.input)}</td>
-                <td>{durationLabel(row)}</td>
-                <td>{display(row.output)}</td>
-                <td>{display(row.note)}</td>
-              </tr>
-            );
-          })
+                  {model.actorColumns.map((actor, actorIndex) => {
+                    const primary =
+                      actor.actorId === row.primaryActorId ||
+                      (actor.actorId === null &&
+                        row.primaryActorId === null &&
+                        model.actorColumns.length === 1);
+
+                    return (
+                      <td
+                        key={actor.actorId ?? `fallback-${actorIndex}`}
+                        className={styles.actorCell}
+                        data-sopflow-actor-cell
+                        data-sopflow-actor-id={actor.actorId ?? "fallback"}
+                      >
+                        {primary ? (
+                          <div className={styles.shapeSlot}>
+                            <span
+                              ref={(element) =>
+                                setShapeRef(row.stepId, element)
+                              }
+                              className={styles.shapeAnchor}
+                              data-sopflow-primary-shape={row.stepId}
+                            >
+                              <ProcedureShape kind={row.kind} />
+                            </span>
+                          </div>
+                        ) : null}
+                      </td>
+                    );
+                  })}
+
+                  <td>{display(row.input)}</td>
+                  <td>{durationLabel(row)}</td>
+                  <td>{display(row.output)}</td>
+                  <td>{display(row.note)}</td>
+                </tr>
+              );
+            })
           )}
 
           <OpcTableRow
