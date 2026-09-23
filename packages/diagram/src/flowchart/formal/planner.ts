@@ -115,6 +115,7 @@ export function planFormalProcedureEdges(
     return [
       {
         id: edge.id,
+        kind: edge.kind,
         fromRow: source.number - 1,
         toRow: target.number - 1,
         fromActorId: source.primaryActorId,
@@ -201,7 +202,7 @@ export function planFormalProcedureEdges(
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        ...(edge.label ? { label: edge.label } : {}),
+        kind: edge.kind,
         sourceType: meta.sourceType,
         targetType: meta.targetType,
       };
@@ -473,7 +474,7 @@ function resolveAutoRoute(input: {
 
     if (
       input.meta.sourceType === "flowchart-decision" &&
-      input.edge.label === "Tidak" &&
+      input.edge.kind === "no" &&
       destinationAbove
     ) {
       const horizontalLoop =
@@ -491,7 +492,7 @@ function resolveAutoRoute(input: {
 
     if (
       input.meta.sourceType === "flowchart-decision" &&
-      input.edge.label === "Ya" &&
+      input.edge.kind === "yes" &&
       destinationBelow
     ) {
       if (result.sourceSide !== "bottom") score += 8_000;
