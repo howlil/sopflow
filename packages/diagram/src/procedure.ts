@@ -104,8 +104,23 @@ export type ProcedureManualRoutes = Readonly<
   Record<string, ProcedureManualRoute>
 >;
 
+export interface ProcedurePagedRouteOverride {
+  readonly source?: ProcedureManualRoute;
+  readonly target?: ProcedureManualRoute;
+}
+
+export type ProcedurePagedRouteOverrides = Readonly<
+  Record<string, ProcedurePagedRouteOverride>
+>;
+
 export interface SopDiagramConfig {
   readonly routes?: ProcedureManualRoutes;
+  /**
+   * Manual route segments created when one semantic edge crosses a page
+   * boundary. Keys are canonical WorkflowEdge ids, never renderer __out/__in
+   * ids.
+   */
+  readonly pagedRoutes?: ProcedurePagedRouteOverrides;
   /**
    * Deterministic routing seed. Different seeds try another stable connection
    * order without changing SOP semantics.
