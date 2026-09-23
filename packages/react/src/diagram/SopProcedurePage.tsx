@@ -36,7 +36,9 @@ export function SopProcedurePage({
 }: SopProcedurePageProps) {
   const rootRef = useRef<HTMLElement>(null);
   const shapeRefs = useRef(new Map<string, HTMLSpanElement>());
-  const [geometry, setGeometry] = useState<FormalFlowchartGeometry | null>(null);
+  const [geometry, setGeometry] = useState<FormalFlowchartGeometry | null>(
+    null,
+  );
   const actorWidth = Math.max(10, 70 / model.actorColumns.length);
   const totalColumns = model.actorColumns.length + 6;
   const routingRowById = useMemo(
@@ -219,7 +221,9 @@ export function SopProcedurePage({
                         <span>{decisionSummary(row.stepId, model)}</span>
                       ) : null}
                       {issueCount > 0 ? (
-                        <span className={styles.issue}>{issueCount} masalah</span>
+                        <span className={styles.issue}>
+                          {issueCount} masalah
+                        </span>
                       ) : null}
                     </div>
                   ) : null}
@@ -370,6 +374,7 @@ function OpcTableRow({
                     className={styles.opcAnchor}
                     data-sopflow-opc={id}
                     data-variant={endpoint.variant}
+                    role="img"
                     aria-label={`Off-page connector ${endpoint.opc.letter}`}
                   >
                     <svg
