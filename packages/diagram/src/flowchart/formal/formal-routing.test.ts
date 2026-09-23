@@ -397,6 +397,110 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points.at(-1)).toEqual({ x: 250, y: 318 });
   });
 
+  it("routes automatic edges around locked manual geometry", () => {
+    const rows = [
+      row("manual-source", 1, "task", "staff"),
+      row("auto-source", 2, "task", "manager"),
+      row("manual-target", 3, "task", "manager"),
+      row("auto-target", 4, "task", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge(
+        "manual-source:next:manual-target",
+        "manual-source",
+        "manual-target",
+        "next",
+      ),
+      edge(
+        "auto-source:next:auto-target",
+        "auto-source",
+        "auto-target",
+        "next",
+      ),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 800,
+      height: 560,
+      pelaksanaBounds: pelaksana,
+      columns: { staff, manager },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "manual-source",
+          shape("manual-source", "staff", 0, "task", {
+            left: 249,
+            top: 100,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "auto-source",
+          shape("auto-source", "manager", 1, "task", {
+            left: 349,
+            top: 180,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "manual-target",
+          shape("manual-target", "manager", 2, "task", {
+            left: 349,
+            top: 300,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "auto-target",
+          shape("auto-target", "staff", 3, "task", {
+            left: 249,
+            top: 400,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+
+    const planned = planFormalProcedureEdges(
+      { rows, edges },
+      geometry,
+      {
+        "manual-source:next:manual-target": {
+          kind: "orthogonal",
+          sSide: "right",
+          eSide: "left",
+          sourceDistance: 0.5,
+          targetDistance: 0.5,
+          bendPoints: [
+            { x: 380, y: 121 },
+            { x: 380, y: 321 },
+          ],
+        },
+      },
+      { maxReconcilePasses: 1 },
+    );
+
+    const segments = new Map(
+      planned.map((route) => [
+        route.id,
+        route.points.slice(1).map((point, index) => {
+          const previous = route.points[index] as { x: number; y: number };
+          return {
+            x1: previous.x,
+            y1: previous.y,
+            x2: point.x,
+            y2: point.y,
+          };
+        }),
+      ]),
+    );
+
+    expect(findFormalRouteCrossingIds(segments)).toEqual([]);
+  });
+
   it("orders long and Tidak routes before simpler connections", () => {
     const ordered = sortFormalRoutesForPlanning([
       meta("near", 0, 1, null),

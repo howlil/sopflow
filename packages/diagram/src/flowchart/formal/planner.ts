@@ -129,14 +129,13 @@ export function planFormalProcedureEdges(
   let latest = new Map<string, FormalPlannedEdge>();
 
   for (let pass = 0; pass < maxReconcilePasses; pass += 1) {
-    const orderedMetas = sortFormalRoutesForPlanning(
-      routeMetas,
-      pathLayoutSeed,
-      {
+    const orderedMetas = prioritizeLockedFormalRoutes(
+      sortFormalRoutesForPlanning(routeMetas, pathLayoutSeed, {
         priorityIds,
         reconcilePass: pass,
         priorityRoutesLast: true,
-      },
+      }),
+      manualRoutes,
     );
     const occupied: Array<{
       x1: number;
@@ -269,6 +268,21 @@ export function planFormalProcedureEdges(
     const routed = latest.get(edge.id);
     return routed ? [routed] : [];
   });
+}
+
+function prioritizeLockedFormalRoutes(
+  metas: readonly FormalRouteMeta[],
+  manualRoutes: Readonly<Record<string, FormalManualRoute>>,
+): FormalRouteMeta[] {
+  const locked: FormalRouteMeta[] = [];
+  const automatic: FormalRouteMeta[] = [];
+
+  for (const meta of metas) {
+    if (manualRoutes[meta.id]) locked.push(meta);
+    else automatic.push(meta);
+  }
+
+  return [...locked, ...automatic];
 }
 
 function resolveAutoRoute(input: {
