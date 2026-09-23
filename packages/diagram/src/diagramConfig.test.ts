@@ -40,12 +40,25 @@ describe("diagram config", () => {
         "start:next:end__out": { kind: "trunk", x: 400 },
         stale: { kind: "trunk", x: 500 },
       },
+      pagedRoutes: {
+        "start:next:end": {
+          source: { kind: "trunk", x: 360 },
+        },
+        stale: {
+          target: { kind: "trunk", x: 520 },
+        },
+      },
     };
 
     expect(pruneSopDiagramConfig(graph, config)).toEqual({
       pathLayoutSeed: 3,
       routes: {
         "start:next:end": { kind: "trunk", x: 320 },
+      },
+      pagedRoutes: {
+        "start:next:end": {
+          source: { kind: "trunk", x: 360 },
+        },
       },
     });
   });
@@ -56,6 +69,11 @@ describe("diagram config", () => {
         pathLayoutSeed: 7,
         routes: {
           "start:next:end": { kind: "trunk", x: 320 },
+        },
+        pagedRoutes: {
+          "start:next:end": {
+            source: { kind: "trunk", x: 360 },
+          },
         },
       }),
     ).toEqual({ pathLayoutSeed: 7 });
@@ -97,6 +115,26 @@ describe("diagram config", () => {
     };
 
     expect(diagramConfigEquals(first, second)).toBe(true);
+    expect(
+      diagramConfigEquals(
+        {
+          ...first,
+          pagedRoutes: {
+            "start:next:end": {
+              source: { kind: "trunk", x: 360 },
+            },
+          },
+        },
+        {
+          ...second,
+          pagedRoutes: {
+            "start:next:end": {
+              source: { kind: "trunk", x: 360 },
+            },
+          },
+        },
+      ),
+    ).toBe(true);
     expect(diagramConfigEquals({}, { routes: {} })).toBe(true);
     expect(
       diagramConfigEquals(first, {
