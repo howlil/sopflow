@@ -2,7 +2,7 @@ import type { SOPDocument, StepId } from "@sopflow/core";
 import { useState } from "react";
 
 import { SopEditor, type SopDiagramKind } from "../SopEditor.js";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 import type { SopReadinessIssue } from "../validation/readiness.js";
 
 export type SopWorkspaceView = "editor" | "diagram";
