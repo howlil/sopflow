@@ -41,6 +41,42 @@ describe("buildFormalProcedurePages", () => {
     expect(pages[1]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
   });
 
+  it("packs rows by estimated content height when a height budget is supplied", () => {
+    const shortDocument = linearDocument(4);
+    const longDocument: SOPDocument = {
+      ...shortDocument,
+      id: "height-aware",
+      steps: shortDocument.steps.map((step) =>
+        step.id === "step-2"
+          ? {
+              ...step,
+              name: "Dokumen sangat panjang ".repeat(32),
+            }
+          : step,
+      ),
+    };
+
+    const shortPages = buildFormalProcedurePages(
+      buildProcedureModel(shortDocument),
+      {
+        firstPageHeightPx: 230,
+        nextPageHeightPx: 230,
+      },
+    );
+    const longPages = buildFormalProcedurePages(
+      buildProcedureModel(longDocument),
+      {
+        firstPageHeightPx: 230,
+        nextPageHeightPx: 230,
+      },
+    );
+
+    expect(shortPages.map((page) => page.rows.length)).toEqual([2, 2]);
+    expect(longPages.map((page) => page.rows.length)).toEqual([1, 1, 2]);
+    expect(longPages[0]?.bottomOpc).toHaveLength(1);
+    expect(longPages[1]?.topOpc).toHaveLength(1);
+  });
+
   it("maps cross-page manual routes through semantic edge ids", () => {
     const model = buildProcedureModel(linearDocument(6));
     const pages = buildFormalProcedurePages(model, {
