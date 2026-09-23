@@ -59,6 +59,27 @@ describe("SopBpmn", () => {
     expect(container.querySelector("rect")).not.toBeNull();
   });
 
+  it("renders long BPMN labels across multiple lines without truncating content", () => {
+    const longLabel =
+      "Verifikasi dokumen pengajuan pembayaran dan kelengkapan administrasi";
+    const longDocument: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "fix" ? { ...step, name: longLabel } : step,
+      ),
+    };
+
+    const { container } = render(<SopBpmn document={longDocument} />);
+    const node = container.querySelector(
+      '[data-sopflow-step-id="fix"]',
+    );
+
+    expect(node?.textContent).toContain("Verifikasi dokumen");
+    expect(node?.textContent).toContain("kelengkapan administrasi");
+    expect(node?.textContent).not.toContain("…");
+    expect(node?.querySelectorAll("tspan").length).toBeGreaterThan(1);
+  });
+
   it("uses the shared controlled selection contract", () => {
     const onSelectedStepChange = vi.fn();
 
