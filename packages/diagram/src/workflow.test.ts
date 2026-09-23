@@ -124,5 +124,4 @@ describe("projectWorkflow", () => {
 
     expect(shuffled).toEqual(original);
   });
-
 });
