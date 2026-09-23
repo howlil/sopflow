@@ -40,3 +40,6 @@ jobs:
           pnpm --filter @sopflow/diagram pack --pack-destination /tmp/sopflow-packs
           pnpm --filter @sopflow/react pack --pack-destination /tmp/sopflow-packs
           ls -lah /tmp/sopflow-packs
+
+      - name: Browser diagram regression
+        run: bash scripts/check-browser-diagrams.sh
