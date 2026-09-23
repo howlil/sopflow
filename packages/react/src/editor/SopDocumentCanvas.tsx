@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
 
 import type {
   SOPDocument,
