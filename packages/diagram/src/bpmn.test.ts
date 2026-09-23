@@ -154,6 +154,74 @@ describe("buildBpmnModel", () => {
     );
   });
 
+  it("grows task geometry and lane footprint for long labels", () => {
+    const longLabel =
+      "Verifikasi dokumen pengajuan pembayaran dan kelengkapan administrasi secara menyeluruh";
+    const model = buildBpmnModel({
+      ...document,
+      id: "bpmn-long-label",
+      steps: document.steps.map((step) =>
+        step.id === "fix" ? { ...step, name: longLabel } : step,
+      ),
+    });
+    const node = model.nodes.find((candidate) => candidate.id === "fix");
+    const lane = model.lanes.find(
+      (candidate) => candidate.index === node?.laneIndex,
+    );
+
+    expect(node).toBeDefined();
+    expect(node?.labelLines.length).toBeGreaterThan(1);
+    expect(node?.width).toBeGreaterThan(96);
+    expect(node?.height).toBeGreaterThanOrEqual(48);
+    expect(lane?.height).toBeGreaterThanOrEqual(model.laneHeight);
+  });
+
+  it("keeps adjacent BPMN node footprints separated after dynamic sizing", () => {
+    const model = buildBpmnModel({
+      schemaVersion: "1",
+      id: "bpmn-wide-chain",
+      title: "Wide chain",
+      actors: [{ id: "staff", name: "Staff" }],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Mulai",
+          actorIds: ["staff"],
+          next: "first",
+        },
+        {
+          id: "first",
+          type: "task",
+          name: "Verifikasi dokumen permohonan yang sangat panjang",
+          actorIds: ["staff"],
+          next: "second",
+        },
+        {
+          id: "second",
+          type: "task",
+          name: "Lakukan validasi lanjutan untuk seluruh lampiran",
+          actorIds: ["staff"],
+          next: "end",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "Selesai",
+          actorIds: ["staff"],
+        },
+      ],
+    });
+    const first = model.nodes.find((node) => node.id === "first");
+    const second = model.nodes.find((node) => node.id === "second");
+
+    if (!first || !second) throw new Error("BPMN task nodes not found");
+
+    const firstRight = first.x + first.width / 2;
+    const secondLeft = second.x - second.width / 2;
+    expect(secondLeft).toBeGreaterThan(firstRight);
+  });
+
   it("keeps BPMN layout stable when step storage order changes", () => {
     const original = buildBpmnModel(document);
     const shuffled = buildBpmnModel({

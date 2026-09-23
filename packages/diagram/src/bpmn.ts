@@ -19,6 +19,7 @@ import {
   type RouteSegment,
 } from "./routeGeometry.js";
 import { layoutBpmnGraph } from "./bpmnLayout.js";
+import { layoutNodeText } from "./text/layoutNodeText.js";
 import { projectWorkflow, type WorkflowEdge } from "./workflow.js";
 
 export interface BpmnLayoutOptions {
@@ -45,6 +46,8 @@ export interface BpmnNode {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  readonly labelLines: readonly string[];
+  readonly labelLineHeight: number;
 }
 
 export interface BpmnRoutedEdge extends WorkflowEdge {
@@ -112,31 +115,69 @@ function buildBpmnModelPass(
     1,
     document.actors.length + (needsFallbackLane && hasExplicitActors ? 1 : 0),
   );
-  const lanes: BpmnLane[] = Array.from({ length: laneCount }, (_, index) => {
-    const actor = document.actors[index];
-
-    return {
-      actorId: actor?.id ?? null,
-      label: actor?.name ?? "Pelaksana",
-      index,
-      y: config.padding + index * config.laneHeight,
-      height: config.laneHeight,
-    };
-  });
   const layoutNodes = layoutBpmnGraph(document, graph);
   const layoutById = new Map(
     layoutNodes.map((node) => [node.id, node] as const),
   );
+  const metricsById = new Map(
+    graph.nodes.map(
+      (node) => [node.id, measureBpmnNode(node.kind, node.label)] as const,
+    ),
+  );
   const maxColumn = Math.max(0, ...layoutNodes.map((node) => node.columnIndex));
-  const width =
-    config.headerWidth + config.padding * 2 + (maxColumn + 1) * config.stepGap;
-  const height = config.padding * 2 + laneCount * config.laneHeight;
+  const columnWidths = Array.from({ length: maxColumn + 1 }, () => 96);
+  for (const layout of layoutNodes) {
+    const metrics = metricsById.get(layout.id);
+    if (!metrics) continue;
+    columnWidths[layout.columnIndex] = Math.max(
+      columnWidths[layout.columnIndex] ?? 96,
+      metrics.footprintWidth,
+    );
+  }
+  const columnGap = Math.max(24, config.stepGap - 96);
+  const columnCenters: number[] = [];
+  let columnCursor = config.padding + config.headerWidth;
+  columnWidths.forEach((columnWidth, index) => {
+    columnCenters[index] = columnCursor + columnWidth / 2;
+    columnCursor += columnWidth;
+    if (index < columnWidths.length - 1) columnCursor += columnGap;
+  });
+  const width = columnCursor + config.padding;
+
+  const laneHeights = Array.from(
+    { length: laneCount },
+    () => config.laneHeight,
+  );
+  for (const layout of layoutNodes) {
+    const metrics = metricsById.get(layout.id);
+    if (!metrics) continue;
+    laneHeights[layout.laneIndex] = Math.max(
+      laneHeights[layout.laneIndex] ?? config.laneHeight,
+      metrics.footprintHeight + 24,
+    );
+  }
+  let laneCursor = config.padding;
+  const lanes: BpmnLane[] = Array.from({ length: laneCount }, (_, index) => {
+    const actor = document.actors[index];
+    const laneHeight = laneHeights[index] ?? config.laneHeight;
+    const lane = {
+      actorId: actor?.id ?? null,
+      label: actor?.name ?? "Pelaksana",
+      index,
+      y: laneCursor,
+      height: laneHeight,
+    };
+    laneCursor += laneHeight;
+    return lane;
+  });
+  const height = laneCursor + config.padding;
 
   const stepById = new Map(document.steps.map((step) => [step.id, step]));
   const nodes = graph.nodes.flatMap<BpmnNode>((node) => {
     const step = stepById.get(node.id);
     const layout = layoutById.get(node.id);
-    if (!step || !layout) return [];
+    const metrics = metricsById.get(node.id);
+    if (!step || !layout || !metrics) return [];
 
     const firstActorId = step.actorIds[0];
     const laneIndex = layout.laneIndex;
@@ -155,7 +196,9 @@ function buildBpmnModelPass(
         to: node.id,
       });
     }
-    const size = nodeSize(node.kind);
+
+    const lane = lanes[laneIndex];
+    if (!lane) return [];
 
     return [
       {
@@ -164,15 +207,13 @@ function buildBpmnModelPass(
         label: node.label,
         laneIndex,
         x:
-          config.headerWidth +
-          config.padding +
-          layout.columnIndex * config.stepGap +
-          config.stepGap / 2,
-        y:
-          config.padding +
-          laneIndex * config.laneHeight +
-          config.laneHeight / 2,
-        ...size,
+          columnCenters[layout.columnIndex] ??
+          config.padding + config.headerWidth + metrics.width / 2,
+        y: lane.y + lane.height / 2,
+        width: metrics.width,
+        height: metrics.height,
+        labelLines: metrics.labelLines,
+        labelLineHeight: metrics.labelLineHeight,
       },
     ];
   });
@@ -746,13 +787,62 @@ function compareBpmnRoutingPriority(
     : first.id.localeCompare(second.id);
 }
 
-function nodeSize(kind: BpmnNode["kind"]): {
+interface BpmnNodeMetrics {
   readonly width: number;
   readonly height: number;
-} {
-  if (kind === "decision") return { width: 48, height: 48 };
-  if (kind === "start" || kind === "end") return { width: 38, height: 38 };
-  return { width: 96, height: 48 };
+  readonly footprintWidth: number;
+  readonly footprintHeight: number;
+  readonly labelLines: readonly string[];
+  readonly labelLineHeight: number;
+}
+
+function measureBpmnNode(
+  kind: BpmnNode["kind"],
+  label: string,
+): BpmnNodeMetrics {
+  const labelLayout = layoutNodeText(label, kind, {
+    maxCharsPerLine: kind === "task" ? 22 : 18,
+    lineHeight: 14,
+    horizontalPadding: 16,
+    verticalPadding: 10,
+    minWidth: 48,
+    maxWidth: 200,
+  });
+  const labelLines = labelLayout.text.lines;
+  const labelLineHeight = labelLayout.text.lineHeight;
+  const longestLine = Math.max(1, ...labelLines.map((line) => line.length));
+  const estimatedLabelWidth = clamp(
+    longestLine * 6.2 + 20,
+    kind === "task" ? 96 : 48,
+    200,
+  );
+
+  if (kind === "task") {
+    const width = estimatedLabelWidth;
+    const height = Math.max(48, labelLines.length * labelLineHeight + 20);
+    return {
+      width,
+      height,
+      footprintWidth: width,
+      footprintHeight: height,
+      labelLines,
+      labelLineHeight,
+    };
+  }
+
+  const shapeSize = kind === "decision" ? 48 : 38;
+  return {
+    width: shapeSize,
+    height: shapeSize,
+    footprintWidth: Math.max(shapeSize, estimatedLabelWidth),
+    footprintHeight: shapeSize + 10 + labelLines.length * labelLineHeight,
+    labelLines,
+    labelLineHeight,
+  };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function compactOrthogonalPoints(
