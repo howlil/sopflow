@@ -1,3 +1,4 @@
+import { extrudePoint, pointOnRectSide } from "../../routeAnchors.js";
 import type { DiagramPoint } from "../../types.js";
 import type {
   FormalFlowchartBounds,
@@ -52,28 +53,8 @@ export function pointOnFormalShape(
 ): DiagramPoint {
   if (isDecision) return pointOnFormalDecisionVertex(rect, side);
 
-  switch (side) {
-    case "top":
-      return {
-        x: Math.round(rect.left + rect.width / 2),
-        y: Math.round(rect.top),
-      };
-    case "bottom":
-      return {
-        x: Math.round(rect.left + rect.width / 2),
-        y: Math.round(rect.top + rect.height),
-      };
-    case "left":
-      return {
-        x: Math.round(rect.left),
-        y: Math.round(rect.top + rect.height / 2),
-      };
-    case "right":
-      return {
-        x: Math.round(rect.left + rect.width),
-        y: Math.round(rect.top + rect.height / 2),
-      };
-  }
+  const point = pointOnRectSide(rect, side);
+  return { x: Math.round(point.x), y: Math.round(point.y) };
 }
 
 export function extrudeFormalShapePoint(
@@ -84,16 +65,7 @@ export function extrudeFormalShapePoint(
 ): DiagramPoint {
   const point = pointOnFormalShape(rect, side, isDecision);
 
-  switch (side) {
-    case "top":
-      return { x: point.x, y: point.y - margin };
-    case "bottom":
-      return { x: point.x, y: point.y + margin };
-    case "left":
-      return { x: point.x - margin, y: point.y };
-    case "right":
-      return { x: point.x + margin, y: point.y };
-  }
+  return extrudePoint(point, side, margin);
 }
 
 export function resolveFormalColumnBoundsForShapeX(
