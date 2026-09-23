@@ -6,6 +6,7 @@ import {
   insertFormalRouteWaypointAtSegmentMidpoint,
   rebuildFormalPathForEndpoint,
   removeFormalRouteWaypoint,
+  repairFormalManualRoute,
   snapFormalEndpoint,
   validateFormalManualRoute,
 } from "./edit.js";
@@ -89,6 +90,57 @@ describe("formal flowchart path editing", () => {
     expect(snapped.side).toBe("top");
     expect(snapped.distance).toBe(0.5);
     expect(snapped.point).toEqual({ x: 130, y: 100 });
+  });
+
+  it("keeps the preferred endpoint side inside the snap hysteresis", () => {
+    const rect = { left: 100, top: 100, width: 100, height: 60 };
+
+    expect(
+      snapFormalEndpoint(
+        rect,
+        { x: 198, y: 102 },
+        { preferredSide: "right", sideHysteresisPx: 8 },
+      ).side,
+    ).toBe("right");
+
+    expect(
+      snapFormalEndpoint(
+        rect,
+        { x: 180, y: 101 },
+        { preferredSide: "right", sideHysteresisPx: 8 },
+      ).side,
+    ).toBe("top");
+  });
+
+  it("repairs an obstacle-crossing manual route through a nearby corridor", () => {
+    const obstacles = [{ left: 140, top: 80, width: 30, height: 40 }];
+    const bounds = { left: 80, top: 60, width: 220, height: 220 };
+    const repaired = repairFormalManualRoute({
+      path: [
+        { x: 100, y: 100 },
+        { x: 180, y: 100 },
+        { x: 180, y: 220 },
+      ],
+      sourceSide: "right",
+      targetSide: "top",
+      obstacles,
+      bounds,
+    });
+
+    expect(repaired).not.toBeNull();
+    if (!repaired) return;
+
+    expect(
+      validateFormalManualRoute({
+        path: repaired,
+        sourceSide: "right",
+        targetSide: "top",
+        obstacles,
+        bounds,
+      }),
+    ).toEqual({ valid: true });
+    expect(repaired[0]).toEqual({ x: 100, y: 100 });
+    expect(repaired.at(-1)).toEqual({ x: 180, y: 220 });
   });
 
   it("rebuilds the endpoint-adjacent segment orthogonally", () => {

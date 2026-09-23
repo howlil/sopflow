@@ -44,6 +44,7 @@ export {
   insertFormalRouteWaypointAtSegmentMidpoint,
   pointOnFormalShapeSide,
   rebuildFormalPathForEndpoint,
+  repairFormalManualRoute,
   removeFormalRouteWaypoint,
   resolveNearestFormalShapeSide,
   snapFormalEndpoint,

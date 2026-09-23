@@ -6,6 +6,7 @@ import {
   insertFormalRouteWaypointAtSegmentMidpoint,
   pointsToPath,
   rebuildFormalPathForEndpoint,
+  repairFormalManualRoute,
   removeFormalRouteWaypoint,
   snapFormalEndpoint,
   validateFormalManualRoute,
@@ -96,10 +97,19 @@ export function EditableFormalFlowchartPath({
       obstacles,
       bounds: routingBounds,
     });
-    if (!validation.valid) return;
+    const effectivePath = validation.valid
+      ? nextPath
+      : repairFormalManualRoute({
+          path: nextPath,
+          sourceSide: nextSourceSide,
+          targetSide: nextTargetSide,
+          obstacles,
+          bounds: routingBounds,
+        });
+    if (!effectivePath) return;
 
     const change = formalRouteChangeFromPath(
-      nextPath,
+      effectivePath,
       nextSourceSide,
       nextTargetSide,
     );
@@ -153,6 +163,7 @@ export function EditableFormalFlowchartPath({
     if (session.mode === "source-endpoint" && sourceRect) {
       const endpoint = snapFormalEndpoint(sourceRect, point, {
         diamond: sourceIsDiamond,
+        preferredSide: sourceSide,
       });
       emitPath(
         rebuildFormalPathForEndpoint(session.originPath, "start", endpoint),
@@ -165,6 +176,7 @@ export function EditableFormalFlowchartPath({
     if (session.mode === "target-endpoint" && targetRect) {
       const endpoint = snapFormalEndpoint(targetRect, point, {
         diamond: targetIsDiamond,
+        preferredSide: targetSide,
       });
       emitPath(
         rebuildFormalPathForEndpoint(session.originPath, "end", endpoint),
