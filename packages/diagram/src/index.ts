@@ -92,6 +92,8 @@ export type {
   ProcedureManualRoute,
   ProcedureManualRoutes,
   ProcedureManualTrunks,
+  ProcedurePagedRouteOverride,
+  ProcedurePagedRouteOverrides,
   ProcedureNodeGeometry,
   ProcedureModel,
   ProcedureRoutingOverrides,
@@ -157,6 +159,9 @@ export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
 
 export {
   buildFormalProcedurePages,
+  removeProcedurePageManualRoute,
+  resolveProcedurePageRouteOverrides,
+  setProcedurePageManualRoute,
   type FormalProcedurePageEdge,
   type FormalProcedurePageModel,
   type FormalProcedurePaginationOptions,
