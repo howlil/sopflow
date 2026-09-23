@@ -1,5 +1,6 @@
 import type { StepId, ValidationIssue } from "@sopflow/core";
 import {
+  formalPathToSegments,
   planFormalProcedureEdges,
   pointsToPath,
   removeProcedurePageManualRoute,
@@ -139,6 +140,17 @@ export function SopProcedurePage({
       page.routingRows,
     ],
   );
+  const routeSegmentsById = useMemo(
+    () =>
+      new Map(
+        routedEdges.map((edge) => [
+          edge.id,
+          formalPathToSegments(edge.points),
+        ] as const),
+      ),
+    [routedEdges],
+  );
+
   const pageEdgeById = useMemo(
     () => new Map(page.edges.map((edge) => [edge.id, edge] as const)),
     [page.edges],
@@ -394,6 +406,9 @@ export function SopProcedurePage({
                   shape.stepId !== edge.from && shape.stepId !== edge.to,
               )
               .map((shape) => shape.rect);
+            const occupiedSegments = [...routeSegmentsById.entries()]
+              .filter(([edgeId]) => edgeId !== edge.id)
+              .flatMap(([, segments]) => segments);
             const pelaksanaBounds = geometry.pelaksanaBounds;
             const formalBounds = pelaksanaBounds
               ? {
@@ -418,6 +433,7 @@ export function SopProcedurePage({
                     sourceIsDiamond={sourceShape?.kind === "decision"}
                     targetIsDiamond={targetShape?.kind === "decision"}
                     obstacles={obstacles}
+                    occupiedSegments={occupiedSegments}
                     routingBounds={formalBounds}
                     onSelect={setSelectedConnectionId}
                     onChange={(route) => updateManualPath(edge.id, route)}
