@@ -541,6 +541,7 @@ export function validateFormalManualRoute(input: {
   readonly sourceSide: FormalFlowchartSide;
   readonly targetSide: FormalFlowchartSide;
   readonly obstacles?: readonly FormalFlowchartRect[];
+  readonly occupied?: readonly FormalFlowchartOccupiedSegment[];
   readonly bounds?: FormalFlowchartRect | null;
   readonly clearance?: number;
 }): FormalManualRouteValidation {
@@ -549,6 +550,7 @@ export function validateFormalManualRoute(input: {
     sourceSide,
     targetSide,
     obstacles = [],
+    occupied = [],
     bounds = null,
     clearance = 2,
   } = input;
