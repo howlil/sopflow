@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
-import { createActorId } from "../utils/createActorId.js";
+import { createActorId } from "./createActorId.js";
 import { DeleteActorDialog } from "./DeleteActorDialog.js";
 import styles from "./ActorsEditor.module.css";
 
