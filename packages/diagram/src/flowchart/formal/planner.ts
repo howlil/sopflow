@@ -4,7 +4,8 @@ import type {
   DiagramPoint,
   DiagramRouteQuality,
 } from "../../types.js";
-import { measureRouteQuality } from "../../routeGeometry.js";
+import { measureRouteQuality, type DiagramRect } from "../../routeGeometry.js";
+import { routeLabelBounds } from "../../routeLabels.js";
 import {
   channelAnchorDistance,
   clampAnchorDistance,
@@ -29,7 +30,7 @@ import {
   routeFormalOrthogonal,
   scoreFormalPath,
 } from "./orthogonal.js";
-import { placeFormalEdgeLabel } from "./labels.js";
+import { placeFormalEdgeLabelPlacement } from "./labels.js";
 import {
   findFormalRouteCrossingIds,
   sortFormalRoutesForPlanning,
@@ -159,6 +160,10 @@ export function planFormalProcedureEdges(
       ReturnType<typeof formalPathToSegments>
     >();
     const planned = new Map<string, FormalPlannedEdge>();
+    const occupiedLabels: DiagramRect[] = [];
+    const labelObstacles = [...geometry.shapes.values()].map(
+      (shape) => shape.rect,
+    );
 
     for (const meta of orderedMetas) {
       const edge = edgeById.get(meta.id);
@@ -248,13 +253,24 @@ export function planFormalProcedureEdges(
       segmentsByConnection.set(edge.id, segments);
       occupied.push(...segments);
 
+      const automaticLabelPlacement = edge.label
+        ? placeFormalEdgeLabelPlacement({
+            path: resolved.points,
+            label: edge.label,
+            obstacles: labelObstacles,
+            occupiedLabels,
+          })
+        : null;
       const labelPosition =
-        manual?.labelPosition ??
-        placeFormalEdgeLabel({
-          path: resolved.points,
-          ...(edge.label ? { label: edge.label } : {}),
-          obstacles,
-        });
+        manual?.labelPosition ?? automaticLabelPlacement?.position ?? null;
+      if (edge.label && labelPosition) {
+        occupiedLabels.push(
+          manual?.labelPosition
+            ? routeLabelBounds(edge.label, labelPosition)
+            : (automaticLabelPlacement?.bounds ??
+                routeLabelBounds(edge.label, labelPosition)),
+        );
+      }
       const handlePosition = routeHandlePosition(resolved.points);
 
       planned.set(edge.id, {
