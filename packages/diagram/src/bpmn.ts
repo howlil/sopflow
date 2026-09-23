@@ -120,10 +120,9 @@ function buildBpmnModelPass(
     layoutNodes.map((node) => [node.id, node] as const),
   );
   const metricsById = new Map(
-    graph.nodes.map((node) => [
-      node.id,
-      measureBpmnNode(node.kind, node.label),
-    ] as const),
+    graph.nodes.map(
+      (node) => [node.id, measureBpmnNode(node.kind, node.label)] as const,
+    ),
   );
   const maxColumn = Math.max(0, ...layoutNodes.map((node) => node.columnIndex));
   const columnWidths = Array.from({ length: maxColumn + 1 }, () => 96);
@@ -145,7 +144,10 @@ function buildBpmnModelPass(
   });
   const width = columnCursor + config.padding;
 
-  const laneHeights = Array.from({ length: laneCount }, () => config.laneHeight);
+  const laneHeights = Array.from(
+    { length: laneCount },
+    () => config.laneHeight,
+  );
   for (const layout of layoutNodes) {
     const metrics = metricsById.get(layout.id);
     if (!metrics) continue;
@@ -833,8 +835,7 @@ function measureBpmnNode(
     width: shapeSize,
     height: shapeSize,
     footprintWidth: Math.max(shapeSize, estimatedLabelWidth),
-    footprintHeight:
-      shapeSize + 10 + labelLines.length * labelLineHeight,
+    footprintHeight: shapeSize + 10 + labelLines.length * labelLineHeight,
     labelLines,
     labelLineHeight,
   };
