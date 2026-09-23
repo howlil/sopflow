@@ -668,7 +668,7 @@ function routeSelfLoop(
   index: number,
   distance = 0.5,
 ): DiagramPoint[] {
-  const start = anchor(node, "right", distance);
+  const start = pointOnRectSide(nodeRect(node), "right", distance);
   const loopX = start.x + 24 + index * 16;
   const outerX = loopX + 24;
   const topY = node.y - node.height / 2 - 24;
