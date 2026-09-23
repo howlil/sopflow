@@ -43,8 +43,8 @@ export {
   ValidationPanel,
   type ValidationPanelProps,
 } from "./validation/ValidationPanel.js";
-export { SopProcedureView } from "./steps/SopProcedureView.js";
-export type { SopProcedureViewProps } from "./steps/SopProcedureView.js";
+export { SopProcedureView } from "./diagram/SopProcedureView.js";
+export type { SopProcedureViewProps } from "./diagram/SopProcedureView.js";
 export { SopStepFields } from "./steps/SopStepFields.js";
 export type { SopStepFieldsProps } from "./steps/SopStepFields.js";
 export { SopWorkspace } from "./workspace/SopWorkspace.js";
