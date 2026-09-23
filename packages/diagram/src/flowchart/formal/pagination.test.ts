@@ -6,6 +6,7 @@ import {
   getFormalOpcEndpointsForPage,
   getFormalPageForRow,
   layoutFormalOpcEndpoints,
+  splitFormalConnectionsByPage,
   splitFormalCrossPageConnections,
   splitFormalRowsIntoPages,
   type FormalPageRow,
@@ -121,6 +122,39 @@ describe("formal flowchart pagination parity", () => {
       "opc-out-decision:no:target",
       "opc-in-decision:no:target",
     ]);
+  });
+
+  it("routes OPCs from explicit page assignment instead of row-count math", () => {
+    const edge: WorkflowEdge = {
+      id: "s2:next:s5",
+      from: "s2",
+      to: "s5",
+      kind: "next",
+    };
+    const pageByStepId = new Map<StepId, number>([
+      ["s1", 0],
+      ["s2", 0],
+      ["s3", 1],
+      ["s4", 1],
+      ["s5", 2],
+    ]);
+
+    const result = splitFormalConnectionsByPage(
+      [edge],
+      rows,
+      pageByStepId,
+      3,
+    );
+
+    expect(result.pages[0]?.[0]).toMatchObject({
+      id: "s2:next:s5__out",
+      segment: "source-to-opc",
+    });
+    expect(result.pages[2]?.[0]).toMatchObject({
+      id: "s2:next:s5__in",
+      segment: "opc-to-target",
+    });
+    expect(result.pages[1]).toEqual([]);
   });
 
   it("places loopback OPC endpoints on the opposite page edges", () => {
