@@ -19,6 +19,7 @@ export {
   getFormalOpcEndpointsForPage,
   getFormalPageForRow,
   layoutFormalOpcEndpoints,
+  splitFormalConnectionsByPage,
   splitFormalCrossPageConnections,
   splitFormalRowsIntoPages,
 } from "./flowchart/formal/pagination.js";
@@ -159,6 +160,7 @@ export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
 
 export {
   buildFormalProcedurePages,
+  estimateProcedureRowHeight,
   removeProcedurePageManualRoute,
   resolveProcedurePageRouteOverrides,
   setProcedurePageManualRoute,
