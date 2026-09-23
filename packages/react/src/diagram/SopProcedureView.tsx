@@ -70,9 +70,27 @@ export function SopProcedureView(props: SopProcedureViewProps) {
       }),
     [model, props.firstPageRows, props.nextPageRows],
   );
+  const [internalDiagramConfig, setInternalDiagramConfig] =
+    useState<SopDiagramConfig>({});
+  const usesLegacyManualPaths =
+    props.diagramConfig === undefined &&
+    (props.manualPathOffsets !== undefined ||
+      props.onManualPathOffsetsChange !== undefined);
+  const diagramConfig = props.diagramConfig ?? internalDiagramConfig;
+  const updateDiagramConfig = useCallback(
+    (next: SopDiagramConfig) => {
+      if (props.diagramConfig === undefined) {
+        setInternalDiagramConfig(next);
+      }
+      props.onDiagramConfigChange?.(next);
+    },
+    [props.diagramConfig, props.onDiagramConfigChange],
+  );
 
-  if (pages.length <= 1) {
-    return <SinglePageSopProcedureView {...props} />;
+  // Preserve the deprecated trunk-offset API without letting it constrain the
+  // modern paginated renderer. Current editor consumers always use diagramConfig.
+  if (usesLegacyManualPaths && pages.length <= 1) {
+    return <LegacySinglePageSopProcedureView {...props} />;
   }
 
   return (
@@ -82,6 +100,7 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         .join(" ")}
       data-sopflow-procedure-view
       data-sopflow-procedure-pages={pages.length}
+      data-manual-editing={props.manualEditing || undefined}
       aria-label="Prosedur SOP"
     >
       {pages.map((page) => (
@@ -89,6 +108,9 @@ export function SopProcedureView(props: SopProcedureViewProps) {
           key={page.pageIndex}
           model={model}
           page={page}
+          manualEditing={props.manualEditing ?? false}
+          diagramConfig={diagramConfig}
+          onDiagramConfigChange={updateDiagramConfig}
           {...(props.selectedStepId !== undefined
             ? { selectedStepId: props.selectedStepId }
             : {})}
@@ -96,16 +118,13 @@ export function SopProcedureView(props: SopProcedureViewProps) {
             ? { onSelectedStepChange: props.onSelectedStepChange }
             : {})}
           {...(props.issues !== undefined ? { issues: props.issues } : {})}
-          {...(props.diagramConfig !== undefined
-            ? { diagramConfig: props.diagramConfig }
-            : {})}
         />
       ))}
     </section>
   );
 }
 
-function SinglePageSopProcedureView({
+function LegacySinglePageSopProcedureView({
   document,
   selectedStepId = null,
   onSelectedStepChange,
