@@ -54,7 +54,10 @@ export interface SopProcedureViewProps {
 }
 
 export function SopProcedureView(props: SopProcedureViewProps) {
-  const model = useMemo(() => buildProcedureModel(props.document), [props.document]);
+  const model = useMemo(
+    () => buildProcedureModel(props.document),
+    [props.document],
+  );
   const pages = useMemo(
     () =>
       buildFormalProcedurePages(model, {
