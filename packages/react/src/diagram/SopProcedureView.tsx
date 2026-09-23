@@ -428,6 +428,12 @@ function LegacySinglePageSopProcedureView({
           bendPoints: route.bendPoints.map((point) => ({ ...point })),
           sSide: route.sourceSide,
           eSide: route.targetSide,
+          ...(route.sourceDistance !== undefined
+            ? { sourceDistance: route.sourceDistance }
+            : {}),
+          ...(route.targetDistance !== undefined
+            ? { targetDistance: route.targetDistance }
+            : {}),
           startPoint: { ...route.startPoint },
           endPoint: { ...route.endPoint },
           ...(currentRoute?.labelPosition
