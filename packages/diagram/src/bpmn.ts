@@ -11,6 +11,7 @@ import {
   extrudePoint,
   pointOnRectSide,
 } from "./routeAnchors.js";
+import { placeRouteLabel } from "./routeLabels.js";
 import {
   compactOrthogonalPath,
   measureRouteQuality,
@@ -336,6 +337,8 @@ function routeBpmnEdgesPass(input: {
   const parallelCounts = new Map<string, number>();
   const portLedger = new BpmnPortLedger();
   const diagnostics: DiagramDiagnostic[] = [];
+  const occupiedLabels: DiagramRect[] = [];
+  const labelObstacles = nodes.map(nodeRect);
   let selfLoopIndex = 0;
 
   const orderedEdges = [...semanticEdges].sort((first, second) => {
@@ -429,12 +432,17 @@ function routeBpmnEdgesPass(input: {
     }
 
     diagnostics.push(...routeDiagnostics);
-    const labelPosition = edge.label
-      ? routeLabelPosition(
-          points,
-          selfLoop ? currentSelfLoopIndex : parallelIndex,
-        )
-      : undefined;
+    const labelPlacement = edge.label
+      ? placeRouteLabel({
+          path: points,
+          label: edge.label,
+          obstacles: labelObstacles,
+          occupiedLabels,
+          perpendicularOffset:
+            18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
+        })
+      : null;
+    if (labelPlacement) occupiedLabels.push(labelPlacement.bounds);
 
     return [
       {
@@ -445,7 +453,7 @@ function routeBpmnEdgesPass(input: {
         targetSide: route.targetSide,
         quality,
         ...(routeDiagnostics.length > 0 ? { routeDiagnostics } : {}),
-        ...(labelPosition ? { labelPosition } : {}),
+        ...(labelPlacement ? { labelPosition: labelPlacement.position } : {}),
       },
     ];
   });
@@ -895,20 +903,6 @@ function selectBpmnRoute(
     sourceSide: chosen?.sourceSide ?? "right",
     targetSide: chosen?.targetSide ?? "right",
     diagnostics,
-  };
-}
-
-function routeLabelPosition(
-  points: readonly DiagramPoint[],
-  index: number,
-): DiagramPoint | undefined {
-  const segments = pathToSegments(points);
-  const segment =
-    segments.find((candidate) => candidate.x1 === candidate.x2) ?? segments[0];
-  if (!segment) return undefined;
-  return {
-    x: (segment.x1 + segment.x2) / 2 + 6 + index * 12,
-    y: (segment.y1 + segment.y2) / 2 - 4,
   };
 }
 
