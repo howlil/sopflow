@@ -40,11 +40,8 @@ export function layoutBpmnGraph(
     );
   }
 
-  const forwardEdges = graph.edges.filter((edge) => {
-    const from = orderById.get(edge.from);
-    const to = orderById.get(edge.to);
-    return from !== undefined && to !== undefined && to > from;
-  });
+  const forwardEdges = getForwardEdges(graph, orderById);
+  const mainSpine = buildBpmnMainSpine(graph);
   const incoming = countEdges(forwardEdges, "to");
   const outgoing = countEdges(forwardEdges, "from");
   const predecessors = new Map<StepId, WorkflowEdge[]>();
@@ -79,7 +76,12 @@ export function layoutBpmnGraph(
   // Columns only move to the right, so this converges quickly for the small SOP
   // graphs this package targets.
   for (let pass = 0; pass < Math.max(1, graph.nodes.length); pass += 1) {
-    let changed = ensureUniqueLaneColumns(graph, laneById, columnById);
+    let changed = ensureUniqueLaneColumns(
+      graph,
+      laneById,
+      columnById,
+      mainSpine,
+    );
 
     for (const edge of forwardEdges) {
       const sourceColumn = columnById.get(edge.from) ?? 0;
@@ -98,13 +100,102 @@ export function layoutBpmnGraph(
   }
 
   // A final collision pass handles pushes introduced by the last propagation pass.
-  ensureUniqueLaneColumns(graph, laneById, columnById);
+  ensureUniqueLaneColumns(graph, laneById, columnById, mainSpine);
 
   return graph.nodes.map((node) => ({
     id: node.id,
     laneIndex: laneById.get(node.id) ?? fallbackLaneIndex,
     columnIndex: columnById.get(node.id) ?? 0,
   }));
+}
+
+export function buildBpmnMainSpine(graph: WorkflowGraph): ReadonlySet<StepId> {
+  const orderById = new Map(
+    graph.nodes.map((node, index) => [node.id, index] as const),
+  );
+  const forwardEdges = getForwardEdges(graph, orderById);
+  const outgoing = new Map<StepId, WorkflowEdge[]>();
+  for (const edge of forwardEdges) {
+    const list = outgoing.get(edge.from) ?? [];
+    list.push(edge);
+    outgoing.set(edge.from, list);
+  }
+
+  const nodeById = new Map(graph.nodes.map((node) => [node.id, node] as const));
+  const distanceMemo = new Map<StepId, number>();
+
+  function distanceToEnd(id: StepId): number {
+    const cached = distanceMemo.get(id);
+    if (cached !== undefined) return cached;
+
+    const node = nodeById.get(id);
+    if (!node) return Number.POSITIVE_INFINITY;
+    if (node.kind === "end") {
+      distanceMemo.set(id, 0);
+      return 0;
+    }
+
+    const candidates = outgoing.get(id) ?? [];
+    let distance = Number.POSITIVE_INFINITY;
+    for (const edge of candidates) {
+      const targetDistance = distanceToEnd(edge.to);
+      if (Number.isFinite(targetDistance)) {
+        distance = Math.min(distance, targetDistance + 1);
+      }
+    }
+
+    distanceMemo.set(id, distance);
+    return distance;
+  }
+
+  const start = graph.nodes.find((node) => node.kind === "start");
+  if (!start) return new Set();
+
+  const spine = new Set<StepId>();
+  let currentId: StepId | undefined = start.id;
+
+  while (currentId && !spine.has(currentId)) {
+    spine.add(currentId);
+    const current = nodeById.get(currentId);
+    if (!current || current.kind === "end") break;
+
+    const candidates = (outgoing.get(currentId) ?? [])
+      .filter((edge) => Number.isFinite(distanceToEnd(edge.to)))
+      .sort((left, right) => {
+        const distanceDifference =
+          distanceToEnd(left.to) - distanceToEnd(right.to);
+        if (distanceDifference !== 0) return distanceDifference;
+
+        const branchDifference =
+          bpmnSpineBranchPriority(left.kind) -
+          bpmnSpineBranchPriority(right.kind);
+        if (branchDifference !== 0) return branchDifference;
+
+        const targetDifference =
+          (orderById.get(left.to) ?? Number.MAX_SAFE_INTEGER) -
+          (orderById.get(right.to) ?? Number.MAX_SAFE_INTEGER);
+        return targetDifference || left.id.localeCompare(right.id);
+      });
+
+    currentId = candidates[0]?.to;
+  }
+
+  return spine;
+}
+
+function getForwardEdges(
+  graph: WorkflowGraph,
+  orderById: ReadonlyMap<StepId, number>,
+): WorkflowEdge[] {
+  return graph.edges.filter((edge) => {
+    const from = orderById.get(edge.from);
+    const to = orderById.get(edge.to);
+    return from !== undefined && to !== undefined && to > from;
+  });
+}
+
+function bpmnSpineBranchPriority(kind: WorkflowEdge["kind"]): number {
+  return kind === "next" ? 0 : kind === "yes" ? 1 : 2;
 }
 
 function countEdges(
@@ -142,11 +233,22 @@ function ensureUniqueLaneColumns(
   graph: WorkflowGraph,
   laneById: ReadonlyMap<StepId, number>,
   columnById: Map<StepId, number>,
+  mainSpine: ReadonlySet<StepId>,
 ): boolean {
   const occupied = new Set<string>();
   let changed = false;
+  const orderById = new Map(
+    graph.nodes.map((node, index) => [node.id, index] as const),
+  );
+  const nodes = [...graph.nodes].sort((left, right) => {
+    const leftPriority = mainSpine.has(left.id) ? 0 : 1;
+    const rightPriority = mainSpine.has(right.id) ? 0 : 1;
+    if (leftPriority !== rightPriority) return leftPriority - rightPriority;
 
-  for (const node of graph.nodes) {
+    return (orderById.get(left.id) ?? 0) - (orderById.get(right.id) ?? 0);
+  });
+
+  for (const node of nodes) {
     const lane = laneById.get(node.id) ?? 0;
     let column = columnById.get(node.id) ?? 0;
 
