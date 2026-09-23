@@ -1,4 +1,5 @@
 import {
+  distanceOnFormalShapeSide,
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
@@ -108,10 +109,48 @@ export function EditableFormalFlowchartPath({
         });
     if (!effectivePath) return;
 
+    const effectiveStart = effectivePath[0];
+    const effectiveEnd = effectivePath.at(-1);
+    const sourceDistance =
+      sourceRect && effectiveStart
+        ? sourceIsDiamond
+          ? 0.5
+          : Math.max(
+              0.08,
+              Math.min(
+                0.92,
+                distanceOnFormalShapeSide(
+                  sourceRect,
+                  nextSourceSide,
+                  effectiveStart,
+                ),
+              ),
+            )
+        : undefined;
+    const targetDistance =
+      targetRect && effectiveEnd
+        ? targetIsDiamond
+          ? 0.5
+          : Math.max(
+              0.08,
+              Math.min(
+                0.92,
+                distanceOnFormalShapeSide(
+                  targetRect,
+                  nextTargetSide,
+                  effectiveEnd,
+                ),
+              ),
+            )
+        : undefined;
     const change = formalRouteChangeFromPath(
       effectivePath,
       nextSourceSide,
       nextTargetSide,
+      {
+        ...(sourceDistance !== undefined ? { sourceDistance } : {}),
+        ...(targetDistance !== undefined ? { targetDistance } : {}),
+      },
     );
     if (change) onChange(change);
   };
