@@ -25,6 +25,9 @@ export function placeFormalEdgeLabelPlacement(
     label,
     obstacles: input.obstacles ?? [],
     occupiedLabels: input.occupiedLabels ?? [],
+    ...(input.distanceAlongEdge !== undefined
+      ? { distanceAlongFirstSegment: input.distanceAlongEdge }
+      : {}),
     perpendicularOffset:
       input.perpendicularOffset ?? (isDecisionLikeLabel(label) ? 22 : 19),
   });
