@@ -1,0 +1,29 @@
+.hitPath {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  vector-effect: non-scaling-stroke;
+
+  cursor: pointer;
+  pointer-events: stroke;
+  touch-action: none;
+}
+
+.hitPath[data-selected="true"] {
+  cursor: grab;
+}
+
+.waypoint {
+  fill: var(--sopflow-color-surface);
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+
+  cursor: grab;
+  pointer-events: all;
+  touch-action: none;
+}
+
+.waypoint:active {
+  cursor: grabbing;
+}
