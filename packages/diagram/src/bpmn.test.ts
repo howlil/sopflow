@@ -165,7 +165,9 @@ describe("buildBpmnModel", () => {
       ),
     });
     const node = model.nodes.find((candidate) => candidate.id === "fix");
-    const lane = model.lanes.find((candidate) => candidate.index === node?.laneIndex);
+    const lane = model.lanes.find(
+      (candidate) => candidate.index === node?.laneIndex,
+    );
 
     expect(node).toBeDefined();
     expect(node?.labelLines.length).toBeGreaterThan(1);
