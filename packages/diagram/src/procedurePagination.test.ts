@@ -16,24 +16,16 @@ describe("buildFormalProcedurePages", () => {
     expect(pages[0]?.bottomOpc).toHaveLength(1);
     expect(pages[1]?.topOpc).toHaveLength(1);
 
-    const outgoing = pages[0]?.edges.find((edge) =>
-      edge.id.endsWith("__out"),
-    );
-    const incoming = pages[1]?.edges.find((edge) =>
-      edge.id.endsWith("__in"),
-    );
+    const outgoing = pages[0]?.edges.find((edge) => edge.id.endsWith("__out"));
+    const incoming = pages[1]?.edges.find((edge) => edge.id.endsWith("__in"));
 
     expect(outgoing?.from).toBe("step-4");
     expect(outgoing?.to).toContain("opc-out-step-4-to-step-5");
     expect(incoming?.from).toContain("opc-in-step-4-to-step-5");
     expect(incoming?.to).toBe("step-5");
 
-    expect(
-      pages[0]?.routingRows.some((row) => row.kind === "opc"),
-    ).toBe(true);
-    expect(
-      pages[1]?.routingRows.some((row) => row.kind === "opc"),
-    ).toBe(true);
+    expect(pages[0]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
+    expect(pages[1]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
   });
 
   it("uses page-local row numbers for routing while preserving displayed numbers", () => {
