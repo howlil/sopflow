@@ -1,7 +1,12 @@
 import type { SOPDocument } from "@sopflow/core";
 import { describe, expect, it } from "vitest";
-import { buildProcedureModel } from "./procedure.js";
-import { buildFormalProcedurePages } from "./procedurePagination.js";
+import { buildProcedureModel, type SopDiagramConfig } from "./procedure.js";
+import {
+  buildFormalProcedurePages,
+  removeProcedurePageManualRoute,
+  resolveProcedurePageRouteOverrides,
+  setProcedurePageManualRoute,
+} from "./procedurePagination.js";
 
 describe("buildFormalProcedurePages", () => {
   it("splits a long procedure and replaces cross-page edges with OPC endpoints", () => {
@@ -34,6 +39,64 @@ describe("buildFormalProcedurePages", () => {
 
     expect(pages[0]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
     expect(pages[1]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
+  });
+
+  it("maps cross-page manual routes through semantic edge ids", () => {
+    const model = buildProcedureModel(linearDocument(6));
+    const pages = buildFormalProcedurePages(model, {
+      firstPageRows: 2,
+      nextPageRows: 2,
+    });
+    const edge = pages[0]?.edges.find(
+      (candidate) => candidate.segment === "source-to-opc",
+    );
+    if (!edge) throw new Error("cross-page source segment not found");
+
+    const route = {
+      kind: "orthogonal" as const,
+      bendPoints: [{ x: 100, y: 120 }],
+      sSide: "right" as const,
+      eSide: "top" as const,
+      startPoint: { x: 80, y: 100 },
+      endPoint: { x: 100, y: 160 },
+    };
+    const configured = setProcedurePageManualRoute({}, edge, route);
+
+    expect(configured).toEqual({
+      pagedRoutes: {
+        [edge.semanticEdgeId]: {
+          source: route,
+        },
+      },
+    });
+    expect(resolveProcedurePageRouteOverrides([edge], configured)).toEqual({
+      [edge.id]: route,
+    });
+    expect(removeProcedurePageManualRoute(configured, edge)).toEqual({});
+  });
+
+  it("keeps local page routes on the canonical routes map", () => {
+    const model = buildProcedureModel(linearDocument(4));
+    const page = buildFormalProcedurePages(model, {
+      firstPageRows: 4,
+      nextPageRows: 4,
+    })[0];
+    const edge = page?.edges.find((candidate) => candidate.segment === "local");
+    if (!edge) throw new Error("local edge not found");
+
+    const config: SopDiagramConfig = setProcedurePageManualRoute({}, edge, {
+      kind: "trunk",
+      x: 320,
+    });
+
+    expect(config).toEqual({
+      routes: {
+        [edge.semanticEdgeId]: { kind: "trunk", x: 320 },
+      },
+    });
+    expect(resolveProcedurePageRouteOverrides([edge], config)).toEqual({
+      [edge.id]: { kind: "trunk", x: 320 },
+    });
   });
 
   it("uses page-local row numbers for routing while preserving displayed numbers", () => {
