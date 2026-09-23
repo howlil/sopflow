@@ -6,7 +6,12 @@ import {
   type SopOperation,
   type StepId,
 } from "@sopflow/core";
-import type { SopDiagramConfig } from "@sopflow/diagram";
+import {
+  diagramConfigEquals,
+  projectWorkflow,
+  pruneSopDiagramConfig,
+  type SopDiagramConfig,
+} from "@sopflow/diagram";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./styles/token.css";
@@ -124,7 +129,12 @@ export function SopEditor({
       : internalSelectedStepId;
   const mode = controlledMode ?? internalMode;
   const diagramKind = controlledDiagramKind ?? internalDiagramKind;
-  const diagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
+  const rawDiagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
+  const workflowGraph = useMemo(() => projectWorkflow(value), [value]);
+  const diagramConfig = useMemo(
+    () => pruneSopDiagramConfig(workflowGraph, rawDiagramConfig),
+    [rawDiagramConfig, workflowGraph],
+  );
   const manualEditing = controlledManualEditing ?? internalManualEditing;
   const diagramConfigMutable =
     controlledDiagramConfig === undefined ||
@@ -161,6 +171,11 @@ export function SopEditor({
     },
     [controlledDiagramConfig, onDiagramConfigChange],
   );
+
+  useEffect(() => {
+    if (diagramConfigEquals(rawDiagramConfig, diagramConfig)) return;
+    handleDiagramConfigChange(diagramConfig);
+  }, [diagramConfig, handleDiagramConfigChange, rawDiagramConfig]);
 
   const handleManualEditingChange = useCallback(
     (editing: boolean) => {
