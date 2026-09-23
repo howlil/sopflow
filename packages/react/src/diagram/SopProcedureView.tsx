@@ -89,10 +89,16 @@ export function SopProcedureView(props: SopProcedureViewProps) {
           key={page.pageIndex}
           model={model}
           page={page}
-          selectedStepId={props.selectedStepId}
-          onSelectedStepChange={props.onSelectedStepChange}
-          issues={props.issues}
-          diagramConfig={props.diagramConfig}
+          {...(props.selectedStepId !== undefined
+            ? { selectedStepId: props.selectedStepId }
+            : {})}
+          {...(props.onSelectedStepChange !== undefined
+            ? { onSelectedStepChange: props.onSelectedStepChange }
+            : {})}
+          {...(props.issues !== undefined ? { issues: props.issues } : {})}
+          {...(props.diagramConfig !== undefined
+            ? { diagramConfig: props.diagramConfig }
+            : {})}
         />
       ))}
     </section>
