@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SOPDocument } from "@sopflow/core";
-import type { SopHeaderValue, SopSignatory } from "../types.js";
+import type { SopHeaderValue, SopSignatory } from "./types.js";
 import styles from "./SopHeaderView.module.css";
 
 export interface SopHeaderViewProps {
