@@ -146,7 +146,9 @@ export function DiagramRegressionSmoke() {
       const firstLines = Array.from(firstNode?.querySelectorAll("tspan") ?? [])
         .map((line) => line.textContent ?? "")
         .join(" ");
-      const secondLines = Array.from(secondNode?.querySelectorAll("tspan") ?? [])
+      const secondLines = Array.from(
+        secondNode?.querySelectorAll("tspan") ?? [],
+      )
         .map((line) => line.textContent ?? "")
         .join(" ");
 
