@@ -69,3 +69,29 @@ export function extrudePoint(
       return { x: point.x - distance, y: point.y };
   }
 }
+
+export const ROUTE_ANCHOR_MIN_DISTANCE = 0.08;
+export const ROUTE_ANCHOR_MAX_DISTANCE = 0.92;
+export const ROUTE_ANCHOR_CHANNEL_SPACING_PX = 14;
+
+export function clampAnchorDistance(distance: number): number {
+  if (!Number.isFinite(distance)) return 0.5;
+  return Math.max(
+    ROUTE_ANCHOR_MIN_DISTANCE,
+    Math.min(ROUTE_ANCHOR_MAX_DISTANCE, distance),
+  );
+}
+
+export function channelAnchorDistance(
+  channelIndex: number,
+  sideLengthPx: number,
+  spacingPx = ROUTE_ANCHOR_CHANNEL_SPACING_PX,
+): number {
+  if (sideLengthPx <= 0 || channelIndex <= 0) return 0.5;
+
+  const step = spacingPx / sideLengthPx;
+  const offsetIndex = Math.ceil(channelIndex / 2);
+  const direction = channelIndex % 2 === 1 ? -1 : 1;
+
+  return clampAnchorDistance(0.5 + direction * offsetIndex * step);
+}
