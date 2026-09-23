@@ -130,5 +130,4 @@ describe("buildSopFlowchart", () => {
 
     expect(shuffled).toEqual(original);
   });
-
 });
