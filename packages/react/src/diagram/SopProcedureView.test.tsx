@@ -51,14 +51,19 @@ describe("SopProcedureView", () => {
     expect(screen.getByText("11 menit")).toBeInTheDocument();
   });
 
-  it("renders flow connections as an overlay on the SOP-AP matrix", async () => {
+  it("uses the page renderer for single-page manual editing", () => {
     const { container } = render(
       <SopProcedureView document={document} manualEditing />,
     );
 
-    const overlay = container.querySelector('svg[data-editing="true"]');
-    expect(overlay).not.toBeNull();
-    expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(1);
+    expect(
+      container.querySelector("[data-sopflow-procedure-pages='1']"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        "[data-sopflow-procedure-page='0'][data-manual-editing='true']",
+      ),
+    ).not.toBeNull();
   });
 
   it("renders one primary shape per step using sop-ta geometry", () => {
@@ -108,15 +113,14 @@ describe("SopProcedureView", () => {
     const reviewRow = container.querySelector(
       '[data-sopflow-procedure-step-id="review"]',
     );
-    const overlay = container.querySelector('svg[data-editing="true"]');
-
     expect(
       reviewRow?.querySelector(
         '[data-sopflow-actor-id="fallback"] svg[data-kind="decision"]',
       ),
     ).not.toBeNull();
-    expect(overlay).not.toBeNull();
-    expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(0);
+    expect(
+      container.querySelector("[data-sopflow-procedure-page='0']"),
+    ).not.toBeNull();
   });
 
   it("renders long procedures as pages with off-page connectors", () => {
@@ -176,5 +180,60 @@ describe("SopProcedureView", () => {
       container.querySelectorAll("[data-sopflow-opc]").length,
     ).toBeGreaterThan(0);
     expect(screen.getByText("Step 6")).toBeInTheDocument();
+  });
+
+  it("keeps manual editing enabled on every paginated procedure page", () => {
+    const longDocument: SOPDocument = {
+      schemaVersion: "1",
+      id: "editable-long-procedure",
+      title: "Editable Long Procedure",
+      actors: [{ id: "staff", name: "Staff" }],
+      steps: Array.from({ length: 6 }, (_, index) => {
+        const number = index + 1;
+        const id = `step-${number}`;
+
+        if (number === 1) {
+          return {
+            id,
+            type: "start" as const,
+            name: `Step ${number}`,
+            actorIds: ["staff"],
+            next: "step-2",
+          };
+        }
+
+        if (number === 6) {
+          return {
+            id,
+            type: "end" as const,
+            name: `Step ${number}`,
+            actorIds: ["staff"],
+          };
+        }
+
+        return {
+          id,
+          type: "task" as const,
+          name: `Step ${number}`,
+          actorIds: ["staff"],
+          next: `step-${number + 1}`,
+        };
+      }),
+    };
+
+    const { container } = render(
+      <SopProcedureView
+        document={longDocument}
+        manualEditing
+        firstPageRows={2}
+        nextPageRows={2}
+      />,
+    );
+
+    expect(
+      container.querySelectorAll(
+        "[data-sopflow-procedure-page][data-manual-editing='true']",
+      ),
+    ).toHaveLength(3);
   });
 });
