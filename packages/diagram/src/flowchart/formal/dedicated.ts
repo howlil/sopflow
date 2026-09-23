@@ -41,11 +41,13 @@ export interface FormalRouteMeta {
   readonly sourceType:
     | "flowchart-terminator"
     | "flowchart-process"
-    | "flowchart-decision";
+    | "flowchart-decision"
+    | "flowchart-opc";
   readonly targetType:
     | "flowchart-terminator"
     | "flowchart-process"
-    | "flowchart-decision";
+    | "flowchart-decision"
+    | "flowchart-opc";
   readonly label?: string | null;
 }
 
