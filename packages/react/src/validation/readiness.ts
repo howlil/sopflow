@@ -3,7 +3,7 @@ import {
   type SOPDocument,
   type ValidationIssue,
 } from "@sopflow/core";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 import {
   validateSopHeader,
   type SopHeaderValidationIssue,
