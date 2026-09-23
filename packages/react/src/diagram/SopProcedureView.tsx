@@ -624,16 +624,15 @@ function SinglePageSopProcedureView({
                             )
                             .map((shape) => shape.rect)
                         : [];
-                      const formalBounds = geometry.formal
+                      const pelaksanaBounds =
+                        geometry.formal?.pelaksanaBounds;
+                      const formalBounds = pelaksanaBounds
                         ? {
-                            left: geometry.formal.pelaksanaBounds.left,
-                            top: geometry.formal.pelaksanaBounds.top,
-                            width:
-                              geometry.formal.pelaksanaBounds.right -
-                              geometry.formal.pelaksanaBounds.left,
+                            left: pelaksanaBounds.left,
+                            top: pelaksanaBounds.top,
+                            width: pelaksanaBounds.right - pelaksanaBounds.left,
                             height:
-                              geometry.formal.pelaksanaBounds.bottom -
-                              geometry.formal.pelaksanaBounds.top,
+                              pelaksanaBounds.bottom - pelaksanaBounds.top,
                           }
                         : null;
 
