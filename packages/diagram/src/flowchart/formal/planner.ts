@@ -470,8 +470,8 @@ function applyManualRoute(
   const autoEnd = auto.points.at(-1);
   if (!autoStart || !autoEnd) return auto;
 
-  const start = resolveManualPoint(manual.startPoint, autoStart, bounds);
-  const end = resolveManualPoint(manual.endPoint, autoEnd, bounds);
+  const start = resolveManualPoint(manual.startPoint, autoStart);
+  const end = resolveManualPoint(manual.endPoint, autoEnd);
   const sourceSide = manual.sSide ?? auto.sourceSide;
   const targetSide = manual.eSide ?? auto.targetSide;
 
@@ -504,7 +504,6 @@ function applyManualRoute(
 function resolveManualPoint(
   configured: DiagramPoint | undefined,
   fallback: DiagramPoint,
-  bounds: FormalFlowchartBounds | null,
 ): DiagramPoint {
   if (
     !configured ||
@@ -514,13 +513,10 @@ function resolveManualPoint(
     return { ...fallback };
   }
 
-  if (!bounds)
-    return { x: Math.round(configured.x), y: Math.round(configured.y) };
-
-  return {
-    x: Math.round(Math.max(bounds.left, Math.min(bounds.right, configured.x))),
-    y: Math.round(Math.max(bounds.top, Math.min(bounds.bottom, configured.y))),
-  };
+  // Persisted endpoints describe shape anchors. They may legitimately sit
+  // outside the inner routing corridor, so replay them exactly instead of
+  // clamping them to routing bounds.
+  return { x: Math.round(configured.x), y: Math.round(configured.y) };
 }
 
 function routeHandlePosition(path: readonly DiagramPoint[]): DiagramPoint {
