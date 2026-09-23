@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildProcedureModel, type SopDiagramConfig } from "./procedure.js";
 import {
   buildFormalProcedurePages,
+  estimateProcedureRowHeight,
   removeProcedurePageManualRoute,
   resolveProcedurePageRouteOverrides,
   setProcedurePageManualRoute,
@@ -97,6 +98,58 @@ describe("buildFormalProcedurePages", () => {
     expect(resolveProcedurePageRouteOverrides([edge], config)).toEqual({
       [edge.id]: { kind: "trunk", x: 320 },
     });
+  });
+
+  it("packs rows by estimated height when a page height budget is provided", () => {
+    const document = linearDocument(5);
+    const longNote = "Catatan panjang ".repeat(28);
+    document.steps = document.steps.map((step) =>
+      step.id === "step-2" ? { ...step, note: longNote } : step,
+    );
+    const model = buildProcedureModel(document);
+    const longRow = model.rows.find((row) => row.stepId === "step-2");
+    const shortRow = model.rows.find((row) => row.stepId === "step-3");
+
+    if (!longRow || !shortRow) throw new Error("test rows not found");
+
+    expect(
+      estimateProcedureRowHeight(longRow, {
+        minimumRowHeightPx: 80,
+        lineHeightPx: 12,
+      }),
+    ).toBeGreaterThan(
+      estimateProcedureRowHeight(shortRow, {
+        minimumRowHeightPx: 80,
+        lineHeightPx: 12,
+      }),
+    );
+
+    const pages = buildFormalProcedurePages(model, {
+      pageHeightPx: 210,
+      minimumRowHeightPx: 80,
+      lineHeightPx: 12,
+    });
+
+    expect(pages.map((page) => page.rows.map((row) => row.stepId))).toEqual([
+      ["step-1"],
+      ["step-2"],
+      ["step-3", "step-4"],
+      ["step-5"],
+    ]);
+    expect(pages[0]?.bottomOpc).toHaveLength(1);
+    expect(pages[1]?.topOpc).toHaveLength(1);
+  });
+
+  it("supports separate first-page and following-page height reserves", () => {
+    const model = buildProcedureModel(linearDocument(5));
+    const pages = buildFormalProcedurePages(model, {
+      pageHeightPx: 260,
+      firstPageReservedHeightPx: 140,
+      nextPageReservedHeightPx: 20,
+      minimumRowHeightPx: 100,
+    });
+
+    expect(pages.map((page) => page.rows.length)).toEqual([1, 2, 2]);
   });
 
   it("uses page-local row numbers for routing while preserving displayed numbers", () => {
