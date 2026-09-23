@@ -87,7 +87,13 @@ export type ProcedureManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: DiagramSide;
       readonly eSide?: DiagramSide;
+      /** Stable normalized anchor position on the selected source side. */
+      readonly sourceDistance?: number;
+      /** Stable normalized anchor position on the selected target side. */
+      readonly targetDistance?: number;
+      /** @deprecated Migration fallback for configs persisted before semantic anchors. */
       readonly startPoint?: DiagramPoint;
+      /** @deprecated Migration fallback for configs persisted before semantic anchors. */
       readonly endPoint?: DiagramPoint;
     }
   | {
@@ -96,7 +102,13 @@ export type ProcedureManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: DiagramSide;
       readonly eSide?: DiagramSide;
+      /** Stable normalized anchor position on the selected source side. */
+      readonly sourceDistance?: number;
+      /** Stable normalized anchor position on the selected target side. */
+      readonly targetDistance?: number;
+      /** @deprecated Migration fallback for configs persisted before semantic anchors. */
       readonly startPoint?: DiagramPoint;
+      /** @deprecated Migration fallback for configs persisted before semantic anchors. */
       readonly endPoint?: DiagramPoint;
     };
 
@@ -596,6 +608,12 @@ export function setProcedureManualRoute(
                 : {}),
               ...(route.sSide ? { sSide: route.sSide } : {}),
               ...(route.eSide ? { eSide: route.eSide } : {}),
+              ...(route.sourceDistance !== undefined
+                ? { sourceDistance: route.sourceDistance }
+                : {}),
+              ...(route.targetDistance !== undefined
+                ? { targetDistance: route.targetDistance }
+                : {}),
               ...(route.startPoint
                 ? { startPoint: { ...route.startPoint } }
                 : {}),
@@ -609,6 +627,12 @@ export function setProcedureManualRoute(
                 : {}),
               ...(route.sSide ? { sSide: route.sSide } : {}),
               ...(route.eSide ? { eSide: route.eSide } : {}),
+              ...(route.sourceDistance !== undefined
+                ? { sourceDistance: route.sourceDistance }
+                : {}),
+              ...(route.targetDistance !== undefined
+                ? { targetDistance: route.targetDistance }
+                : {}),
               ...(route.startPoint
                 ? { startPoint: { ...route.startPoint } }
                 : {}),
