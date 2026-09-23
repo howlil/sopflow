@@ -209,11 +209,7 @@ function BpmnNodeLabel({ node }: { node: BpmnNode }) {
       className={styles.nodeLabel}
     >
       {labelLines.map(({ line, key, first }) => (
-        <tspan
-          key={key}
-          x={node.x}
-          dy={first ? 0 : node.labelLineHeight}
-        >
+        <tspan key={key} x={node.x} dy={first ? 0 : node.labelLineHeight}>
           {line}
         </tspan>
       ))}
