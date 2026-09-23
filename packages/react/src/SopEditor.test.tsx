@@ -10,6 +10,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { validateSop, type SOPDocument } from "@sopflow/core";
+import type { SopDiagramConfig } from "@sopflow/diagram";
 
 import { SopEditor } from "./SopEditor.js";
 import type { SopHeaderValue } from "./header/types.js";
@@ -320,6 +321,67 @@ describe("SopEditor document workbench", () => {
     );
 
     expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
+  });
+
+  it("prunes stale diagram routes when topology changes", async () => {
+    const config: SopDiagramConfig = {
+      pathLayoutSeed: 7,
+      routes: {
+        "start:next:task": { kind: "trunk", x: 320 },
+      },
+      pagedRoutes: {
+        "task:next:end": {
+          source: { kind: "trunk", x: 360 },
+        },
+      },
+    };
+    const onDiagramConfigChange = vi.fn();
+    const { rerender } = render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+
+    const rewiredDocument: SOPDocument = {
+      ...initialDocument,
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Mulai",
+          actorIds: [],
+          next: "end",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "Selesai",
+          actorIds: [],
+        },
+      ],
+    };
+
+    rerender(
+      <SopEditor
+        value={rewiredDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onDiagramConfigChange).toHaveBeenCalledWith({
+        pathLayoutSeed: 7,
+      });
+    });
   });
 
   it("edits steps inline in the document instead of the inspector", async () => {
