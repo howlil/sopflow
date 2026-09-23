@@ -284,6 +284,62 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points).toContainEqual({ x: 300, y: 220 });
   });
 
+  it("replays persisted manual connector sides and endpoints", () => {
+    const rows = [
+      row("start", 1, "start", "staff"),
+      row("end", 2, "end", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("start:next:end", "start", "end", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 600,
+      height: 360,
+      pelaksanaBounds: pelaksana,
+      columns: { staff },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 237,
+            top: 100,
+            width: 86,
+            height: 42,
+          }),
+        ],
+        [
+          "end",
+          shape("end", "staff", 1, "end", {
+            left: 237,
+            top: 220,
+            width: 86,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:end": {
+        kind: "orthogonal",
+        sSide: "right",
+        eSide: "left",
+        startPoint: { x: 323, y: 121 },
+        endPoint: { x: 237, y: 241 },
+        bendPoints: [
+          { x: 360, y: 121 },
+          { x: 360, y: 241 },
+        ],
+      },
+    });
+
+    expect(routed?.sourceSide).toBe("right");
+    expect(routed?.targetSide).toBe("left");
+    expect(routed?.points[0]).toEqual({ x: 323, y: 121 });
+    expect(routed?.points.at(-1)).toEqual({ x: 237, y: 241 });
+  });
+
   it("orders long and Tidak routes before simpler connections", () => {
     const ordered = sortFormalRoutesForPlanning([
       meta("near", 0, 1, null),
