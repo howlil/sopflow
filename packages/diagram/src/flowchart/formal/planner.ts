@@ -544,7 +544,11 @@ function resolveManualAnchorPoint(
   if (Number.isFinite(distance)) {
     if (decision) return pointOnFormalDecisionVertex(shape, side);
 
-    const point = pointOnRectSide(shape, side, clampAnchorDistance(distance as number));
+    const point = pointOnRectSide(
+      shape,
+      side,
+      clampAnchorDistance(distance as number),
+    );
     return { x: Math.round(point.x), y: Math.round(point.y) };
   }
 
