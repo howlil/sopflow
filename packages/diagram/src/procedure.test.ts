@@ -350,4 +350,14 @@ describe("procedure model", () => {
       },
     });
   });
+
+  it("keeps procedure presentation stable when step storage order changes", () => {
+    const original = buildProcedureModel(document);
+    const shuffled = buildProcedureModel({
+      ...document,
+      steps: [...document.steps].reverse(),
+    });
+
+    expect(shuffled).toEqual(original);
+  });
 });

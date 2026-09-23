@@ -136,7 +136,11 @@ export interface ProcedureRoutedEdge extends WorkflowEdge {
 }
 
 export function buildProcedureModel(document: SOPDocument): ProcedureModel {
+  const graph = projectWorkflow(document);
   const actorIds = new Set(document.actors.map((actor) => actor.id));
+  const stepById = new Map(
+    document.steps.map((step) => [step.id, step] as const),
+  );
   const hasFallbackRows = document.steps.some(
     (step) =>
       step.actorIds.length === 0 ||
@@ -151,24 +155,31 @@ export function buildProcedureModel(document: SOPDocument): ProcedureModel {
       ? [{ actorId: null, label: "Pelaksana" }]
       : []),
   ];
-  const rows = document.steps.map<ProcedureRowModel>((step, index) => ({
-    stepId: step.id,
-    number: index + 1,
-    kind: step.type,
-    activity: step.name,
-    actorIds: step.actorIds,
-    primaryActorId:
-      step.actorIds.find((actorId) => actorIds.has(actorId)) ?? null,
-    ...(step.input !== undefined ? { input: step.input } : {}),
-    ...(step.duration !== undefined ? { duration: step.duration } : {}),
-    ...(step.output !== undefined ? { output: step.output } : {}),
-    ...(step.note !== undefined ? { note: step.note } : {}),
-  }));
+  const rows = graph.nodes.flatMap<ProcedureRowModel>((node, index) => {
+    const step = stepById.get(node.id);
+    if (!step) return [];
+
+    return [
+      {
+        stepId: step.id,
+        number: index + 1,
+        kind: step.type,
+        activity: step.name,
+        actorIds: step.actorIds,
+        primaryActorId:
+          step.actorIds.find((actorId) => actorIds.has(actorId)) ?? null,
+        ...(step.input !== undefined ? { input: step.input } : {}),
+        ...(step.duration !== undefined ? { duration: step.duration } : {}),
+        ...(step.output !== undefined ? { output: step.output } : {}),
+        ...(step.note !== undefined ? { note: step.note } : {}),
+      },
+    ];
+  });
 
   return {
     actorColumns,
     rows,
-    graph: projectWorkflow(document),
+    graph,
   };
 }
 

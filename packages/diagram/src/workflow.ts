@@ -1,4 +1,9 @@
-import type { SOPDocument, Step, StepId } from "@sopflow/core";
+import {
+  getOrderedSteps,
+  type SOPDocument,
+  type Step,
+  type StepId,
+} from "@sopflow/core";
 import type { DiagramDiagnostic, DiagramEdgeKind } from "./types.js";
 
 export interface WorkflowNode {
@@ -36,8 +41,9 @@ export function buildWorkflowEdgeId(
 }
 
 export function projectWorkflow(document: SOPDocument): WorkflowGraph {
+  const orderedSteps = getOrderedSteps(document);
   const nodeIds = new Set(document.steps.map((step) => step.id));
-  const nodes = document.steps.map<WorkflowNode>((step) => ({
+  const nodes = orderedSteps.map<WorkflowNode>((step) => ({
     id: step.id,
     kind: step.type,
     label: step.name,
@@ -46,7 +52,7 @@ export function projectWorkflow(document: SOPDocument): WorkflowGraph {
   const edges: WorkflowEdge[] = [];
   const diagnostics: DiagramDiagnostic[] = [];
 
-  for (const step of document.steps) {
+  for (const step of orderedSteps) {
     for (const connection of stepConnections(step)) {
       const edge: WorkflowEdge = {
         id: buildWorkflowEdgeId(step.id, connection.kind, connection.to),

@@ -17,6 +17,7 @@ import {
   type DiagramRect,
   type RouteSegment,
 } from "./routeGeometry.js";
+import { layoutBpmnGraph } from "./bpmnLayout.js";
 import { projectWorkflow, type WorkflowEdge } from "./workflow.js";
 
 export interface BpmnLayoutOptions {
@@ -106,7 +107,6 @@ function buildBpmnModelPass(
     return !actorId || !actorIndex.has(actorId);
   });
   const hasExplicitActors = document.actors.length > 0;
-  const fallbackLaneIndex = hasExplicitActors ? document.actors.length : 0;
   const laneCount = Math.max(
     1,
     document.actors.length + (needsFallbackLane && hasExplicitActors ? 1 : 0),
@@ -122,21 +122,23 @@ function buildBpmnModelPass(
       height: config.laneHeight,
     };
   });
+  const layoutNodes = layoutBpmnGraph(document, graph);
+  const layoutById = new Map(
+    layoutNodes.map((node) => [node.id, node] as const),
+  );
+  const maxColumn = Math.max(0, ...layoutNodes.map((node) => node.columnIndex));
   const width =
-    config.headerWidth +
-    config.padding * 2 +
-    Math.max(1, document.steps.length) * config.stepGap;
+    config.headerWidth + config.padding * 2 + (maxColumn + 1) * config.stepGap;
   const height = config.padding * 2 + laneCount * config.laneHeight;
 
   const stepById = new Map(document.steps.map((step) => [step.id, step]));
-  const nodes = graph.nodes.flatMap<BpmnNode>((node, index) => {
+  const nodes = graph.nodes.flatMap<BpmnNode>((node) => {
     const step = stepById.get(node.id);
-    if (!step) return [];
+    const layout = layoutById.get(node.id);
+    if (!step || !layout) return [];
 
     const firstActorId = step.actorIds[0];
-    const laneIndex = firstActorId
-      ? (actorIndex.get(firstActorId) ?? fallbackLaneIndex)
-      : fallbackLaneIndex;
+    const laneIndex = layout.laneIndex;
     if (!firstActorId && hasExplicitActors) {
       diagnostics.push({
         code: "UNASSIGNED_ACTOR",
@@ -163,7 +165,7 @@ function buildBpmnModelPass(
         x:
           config.headerWidth +
           config.padding +
-          index * config.stepGap +
+          layout.columnIndex * config.stepGap +
           config.stepGap / 2,
         y:
           config.padding +

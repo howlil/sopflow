@@ -111,12 +111,13 @@ export function SopFlowchart({
           </g>
         ))}
 
-        {document.steps.map((step, row) => {
-          const y = 24 + flowchart.headerHeight + row * flowchart.rowHeight;
+        {flowchart.nodes.map((node) => {
+          const y =
+            24 + flowchart.headerHeight + node.row * flowchart.rowHeight;
 
           return (
             <line
-              key={step.id}
+              key={node.id}
               x1={flowchart.lanes[0]?.x ?? 24}
               x2={
                 (flowchart.lanes.at(-1)?.x ?? 24) +
