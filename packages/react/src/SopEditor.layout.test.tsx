@@ -72,9 +72,7 @@ describe("SopEditor default composition", () => {
     const { container } = render(<Harness />);
 
     const main = container.querySelector("[data-sopflow-main-pane]");
-    const canvasStage = container.querySelector(
-      "[data-sopflow-canvas-stage]",
-    );
+    const canvasStage = container.querySelector("[data-sopflow-canvas-stage]");
     const inspector = container.querySelector("[data-sopflow-inspector]");
     const headerView = container.querySelector("[data-sopflow-header-view]");
     const flowchart = container.querySelector("[data-sopflow-flowchart]");
