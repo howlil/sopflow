@@ -1,3 +1,4 @@
+import type { DiagramEdgeKind } from "../../types.js";
 import type {
   FormalFlowchartRect,
   FormalFlowchartRouteCandidate,
@@ -17,7 +18,7 @@ export interface FormalFlowchartConnectionMeta {
   readonly id: string;
   readonly from: string;
   readonly to: string;
-  readonly label?: string | null;
+  readonly kind: DiagramEdgeKind;
   readonly sourceType?:
     | "flowchart-terminator"
     | "flowchart-process"
@@ -38,14 +39,6 @@ function center(rect: FormalFlowchartRect): { x: number; y: number } {
     x: rect.left + rect.width / 2,
     y: rect.top + rect.height / 2,
   };
-}
-
-function isYes(label: string | null | undefined): boolean {
-  return label?.trim().toLocaleLowerCase("id") === "ya";
-}
-
-function isNo(label: string | null | undefined): boolean {
-  return label?.trim().toLocaleLowerCase("id") === "tidak";
 }
 
 function candidate(
@@ -82,8 +75,8 @@ export function selectFormalFlowchartSidePairs(
 
   const decisionSource = connection.sourceType === "flowchart-decision";
   const startTerminator = connection.sourceType === "flowchart-terminator";
-  const yes = isYes(connection.label);
-  const no = isNo(connection.label);
+  const yes = connection.kind === "yes";
+  const no = connection.kind === "no";
 
   const sourceBusy = (side: FormalFlowchartSide) =>
     (usedSides[connection.from]?.out?.[side] ?? []).some(
