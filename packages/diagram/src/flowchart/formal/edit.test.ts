@@ -128,5 +128,4 @@ describe("formal flowchart path editing", () => {
     });
     expect(outside).toEqual({ valid: false, reason: "OUT_OF_BOUNDS" });
   });
-
 });
