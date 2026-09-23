@@ -34,7 +34,9 @@ export function buildSopFlowchart(
 ): SopFlowchartModel {
   const config = resolveOptions(options);
   const graph = projectWorkflow(document);
-  const stepById = new Map(document.steps.map((step) => [step.id, step] as const));
+  const stepById = new Map(
+    document.steps.map((step) => [step.id, step] as const),
+  );
   const orderByStepId = new Map(
     graph.nodes.map((node, index) => [node.id, index] as const),
   );
@@ -105,11 +107,7 @@ export function buildSopFlowchart(
   const backEdgeCount = graph.edges.filter((edge) => {
     const fromRow = orderByStepId.get(edge.from);
     const targetRow = orderByStepId.get(edge.to);
-    return (
-      fromRow !== undefined &&
-      targetRow !== undefined &&
-      targetRow <= fromRow
-    );
+    return fromRow !== undefined && targetRow !== undefined && targetRow <= fromRow;
   }).length;
   const backEdgeExtra = backEdgeCount > 0 ? 72 + backEdgeCount * 20 : 0;
   const width = laneAreaRight + config.padding + backEdgeExtra;
