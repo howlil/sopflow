@@ -39,7 +39,7 @@ import type {
 export interface FormalProcedureRowLike {
   readonly stepId: StepId;
   readonly number: number;
-  readonly kind: "start" | "task" | "decision" | "end";
+  readonly kind: "start" | "task" | "decision" | "end" | "opc";
   readonly primaryActorId: string | null;
 }
 
@@ -544,10 +544,15 @@ function clampX(value: number, bounds: FormalFlowchartBounds | null): number {
 }
 
 function shapeType(
-  kind: "start" | "task" | "decision" | "end",
-): "flowchart-terminator" | "flowchart-process" | "flowchart-decision" {
+  kind: "start" | "task" | "decision" | "end" | "opc",
+):
+  | "flowchart-terminator"
+  | "flowchart-process"
+  | "flowchart-decision"
+  | "flowchart-opc" {
   if (kind === "start" || kind === "end") return "flowchart-terminator";
   if (kind === "decision") return "flowchart-decision";
+  if (kind === "opc") return "flowchart-opc";
   return "flowchart-process";
 }
 
