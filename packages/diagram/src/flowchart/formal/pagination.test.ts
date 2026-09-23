@@ -139,12 +139,7 @@ describe("formal flowchart pagination parity", () => {
       ["s5", 2],
     ]);
 
-    const result = splitFormalConnectionsByPage(
-      [edge],
-      rows,
-      pageByStepId,
-      3,
-    );
+    const result = splitFormalConnectionsByPage([edge], rows, pageByStepId, 3);
 
     expect(result.pages[0]?.[0]).toMatchObject({
       id: "s2:next:s5__out",
