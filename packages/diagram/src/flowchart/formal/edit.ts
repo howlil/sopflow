@@ -226,6 +226,8 @@ export interface FormalRouteChange {
   readonly bendPoints: readonly DiagramPoint[];
   readonly sourceSide: FormalFlowchartSide;
   readonly targetSide: FormalFlowchartSide;
+  readonly sourceDistance?: number;
+  readonly targetDistance?: number;
 }
 
 export type FormalManualRouteValidation =
@@ -487,6 +489,10 @@ export function formalRouteChangeFromPath(
   path: readonly DiagramPoint[],
   sourceSide: FormalFlowchartSide,
   targetSide: FormalFlowchartSide,
+  anchorDistances: {
+    readonly sourceDistance?: number;
+    readonly targetDistance?: number;
+  } = {},
 ): FormalRouteChange | null {
   const startPoint = path[0];
   const endPoint = path.at(-1);
@@ -498,6 +504,12 @@ export function formalRouteChangeFromPath(
     bendPoints: path.slice(1, -1).map((point) => ({ ...point })),
     sourceSide,
     targetSide,
+    ...(Number.isFinite(anchorDistances.sourceDistance)
+      ? { sourceDistance: anchorDistances.sourceDistance }
+      : {}),
+    ...(Number.isFinite(anchorDistances.targetDistance)
+      ? { targetDistance: anchorDistances.targetDistance }
+      : {}),
   };
 }
 
