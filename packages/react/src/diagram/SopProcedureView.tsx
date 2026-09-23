@@ -609,54 +609,60 @@ function SinglePageSopProcedureView({
 
             return (
               <g key={edge.id}>
-                {manualEditing && !usesLegacyManualPaths ? (() => {
-                  const sourceShape = geometry.formal?.shapes.get(edge.from);
-                  const targetShape = geometry.formal?.shapes.get(edge.to);
-                  const obstacles = geometry.formal
-                    ? [...geometry.formal.shapes.values()]
-                        .filter(
-                          (shape) =>
-                            shape.stepId !== edge.from &&
-                            shape.stepId !== edge.to,
-                        )
-                        .map((shape) => shape.rect)
-                    : [];
-                  const formalBounds = geometry.formal
-                    ? {
-                        left: geometry.formal.pelaksanaBounds.left,
-                        top: geometry.formal.pelaksanaBounds.top,
-                        width:
-                          geometry.formal.pelaksanaBounds.right -
-                          geometry.formal.pelaksanaBounds.left,
-                        height:
-                          geometry.formal.pelaksanaBounds.bottom -
-                          geometry.formal.pelaksanaBounds.top,
-                      }
-                    : null;
+                {manualEditing && !usesLegacyManualPaths
+                  ? (() => {
+                      const sourceShape = geometry.formal?.shapes.get(
+                        edge.from,
+                      );
+                      const targetShape = geometry.formal?.shapes.get(edge.to);
+                      const obstacles = geometry.formal
+                        ? [...geometry.formal.shapes.values()]
+                            .filter(
+                              (shape) =>
+                                shape.stepId !== edge.from &&
+                                shape.stepId !== edge.to,
+                            )
+                            .map((shape) => shape.rect)
+                        : [];
+                      const formalBounds = geometry.formal
+                        ? {
+                            left: geometry.formal.pelaksanaBounds.left,
+                            top: geometry.formal.pelaksanaBounds.top,
+                            width:
+                              geometry.formal.pelaksanaBounds.right -
+                              geometry.formal.pelaksanaBounds.left,
+                            height:
+                              geometry.formal.pelaksanaBounds.bottom -
+                              geometry.formal.pelaksanaBounds.top,
+                          }
+                        : null;
 
-                  return (
-                    <EditableFormalFlowchartPath
-                      path={edge.points}
-                      connectionId={edge.id}
-                      selected={selected}
-                      sourceSide={edge.sourceSide ?? "bottom"}
-                      targetSide={edge.targetSide ?? "top"}
-                      {...(sourceShape
-                        ? { sourceRect: sourceShape.rect }
-                        : {})}
-                      {...(targetShape
-                        ? { targetRect: targetShape.rect }
-                        : {})}
-                      sourceIsDiamond={sourceShape?.kind === "decision"}
-                      targetIsDiamond={targetShape?.kind === "decision"}
-                      obstacles={obstacles}
-                      routingBounds={formalBounds}
-                      onSelect={setSelectedConnectionId}
-                      onChange={(route) => updateManualPath(edge.id, route)}
-                      onReset={() => resetManualPath(edge.id)}
-                    />
-                  );
-                })() : null}
+                      return (
+                        <EditableFormalFlowchartPath
+                          path={edge.points}
+                          connectionId={edge.id}
+                          selected={selected}
+                          sourceSide={edge.sourceSide ?? "bottom"}
+                          targetSide={edge.targetSide ?? "top"}
+                          {...(sourceShape
+                            ? { sourceRect: sourceShape.rect }
+                            : {})}
+                          {...(targetShape
+                            ? { targetRect: targetShape.rect }
+                            : {})}
+                          sourceIsDiamond={sourceShape?.kind === "decision"}
+                          targetIsDiamond={targetShape?.kind === "decision"}
+                          obstacles={obstacles}
+                          routingBounds={formalBounds}
+                          onSelect={setSelectedConnectionId}
+                          onChange={(route) =>
+                            updateManualPath(edge.id, route)
+                          }
+                          onReset={() => resetManualPath(edge.id)}
+                        />
+                      );
+                    })()
+                  : null}
 
                 <path
                   d={pointsToPath(edge.points)}
