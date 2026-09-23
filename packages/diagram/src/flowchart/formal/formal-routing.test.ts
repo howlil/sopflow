@@ -340,6 +340,63 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points.at(-1)).toEqual({ x: 237, y: 241 });
   });
 
+  it("reattaches semantic manual anchors when shape geometry moves", () => {
+    const rows = [
+      row("start", 1, "start", "staff"),
+      row("end", 2, "end", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("start:next:end", "start", "end", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 700,
+      height: 420,
+      pelaksanaBounds: pelaksana,
+      columns: { staff },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 260,
+            top: 120,
+            width: 100,
+            height: 50,
+          }),
+        ],
+        [
+          "end",
+          shape("end", "staff", 1, "end", {
+            left: 250,
+            top: 280,
+            width: 120,
+            height: 50,
+          }),
+        ],
+      ]),
+    };
+
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:end": {
+        kind: "orthogonal",
+        sSide: "right",
+        eSide: "left",
+        sourceDistance: 0.25,
+        targetDistance: 0.75,
+        // Legacy coordinates intentionally point at the old geometry.
+        startPoint: { x: 323, y: 121 },
+        endPoint: { x: 237, y: 241 },
+        bendPoints: [
+          { x: 400, y: 133 },
+          { x: 400, y: 318 },
+        ],
+      },
+    });
+
+    expect(routed?.points[0]).toEqual({ x: 360, y: 133 });
+    expect(routed?.points.at(-1)).toEqual({ x: 250, y: 318 });
+  });
+
   it("orders long and Tidak routes before simpler connections", () => {
     const ordered = sortFormalRoutesForPlanning([
       meta("near", 0, 1, null),
