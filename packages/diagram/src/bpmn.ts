@@ -6,6 +6,7 @@ import type {
   DiagramRouteQuality,
   DiagramSide,
 } from "./types.js";
+import { extrudePoint, pointOnRectSide } from "./routeAnchors.js";
 import {
   compactOrthogonalPath,
   measureRouteQuality,
@@ -323,48 +324,6 @@ function nodeRect(node: BpmnNode): DiagramRect {
   };
 }
 
-function anchor(
-  node: BpmnNode,
-  side: DiagramSide,
-  distance = 0.5,
-): DiagramPoint {
-  const rect = nodeRect(node);
-  const normalized = Math.max(0, Math.min(1, distance));
-  switch (side) {
-    case "top":
-      return { x: rect.left + rect.width * normalized, y: rect.top };
-    case "right":
-      return {
-        x: rect.left + rect.width,
-        y: rect.top + rect.height * normalized,
-      };
-    case "bottom":
-      return {
-        x: rect.left + rect.width * normalized,
-        y: rect.top + rect.height,
-      };
-    case "left":
-      return { x: rect.left, y: rect.top + rect.height * normalized };
-  }
-}
-
-function extrude(
-  point: DiagramPoint,
-  side: DiagramSide,
-  distance: number,
-): DiagramPoint {
-  switch (side) {
-    case "top":
-      return { x: point.x, y: point.y - distance };
-    case "right":
-      return { x: point.x + distance, y: point.y };
-    case "bottom":
-      return { x: point.x, y: point.y + distance };
-    case "left":
-      return { x: point.x - distance, y: point.y };
-  }
-}
-
 function candidateBpmnPath(
   from: BpmnNode,
   to: BpmnNode,
@@ -374,10 +333,10 @@ function candidateBpmnPath(
   sourceDistance = 0.5,
   targetDistance = 0.5,
 ): DiagramPoint[] {
-  const start = anchor(from, sourceSide, sourceDistance);
-  const end = anchor(to, targetSide, targetDistance);
-  const startJetty = extrude(start, sourceSide, 18);
-  const endJetty = extrude(end, targetSide, 18);
+  const start = pointOnRectSide(nodeRect(from), sourceSide, sourceDistance);
+  const end = pointOnRectSide(nodeRect(to), targetSide, targetDistance);
+  const startJetty = extrudePoint(start, sourceSide, 18);
+  const endJetty = extrudePoint(end, targetSide, 18);
 
   if (sourceSide === "right" || sourceSide === "left") {
     const midX = (startJetty.x + endJetty.x) / 2 + offset;
