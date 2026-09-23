@@ -34,6 +34,7 @@ describe("diagram public API", () => {
         "buildFormalTableColumnPercents",
         "classifyFormalFlowchartRouteComplexity",
         "computeFormalActorColumnCenterPercent",
+        "diagramConfigEquals",
         "formalOpcCenterXToLeftPx",
         "formalOpcStackTopPx",
         "formalRowSpan",
@@ -73,6 +74,8 @@ describe("diagram public API", () => {
         "validateFormalManualRoute",
         "updateProcedureManualTrunk",
         "projectWorkflow",
+        "pruneSopDiagramConfig",
+        "resetDiagramRoutes",
       ].sort(),
     );
   });
