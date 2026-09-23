@@ -133,6 +133,8 @@ function manualRouteEquals(
   if (!pointEquals(left.endPoint, right.endPoint)) return false;
   if (!sideEquals(left.sSide, right.sSide)) return false;
   if (!sideEquals(left.eSide, right.eSide)) return false;
+  if (left.sourceDistance !== right.sourceDistance) return false;
+  if (left.targetDistance !== right.targetDistance) return false;
 
   if (left.kind === "trunk" && right.kind === "trunk") {
     return left.x === right.x;
