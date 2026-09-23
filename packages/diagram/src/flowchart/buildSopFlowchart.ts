@@ -33,6 +33,11 @@ export function buildSopFlowchart(
   options: BuildSopFlowchartOptions = {},
 ): SopFlowchartModel {
   const config = resolveOptions(options);
+  const graph = projectWorkflow(document);
+  const stepById = new Map(document.steps.map((step) => [step.id, step] as const));
+  const orderByStepId = new Map(
+    graph.nodes.map((node, index) => [node.id, index] as const),
+  );
   const actorList =
     document.actors.length > 0
       ? document.actors.map((actor) => ({
@@ -55,7 +60,10 @@ export function buildSopFlowchart(
   );
   const fallbackLane = lanes[0];
 
-  const nodes = document.steps.map<SopFlowchartNode>((step, row) => {
+  const nodes = graph.nodes.flatMap<SopFlowchartNode>((workflowNode, row) => {
+    const step = stepById.get(workflowNode.id);
+    if (!step) return [];
+
     const size = nodeSize(step, config);
     const assignedLanes = step.actorIds
       .map((actorId) => laneByActorId.get(actorId))
@@ -79,47 +87,36 @@ export function buildSopFlowchart(
       y: centerY,
     }));
 
-    return {
-      id: step.id,
-      kind: step.type,
-      label: step.name,
-      actorIds: step.actorIds,
-      row,
-      width: size.width,
-      height: size.height,
-      placements,
-    };
+    return [
+      {
+        id: step.id,
+        kind: step.type,
+        label: step.name,
+        actorIds: step.actorIds,
+        row,
+        width: size.width,
+        height: size.height,
+        placements,
+      },
+    ];
   });
 
   const laneAreaRight = config.padding + lanes.length * config.laneWidth;
-  const backEdgeCount = document.steps.reduce((count, step) => {
-    const outgoing =
-      step.type === "decision"
-        ? [step.yes, step.no]
-        : step.type === "start" || step.type === "task"
-          ? [step.next]
-          : [];
+  const backEdgeCount = graph.edges.filter((edge) => {
+    const fromRow = orderByStepId.get(edge.from);
+    const targetRow = orderByStepId.get(edge.to);
     return (
-      count +
-      outgoing.filter((target) => {
-        const fromRow = document.steps.findIndex(
-          (candidate) => candidate.id === step.id,
-        );
-        const targetRow = document.steps.findIndex(
-          (candidate) => candidate.id === target,
-        );
-        return targetRow >= 0 && targetRow <= fromRow;
-      }).length
+      fromRow !== undefined &&
+      targetRow !== undefined &&
+      targetRow <= fromRow
     );
-  }, 0);
+  }).length;
   const backEdgeExtra = backEdgeCount > 0 ? 72 + backEdgeCount * 20 : 0;
   const width = laneAreaRight + config.padding + backEdgeExtra;
   const height =
     config.padding * 2 +
     config.headerHeight +
-    Math.max(1, document.steps.length) * config.rowHeight;
-
-  const graph = projectWorkflow(document);
+    Math.max(1, graph.nodes.length) * config.rowHeight;
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const diagramModel: DiagramModel = {
     nodes: nodes.map((node) => {
