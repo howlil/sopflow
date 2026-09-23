@@ -64,48 +64,88 @@ export function getNextStepIds(step: Step): StepId[] {
 }
 
 export function getOrderedStepIds(document: SOPDocument): StepId[] {
-  const start = document.steps.find((step) => step.type === "start");
-
-  if (!start) return document.steps.map((step) => step.id);
-
   const steps = createStepMap(document);
   const visited = new Set<StepId>();
   const visiting = new Set<StepId>();
-  const ordered: StepId[] = [];
-  const terminal: StepId[] = [];
+  const result: StepId[] = [];
 
-  function visit(id: StepId): void {
-    if (visited.has(id) || visiting.has(id)) return;
+  function visitComponent(rootId: StepId): void {
+    const ordered: StepId[] = [];
+    const terminal: StepId[] = [];
 
-    const step = steps.get(id);
+    function visit(id: StepId): void {
+      if (visited.has(id) || visiting.has(id)) return;
 
-    if (!step) return;
+      const step = steps.get(id);
+      if (!step) return;
 
-    visiting.add(id);
+      visiting.add(id);
 
-    if (step.type !== "end") {
-      ordered.push(id);
+      if (step.type !== "end") {
+        ordered.push(id);
+      }
+
+      for (const nextId of getNextStepIds(step)) {
+        visit(nextId);
+      }
+
+      visiting.delete(id);
+      visited.add(id);
+
+      if (step.type === "end") {
+        terminal.push(id);
+      }
     }
 
+    visit(rootId);
+    result.push(...ordered, ...terminal);
+  }
+
+  const startIds = document.steps
+    .filter((step) => step.type === "start")
+    .map((step) => step.id)
+    .sort(compareStepIds);
+
+  for (const startId of startIds) {
+    visitComponent(startId);
+  }
+
+  const zeroIncomingIds = findZeroIncomingStepIds(document)
+    .filter((id) => !visited.has(id))
+    .sort(compareStepIds);
+
+  for (const rootId of zeroIncomingIds) {
+    visitComponent(rootId);
+  }
+
+  const remainingIds = [...steps.keys()]
+    .filter((id) => !visited.has(id))
+    .sort(compareStepIds);
+
+  for (const rootId of remainingIds) {
+    visitComponent(rootId);
+  }
+
+  return result;
+}
+
+function findZeroIncomingStepIds(document: SOPDocument): StepId[] {
+  const knownIds = new Set(document.steps.map((step) => step.id));
+  const incoming = new Set<StepId>();
+
+  for (const step of document.steps) {
     for (const nextId of getNextStepIds(step)) {
-      visit(nextId);
-    }
-
-    visiting.delete(id);
-    visited.add(id);
-
-    if (step.type === "end") {
-      terminal.push(id);
+      if (knownIds.has(nextId)) incoming.add(nextId);
     }
   }
 
-  visit(start.id);
+  return document.steps
+    .map((step) => step.id)
+    .filter((id) => !incoming.has(id));
+}
 
-  const orphanIds = document.steps
-    .filter((step) => !visited.has(step.id))
-    .map((step) => step.id);
-
-  return [...ordered, ...terminal, ...orphanIds];
+function compareStepIds(left: StepId, right: StepId): number {
+  return left.localeCompare(right);
 }
 
 export function getOrderedSteps(document: SOPDocument): Step[] {

@@ -20,8 +20,8 @@ describe("buildFormalProcedurePages", () => {
     const incoming = pages[1]?.edges.find((edge) => edge.id.endsWith("__in"));
 
     expect(outgoing?.from).toBe("step-4");
-    expect(outgoing?.to).toContain("opc-out-step-4-to-step-5");
-    expect(incoming?.from).toContain("opc-in-step-4-to-step-5");
+    expect(outgoing?.to).toBe("opc-out-step-4:next:step-5");
+    expect(incoming?.from).toBe("opc-in-step-4:next:step-5");
     expect(incoming?.to).toBe("step-5");
 
     expect(pages[0]?.routingRows.some((row) => row.kind === "opc")).toBe(true);

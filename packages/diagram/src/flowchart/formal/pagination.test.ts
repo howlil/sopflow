@@ -63,6 +63,45 @@ describe("formal flowchart pagination parity", () => {
     });
   });
 
+  it("keeps OPC endpoint ids unique when decision branches share a target", () => {
+    const branchRows: FormalPageRow[] = [
+      row("decision", 1, "staff"),
+      row("filler", 2, "staff"),
+      row("target", 3, "manager"),
+    ];
+    const edges: WorkflowEdge[] = [
+      {
+        id: "decision:yes:target",
+        from: "decision",
+        to: "target",
+        kind: "yes",
+        label: "Ya",
+      },
+      {
+        id: "decision:no:target",
+        from: "decision",
+        to: "target",
+        kind: "no",
+        label: "Tidak",
+      },
+    ];
+
+    const result = splitFormalCrossPageConnections(edges, branchRows, 2, 2);
+    const endpointIds = result.opcPairs.flatMap((pair) => [
+      pair.opcOutId,
+      pair.opcInId,
+    ]);
+
+    expect(result.opcPairs).toHaveLength(2);
+    expect(new Set(endpointIds).size).toBe(endpointIds.length);
+    expect(endpointIds).toEqual([
+      "opc-out-decision:yes:target",
+      "opc-in-decision:yes:target",
+      "opc-out-decision:no:target",
+      "opc-in-decision:no:target",
+    ]);
+  });
+
   it("places loopback OPC endpoints on the opposite page edges", () => {
     const edge: WorkflowEdge = {
       id: "s5:no:s2",

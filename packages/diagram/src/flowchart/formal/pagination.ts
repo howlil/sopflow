@@ -147,8 +147,8 @@ export function splitFormalCrossPageConnections(
     }
 
     const letter = LETTERS[opcPairs.length % LETTERS.length] ?? "A";
-    const opcOutId = `${opcIdPrefix}opc-out-${edge.from}-to-${edge.to}`;
-    const opcInId = `${opcIdPrefix}opc-in-${edge.from}-to-${edge.to}`;
+    const opcOutId = buildFormalOpcId(edge.id, "out", opcIdPrefix);
+    const opcInId = buildFormalOpcId(edge.id, "in", opcIdPrefix);
 
     pages[fromPage]?.push({
       ...toPagedConnection(edge, source, target),
@@ -328,6 +328,14 @@ export function formalOpcStackTopPx(stackIndex: number): number {
     stackIndex *
     (FORMAL_OPC_CONNECTOR_HEIGHT_PX + FORMAL_OPC_CONNECTOR_STACK_GAP_PX)
   );
+}
+
+function buildFormalOpcId(
+  edgeId: string,
+  variant: FormalOpcEndpointVariant,
+  prefix: string,
+): string {
+  return `${prefix}opc-${variant}-${edgeId}`;
 }
 
 function toPagedConnection(

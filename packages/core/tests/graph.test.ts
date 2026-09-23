@@ -86,6 +86,102 @@ describe("getOrderedStepIds", () => {
     ]);
   });
 
+  it("keeps multiple starts deterministic regardless of storage order", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "multiple-starts",
+      title: "Multiple starts",
+      actors: [],
+      steps: [
+        {
+          id: "start-b",
+          type: "start",
+          name: "Start B",
+          actorIds: [],
+          next: "end-b",
+        },
+        { id: "end-b", type: "end", name: "End B", actorIds: [] },
+        {
+          id: "start-a",
+          type: "start",
+          name: "Start A",
+          actorIds: [],
+          next: "end-a",
+        },
+        { id: "end-a", type: "end", name: "End A", actorIds: [] },
+      ],
+    };
+
+    const expected = getOrderedStepIds(document);
+    expect(
+      getOrderedStepIds({ ...document, steps: [...document.steps].reverse() }),
+    ).toEqual(expected);
+    expect(expected).toEqual(["start-a", "end-a", "start-b", "end-b"]);
+  });
+
+  it("keeps start-less disconnected graphs deterministic", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "no-start",
+      title: "No start",
+      actors: [],
+      steps: [
+        {
+          id: "task-b",
+          type: "task",
+          name: "Task B",
+          actorIds: [],
+          next: "end-b",
+        },
+        { id: "end-b", type: "end", name: "End B", actorIds: [] },
+        {
+          id: "task-a",
+          type: "task",
+          name: "Task A",
+          actorIds: [],
+          next: "end-a",
+        },
+        { id: "end-a", type: "end", name: "End A", actorIds: [] },
+      ],
+    };
+
+    const expected = getOrderedStepIds(document);
+    expect(
+      getOrderedStepIds({ ...document, steps: [...document.steps].reverse() }),
+    ).toEqual(expected);
+    expect(expected).toEqual(["task-a", "end-a", "task-b", "end-b"]);
+  });
+
+  it("keeps rootless cycles deterministic", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "cycle",
+      title: "Cycle",
+      actors: [],
+      steps: [
+        {
+          id: "cycle-b",
+          type: "task",
+          name: "Cycle B",
+          actorIds: [],
+          next: "cycle-a",
+        },
+        {
+          id: "cycle-a",
+          type: "task",
+          name: "Cycle A",
+          actorIds: [],
+          next: "cycle-b",
+        },
+      ],
+    };
+
+    expect(getOrderedStepIds(document)).toEqual(["cycle-a", "cycle-b"]);
+    expect(
+      getOrderedStepIds({ ...document, steps: [...document.steps].reverse() }),
+    ).toEqual(["cycle-a", "cycle-b"]);
+  });
+
   it("keeps orphan records visible after the graph", () => {
     const document = {
       ...exampleSop,
