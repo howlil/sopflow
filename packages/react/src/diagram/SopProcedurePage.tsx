@@ -392,11 +392,9 @@ export function SopProcedurePage({
               left: geometry.pelaksanaBounds.left,
               top: geometry.pelaksanaBounds.top,
               width:
-                geometry.pelaksanaBounds.right -
-                geometry.pelaksanaBounds.left,
+                geometry.pelaksanaBounds.right - geometry.pelaksanaBounds.left,
               height:
-                geometry.pelaksanaBounds.bottom -
-                geometry.pelaksanaBounds.top,
+                geometry.pelaksanaBounds.bottom - geometry.pelaksanaBounds.top,
             };
 
             return (
