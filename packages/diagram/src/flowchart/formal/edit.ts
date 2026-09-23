@@ -1,5 +1,6 @@
 import {
   distanceOnRectSide,
+  extrudePoint,
   nearestRectSide,
   pointOnRectSide,
 } from "../../routeAnchors.js";
@@ -267,9 +268,19 @@ export function snapFormalEndpoint(
   options: {
     readonly diamond?: boolean;
     readonly centerThresholdPx?: number;
+    readonly preferredSide?: FormalFlowchartSide;
+    readonly sideHysteresisPx?: number;
   } = {},
 ): FormalRouteEndpoint {
-  const side = resolveNearestFormalShapeSide(rect, point);
+  const nearestSide = resolveNearestFormalShapeSide(rect, point);
+  const preferredSide = options.preferredSide;
+  const hysteresis = Math.max(0, options.sideHysteresisPx ?? 8);
+  const side =
+    preferredSide &&
+    distanceToFormalRectSide(rect, point, preferredSide) <=
+      distanceToFormalRectSide(rect, point, nearestSide) + hysteresis
+      ? preferredSide
+      : nearestSide;
 
   if (options.diamond) {
     return {
@@ -320,6 +331,166 @@ export function rebuildFormalPathForEndpoint(
   return normalizeFormalOrthogonalPath(next, null, {
     preserveCollinear: true,
   });
+}
+
+export function repairFormalManualRoute(input: {
+  readonly path: readonly DiagramPoint[];
+  readonly sourceSide: FormalFlowchartSide;
+  readonly targetSide: FormalFlowchartSide;
+  readonly obstacles?: readonly FormalFlowchartRect[];
+  readonly bounds?: FormalFlowchartRect | null;
+  readonly clearance?: number;
+  readonly jetty?: number;
+}): DiagramPoint[] | null {
+  const {
+    path,
+    sourceSide,
+    targetSide,
+    obstacles = [],
+    bounds = null,
+    clearance = 2,
+    jetty = 12,
+  } = input;
+
+  if (
+    validateFormalManualRoute({
+      path,
+      sourceSide,
+      targetSide,
+      obstacles,
+      bounds,
+      clearance,
+    }).valid
+  ) {
+    return path.map((point) => ({ ...point }));
+  }
+
+  const start = path[0];
+  const end = path.at(-1);
+  if (!start || !end) return null;
+
+  const startJetty = extrudePoint(start, sourceSide, jetty);
+  const endJetty = extrudePoint(end, targetSide, jetty);
+  const detour = clearance + 6;
+  const preferredX = (startJetty.x + endJetty.x) / 2;
+  const preferredY = (startJetty.y + endJetty.y) / 2;
+  const xCandidates = uniqueNumbers([
+    preferredX,
+    ...obstacles.flatMap((rect) => [
+      rect.left - detour,
+      rect.left + rect.width + detour,
+    ]),
+    ...(bounds
+      ? [bounds.left + detour, bounds.left + bounds.width - detour]
+      : []),
+  ]).sort(
+    (left, right) =>
+      Math.abs(left - preferredX) - Math.abs(right - preferredX),
+  );
+  const yCandidates = uniqueNumbers([
+    preferredY,
+    ...obstacles.flatMap((rect) => [
+      rect.top - detour,
+      rect.top + rect.height + detour,
+    ]),
+    ...(bounds
+      ? [bounds.top + detour, bounds.top + bounds.height - detour]
+      : []),
+  ]).sort(
+    (left, right) =>
+      Math.abs(left - preferredY) - Math.abs(right - preferredY),
+  );
+
+  const candidates: DiagramPoint[][] = [
+    [
+      start,
+      startJetty,
+      { x: endJetty.x, y: startJetty.y },
+      endJetty,
+      end,
+    ],
+    [
+      start,
+      startJetty,
+      { x: startJetty.x, y: endJetty.y },
+      endJetty,
+      end,
+    ],
+    ...xCandidates.map((x) => [
+      start,
+      startJetty,
+      { x, y: startJetty.y },
+      { x, y: endJetty.y },
+      endJetty,
+      end,
+    ]),
+    ...yCandidates.map((y) => [
+      start,
+      startJetty,
+      { x: startJetty.x, y },
+      { x: endJetty.x, y },
+      endJetty,
+      end,
+    ]),
+  ].map((candidate) =>
+    normalizeFormalOrthogonalPath(candidate, null, {
+      preserveCollinear: true,
+    }),
+  );
+
+  const validCandidates = candidates.filter(
+    (candidate) =>
+      validateFormalManualRoute({
+        path: candidate,
+        sourceSide,
+        targetSide,
+        obstacles,
+        bounds,
+        clearance,
+      }).valid,
+  );
+
+  if (validCandidates.length === 0) return null;
+
+  return validCandidates.sort(
+    (left, right) =>
+      formalRepairScore(left, path) - formalRepairScore(right, path),
+  )[0] ?? null;
+}
+
+function formalRepairScore(
+  candidate: readonly DiagramPoint[],
+  original: readonly DiagramPoint[],
+): number {
+  const routeLength = candidate.slice(1).reduce((total, point, index) => {
+    const previous = candidate[index];
+    return previous
+      ? total + Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y)
+      : total;
+  }, 0);
+  const bends = Math.max(0, candidate.length - 2);
+  const originalInterior = original.slice(1, -1);
+  const displacement = candidate
+    .slice(1, -1)
+    .reduce((total, point) => {
+      if (originalInterior.length === 0) return total;
+
+      return (
+        total +
+        Math.min(
+          ...originalInterior.map(
+            (origin) =>
+              Math.abs(point.x - origin.x) + Math.abs(point.y - origin.y),
+          ),
+        )
+      );
+    }, 0);
+
+  return routeLength + bends * 24 + displacement * 0.25;
+}
+
+function uniqueNumbers(values: readonly number[]): number[] {
+  return [...new Set(values.filter(Number.isFinite).map((value) => Math.round(value)))];
 }
 
 export function formalRouteChangeFromPath(
@@ -394,6 +565,23 @@ export function validateFormalManualRoute(input: {
   }
 
   return { valid: true };
+}
+
+function distanceToFormalRectSide(
+  rect: FormalFlowchartRect,
+  point: DiagramPoint,
+  side: FormalFlowchartSide,
+): number {
+  switch (side) {
+    case "top":
+      return Math.abs(point.y - rect.top);
+    case "right":
+      return Math.abs(point.x - (rect.left + rect.width));
+    case "bottom":
+      return Math.abs(point.y - (rect.top + rect.height));
+    case "left":
+      return Math.abs(point.x - rect.left);
+  }
 }
 
 function endpointDirectionValid(
