@@ -107,7 +107,11 @@ export function buildSopFlowchart(
   const backEdgeCount = graph.edges.filter((edge) => {
     const fromRow = orderByStepId.get(edge.from);
     const targetRow = orderByStepId.get(edge.to);
-    return fromRow !== undefined && targetRow !== undefined && targetRow <= fromRow;
+    return (
+      fromRow !== undefined &&
+      targetRow !== undefined &&
+      targetRow <= fromRow
+    );
   }).length;
   const backEdgeExtra = backEdgeCount > 0 ? 72 + backEdgeCount * 20 : 0;
   const width = laneAreaRight + config.padding + backEdgeExtra;
