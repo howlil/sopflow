@@ -15,17 +15,36 @@ export function pruneSopDiagramConfig(
   graph: WorkflowGraph,
   config: SopDiagramConfig,
 ): SopDiagramConfig {
-  return pruneProcedureManualRoutes(
-    config,
-    new Set(graph.edges.map((edge) => edge.id)),
+  const validEdgeIds = new Set(graph.edges.map((edge) => edge.id));
+  const routesPruned = pruneProcedureManualRoutes(config, validEdgeIds);
+
+  if (!routesPruned.pagedRoutes) return routesPruned;
+
+  const pagedRoutes = Object.fromEntries(
+    Object.entries(routesPruned.pagedRoutes).filter(([edgeId]) =>
+      validEdgeIds.has(edgeId),
+    ),
   );
+  if (
+    Object.keys(pagedRoutes).length ===
+    Object.keys(routesPruned.pagedRoutes).length
+  ) {
+    return routesPruned;
+  }
+
+  const { pagedRoutes: _removedPagedRoutes, ...rest } = routesPruned;
+  return Object.keys(pagedRoutes).length > 0 ? { ...rest, pagedRoutes } : rest;
 }
 
 /** Remove all manual routes while preserving non-route diagram preferences. */
 export function resetDiagramRoutes(config: SopDiagramConfig): SopDiagramConfig {
-  if (!config.routes) return config;
+  if (!config.routes && !config.pagedRoutes) return config;
 
-  const { routes: _removedRoutes, ...rest } = config;
+  const {
+    routes: _removedRoutes,
+    pagedRoutes: _removedPagedRoutes,
+    ...rest
+  } = config;
   return rest;
 }
 
@@ -38,6 +57,7 @@ export function diagramConfigEquals(
   right: SopDiagramConfig,
 ): boolean {
   if ((left.pathLayoutSeed ?? 0) !== (right.pathLayoutSeed ?? 0)) return false;
+  if (!pagedRoutesEqual(left, right)) return false;
 
   const leftRoutes = left.routes ?? {};
   const rightRoutes = right.routes ?? {};
@@ -63,6 +83,44 @@ export function diagramConfigEquals(
   }
 
   return true;
+}
+
+function pagedRoutesEqual(
+  left: SopDiagramConfig,
+  right: SopDiagramConfig,
+): boolean {
+  const leftRoutes = left.pagedRoutes ?? {};
+  const rightRoutes = right.pagedRoutes ?? {};
+  const leftIds = Object.keys(leftRoutes).sort();
+  const rightIds = Object.keys(rightRoutes).sort();
+
+  if (leftIds.length !== rightIds.length) return false;
+
+  for (let index = 0; index < leftIds.length; index += 1) {
+    const edgeId = leftIds[index];
+    if (!edgeId || edgeId !== rightIds[index]) return false;
+
+    const leftEntry = leftRoutes[edgeId];
+    const rightEntry = rightRoutes[edgeId];
+    if (!leftEntry || !rightEntry) return false;
+
+    if (!optionalManualRouteEquals(leftEntry.source, rightEntry.source)) {
+      return false;
+    }
+    if (!optionalManualRouteEquals(leftEntry.target, rightEntry.target)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function optionalManualRouteEquals(
+  left: ProcedureManualRoute | undefined,
+  right: ProcedureManualRoute | undefined,
+): boolean {
+  if (!left || !right) return left === right;
+  return manualRouteEquals(left, right);
 }
 
 function manualRouteEquals(
