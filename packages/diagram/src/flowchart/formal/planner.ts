@@ -53,11 +53,19 @@ export type FormalManualRoute =
       readonly kind: "trunk";
       readonly x: number;
       readonly labelPosition?: DiagramPoint;
+      readonly sSide?: FormalFlowchartSide;
+      readonly eSide?: FormalFlowchartSide;
+      readonly startPoint?: DiagramPoint;
+      readonly endPoint?: DiagramPoint;
     }
   | {
       readonly kind: "orthogonal";
       readonly bendPoints: readonly DiagramPoint[];
       readonly labelPosition?: DiagramPoint;
+      readonly sSide?: FormalFlowchartSide;
+      readonly eSide?: FormalFlowchartSide;
+      readonly startPoint?: DiagramPoint;
+      readonly endPoint?: DiagramPoint;
     };
 
 export interface FormalPlannedEdge extends WorkflowEdge {
@@ -458,31 +466,59 @@ function applyManualRoute(
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
-  const start = auto.points[0];
-  const end = auto.points.at(-1);
-  if (!start || !end) return auto;
+  const autoStart = auto.points[0];
+  const autoEnd = auto.points.at(-1);
+  if (!autoStart || !autoEnd) return auto;
+
+  const start = resolveManualPoint(manual.startPoint, autoStart, bounds);
+  const end = resolveManualPoint(manual.endPoint, autoEnd, bounds);
+  const sourceSide = manual.sSide ?? auto.sourceSide;
+  const targetSide = manual.eSide ?? auto.targetSide;
 
   if (manual.kind === "orthogonal") {
     return {
-      ...auto,
       points: normalizeFormalOrthogonalPath(
         [start, ...manual.bendPoints, end],
         null,
         { preserveCollinear: true },
       ),
+      sourceSide,
+      targetSide,
     };
   }
 
   const x = clampX(manual.x, bounds);
 
   return {
-    ...auto,
     points: normalizeFormalOrthogonalPath([
       start,
       { x, y: start.y },
       { x, y: end.y },
       end,
     ]),
+    sourceSide,
+    targetSide,
+  };
+}
+
+function resolveManualPoint(
+  configured: DiagramPoint | undefined,
+  fallback: DiagramPoint,
+  bounds: FormalFlowchartBounds | null,
+): DiagramPoint {
+  if (
+    !configured ||
+    !Number.isFinite(configured.x) ||
+    !Number.isFinite(configured.y)
+  ) {
+    return { ...fallback };
+  }
+
+  if (!bounds) return { x: Math.round(configured.x), y: Math.round(configured.y) };
+
+  return {
+    x: Math.round(Math.max(bounds.left, Math.min(bounds.right, configured.x))),
+    y: Math.round(Math.max(bounds.top, Math.min(bounds.bottom, configured.y))),
   };
 }
 
