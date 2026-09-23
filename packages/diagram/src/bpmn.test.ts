@@ -163,5 +163,4 @@ describe("buildBpmnModel", () => {
 
     expect(shuffled).toEqual(original);
   });
-
 });
