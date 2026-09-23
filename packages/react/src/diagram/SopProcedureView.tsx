@@ -2,6 +2,7 @@ import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import {
   buildFormalProcedurePages,
   buildProcedureModel,
+  formalPathToSegments,
   pointsToPath,
   removeProcedureManualRoute,
   routeProcedureEdges,
@@ -180,6 +181,17 @@ function LegacySinglePageSopProcedureView({
     () =>
       geometry ? routeProcedureEdges(model, geometry, routeOverrides) : [],
     [geometry, model, routeOverrides],
+  );
+
+  const routeSegmentsById = useMemo(
+    () =>
+      new Map(
+        routedEdges.map((edge) => [
+          edge.id,
+          formalPathToSegments(edge.points),
+        ] as const),
+      ),
+    [routedEdges],
   );
 
   const updatePathOffsets = useCallback(
@@ -668,6 +680,9 @@ function LegacySinglePageSopProcedureView({
                             )
                             .map((shape) => shape.rect)
                         : [];
+                      const occupiedSegments = [...routeSegmentsById.entries()]
+                        .filter(([edgeId]) => edgeId !== edge.id)
+                        .flatMap(([, segments]) => segments);
                       const pelaksanaBounds = geometry.formal?.pelaksanaBounds;
                       const formalBounds = pelaksanaBounds
                         ? {
@@ -695,6 +710,7 @@ function LegacySinglePageSopProcedureView({
                           sourceIsDiamond={sourceShape?.kind === "decision"}
                           targetIsDiamond={targetShape?.kind === "decision"}
                           obstacles={obstacles}
+                          occupiedSegments={occupiedSegments}
                           routingBounds={formalBounds}
                           onSelect={setSelectedConnectionId}
                           onChange={(route) => updateManualPath(edge.id, route)}
