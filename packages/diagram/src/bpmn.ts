@@ -132,7 +132,8 @@ function buildBpmnModelPass(
     if (edge.from === edge.to) return [];
     const source = layoutById.get(edge.from);
     const target = layoutById.get(edge.to);
-    if (!source || !target || target.columnIndex > source.columnIndex) return [];
+    if (!source || !target || target.columnIndex > source.columnIndex)
+      return [];
     return [edge.id];
   });
   const feedbackSlotById = new Map(
