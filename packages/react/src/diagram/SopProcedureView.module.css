@@ -1,0 +1,213 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 2px solid var(--sopflow-color-document-border);
+  background: var(--sopflow-color-surface);
+  color: var(--sopflow-color-text);
+  font-size: var(--sopflow-font-document);
+  line-height: 1.2;
+}
+
+.table th,
+.table td {
+  border: 2px solid var(--sopflow-color-document-border);
+  overflow-wrap: anywhere;
+}
+
+.table th {
+  padding: 0.125rem 0.25rem;
+
+  background: #d9d9d9;
+  font-size: var(--sopflow-font-document);
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.table td {
+  padding: 0.125rem 0.25rem;
+
+  vertical-align: top;
+}
+
+.actorHeader {
+  padding-inline: 0.125rem !important;
+  font-size: var(--sopflow-font-document) !important;
+  line-height: 1.15;
+}
+
+.row {
+  outline: none;
+}
+
+.row[data-selected="true"] {
+  box-shadow: inset 2px 0 0 var(--sopflow-selected-border);
+}
+
+.row[data-error="true"]:not([data-selected="true"]) {
+  box-shadow: inset 2px 0 0 var(--sopflow-error-border);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: -2px;
+}
+
+.number {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity {
+  text-align: justify;
+}
+
+.activityName {
+  font-weight: 500;
+}
+
+.activityMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.125rem 0.25rem;
+
+  margin-top: 0.1875rem;
+
+  color: var(--sopflow-color-text-muted);
+  font-size: var(--sopflow-font-document);
+}
+
+.issue {
+  color: var(--sopflow-error-text);
+
+  font-weight: 600;
+}
+
+.actorCell {
+  padding: 0 !important;
+
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.shapeSlot {
+  position: relative;
+  z-index: 10;
+
+  display: flex;
+  min-height: 4.375rem;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+
+  padding: 1.25rem 0.5rem;
+}
+
+.shapeAnchor {
+  display: inline-block;
+
+  line-height: 0;
+}
+
+.flowShape {
+  display: block;
+  overflow: visible;
+
+  fill: none;
+  stroke: var(--sopflow-color-document-border);
+  stroke-width: 2;
+}
+
+.empty {
+  height: 4rem;
+
+  color: var(--sopflow-color-text-muted);
+
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+
+  pointer-events: none;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--sopflow-color-document-border);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+
+  pointer-events: none;
+}
+
+.edge[data-editable="true"] {
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
+.edge[data-selected="true"] {
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+}
+
+.arrowHead {
+  fill: var(--sopflow-color-document-border);
+}
+
+.edgeLabel {
+  fill: var(--sopflow-text);
+  font-size: var(--sopflow-font-document);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--sopflow-surface);
+  stroke-width: 3px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pathHandle {
+  fill: var(--sopflow-color-surface);
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+
+  cursor: ew-resize;
+  pointer-events: all;
+}
+
+@media print {
+  .row[data-selected="true"],
+  .row[data-error="true"] {
+    box-shadow: none;
+  }
+
+  .row:focus-visible {
+    outline: none;
+  }
+
+  .overlay {
+    pointer-events: none;
+  }
+
+  .pathHandle {
+    display: none;
+  }
+}
