@@ -508,10 +508,10 @@ describe("formal SOP-AP flowchart routing parity", () => {
 
   it("orders long and Tidak routes before simpler connections", () => {
     const ordered = sortFormalRoutesForPlanning([
-      meta("near", 0, 1, null),
-      meta("long", 0, 4, null),
-      meta("yes", 2, 3, "Ya"),
-      meta("no", 3, 1, "Tidak"),
+      meta("near", 0, 1, "next"),
+      meta("long", 0, 4, "next"),
+      meta("yes", 2, 3, "yes"),
+      meta("no", 3, 1, "no"),
     ]);
 
     expect(ordered[0]?.id).toBe("long");
@@ -521,6 +521,75 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(noIndex).toBeGreaterThanOrEqual(0);
     expect(yesIndex).toBeGreaterThanOrEqual(0);
     expect(noIndex).toBeLessThan(yesIndex);
+  });
+
+  it("keeps branch routing semantic when presentation labels change", () => {
+    const rows = [
+      row("decision", 1, "decision", "staff"),
+      row("yes-target", 2, "task", "staff"),
+      row("no-target", 3, "task", "staff"),
+    ] as const;
+    const geometry: FormalFlowchartGeometry = {
+      width: 600,
+      height: 420,
+      pelaksanaBounds: pelaksana,
+      columns: { staff },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "decision",
+          shape("decision", "staff", 0, "decision", {
+            left: 257,
+            top: 110,
+            width: 66,
+            height: 66,
+          }),
+        ],
+        [
+          "yes-target",
+          shape("yes-target", "staff", 1, "task", {
+            left: 249,
+            top: 240,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "no-target",
+          shape("no-target", "staff", 2, "task", {
+            left: 249,
+            top: 350,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+    const edges: WorkflowEdge[] = [
+      edge(
+        "decision:yes:yes-target",
+        "decision",
+        "yes-target",
+        "yes",
+        "Approved",
+      ),
+      edge(
+        "decision:no:no-target",
+        "decision",
+        "no-target",
+        "no",
+        "Rejected",
+      ),
+    ];
+
+    const planned = planFormalProcedureEdges({ rows, edges }, geometry);
+    const yes = planned.find((route) => route.kind === "yes");
+    const no = planned.find((route) => route.kind === "no");
+
+    expect(yes?.label).toBe("Approved");
+    expect(no?.label).toBe("Rejected");
+    expect(yes?.sourceSide).toBe("bottom");
+    expect(no?.sourceSide).toBeDefined();
   });
 
   it("detects connector crossings for reconciliation", () => {
@@ -569,16 +638,16 @@ function meta(
   id: string,
   fromRow: number,
   toRow: number,
-  label: string | null,
+  kind: "next" | "yes" | "no",
 ) {
   return {
     id,
+    kind,
     fromRow,
     toRow,
     fromActorId: "staff",
     toActorId: "staff",
     sourceType: "flowchart-process" as const,
     targetType: "flowchart-process" as const,
-    ...(label ? { label } : {}),
   };
 }
