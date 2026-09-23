@@ -6,7 +6,9 @@ Sopflow adalah toolkit TypeScript untuk memodelkan dan mengembangkan structured 
 
 ```text
 packages/core      @sopflow/core — domain, schema, graph, validation, operations, history
-apps/playground    consumer workbench untuk mencoba seluruh feature package core
+packages/diagram   @sopflow/diagram — workflow projection, layout, routing, SVG models
+packages/react     @sopflow/react — reusable React editor and diagram presentation
+apps/playground    integration consumer/workbench untuk mencoba package Sopflow
 ```
 
 ## Mulai
@@ -19,7 +21,7 @@ pnpm --filter playground start
 
 ## Package
 
-Package utama adalah [`@sopflow/core`](./packages/core). Core engine tidak bergantung pada React, database, browser, atau provider AI. Dokumentasi API package tersedia di [`packages/core/README.md`](./packages/core/README.md).
+Package dibagi menurut ownership: [`@sopflow/core`](./packages/core) memiliki domain dan workflow invariant, [`@sopflow/diagram`](./packages/diagram) memiliki projection/layout/routing framework-agnostic, dan [`@sopflow/react`](./packages/react) memiliki presentation serta interaction React. `apps/playground` hanya consumer integrasi.
 
 Playground mencakup route projection, step mutation, decision branches, graph
 diagnostics, validation evidence, undo/redo, strict dan draft operation batches,
