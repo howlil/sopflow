@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { exampleSop } from "../src/example.js";
+import { exampleSop } from "./fixtures/exampleSop.js";
 import { SopCoreError } from "../src/errors.js";
 import { removeActor } from "../src/mutate.js";
 import { applyOperations } from "../src/operations.js";

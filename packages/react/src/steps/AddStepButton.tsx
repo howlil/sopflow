@@ -4,7 +4,7 @@ import {
   type SopOperation,
 } from "@sopflow/core";
 import { Button } from "../primitives/Button.js";
-import { createStepId } from "../utils/createStepId.js";
+import { createStepId } from "./createStepId.js";
 import styles from "./AddStepButton.module.css";
 
 export interface AddStepButtonProps {

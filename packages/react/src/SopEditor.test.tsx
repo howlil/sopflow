@@ -12,7 +12,7 @@ import { describe, expect, it, vi } from "vitest";
 import { validateSop, type SOPDocument } from "@sopflow/core";
 
 import { SopEditor } from "./SopEditor.js";
-import type { SopHeaderValue } from "./types.js";
+import type { SopHeaderValue } from "./header/types.js";
 
 const initialDocument: SOPDocument = {
   schemaVersion: "1",

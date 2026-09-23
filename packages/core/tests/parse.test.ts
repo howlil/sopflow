@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleSop } from "../src/example.js";
+import { exampleSop } from "./fixtures/exampleSop.js";
 import { parseSop } from "../src/parse.js";
 
 describe("parseSop", () => {

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { SOPDocument } from "@sopflow/core";
 
 import { SopWorkspace } from "./SopWorkspace.js";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 
 const document: SOPDocument = {
   schemaVersion: "1",

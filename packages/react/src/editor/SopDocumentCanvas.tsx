@@ -9,9 +9,9 @@ import type {
 import type { SopDiagramConfig } from "@sopflow/diagram";
 import { SopBpmn } from "../diagram/SopBpmn.js";
 import { SopHeaderView } from "../header/SopHeaderView.js";
-import { SopProcedureView } from "../steps/SopProcedureView.js";
+import { SopProcedureView } from "../diagram/SopProcedureView.js";
 import { SopStepsEditor } from "../steps/SopStepsEditor.js";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 import {
   SopDocumentToolbar,
   type SopDiagramKind,

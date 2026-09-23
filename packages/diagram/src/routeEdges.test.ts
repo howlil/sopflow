@@ -138,7 +138,9 @@ describe("routeDiagramEdges", () => {
       ...decisionDocument,
       id: "shared-target",
       steps: decisionDocument.steps.map((step) =>
-        step.id === "decision" ? { ...step, yes: "approve", no: "approve" } : step,
+        step.id === "decision"
+          ? { ...step, yes: "approve", no: "approve" }
+          : step,
       ),
     });
     const branches = model.routedEdges.filter(

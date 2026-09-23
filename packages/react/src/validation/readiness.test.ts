@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SOPDocument, ValidationIssue } from "@sopflow/core";
-import type { SopHeaderValue } from "../types.js";
+import type { SopHeaderValue } from "../header/types.js";
 import { getSopReadinessIssues, isSopReady } from "./readiness.js";
 
 const document: SOPDocument = {

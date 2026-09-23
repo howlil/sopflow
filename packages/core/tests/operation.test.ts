@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleSop } from "../src/example.js";
+import { exampleSop } from "./fixtures/exampleSop.js";
 import { applyOperation, applyOperations } from "../src/operations.js";
 import { validateSop } from "../src/validate.js";
 import type { SOPDocument } from "../src/types.js";
