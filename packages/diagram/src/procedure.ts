@@ -16,6 +16,8 @@ import {
   type DiagramRect,
   type RouteSegment,
 } from "./routeGeometry.js";
+import type { FormalFlowchartGeometry } from "./flowchart/formal/types.js";
+import { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
 import {
   projectWorkflow,
   type WorkflowEdge,
@@ -71,6 +73,11 @@ export interface ProcedureGeometry {
   readonly nodes?: ReadonlyMap<StepId, ProcedureNodeGeometry>;
   readonly obstacles?: readonly DiagramRect[];
   readonly routingBounds?: DiagramRect;
+  /**
+   * Detailed formal SOP-AP geometry. When present, routing uses the
+   * sop-ta-compatible formal flowchart planner.
+   */
+  readonly formal?: FormalFlowchartGeometry;
 }
 
 export type ProcedureManualRoute =
@@ -99,6 +106,11 @@ export type ProcedureManualRoutes = Readonly<
 
 export interface SopDiagramConfig {
   readonly routes?: ProcedureManualRoutes;
+  /**
+   * Deterministic routing seed. Different seeds try another stable connection
+   * order without changing SOP semantics.
+   */
+  readonly pathLayoutSeed?: number;
 }
 
 /**
@@ -193,7 +205,40 @@ function routeProcedureEdgesPass(
   const orderByStepId = new Map(
     model.rows.map((row, index) => [row.stepId, index] as const),
   );
-  const { routes, legacyTrunks } = resolveRoutingOverrides(overrides);
+  const { routes, legacyTrunks, pathLayoutSeed } =
+    resolveRoutingOverrides(overrides);
+
+  if (geometry.formal) {
+    const manualRoutes = {
+      ...Object.fromEntries(
+        Object.entries(legacyTrunks).map(([edgeId, x]) => [
+          edgeId,
+          { kind: "trunk" as const, x },
+        ]),
+      ),
+      ...routes,
+    };
+    const planned = planFormalProcedureEdges(
+      {
+        rows: model.rows.map((row) => ({
+          stepId: row.stepId,
+          number: row.number,
+          kind: row.kind,
+          primaryActorId: row.primaryActorId,
+        })),
+        edges: model.graph.edges,
+      },
+      geometry.formal,
+      manualRoutes,
+      { pathLayoutSeed },
+    );
+
+    return planned.map((edge) => ({
+      ...edge,
+      points: [...edge.points],
+    }));
+  }
+
   let backIndex = 0;
   const occupied: RouteSegment[] = [];
   const parallelCounts = new Map<string, number>();
@@ -583,27 +628,32 @@ export function removeProcedureManualRoute(
 function resolveRoutingOverrides(overrides: ProcedureRoutingOverrides): {
   routes: ProcedureManualRoutes;
   legacyTrunks: ProcedureManualTrunks;
+  pathLayoutSeed: number;
 } {
   if (isDiagramConfig(overrides)) {
     return {
       routes: overrides.routes ?? {},
       legacyTrunks: {},
+      pathLayoutSeed: overrides.pathLayoutSeed ?? 0,
     };
   }
 
   return {
     routes: {},
     legacyTrunks: overrides,
+    pathLayoutSeed: 0,
   };
 }
 
 function isDiagramConfig(
   overrides: ProcedureRoutingOverrides,
 ): overrides is SopDiagramConfig {
-  if (!Object.hasOwn(overrides, "routes")) return false;
-  const routes = (overrides as SopDiagramConfig).routes;
+  if (Object.hasOwn(overrides, "pathLayoutSeed")) return true;
+  if (Object.hasOwn(overrides, "routes")) return true;
+
+  const values = Object.values(overrides);
   return (
-    routes === undefined || (routes !== null && typeof routes === "object")
+    values.length === 0 || values.some((value) => typeof value !== "number")
   );
 }
 

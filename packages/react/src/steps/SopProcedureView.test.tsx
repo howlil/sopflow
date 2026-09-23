@@ -61,24 +61,37 @@ describe("SopProcedureView", () => {
     expect(overlay?.querySelectorAll("path").length).toBeGreaterThan(1);
   });
 
-  it("marks every assigned actor cell for multi-actor steps", () => {
+  it("renders one primary shape per step using sop-ta geometry", () => {
     const { container } = render(<SopProcedureView document={document} />);
-    const row = container.querySelector(
+    const reviewRow = container.querySelector(
       '[data-sopflow-procedure-step-id="review"]',
     );
 
-    if (!row) throw new Error("review row not found");
-
-    const frontOffice = row.querySelector(
-      '[data-sopflow-actor-id="front-office"]',
-    );
-    const manager = row.querySelector('[data-sopflow-actor-id="manager"]');
+    if (!reviewRow) throw new Error("review row not found");
 
     expect(
-      frontOffice?.querySelector("svg[data-kind='decision']"),
-    ).not.toBeNull();
-    expect(manager?.querySelector("svg[data-kind='decision']")).not.toBeNull();
-    expect(within(row as HTMLElement).getByText("Valid?")).toBeInTheDocument();
+      reviewRow.querySelectorAll("[data-sopflow-primary-shape='review']"),
+    ).toHaveLength(1);
+
+    const decision = reviewRow.querySelector<SVGElement>(
+      "svg[data-kind='decision']",
+    );
+    expect(decision).not.toBeNull();
+    expect(decision).toHaveAttribute("width", "66");
+    expect(decision).toHaveAttribute("height", "66");
+    expect(decision).toHaveAttribute("viewBox", "-2 -2 64 64");
+    expect(decision?.querySelector("polygon")).toHaveAttribute(
+      "points",
+      "30,1 59,30 30,59 1,30",
+    );
+
+    const start = container.querySelector<SVGElement>("svg[data-kind='start']");
+    expect(start).toHaveAttribute("width", "86");
+    expect(start).toHaveAttribute("height", "42");
+
+    expect(
+      within(reviewRow as HTMLElement).getByText("Valid?"),
+    ).toBeInTheDocument();
   });
 
   it("keeps edges for an unassigned row by using the explicit fallback lane", () => {
