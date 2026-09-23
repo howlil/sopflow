@@ -4,10 +4,7 @@ import {
   isFormalOrthogonalPath,
   normalizeFormalOrthogonalPath,
 } from "./orthogonal.js";
-import type {
-  FormalFlowchartRect,
-  FormalFlowchartSide,
-} from "./types.js";
+import type { FormalFlowchartRect, FormalFlowchartSide } from "./types.js";
 
 const DEFAULT_GRID = 4;
 
@@ -210,7 +207,6 @@ function pointToSegmentDistance(
 
   return Math.hypot(px - closestX, py - closestY);
 }
-
 
 export interface FormalRouteEndpoint {
   readonly point: DiagramPoint;
