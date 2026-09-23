@@ -6,7 +6,7 @@ import {
   type SopOperation,
   type Step,
 } from "@sopflow/core";
-import { createStepId } from "../../utils/createStepId.js";
+import { createStepId } from "../createStepId.js";
 
 export interface UseStepActionsOptions {
   step: Step;
