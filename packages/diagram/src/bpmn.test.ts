@@ -408,13 +408,13 @@ describe("buildBpmnModel", () => {
 
     expect(model.edges).toHaveLength(7);
     expect(
-      model.edges.flatMap((edge) => edge.routeDiagnostics ?? []).filter(
-        (diagnostic) => diagnostic.code === "PATH_INTERSECTS_NODE",
-      ),
+      model.edges
+        .flatMap((edge) => edge.routeDiagnostics ?? [])
+        .filter((diagnostic) => diagnostic.code === "PATH_INTERSECTS_NODE"),
     ).toEqual([]);
-    expect(
-      model.edges.filter((edge) => edge.routeKind === "fallback"),
-    ).toEqual([]);
+    expect(model.edges.filter((edge) => edge.routeKind === "fallback")).toEqual(
+      [],
+    );
   });
 
   it("keeps BPMN layout stable when step storage order changes", () => {
