@@ -32,6 +32,11 @@ export interface FormalProcedurePaginationOptions {
   readonly nextPageReservedHeightPx?: number;
   readonly minimumRowHeightPx?: number;
   readonly lineHeightPx?: number;
+  /**
+   * Optional browser-measured row heights used to correct the pure estimator.
+   * Unknown rows continue to use estimateProcedureRowHeight().
+   */
+  readonly measuredRowHeights?: Readonly<Record<string, number>>;
 }
 
 export interface FormalProcedurePageEdge extends WorkflowEdge {
@@ -341,7 +346,11 @@ function splitProcedureRowsByEstimatedHeight(
   };
 
   for (const row of rows) {
-    const rowHeight = estimateProcedureRowHeight(row, options);
+    const measuredHeight = positiveOptionalNumber(
+      options.measuredRowHeights?.[row.stepId],
+    );
+    const rowHeight =
+      measuredHeight ?? estimateProcedureRowHeight(row, options);
     let budget = pageBudget(pages.length);
 
     if (current.length > 0 && usedHeight + rowHeight > budget) {
