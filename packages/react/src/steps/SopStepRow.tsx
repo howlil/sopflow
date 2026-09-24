@@ -1,5 +1,6 @@
-import type {
-  SOPDocument,
+import {
+  getPresentationSteps,
+  type SOPDocument,
   SopOperation,
   Step,
   ValidationIssue,
@@ -110,7 +111,7 @@ export function SopStepRow({
         <td>
           <StepTypeField
             step={step}
-            steps={document.steps}
+            steps={getPresentationSteps(document)}
             readOnly={disabled}
             onChange={changeStepType}
           />
