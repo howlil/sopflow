@@ -19,6 +19,7 @@ import {
   tryBuildFormalDedicatedRoute,
   type FormalRouteMeta,
 } from "./dedicated.js";
+import { repairFormalManualRoute } from "./edit.js";
 import {
   computeFormalConnectionRoutingBounds,
   pointOnFormalDecisionVertex,
@@ -244,6 +245,8 @@ export function planFormalProcedureEdges(
         sourceGeometry.kind === "decision",
         targetGeometry.kind === "decision",
         routingBounds,
+        obstacles,
+        occupied,
       );
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
@@ -717,6 +720,8 @@ function applyManualRoute(
   sourceDecision: boolean,
   targetDecision: boolean,
   bounds: FormalFlowchartBounds | null,
+  obstacles: readonly FormalFlowchartRect[],
+  occupied: readonly ReturnType<typeof formalPathToSegments>[number][],
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
@@ -744,28 +749,60 @@ function applyManualRoute(
   );
 
   if (manual.kind === "orthogonal") {
+    const replayed = normalizeFormalOrthogonalPath(
+      [start, ...manual.bendPoints, end],
+      null,
+      { preserveCollinear: true },
+    );
+    const repaired = repairFormalManualRoute({
+      path: replayed,
+      sourceSide,
+      targetSide,
+      obstacles,
+      occupied,
+      bounds: bounds ? formalBoundsToRect(bounds) : null,
+    });
+
+    if (!repaired) return auto;
+
     return {
-      points: normalizeFormalOrthogonalPath(
-        [start, ...manual.bendPoints, end],
-        null,
-        { preserveCollinear: true },
-      ),
+      points: repaired,
       sourceSide,
       targetSide,
     };
   }
 
   const x = clampX(manual.x, bounds);
-
-  return {
-    points: normalizeFormalOrthogonalPath([
-      start,
-      { x, y: start.y },
-      { x, y: end.y },
-      end,
-    ]),
+  const replayed = normalizeFormalOrthogonalPath([
+    start,
+    { x, y: start.y },
+    { x, y: end.y },
+    end,
+  ]);
+  const repaired = repairFormalManualRoute({
+    path: replayed,
     sourceSide,
     targetSide,
+    obstacles,
+    occupied,
+    bounds: bounds ? formalBoundsToRect(bounds) : null,
+  });
+
+  if (!repaired) return auto;
+
+  return {
+    points: repaired,
+    sourceSide,
+    targetSide,
+  };
+}
+
+function formalBoundsToRect(bounds: FormalFlowchartBounds): FormalFlowchartRect {
+  return {
+    left: bounds.left,
+    top: bounds.top,
+    width: Math.max(0, bounds.right - bounds.left),
+    height: Math.max(0, bounds.bottom - bounds.top),
   };
 }
 
