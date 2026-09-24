@@ -82,6 +82,7 @@ describe("diagram public API", () => {
         "validateFormalManualRoute",
         "updateProcedureManualTrunk",
         "projectWorkflow",
+        "pruneProcedurePagedRoutes",
         "pruneSopDiagramConfig",
         "resetDiagramRoutes",
       ].sort(),
