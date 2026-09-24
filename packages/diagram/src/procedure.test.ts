@@ -78,6 +78,24 @@ describe("procedure model", () => {
     ]);
   });
 
+  it("numbers rows by authored order without changing graph edges", () => {
+    const model = buildProcedureModel({
+      ...document,
+      presentationOrder: ["start", "end", "review"],
+    });
+
+    expect(model.rows.map((row) => [row.number, row.stepId])).toEqual([
+      [1, "start"],
+      [2, "end"],
+      [3, "review"],
+    ]);
+    expect(model.graph.edges.map((edge) => edge.id)).toEqual([
+      "start:next:review",
+      "review:yes:end",
+      "review:no:start",
+    ]);
+  });
+
   it("creates an explicit fallback lane for unassigned rows", () => {
     const model = buildProcedureModel({
       ...document,
