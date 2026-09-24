@@ -6,6 +6,34 @@ import {
 } from "./procedure.js";
 import type { WorkflowGraph } from "./workflow.js";
 
+export interface SopDiagramConfigs {
+  readonly flowchart?: SopDiagramConfig;
+  readonly bpmn?: SopDiagramConfig;
+}
+
+export function pruneSopDiagramConfigs(
+  graph: WorkflowGraph,
+  configs: SopDiagramConfigs,
+): SopDiagramConfigs {
+  const flowchart = pruneSopDiagramConfig(graph, configs.flowchart ?? {});
+  const bpmn = pruneSopDiagramConfig(graph, configs.bpmn ?? {});
+
+  return {
+    ...(Object.keys(flowchart).length > 0 ? { flowchart } : {}),
+    ...(Object.keys(bpmn).length > 0 ? { bpmn } : {}),
+  };
+}
+
+export function diagramConfigsEqual(
+  left: SopDiagramConfigs,
+  right: SopDiagramConfigs,
+): boolean {
+  return (
+    diagramConfigEquals(left.flowchart ?? {}, right.flowchart ?? {}) &&
+    diagramConfigEquals(left.bpmn ?? {}, right.bpmn ?? {})
+  );
+}
+
 /**
  * Remove manual route overrides for edges that no longer exist in the semantic
  * workflow graph. Renderer-only edge ids (for example paginated OPC segments)
