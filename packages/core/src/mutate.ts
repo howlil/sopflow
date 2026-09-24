@@ -1,6 +1,21 @@
 import type { Actor, ActorId, SOPDocument, Step, StepId } from "./types.js";
 import { SopCoreError } from "./errors.js";
-import { getIncomingConnections, getNextStepIds } from "./graph.js";
+import {
+  getIncomingConnections,
+  getNextStepIds,
+  getPresentationStepIds,
+} from "./graph.js";
+
+function presentationOrder(document: SOPDocument): StepId[] {
+  return [...getPresentationStepIds(document)];
+}
+
+function withPresentationOrder(
+  document: SOPDocument,
+  order: readonly StepId[],
+): SOPDocument {
+  return { ...document, presentationOrder: [...order] };
+}
 
 export function addActor(document: SOPDocument, actor: Actor): SOPDocument {
   const exists = document.actors.some((item) => item.id === actor.id);
@@ -141,10 +156,13 @@ function validateNewStep(document: SOPDocument, step: Step): void {
 export function addStep(document: SOPDocument, step: Step): SOPDocument {
   validateNewStep(document, step);
 
-  return {
-    ...document,
-    steps: [...document.steps, step],
-  };
+  return withPresentationOrder(
+    {
+      ...document,
+      steps: [...document.steps, step],
+    },
+    [...presentationOrder(document), step.id],
+  );
 }
 
 export function insertStep(
@@ -164,14 +182,22 @@ export function insertStep(
 
   validateNewStep(document, step);
 
-  return {
-    ...document,
-    steps: [
-      ...document.steps.slice(0, index + 1),
-      step,
-      ...document.steps.slice(index + 1),
-    ],
-  };
+  const order = presentationOrder(document);
+  const orderIndex = order.indexOf(afterStepId);
+
+  return withPresentationOrder(
+    {
+      ...document,
+      steps: [
+        ...document.steps.slice(0, index + 1),
+        step,
+        ...document.steps.slice(index + 1),
+      ],
+    },
+    orderIndex >= 0
+      ? [...order.slice(0, orderIndex + 1), step.id, ...order.slice(orderIndex + 1)]
+      : [...order, step.id],
+  );
 }
 
 export function insertStepBefore(
@@ -191,14 +217,22 @@ export function insertStepBefore(
 
   validateNewStep(document, step);
 
-  return {
-    ...document,
-    steps: [
-      ...document.steps.slice(0, index),
-      step,
-      ...document.steps.slice(index),
-    ],
-  };
+  const order = presentationOrder(document);
+  const orderIndex = order.indexOf(beforeStepId);
+
+  return withPresentationOrder(
+    {
+      ...document,
+      steps: [
+        ...document.steps.slice(0, index),
+        step,
+        ...document.steps.slice(index),
+      ],
+    },
+    orderIndex >= 0
+      ? [...order.slice(0, orderIndex), step.id, ...order.slice(orderIndex)]
+      : [...order, step.id],
+  );
 }
 
 export function updateStep(document: SOPDocument, step: Step): SOPDocument {
@@ -241,10 +275,13 @@ export function removeStep(document: SOPDocument, stepId: StepId): SOPDocument {
     );
   }
 
-  return {
-    ...document,
-    steps: document.steps.filter((step) => step.id !== stepId),
-  };
+  return withPresentationOrder(
+    {
+      ...document,
+      steps: document.steps.filter((step) => step.id !== stepId),
+    },
+    presentationOrder(document).filter((id) => id !== stepId),
+  );
 }
 
 export function connectStep(
