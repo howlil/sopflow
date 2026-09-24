@@ -289,6 +289,22 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(@types/node@22.20.2)(jsdom@26.1.0)(vite@8.3.0(@types/node@22.20.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
+  packages/sop-ap:
+    dependencies:
+      '@sopflow/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsdown:
+        specifier: ^0.23.0
+        version: 0.23.0(@tsdown/css@0.23.0)(tsx@4.23.15)(typescript@7.0.2)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@types/node@22.20.2)(jsdom@26.1.0)(vite@8.3.0(@types/node@22.20.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
   packages/react:
     dependencies:
       '@sopflow/core':
@@ -297,6 +313,9 @@ importers:
       '@sopflow/diagram':
         specifier: workspace:*
         version: link:../diagram
+      '@sopflow/sop-ap':
+        specifier: workspace:*
+        version: link:../sop-ap
       react:
         specifier: '>=18'
         version: 19.3.0
