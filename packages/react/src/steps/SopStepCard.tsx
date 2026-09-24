@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type {
-  SOPDocument,
+import {
+  getPresentationSteps,
+  type SOPDocument,
   SopOperation,
   Step,
   ValidationIssue,
@@ -116,7 +117,7 @@ export function SopStepCard({
         <Field label="Tipe">
           <StepTypeField
             step={step}
-            steps={document.steps}
+            steps={getPresentationSteps(document)}
             readOnly={disabled}
             onChange={changeStepType}
           />
