@@ -47,7 +47,17 @@ export function parseSop(input: unknown): ParseSOPResult {
     };
   }
 
-  const semanticIssues = validateSop(parsed.data);
+  const document: SOPDocument = {
+    schemaVersion: parsed.data.schemaVersion,
+    id: parsed.data.id,
+    title: parsed.data.title,
+    actors: parsed.data.actors,
+    steps: parsed.data.steps,
+    ...(parsed.data.presentationOrder !== undefined
+      ? { presentationOrder: parsed.data.presentationOrder }
+      : {}),
+  };
+  const semanticIssues = validateSop(document);
 
   if (semanticIssues.length > 0) {
     return {
@@ -62,6 +72,6 @@ export function parseSop(input: unknown): ParseSOPResult {
 
   return {
     success: true,
-    data: parsed.data,
+    data: document,
   };
 }
