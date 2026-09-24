@@ -105,10 +105,7 @@ export function channelAnchorDistance(
   // deterministic distinct positions instead of collapsing every extra port
   // onto the same clamped endpoint.
   const safeSpan = ROUTE_ANCHOR_MAX_DISTANCE - ROUTE_ANCHOR_MIN_DISTANCE;
-  return (
-    ROUTE_ANCHOR_MIN_DISTANCE +
-    safeSpan * vanDerCorput(channelIndex + 1)
-  );
+  return ROUTE_ANCHOR_MIN_DISTANCE + safeSpan * vanDerCorput(channelIndex + 1);
 }
 
 function vanDerCorput(value: number): number {
