@@ -13,6 +13,37 @@ describe("validateSop", () => {
     expect(issues).toEqual([]);
   });
 
+  it("reports invalid authored presentation order", () => {
+    const issues = validateSop({
+      ...exampleSop,
+      presentationOrder: [
+        "start",
+        "prepare-document",
+        "prepare-document",
+        "missing",
+      ],
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "DUPLICATE_PRESENTATION_STEP",
+        stepId: "prepare-document",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "UNKNOWN_PRESENTATION_STEP",
+        stepId: "missing",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_PRESENTATION_STEP",
+        stepId: "check-document",
+      }),
+    );
+  });
+
   it("detects duplicates step ids", () => {
     const sop: SOPDocument = {
       ...exampleSop,
