@@ -7,16 +7,29 @@ const document: SOPDocument = {
   schemaVersion: "1",
   id: "readiness",
   title: "Readiness",
-  actors: [],
+  actors: [{ id: "staff", name: "Staff" }],
   steps: [
     {
       id: "start",
       type: "start",
       name: "Mulai",
-      actorIds: [],
+      actorIds: ["staff"],
+      input: "Berkas",
+      duration: { value: 1, unit: "minute" },
+      output: "Mulai",
+      note: "-",
       next: "end",
     },
-    { id: "end", type: "end", name: "Selesai", actorIds: [] },
+    {
+      id: "end",
+      type: "end",
+      name: "Selesai",
+      actorIds: ["staff"],
+      input: "Hasil",
+      duration: { value: 1, unit: "minute" },
+      output: "Selesai",
+      note: "-",
+    },
   ],
 };
 
