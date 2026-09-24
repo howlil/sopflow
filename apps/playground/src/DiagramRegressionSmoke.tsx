@@ -88,7 +88,6 @@ const bpmnDocument: SOPDocument = {
   ],
 };
 
-
 const denseBpmnDocument: SOPDocument = {
   schemaVersion: "1",
   id: "browser-dense-bpmn-regression",
@@ -290,9 +289,7 @@ export function DiagramRegressionSmoke() {
         nextFailures.push("dense BPMN fan-in target is missing");
       } else {
         const box = denseTarget.getBBox();
-        if (
-          ![box.x, box.y, box.width, box.height].every(Number.isFinite)
-        ) {
+        if (![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
           nextFailures.push("dense BPMN target has invalid geometry");
         }
       }
@@ -351,7 +348,6 @@ export function DiagramRegressionSmoke() {
       >
         <SopBpmn document={bpmnDocument} />
       </section>
-
 
       <section
         aria-label="Dense BPMN browser regression"
