@@ -161,9 +161,7 @@ export function SopDocumentCanvas({
                 onManualEditingChange={onManualEditingChange}
                 diagramPanelId={diagramPanelId}
                 readOnly={readOnly}
-                manualEditingSupported={
-                  diagramKind === "flowchart" && manualEditingSupported
-                }
+                manualEditingSupported={manualEditingSupported}
               />
             </div>
 
@@ -192,6 +190,9 @@ export function SopDocumentCanvas({
                     document={document}
                     selectedStepId={selectedStepId}
                     onSelectedStepChange={onSelectedStepChange}
+                    manualEditing={manualEditing}
+                    diagramConfig={diagramConfig}
+                    onDiagramConfigChange={onDiagramConfigChange}
                   />
                 ) : (
                   <SopProcedureView
