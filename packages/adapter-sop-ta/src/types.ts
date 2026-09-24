@@ -31,3 +31,19 @@ export interface SopTaImportInput {
   readonly actors: readonly SopTaActor[];
   readonly rows: readonly SopTaProcedureRow[];
 }
+
+export type SopTaProcedureKind = "AWAL_AKHIR" | "KEGIATAN" | "KEPUTUSAN";
+
+export interface SopTaProcedurePatchItem {
+  readonly tempId: string;
+  readonly jenis: SopTaProcedureKind;
+  readonly kegiatan: string;
+  readonly kelengkapan?: string;
+  readonly keluaran?: string;
+  readonly waktu?: number;
+  readonly satuanWaktu?: SopTaDurationUnit;
+  readonly keterangan?: string;
+  readonly pelaksanaId?: string;
+  readonly langkahSelanjutnyaYaTempId?: string | null;
+  readonly langkahSelanjutnyaTidakTempId?: string | null;
+}
