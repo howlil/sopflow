@@ -398,58 +398,57 @@ function routeBpmnEdgesPass(input: {
       .map(nodeRect);
     const configuredRoute = diagramConfig.routes?.[edge.id];
     const manualRoute = configuredRoute
-      ? resolveBpmnManualRoute(
-          configuredRoute,
-          from,
-          to,
-          obstacles,
-          { left: 0, top: 0, width, height },
-        )
+      ? resolveBpmnManualRoute(configuredRoute, from, to, obstacles, {
+          left: 0,
+          top: 0,
+          width,
+          height,
+        })
       : null;
     const route = manualRoute
       ? manualRoute
       : selfLoop
         ? selectBpmnRoute(
-          [
-            {
-              path: routeSelfLoop(
-                from,
-                currentSelfLoopIndex,
-                Math.max(
-                  portLedger.peek(
-                    from.id,
-                    "out",
-                    "right",
-                    sideLength(nodeRect(from), "right"),
-                  ),
-                  portLedger.peek(
-                    from.id,
-                    "in",
-                    "right",
-                    sideLength(nodeRect(from), "right"),
+            [
+              {
+                path: routeSelfLoop(
+                  from,
+                  currentSelfLoopIndex,
+                  Math.max(
+                    portLedger.peek(
+                      from.id,
+                      "out",
+                      "right",
+                      sideLength(nodeRect(from), "right"),
+                    ),
+                    portLedger.peek(
+                      from.id,
+                      "in",
+                      "right",
+                      sideLength(nodeRect(from), "right"),
+                    ),
                   ),
                 ),
-              ),
-              sourceSide: "right",
-              targetSide: "right",
-            },
-          ],
-          obstacles,
-          occupied,
-          { width, height },
-          edge,
-        )
-      : buildBpmnRoute(
-          from,
-          to,
-          edge,
-          parallelIndex,
-          obstacles,
-          occupied,
-          { width, height, feedbackCorridorTop },
-          portLedger,
-          feedbackSlotById.get(edge.id),
-        );
+                sourceSide: "right",
+                targetSide: "right",
+              },
+            ],
+            obstacles,
+            occupied,
+            { width, height },
+            edge,
+          )
+        : buildBpmnRoute(
+            from,
+            to,
+            edge,
+            parallelIndex,
+            obstacles,
+            occupied,
+            { width, height, feedbackCorridorTop },
+            portLedger,
+            feedbackSlotById.get(edge.id),
+          );
     const points = route.points;
     const quality = measureRouteQuality(points, obstacles, occupied);
     occupied.push(...pathToSegments(points));
@@ -482,16 +481,17 @@ function routeBpmnEdgesPass(input: {
 
     diagnostics.push(...routeDiagnostics);
     const manualLabelPosition = configuredRoute?.labelPosition;
-    const labelPlacement = edge.label && !manualLabelPosition
-      ? placeRouteLabel({
-          path: points,
-          label: edge.label,
-          obstacles: labelObstacles,
-          occupiedLabels,
-          perpendicularOffset:
-            18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
-        })
-      : null;
+    const labelPlacement =
+      edge.label && !manualLabelPosition
+        ? placeRouteLabel({
+            path: points,
+            label: edge.label,
+            obstacles: labelObstacles,
+            occupiedLabels,
+            perpendicularOffset:
+              18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
+          })
+        : null;
     if (labelPlacement) occupiedLabels.push(labelPlacement.bounds);
 
     return [
@@ -623,9 +623,7 @@ function resolveBpmnManualRoute(
   const toRect = nodeRect(to);
   const sourceSide =
     route.sSide ??
-    (route.startPoint
-      ? nearestRectSide(fromRect, route.startPoint)
-      : "right");
+    (route.startPoint ? nearestRectSide(fromRect, route.startPoint) : "right");
   const targetSide =
     route.eSide ??
     (route.endPoint ? nearestRectSide(toRect, route.endPoint) : "left");
