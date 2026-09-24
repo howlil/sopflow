@@ -104,8 +104,8 @@ describe("diagram config", () => {
     });
     expect(
       diagramConfigsEqual(configs, {
-        bpmn: configs.bpmn,
-        flowchart: configs.flowchart,
+        ...(configs.bpmn ? { bpmn: configs.bpmn } : {}),
+        ...(configs.flowchart ? { flowchart: configs.flowchart } : {}),
       }),
     ).toBe(true);
   });
