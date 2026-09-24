@@ -188,11 +188,24 @@ export function SopEditor({
   const handleDiagramConfigsChange = useCallback(
     (nextConfigs: SopDiagramConfigs) => {
       if (controlledDiagramConfigs === undefined) {
-        setInternalDiagramConfigs(nextConfigs);
+        const internalNext =
+          controlledDiagramConfig === undefined
+            ? nextConfigs
+            : nextConfigs.bpmn
+              ? { bpmn: nextConfigs.bpmn }
+              : {};
+
+        setInternalDiagramConfigs((current) =>
+          diagramConfigsEqual(current, internalNext) ? current : internalNext,
+        );
       }
       onDiagramConfigsChange?.(nextConfigs);
     },
-    [controlledDiagramConfigs, onDiagramConfigsChange],
+    [
+      controlledDiagramConfig,
+      controlledDiagramConfigs,
+      onDiagramConfigsChange,
+    ],
   );
 
   const handleDiagramConfigChange = useCallback(
