@@ -30,9 +30,14 @@ describe("route anchors", () => {
     expect(channelAnchorDistance(4, 100)).toBeCloseTo(0.78);
   });
 
-  it("clamps dense channels inside the safe side range", () => {
-    expect(channelAnchorDistance(9, 40)).toBeGreaterThanOrEqual(0.08);
-    expect(channelAnchorDistance(10, 40)).toBeLessThanOrEqual(0.92);
+  it("keeps dense channels distinct after physical spacing saturates", () => {
+    const distances = Array.from({ length: 12 }, (_, index) =>
+      channelAnchorDistance(index, 40),
+    );
+
+    expect(distances.every((distance) => distance >= 0.08)).toBe(true);
+    expect(distances.every((distance) => distance <= 0.92)).toBe(true);
+    expect(new Set(distances).size).toBe(distances.length);
   });
 
   it("extrudes a point in the selected side direction", () => {
