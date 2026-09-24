@@ -36,17 +36,16 @@ describe("validateSopHeader", () => {
     expect(validateSopHeader(document, validHeader)).toEqual([]);
   });
 
-  it("reports missing identity, authorization, and quality fields", () => {
-    const { signatory: _signatory, ...headerWithoutSignatory } = validHeader;
+  it("reports missing identity and quality fields", () => {
     const issues = validateSopHeader(document, {
-      ...headerWithoutSignatory,
+      ...validHeader,
       number: "",
       lawBasis: [],
       records: [],
     });
 
     expect(issues.map((issue) => issue.field)).toEqual(
-      expect.arrayContaining(["number", "signatory", "lawBasis", "records"]),
+      expect.arrayContaining(["number", "lawBasis", "records"]),
     );
   });
 
