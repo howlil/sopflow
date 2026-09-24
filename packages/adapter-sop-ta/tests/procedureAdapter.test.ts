@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   exportSopTaDocument,
+  exportSopTaPatchItems,
   importSopTaDocument,
   validateSopTaCompatibility,
   type SopTaProcedureRow,
@@ -130,6 +131,45 @@ describe("sop-ta compatibility adapter", () => {
           : {}),
       })),
     );
+  });
+
+  it("exports the exact sop-ta procedure patch shape", () => {
+    const document = importSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [
+        { id: "staff", name: "Staff" },
+        { id: "manager", name: "Manager" },
+      ],
+      rows,
+    });
+
+    expect(exportSopTaPatchItems(document)).toEqual([
+      expect.objectContaining({
+        tempId: "start",
+        jenis: "AWAL_AKHIR",
+        pelaksanaId: "staff",
+      }),
+      expect.objectContaining({
+        tempId: "review",
+        jenis: "KEPUTUSAN",
+        pelaksanaId: "manager",
+        langkahSelanjutnyaYaTempId: "end",
+        langkahSelanjutnyaTidakTempId: "fix",
+      }),
+      expect.objectContaining({
+        tempId: "fix",
+        jenis: "KEGIATAN",
+        pelaksanaId: "staff",
+        waktu: 1,
+        satuanWaktu: "h",
+      }),
+      expect.objectContaining({
+        tempId: "end",
+        jenis: "AWAL_AKHIR",
+        pelaksanaId: "manager",
+      }),
+    ]);
   });
 
   it("rejects export when a generic task jumps outside authored sequence", () => {
