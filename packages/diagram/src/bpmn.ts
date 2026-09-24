@@ -699,12 +699,14 @@ function buildBpmnRoute(
       "out",
       "top",
       sideLength(nodeRect(from), "top"),
+      from.kind === "decision",
     );
     const targetDistance = portLedger.peek(
       to.id,
       "in",
       "top",
       sideLength(nodeRect(to), "top"),
+      to.kind === "decision",
     );
     candidates.push({
       path: routeBpmnFeedbackCorridor(
@@ -745,12 +747,14 @@ function buildBpmnRoute(
     "out",
     sourceSide,
     sideLength(nodeRect(from), sourceSide),
+    from.kind === "decision",
   );
   const targetDistance = portLedger.peek(
     to.id,
     "in",
     targetSide,
     sideLength(nodeRect(to), targetSide),
+    to.kind === "decision",
   );
 
   if (sameLane && targetRight) {
@@ -1057,7 +1061,9 @@ class BpmnPortLedger {
     direction: "in" | "out",
     side: DiagramSide,
     sideLengthPx: number,
+    isDiamond = false,
   ): number {
+    if (isDiamond) return 0.5;
     return channelAnchorDistance(
       this.counts.get(this.key(nodeId, direction, side)) ?? 0,
       sideLengthPx,
