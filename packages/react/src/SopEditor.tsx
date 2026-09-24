@@ -139,7 +139,7 @@ export function SopEditor({
   const rawDiagramConfigs = useMemo<SopDiagramConfigs>(() => {
     if (controlledDiagramConfigs !== undefined) return controlledDiagramConfigs;
     if (controlledDiagramConfig !== undefined) {
-      return { flowchart: controlledDiagramConfig };
+      return { ...internalDiagramConfigs, flowchart: controlledDiagramConfig };
     }
     return internalDiagramConfigs;
   }, [
@@ -185,23 +185,12 @@ export function SopEditor({
 
   const handleDiagramConfigsChange = useCallback(
     (nextConfigs: SopDiagramConfigs) => {
-      if (
-        controlledDiagramConfigs === undefined &&
-        controlledDiagramConfig === undefined
-      ) {
+      if (controlledDiagramConfigs === undefined) {
         setInternalDiagramConfigs(nextConfigs);
       }
       onDiagramConfigsChange?.(nextConfigs);
-      if (nextConfigs.flowchart) {
-        onDiagramConfigChange?.(nextConfigs.flowchart);
-      }
     },
-    [
-      controlledDiagramConfig,
-      controlledDiagramConfigs,
-      onDiagramConfigChange,
-      onDiagramConfigsChange,
-    ],
+    [controlledDiagramConfigs, onDiagramConfigsChange],
   );
 
   const handleDiagramConfigChange = useCallback(
@@ -211,14 +200,34 @@ export function SopEditor({
         [diagramKind]: nextConfig,
       };
       handleDiagramConfigsChange(nextConfigs);
+      if (diagramKind === "flowchart") {
+        onDiagramConfigChange?.(nextConfig);
+      }
     },
-    [diagramConfigs, diagramKind, handleDiagramConfigsChange],
+    [
+      diagramConfigs,
+      diagramKind,
+      handleDiagramConfigsChange,
+      onDiagramConfigChange,
+    ],
   );
 
   useEffect(() => {
     if (diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)) return;
     handleDiagramConfigsChange(diagramConfigs);
-  }, [diagramConfigs, handleDiagramConfigsChange, rawDiagramConfigs]);
+    if (
+      controlledDiagramConfig !== undefined &&
+      diagramConfigs.flowchart !== undefined
+    ) {
+      onDiagramConfigChange?.(diagramConfigs.flowchart);
+    }
+  }, [
+    controlledDiagramConfig,
+    diagramConfigs,
+    handleDiagramConfigsChange,
+    onDiagramConfigChange,
+    rawDiagramConfigs,
+  ]);
 
   const handleManualEditingChange = useCallback(
     (editing: boolean) => {
