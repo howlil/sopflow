@@ -15,6 +15,7 @@ export {
   buildFormalTableColumnPercents,
   computeFormalActorColumnCenterPercent,
   formalOpcCenterXToLeftPx,
+  formalOpcLabel,
   formalOpcStackTopPx,
   getFormalOpcEndpointsForPage,
   getFormalPageForRow,
@@ -165,6 +166,7 @@ export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
 export {
   buildFormalProcedurePages,
   estimateProcedureRowHeight,
+  pruneProcedurePagedRoutes,
   removeProcedurePageManualRoute,
   resolveProcedurePageRouteOverrides,
   setProcedurePageManualRoute,
