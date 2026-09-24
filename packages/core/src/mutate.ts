@@ -195,7 +195,11 @@ export function insertStep(
       ],
     },
     orderIndex >= 0
-      ? [...order.slice(0, orderIndex + 1), step.id, ...order.slice(orderIndex + 1)]
+      ? [
+          ...order.slice(0, orderIndex + 1),
+          step.id,
+          ...order.slice(orderIndex + 1),
+        ]
       : [...order, step.id],
   );
 }
