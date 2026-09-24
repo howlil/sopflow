@@ -54,6 +54,7 @@ export {
   validateDecisionBranches,
   validateEndReachability,
   validateEndReachbilty,
+  validatePresentationOrder,
   validateReachability,
   validateReference,
   validateSop,
