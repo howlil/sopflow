@@ -171,9 +171,6 @@ export interface ProcedureRoutedEdge extends WorkflowEdge {
 export function buildProcedureModel(document: SOPDocument): ProcedureModel {
   const graph = projectWorkflow(document);
   const actorIds = new Set(document.actors.map((actor) => actor.id));
-  const stepById = new Map(
-    document.steps.map((step) => [step.id, step] as const),
-  );
   const presentationSteps = getPresentationSteps(document);
   const hasFallbackRows = document.steps.some(
     (step) =>
