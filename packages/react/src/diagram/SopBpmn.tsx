@@ -36,9 +36,9 @@ export function SopBpmn({
   className,
 }: SopBpmnProps) {
   const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
-  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(
-    null,
-  );
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null);
   const model = useMemo(
     () => buildBpmnModel(document, { diagramConfig }),
     [diagramConfig, document],
