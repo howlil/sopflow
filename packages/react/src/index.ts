@@ -15,6 +15,7 @@ export type { SelectProps } from "./primitives/Select.js";
 export { SopEditor } from "./SopEditor.js";
 export type {
   SopDiagramConfig,
+  SopDiagramConfigs,
   SopDiagramKind,
   SopDocumentMode,
   SopEditorProps,
