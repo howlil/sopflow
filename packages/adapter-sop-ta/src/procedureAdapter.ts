@@ -8,6 +8,7 @@ import {
 import type {
   SopTaDurationUnit,
   SopTaImportInput,
+  SopTaProcedurePatchItem,
   SopTaProcedureRow,
   SopTaStepType,
 } from "./types.js";
@@ -123,6 +124,46 @@ export function importSopTaDocument(input: SopTaImportInput): SOPDocument {
     steps,
     presentationOrder,
   };
+}
+
+export function exportSopTaPatchItems(
+  document: SOPDocument,
+): SopTaProcedurePatchItem[] {
+  const issues = validateSopTaCompatibility(document);
+  if (issues.length > 0) {
+    throw new Error(
+      `SOP document is not losslessly compatible with sop-ta: ${issues
+        .map((issue) => issue.message)
+        .join("; ")}`,
+    );
+  }
+
+  return getPresentationSteps(document).map((step) => ({
+    tempId: step.id,
+    jenis:
+      step.type === "decision"
+        ? "KEPUTUSAN"
+        : step.type === "task"
+          ? "KEGIATAN"
+          : "AWAL_AKHIR",
+    kegiatan: step.name,
+    ...(step.input !== undefined ? { kelengkapan: step.input } : {}),
+    ...(step.output !== undefined ? { keluaran: step.output } : {}),
+    ...(step.duration !== undefined
+      ? {
+          waktu: step.duration.value,
+          satuanWaktu: DURATION_TO_SOP_TA[step.duration.unit],
+        }
+      : {}),
+    ...(step.note !== undefined ? { keterangan: step.note } : {}),
+    ...(step.actorIds[0] ? { pelaksanaId: step.actorIds[0] } : {}),
+    ...(step.type === "decision"
+      ? {
+          langkahSelanjutnyaYaTempId: step.yes,
+          langkahSelanjutnyaTidakTempId: step.no,
+        }
+      : {}),
+  }));
 }
 
 export function validateSopTaCompatibility(
