@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { exampleSop } from "./fixtures/exampleSop.js";
 import {
   getOrderedStepIds,
+  getPresentationStepIds,
   getNextStepIds,
   getReachableStepIds,
   getStep,
@@ -198,6 +199,80 @@ describe("getOrderedStepIds", () => {
     };
 
     expect(getOrderedStepIds(document).at(-1)).toBe("orphan");
+  });
+});
+
+describe("getPresentationStepIds", () => {
+  it("keeps authored order independent from graph traversal", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "authored-order",
+      title: "Authored order",
+      actors: [],
+      presentationOrder: ["start", "decision", "fix", "approve", "end"],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Mulai",
+          actorIds: [],
+          next: "decision",
+        },
+        {
+          id: "decision",
+          type: "decision",
+          name: "Lulus?",
+          actorIds: [],
+          yes: "approve",
+          no: "fix",
+        },
+        {
+          id: "fix",
+          type: "task",
+          name: "Perbaiki",
+          actorIds: [],
+          next: "decision",
+        },
+        {
+          id: "approve",
+          type: "task",
+          name: "Setujui",
+          actorIds: [],
+          next: "end",
+        },
+        { id: "end", type: "end", name: "Selesai", actorIds: [] },
+      ],
+    };
+
+    expect(getOrderedStepIds(document)).toEqual([
+      "start",
+      "decision",
+      "approve",
+      "end",
+      "fix",
+    ]);
+    expect(getPresentationStepIds(document)).toEqual([
+      "start",
+      "decision",
+      "fix",
+      "approve",
+      "end",
+    ]);
+  });
+
+  it("keeps rows visible while invalid authored order is being edited", () => {
+    expect(
+      getPresentationStepIds({
+        ...exampleSop,
+        presentationOrder: ["start", "missing", "start"],
+      }),
+    ).toEqual([
+      "start",
+      "prepare-document",
+      "check-document",
+      "approve-document",
+      "end",
+    ]);
   });
 });
 
