@@ -173,6 +173,28 @@ describe("buildFormalProcedurePages", () => {
     expect(pages[1]?.topOpc).toHaveLength(1);
   });
 
+  it("uses measured row heights to correct estimated page packing", () => {
+    const model = buildProcedureModel(linearDocument(4));
+
+    const estimated = buildFormalProcedurePages(model, {
+      pageHeightPx: 250,
+      minimumRowHeightPx: 100,
+    });
+    expect(estimated.map((page) => page.rows.length)).toEqual([2, 2]);
+
+    const corrected = buildFormalProcedurePages(model, {
+      pageHeightPx: 250,
+      minimumRowHeightPx: 100,
+      measuredRowHeights: {
+        "step-1": 100,
+        "step-2": 180,
+        "step-3": 100,
+        "step-4": 100,
+      },
+    });
+    expect(corrected.map((page) => page.rows.length)).toEqual([1, 1, 2]);
+  });
+
   it("supports separate first-page and following-page height reserves", () => {
     const model = buildProcedureModel(linearDocument(5));
     const pages = buildFormalProcedurePages(model, {
