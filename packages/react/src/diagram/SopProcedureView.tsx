@@ -61,6 +61,10 @@ export interface SopProcedureViewProps {
 }
 
 export function SopProcedureView(props: SopProcedureViewProps) {
+  const rootRef = useRef<HTMLElement>(null);
+  const [measuredRowHeights, setMeasuredRowHeights] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const model = useMemo(
     () => buildProcedureModel(props.document),
     [props.document],
@@ -83,6 +87,9 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         ...(props.nextPageReservedHeightPx !== undefined
           ? { nextPageReservedHeightPx: props.nextPageReservedHeightPx }
           : {}),
+        ...(Object.keys(measuredRowHeights).length > 0
+          ? { measuredRowHeights }
+          : {}),
       }),
     [
       model,
@@ -91,8 +98,47 @@ export function SopProcedureView(props: SopProcedureViewProps) {
       props.nextPageReservedHeightPx,
       props.nextPageRows,
       props.pageHeightPx,
+      measuredRowHeights,
     ],
   );
+  const measureRenderedRows = useCallback(() => {
+    if (props.pageHeightPx === undefined) {
+      setMeasuredRowHeights((current) =>
+        Object.keys(current).length === 0 ? current : {},
+      );
+      return;
+    }
+
+    const root = rootRef.current;
+    if (!root) return;
+
+    const next: Record<string, number> = {};
+    for (const row of root.querySelectorAll<HTMLElement>(
+      "[data-sopflow-procedure-step-id]",
+    )) {
+      const stepId = row.dataset.sopflowProcedureStepId;
+      const height = row.getBoundingClientRect().height;
+      if (stepId && Number.isFinite(height) && height > 0) {
+        next[stepId] = Math.round(height);
+      }
+    }
+
+    setMeasuredRowHeights((current) =>
+      measuredRowHeightMapsEqual(current, next) ? current : next,
+    );
+  }, [props.pageHeightPx]);
+
+  useLayoutEffect(() => {
+    measureRenderedRows();
+
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measureRenderedRows);
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [measureRenderedRows]);
+
   const [internalDiagramConfig, setInternalDiagramConfig] =
     useState<SopDiagramConfig>({});
   const usesLegacyManualPaths =
@@ -127,6 +173,7 @@ export function SopProcedureView(props: SopProcedureViewProps) {
 
   return (
     <section
+      ref={rootRef}
       className={[styles.paginatedRoot, props.className]
         .filter(Boolean)
         .join(" ")}
@@ -153,6 +200,21 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         />
       ))}
     </section>
+  );
+}
+
+function measuredRowHeightMapsEqual(
+  first: Readonly<Record<string, number>>,
+  second: Readonly<Record<string, number>>,
+): boolean {
+  const firstIds = Object.keys(first);
+  const secondIds = Object.keys(second);
+  if (firstIds.length !== secondIds.length) return false;
+
+  return firstIds.every(
+    (stepId) =>
+      second[stepId] !== undefined &&
+      Math.abs((first[stepId] ?? 0) - (second[stepId] ?? 0)) <= 1,
   );
 }
 
