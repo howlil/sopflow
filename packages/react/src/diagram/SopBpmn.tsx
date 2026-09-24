@@ -167,10 +167,14 @@ export function SopBpmn({
                   path={edge.points}
                   connectionId={edge.id}
                   selected={selectedConnectionId === edge.id}
-                  sourceSide={edge.sourceSide}
-                  targetSide={edge.targetSide}
-                  sourceRect={bpmnNodeRect(nodeById.get(edge.from))}
-                  targetRect={bpmnNodeRect(nodeById.get(edge.to))}
+                  {...(edge.sourceSide ? { sourceSide: edge.sourceSide } : {})}
+                  {...(edge.targetSide ? { targetSide: edge.targetSide } : {})}
+                  {...(bpmnNodeRect(nodeById.get(edge.from))
+                    ? { sourceRect: bpmnNodeRect(nodeById.get(edge.from)) }
+                    : {})}
+                  {...(bpmnNodeRect(nodeById.get(edge.to))
+                    ? { targetRect: bpmnNodeRect(nodeById.get(edge.to)) }
+                    : {})}
                   sourceIsDiamond={nodeById.get(edge.from)?.kind === "decision"}
                   targetIsDiamond={nodeById.get(edge.to)?.kind === "decision"}
                   obstacles={model.nodes
