@@ -37,6 +37,7 @@ describe("diagram public API", () => {
         "diagramConfigEquals",
         "estimateProcedureRowHeight",
         "formalOpcCenterXToLeftPx",
+        "formalOpcLabel",
         "formalOpcStackTopPx",
         "formalPathToSegments",
         "formalRowSpan",
