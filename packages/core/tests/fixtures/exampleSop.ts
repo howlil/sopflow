@@ -6,6 +6,14 @@ export const exampleSop: SOPDocument = {
   id: "pengajuan-surat",
   title: "Pengajuan Surat",
 
+  presentationOrder: [
+    "start",
+    "prepare-document",
+    "check-document",
+    "approve-document",
+    "end",
+  ],
+
   actors: [
     {
       id: "staff",
