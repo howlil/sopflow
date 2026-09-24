@@ -35,6 +35,7 @@ describe("diagram public API", () => {
         "classifyFormalFlowchartRouteComplexity",
         "computeFormalActorColumnCenterPercent",
         "diagramConfigEquals",
+        "diagramConfigsEqual",
         "estimateProcedureRowHeight",
         "formalOpcCenterXToLeftPx",
         "formalOpcLabel",
@@ -84,6 +85,7 @@ describe("diagram public API", () => {
         "projectWorkflow",
         "pruneProcedurePagedRoutes",
         "pruneSopDiagramConfig",
+        "pruneSopDiagramConfigs",
         "resetDiagramRoutes",
       ].sort(),
     );
