@@ -91,6 +91,10 @@ describe("SopBpmn", () => {
       throw new Error("automatic route fixture missing");
     }
 
+    const startPoint = edge.points[0];
+    const endPoint = edge.points.at(-1);
+    if (!startPoint || !endPoint) throw new Error("route endpoints missing");
+
     const config: SopDiagramConfig = {
       routes: {
         [edge.id]: {
@@ -98,8 +102,8 @@ describe("SopBpmn", () => {
           bendPoints: edge.points.slice(1, -1),
           sSide: edge.sourceSide,
           eSide: edge.targetSide,
-          startPoint: edge.points[0],
-          endPoint: edge.points.at(-1),
+          startPoint,
+          endPoint,
         },
       },
     };
@@ -117,7 +121,7 @@ describe("SopBpmn", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Edit route start:next:review" }),
     );
-    fireEvent.keyDown(globalThis, { key: "Delete" });
+    fireEvent.keyDown(window, { key: "Delete" });
 
     expect(onDiagramConfigChange).toHaveBeenCalledWith({});
   });
