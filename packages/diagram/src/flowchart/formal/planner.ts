@@ -787,7 +787,7 @@ function applyManualRoute(
     targetSide,
     obstacles,
     occupied,
-    bounds: bounds ? formalBoundsToRect(bounds) : null,
+    bounds: manualBounds ? formalBoundsToRect(manualBounds) : null,
   });
 
   if (!repaired) return auto;
