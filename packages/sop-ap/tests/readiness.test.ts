@@ -8,7 +8,6 @@ import {
 
 const quality = {
   input: "Berkas",
-  duration: { value: 5, unit: "minute" as const },
   output: "Hasil",
   note: "-",
 };
@@ -60,7 +59,12 @@ describe("SOP AP readiness", () => {
         ...document,
         steps: document.steps.map((step) =>
           step.id === "start"
-            ? { ...step, actorIds: ["staff", "other"], input: "" }
+            ? {
+                ...step,
+                name: "",
+                actorIds: ["staff", "other"],
+                input: "",
+              }
             : step,
         ),
       },
@@ -71,6 +75,13 @@ describe("SOP AP readiness", () => {
       expect.objectContaining({
         kind: "procedure",
         code: "INVALID_ACTOR_COUNT",
+        stepId: "start",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        kind: "procedure",
+        code: "MISSING_ACTIVITY",
         stepId: "start",
       }),
     );
