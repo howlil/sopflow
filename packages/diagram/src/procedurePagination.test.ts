@@ -4,6 +4,7 @@ import { buildProcedureModel, type SopDiagramConfig } from "./procedure.js";
 import {
   buildFormalProcedurePages,
   estimateProcedureRowHeight,
+  pruneProcedurePagedRoutes,
   removeProcedurePageManualRoute,
   resolveProcedurePageRouteOverrides,
   setProcedurePageManualRoute,
@@ -40,6 +41,35 @@ describe("buildFormalProcedurePages", () => {
 
     expect(pages[0]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
     expect(pages[1]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
+  });
+
+  it("drops paged route overrides when an edge becomes local", () => {
+    const model = buildProcedureModel(linearDocument(4));
+    const crossPages = buildFormalProcedurePages(model, {
+      firstPageRows: 2,
+      nextPageRows: 2,
+    });
+    const crossEdge = crossPages
+      .flatMap((page) => page.edges)
+      .find((edge) => edge.segment === "source-to-opc");
+    if (!crossEdge) throw new Error("cross-page edge not found");
+
+    const configured: SopDiagramConfig = {
+      pagedRoutes: {
+        [crossEdge.semanticEdgeId]: {
+          source: { kind: "trunk", x: 320 },
+        },
+      },
+    };
+    expect(pruneProcedurePagedRoutes(crossPages, configured)).toEqual(
+      configured,
+    );
+
+    const localPages = buildFormalProcedurePages(model, {
+      firstPageRows: 4,
+      nextPageRows: 4,
+    });
+    expect(pruneProcedurePagedRoutes(localPages, configured)).toEqual({});
   });
 
   it("maps cross-page manual routes through semantic edge ids", () => {
