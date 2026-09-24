@@ -340,12 +340,248 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points.at(-1)).toEqual({ x: 237, y: 241 });
   });
 
+  it("reattaches semantic manual anchors when shape geometry moves", () => {
+    const rows = [
+      row("start", 1, "start", "staff"),
+      row("end", 2, "end", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("start:next:end", "start", "end", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 700,
+      height: 420,
+      pelaksanaBounds: pelaksana,
+      columns: { staff },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 260,
+            top: 120,
+            width: 100,
+            height: 50,
+          }),
+        ],
+        [
+          "end",
+          shape("end", "staff", 1, "end", {
+            left: 250,
+            top: 280,
+            width: 120,
+            height: 50,
+          }),
+        ],
+      ]),
+    };
+
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:end": {
+        kind: "orthogonal",
+        sSide: "right",
+        eSide: "left",
+        sourceDistance: 0.25,
+        targetDistance: 0.75,
+        // Legacy coordinates intentionally point at the old geometry.
+        startPoint: { x: 323, y: 121 },
+        endPoint: { x: 237, y: 241 },
+        bendPoints: [
+          { x: 400, y: 133 },
+          { x: 400, y: 318 },
+        ],
+      },
+    });
+
+    expect(routed?.points[0]).toEqual({ x: 360, y: 133 });
+    expect(routed?.points.at(-1)).toEqual({ x: 250, y: 318 });
+  });
+
+  it("repairs stale manual bends when reflow moves an obstacle into the path", () => {
+    const rows = [
+      row("start", 1, "start", "staff"),
+      row("obstacle", 2, "task", "manager"),
+      row("end", 3, "end", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("start:next:end", "start", "end", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 800,
+      height: 520,
+      pelaksanaBounds: pelaksana,
+      columns: { staff, manager },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 249,
+            top: 100,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "obstacle",
+          shape("obstacle", "manager", 1, "task", {
+            left: 349,
+            top: 180,
+            width: 82,
+            height: 80,
+          }),
+        ],
+        [
+          "end",
+          shape("end", "staff", 2, "end", {
+            left: 249,
+            top: 340,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:end": {
+        kind: "orthogonal",
+        sSide: "right",
+        eSide: "right",
+        sourceDistance: 0.5,
+        targetDistance: 0.5,
+        // These persisted bends used to be clear, but now cross the moved
+        // manager shape after the layout reflow.
+        bendPoints: [
+          { x: 390, y: 121 },
+          { x: 390, y: 361 },
+        ],
+      },
+    });
+
+    expect(routed).toBeDefined();
+    expect(routed?.points[0]).toEqual({ x: 331, y: 121 });
+    expect(routed?.points.at(-1)).toEqual({ x: 331, y: 361 });
+    expect(routed?.routeDiagnostics ?? []).not.toContainEqual(
+      expect.objectContaining({ code: "PATH_INTERSECTS_NODE" }),
+    );
+  });
+
+  it("reports unresolved conflicts between locked manual routes", () => {
+    const rows = [
+      row("a", 1, "task", "staff"),
+      row("b", 2, "task", "manager"),
+      row("c", 3, "task", "staff"),
+      row("d", 4, "task", "manager"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("a:next:d", "a", "d", "next"),
+      edge("b:next:c", "b", "c", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 800,
+      height: 560,
+      pelaksanaBounds: pelaksana,
+      columns: { staff, manager },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "a",
+          shape("a", "staff", 0, "task", {
+            left: 249,
+            top: 100,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "b",
+          shape("b", "manager", 1, "task", {
+            left: 349,
+            top: 180,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "c",
+          shape("c", "staff", 2, "task", {
+            left: 249,
+            top: 300,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "d",
+          shape("d", "manager", 3, "task", {
+            left: 349,
+            top: 400,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+
+    const planned = planFormalProcedureEdges(
+      { rows, edges },
+      geometry,
+      {
+        "a:next:d": {
+          kind: "orthogonal",
+          sSide: "right",
+          eSide: "left",
+          sourceDistance: 0.5,
+          targetDistance: 0.5,
+          bendPoints: [
+            { x: 380, y: 121 },
+            { x: 380, y: 421 },
+          ],
+        },
+        "b:next:c": {
+          kind: "orthogonal",
+          sSide: "left",
+          eSide: "right",
+          sourceDistance: 0.5,
+          targetDistance: 0.5,
+          bendPoints: [
+            { x: 349, y: 250 },
+            { x: 420, y: 250 },
+            { x: 420, y: 321 },
+          ],
+        },
+      },
+      { maxReconcilePasses: 4 },
+    );
+
+    const conflicted = planned.filter(
+      (route) => (route.quality.crossings ?? 0) > 0,
+    );
+
+    expect(conflicted.length).toBeGreaterThan(0);
+    expect(
+      conflicted.some((route) =>
+        route.routeDiagnostics?.some(
+          (diagnostic) => diagnostic.code === "PATH_CROSSES_EDGE",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      conflicted.some((route) =>
+        route.routeDiagnostics?.some(
+          (diagnostic) => diagnostic.code === "INVALID_MANUAL_ROUTE",
+        ),
+      ),
+    ).toBe(true);
+  });
+
   it("orders long and Tidak routes before simpler connections", () => {
     const ordered = sortFormalRoutesForPlanning([
-      meta("near", 0, 1, null),
-      meta("long", 0, 4, null),
-      meta("yes", 2, 3, "Ya"),
-      meta("no", 3, 1, "Tidak"),
+      meta("near", 0, 1, "next"),
+      meta("long", 0, 4, "next"),
+      meta("yes", 2, 3, "yes"),
+      meta("no", 3, 1, "no"),
     ]);
 
     expect(ordered[0]?.id).toBe("long");
@@ -355,6 +591,69 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(noIndex).toBeGreaterThanOrEqual(0);
     expect(yesIndex).toBeGreaterThanOrEqual(0);
     expect(noIndex).toBeLessThan(yesIndex);
+  });
+
+  it("keeps branch routing semantic when presentation labels change", () => {
+    const rows = [
+      row("decision", 1, "decision", "staff"),
+      row("yes-target", 2, "task", "staff"),
+      row("no-target", 3, "task", "staff"),
+    ] as const;
+    const geometry: FormalFlowchartGeometry = {
+      width: 600,
+      height: 420,
+      pelaksanaBounds: pelaksana,
+      columns: { staff },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "decision",
+          shape("decision", "staff", 0, "decision", {
+            left: 257,
+            top: 110,
+            width: 66,
+            height: 66,
+          }),
+        ],
+        [
+          "yes-target",
+          shape("yes-target", "staff", 1, "task", {
+            left: 249,
+            top: 240,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "no-target",
+          shape("no-target", "staff", 2, "task", {
+            left: 249,
+            top: 350,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+    const edges: WorkflowEdge[] = [
+      edge(
+        "decision:yes:yes-target",
+        "decision",
+        "yes-target",
+        "yes",
+        "Approved",
+      ),
+      edge("decision:no:no-target", "decision", "no-target", "no", "Rejected"),
+    ];
+
+    const planned = planFormalProcedureEdges({ rows, edges }, geometry);
+    const yes = planned.find((route) => route.kind === "yes");
+    const no = planned.find((route) => route.kind === "no");
+
+    expect(yes?.label).toBe("Approved");
+    expect(no?.label).toBe("Rejected");
+    expect(yes?.sourceSide).toBe("bottom");
+    expect(no?.sourceSide).toBeDefined();
   });
 
   it("detects connector crossings for reconciliation", () => {
@@ -403,16 +702,16 @@ function meta(
   id: string,
   fromRow: number,
   toRow: number,
-  label: string | null,
+  kind: "next" | "yes" | "no",
 ) {
   return {
     id,
+    kind,
     fromRow,
     toRow,
     fromActorId: "staff",
     toActorId: "staff",
     sourceType: "flowchart-process" as const,
     targetType: "flowchart-process" as const,
-    ...(label ? { label } : {}),
   };
 }

@@ -15,6 +15,7 @@ export {
   buildFormalTableColumnPercents,
   computeFormalActorColumnCenterPercent,
   formalOpcCenterXToLeftPx,
+  formalOpcLabel,
   formalOpcStackTopPx,
   getFormalOpcEndpointsForPage,
   getFormalPageForRow,
@@ -54,12 +55,15 @@ export {
   type FormalRouteEndpoint,
 } from "./flowchart/formal/edit.js";
 
+export { formalPathToSegments } from "./flowchart/formal/orthogonal.js";
+
 export { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
 export type {
   FormalFlowchartBounds,
   FormalFlowchartColumnBounds,
   FormalFlowchartGeometry,
   FormalFlowchartGridLayout,
+  FormalFlowchartOccupiedSegment,
   FormalFlowchartRect,
   FormalFlowchartShapeGeometry,
   FormalFlowchartSide,
@@ -162,6 +166,7 @@ export type { DiagramRect, RouteSegment } from "./routeGeometry.js";
 export {
   buildFormalProcedurePages,
   estimateProcedureRowHeight,
+  pruneProcedurePagedRoutes,
   removeProcedurePageManualRoute,
   resolveProcedurePageRouteOverrides,
   setProcedurePageManualRoute,

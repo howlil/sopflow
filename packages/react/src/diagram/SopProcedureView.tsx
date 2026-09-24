@@ -2,7 +2,10 @@ import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import {
   buildFormalProcedurePages,
   buildProcedureModel,
+  diagramConfigEquals,
+  formalPathToSegments,
   pointsToPath,
+  pruneProcedurePagedRoutes,
   removeProcedureManualRoute,
   routeProcedureEdges,
   setProcedureManualRoute,
@@ -24,6 +27,7 @@ import {
 } from "@sopflow/diagram";
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -57,6 +61,10 @@ export interface SopProcedureViewProps {
 }
 
 export function SopProcedureView(props: SopProcedureViewProps) {
+  const rootRef = useRef<HTMLElement>(null);
+  const [measuredRowHeights, setMeasuredRowHeights] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const model = useMemo(
     () => buildProcedureModel(props.document),
     [props.document],
@@ -79,6 +87,9 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         ...(props.nextPageReservedHeightPx !== undefined
           ? { nextPageReservedHeightPx: props.nextPageReservedHeightPx }
           : {}),
+        ...(Object.keys(measuredRowHeights).length > 0
+          ? { measuredRowHeights }
+          : {}),
       }),
     [
       model,
@@ -87,15 +98,58 @@ export function SopProcedureView(props: SopProcedureViewProps) {
       props.nextPageReservedHeightPx,
       props.nextPageRows,
       props.pageHeightPx,
+      measuredRowHeights,
     ],
   );
+  const measureRenderedRows = useCallback(() => {
+    if (props.pageHeightPx === undefined) {
+      setMeasuredRowHeights((current) =>
+        Object.keys(current).length === 0 ? current : {},
+      );
+      return;
+    }
+
+    const root = rootRef.current;
+    if (!root) return;
+
+    const next: Record<string, number> = {};
+    for (const row of root.querySelectorAll<HTMLElement>(
+      "[data-sopflow-procedure-step-id]",
+    )) {
+      const stepId = row.dataset.sopflowProcedureStepId;
+      const height = row.getBoundingClientRect().height;
+      if (stepId && Number.isFinite(height) && height > 0) {
+        next[stepId] = Math.round(height);
+      }
+    }
+
+    setMeasuredRowHeights((current) =>
+      measuredRowHeightMapsEqual(current, next) ? current : next,
+    );
+  }, [props.pageHeightPx]);
+
+  useLayoutEffect(() => {
+    measureRenderedRows();
+
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measureRenderedRows);
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [measureRenderedRows]);
+
   const [internalDiagramConfig, setInternalDiagramConfig] =
     useState<SopDiagramConfig>({});
   const usesLegacyManualPaths =
     props.diagramConfig === undefined &&
     (props.manualPathOffsets !== undefined ||
       props.onManualPathOffsetsChange !== undefined);
-  const diagramConfig = props.diagramConfig ?? internalDiagramConfig;
+  const rawDiagramConfig = props.diagramConfig ?? internalDiagramConfig;
+  const diagramConfig = useMemo(
+    () => pruneProcedurePagedRoutes(pages, rawDiagramConfig),
+    [pages, rawDiagramConfig],
+  );
   const updateDiagramConfig = useCallback(
     (next: SopDiagramConfig) => {
       if (props.diagramConfig === undefined) {
@@ -106,6 +160,11 @@ export function SopProcedureView(props: SopProcedureViewProps) {
     [props.diagramConfig, props.onDiagramConfigChange],
   );
 
+  useEffect(() => {
+    if (diagramConfigEquals(rawDiagramConfig, diagramConfig)) return;
+    updateDiagramConfig(diagramConfig);
+  }, [diagramConfig, rawDiagramConfig, updateDiagramConfig]);
+
   // Preserve the deprecated trunk-offset API without letting it constrain the
   // modern paginated renderer. Current editor consumers always use diagramConfig.
   if (usesLegacyManualPaths && pages.length <= 1) {
@@ -114,6 +173,7 @@ export function SopProcedureView(props: SopProcedureViewProps) {
 
   return (
     <section
+      ref={rootRef}
       className={[styles.paginatedRoot, props.className]
         .filter(Boolean)
         .join(" ")}
@@ -140,6 +200,21 @@ export function SopProcedureView(props: SopProcedureViewProps) {
         />
       ))}
     </section>
+  );
+}
+
+function measuredRowHeightMapsEqual(
+  first: Readonly<Record<string, number>>,
+  second: Readonly<Record<string, number>>,
+): boolean {
+  const firstIds = Object.keys(first);
+  const secondIds = Object.keys(second);
+  if (firstIds.length !== secondIds.length) return false;
+
+  return firstIds.every(
+    (stepId) =>
+      second[stepId] !== undefined &&
+      Math.abs((first[stepId] ?? 0) - (second[stepId] ?? 0)) <= 1,
   );
 }
 
@@ -180,6 +255,16 @@ function LegacySinglePageSopProcedureView({
     () =>
       geometry ? routeProcedureEdges(model, geometry, routeOverrides) : [],
     [geometry, model, routeOverrides],
+  );
+
+  const routeSegmentsById = useMemo(
+    () =>
+      new Map(
+        routedEdges.map(
+          (edge) => [edge.id, formalPathToSegments(edge.points)] as const,
+        ),
+      ),
+    [routedEdges],
   );
 
   const updatePathOffsets = useCallback(
@@ -428,6 +513,12 @@ function LegacySinglePageSopProcedureView({
           bendPoints: route.bendPoints.map((point) => ({ ...point })),
           sSide: route.sourceSide,
           eSide: route.targetSide,
+          ...(route.sourceDistance !== undefined
+            ? { sourceDistance: route.sourceDistance }
+            : {}),
+          ...(route.targetDistance !== undefined
+            ? { targetDistance: route.targetDistance }
+            : {}),
           startPoint: { ...route.startPoint },
           endPoint: { ...route.endPoint },
           ...(currentRoute?.labelPosition
@@ -662,6 +753,9 @@ function LegacySinglePageSopProcedureView({
                             )
                             .map((shape) => shape.rect)
                         : [];
+                      const occupiedSegments = [...routeSegmentsById.entries()]
+                        .filter(([edgeId]) => edgeId !== edge.id)
+                        .flatMap(([, segments]) => segments);
                       const pelaksanaBounds = geometry.formal?.pelaksanaBounds;
                       const formalBounds = pelaksanaBounds
                         ? {
@@ -689,6 +783,7 @@ function LegacySinglePageSopProcedureView({
                           sourceIsDiamond={sourceShape?.kind === "decision"}
                           targetIsDiamond={targetShape?.kind === "decision"}
                           obstacles={obstacles}
+                          occupiedSegments={occupiedSegments}
                           routingBounds={formalBounds}
                           onSelect={setSelectedConnectionId}
                           onChange={(route) => updateManualPath(edge.id, route)}

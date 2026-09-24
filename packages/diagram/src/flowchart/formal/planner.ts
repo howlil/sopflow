@@ -1,5 +1,16 @@
 import type { StepId } from "@sopflow/core";
-import type { DiagramPoint } from "../../types.js";
+import type {
+  DiagramDiagnostic,
+  DiagramPoint,
+  DiagramRouteQuality,
+} from "../../types.js";
+import { measureRouteQuality, type DiagramRect } from "../../routeGeometry.js";
+import { routeLabelBounds } from "../../routeLabels.js";
+import {
+  channelAnchorDistance,
+  clampAnchorDistance,
+  pointOnRectSide,
+} from "../../routeAnchors.js";
 import type { WorkflowEdge } from "../../workflow.js";
 import {
   assignFormalColumnTrunkSlots,
@@ -8,8 +19,10 @@ import {
   tryBuildFormalDedicatedRoute,
   type FormalRouteMeta,
 } from "./dedicated.js";
+import { repairFormalManualRoute } from "./edit.js";
 import {
   computeFormalConnectionRoutingBounds,
+  pointOnFormalDecisionVertex,
   resolveFormalColumnForConnection,
 } from "./geometry.js";
 import {
@@ -18,7 +31,7 @@ import {
   routeFormalOrthogonal,
   scoreFormalPath,
 } from "./orthogonal.js";
-import { placeFormalEdgeLabel } from "./labels.js";
+import { placeFormalEdgeLabelPlacement } from "./labels.js";
 import {
   findFormalRouteCrossingIds,
   sortFormalRoutesForPlanning,
@@ -55,6 +68,8 @@ export type FormalManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: FormalFlowchartSide;
       readonly eSide?: FormalFlowchartSide;
+      readonly sourceDistance?: number;
+      readonly targetDistance?: number;
       readonly startPoint?: DiagramPoint;
       readonly endPoint?: DiagramPoint;
     }
@@ -64,6 +79,8 @@ export type FormalManualRoute =
       readonly labelPosition?: DiagramPoint;
       readonly sSide?: FormalFlowchartSide;
       readonly eSide?: FormalFlowchartSide;
+      readonly sourceDistance?: number;
+      readonly targetDistance?: number;
       readonly startPoint?: DiagramPoint;
       readonly endPoint?: DiagramPoint;
     };
@@ -75,6 +92,8 @@ export interface FormalPlannedEdge extends WorkflowEdge {
   readonly labelPosition?: DiagramPoint;
   readonly handlePosition: DiagramPoint;
   readonly trunkX: number;
+  readonly quality: DiagramRouteQuality;
+  readonly routeDiagnostics?: readonly DiagramDiagnostic[];
 }
 
 export interface FormalFlowchartPlanOptions {
@@ -98,6 +117,7 @@ export function planFormalProcedureEdges(
     return [
       {
         id: edge.id,
+        kind: edge.kind,
         fromRow: source.number - 1,
         toRow: target.number - 1,
         fromActorId: source.primaryActorId,
@@ -116,17 +136,18 @@ export function planFormalProcedureEdges(
   const maxReconcilePasses = Math.max(1, options.maxReconcilePasses ?? 4);
 
   let priorityIds = new Set<string>();
-  let latest = new Map<string, FormalPlannedEdge>();
+  let bestPlan: Map<string, FormalPlannedEdge> | null = null;
+  let bestSegments = new Map<string, ReturnType<typeof formalPathToSegments>>();
+  let bestScore = Number.POSITIVE_INFINITY;
 
   for (let pass = 0; pass < maxReconcilePasses; pass += 1) {
-    const orderedMetas = sortFormalRoutesForPlanning(
-      routeMetas,
-      pathLayoutSeed,
-      {
+    const orderedMetas = prioritizeLockedFormalRoutes(
+      sortFormalRoutesForPlanning(routeMetas, pathLayoutSeed, {
         priorityIds,
         reconcilePass: pass,
         priorityRoutesLast: true,
-      },
+      }),
+      manualRoutes,
     );
     const occupied: Array<{
       x1: number;
@@ -140,6 +161,10 @@ export function planFormalProcedureEdges(
       ReturnType<typeof formalPathToSegments>
     >();
     const planned = new Map<string, FormalPlannedEdge>();
+    const occupiedLabels: DiagramRect[] = [];
+    const labelObstacles = [...geometry.shapes.values()].map(
+      (shape) => shape.rect,
+    );
 
     for (const meta of orderedMetas) {
       const edge = edgeById.get(meta.id);
@@ -183,7 +208,7 @@ export function planFormalProcedureEdges(
         id: edge.id,
         from: edge.from,
         to: edge.to,
-        ...(edge.label ? { label: edge.label } : {}),
+        kind: edge.kind,
         sourceType: meta.sourceType,
         targetType: meta.targetType,
       };
@@ -207,11 +232,23 @@ export function planFormalProcedureEdges(
         obstacles,
         occupied,
         routeCandidates,
+        usedSides,
         loopbackSlot: loopbackSlots.get(edge.id) ?? 0,
         crossColumnSlot: crossColumnSlots.get(edge.id) ?? 0,
         columnTrunkSlot: columnTrunkSlots.get(edge.id) ?? 0,
       });
-      const resolved = applyManualRoute(auto, manual, routingBounds);
+      const resolved = applyManualRoute(
+        auto,
+        manual,
+        source,
+        target,
+        sourceGeometry.kind === "decision",
+        targetGeometry.kind === "decision",
+        routingBounds,
+        geometry.pelaksanaBounds,
+        obstacles,
+        occupied,
+      );
 
       registerSide(usedSides, edge.from, "out", resolved.sourceSide, edge.id);
       registerSide(usedSides, edge.to, "in", resolved.targetSide, edge.id);
@@ -220,13 +257,24 @@ export function planFormalProcedureEdges(
       segmentsByConnection.set(edge.id, segments);
       occupied.push(...segments);
 
+      const automaticLabelPlacement = edge.label
+        ? placeFormalEdgeLabelPlacement({
+            path: resolved.points,
+            label: edge.label,
+            obstacles: labelObstacles,
+            occupiedLabels,
+          })
+        : null;
       const labelPosition =
-        manual?.labelPosition ??
-        placeFormalEdgeLabel({
-          path: resolved.points,
-          ...(edge.label ? { label: edge.label } : {}),
-          obstacles,
-        });
+        manual?.labelPosition ?? automaticLabelPlacement?.position ?? null;
+      if (edge.label && labelPosition) {
+        occupiedLabels.push(
+          manual?.labelPosition
+            ? routeLabelBounds(edge.label, labelPosition)
+            : (automaticLabelPlacement?.bounds ??
+                routeLabelBounds(edge.label, labelPosition)),
+        );
+      }
       const handlePosition = routeHandlePosition(resolved.points);
 
       planned.set(edge.id, {
@@ -236,20 +284,156 @@ export function planFormalProcedureEdges(
         targetSide: resolved.targetSide,
         handlePosition,
         trunkX: handlePosition.x,
+        quality: {
+          length: 0,
+          bends: 0,
+          obstacleHits: 0,
+          overlaps: 0,
+          crossings: 0,
+        },
         ...(labelPosition ? { labelPosition } : {}),
       });
     }
 
-    latest = planned;
+    const passScore = scoreFormalPlan(planned, segmentsByConnection, geometry);
+    if (passScore < bestScore) {
+      bestScore = passScore;
+      bestPlan = planned;
+      bestSegments = segmentsByConnection;
+    }
+
     const violators = findFormalRouteCrossingIds(segmentsByConnection);
     if (violators.length === 0) break;
     priorityIds = new Set(violators);
   }
 
+  const selected = bestPlan ?? new Map<string, FormalPlannedEdge>();
+
   return model.edges.flatMap((edge) => {
-    const routed = latest.get(edge.id);
-    return routed ? [routed] : [];
+    const routed = selected.get(edge.id);
+    if (!routed) return [];
+
+    const quality = measureFormalEdgeQuality(routed, geometry, bestSegments);
+    const routeDiagnostics = formalRouteDiagnostics(
+      routed,
+      quality,
+      manualRoutes[edge.id] !== undefined,
+    );
+
+    return [
+      {
+        ...routed,
+        quality,
+        ...(routeDiagnostics.length > 0 ? { routeDiagnostics } : {}),
+      },
+    ];
   });
+}
+
+function scoreFormalPlan(
+  planned: ReadonlyMap<string, FormalPlannedEdge>,
+  segmentsByConnection: ReadonlyMap<
+    string,
+    ReturnType<typeof formalPathToSegments>
+  >,
+  geometry: FormalFlowchartGeometry,
+): number {
+  let score = 0;
+
+  for (const edge of planned.values()) {
+    const quality = measureFormalEdgeQuality(
+      edge,
+      geometry,
+      segmentsByConnection,
+    );
+    score +=
+      quality.obstacleHits * 100_000 +
+      quality.overlaps * 25_000 +
+      quality.crossings * 10_000 +
+      quality.bends * 120 +
+      quality.length;
+  }
+
+  return score;
+}
+
+function measureFormalEdgeQuality(
+  edge: FormalPlannedEdge,
+  geometry: FormalFlowchartGeometry,
+  segmentsByConnection: ReadonlyMap<
+    string,
+    ReturnType<typeof formalPathToSegments>
+  >,
+): DiagramRouteQuality {
+  const obstacles = [...geometry.shapes.values()]
+    .filter((shape) => shape.stepId !== edge.from && shape.stepId !== edge.to)
+    .map((shape) => shape.rect);
+  const occupied = [...segmentsByConnection.entries()]
+    .filter(([connectionId]) => connectionId !== edge.id)
+    .flatMap(([, segments]) => [...segments]);
+
+  return measureRouteQuality(edge.points, obstacles, occupied);
+}
+
+function formalRouteDiagnostics(
+  edge: FormalPlannedEdge,
+  quality: DiagramRouteQuality,
+  manual: boolean,
+): DiagramDiagnostic[] {
+  const diagnostics: DiagramDiagnostic[] = [];
+
+  if (quality.obstacleHits > 0) {
+    diagnostics.push({
+      code: "PATH_INTERSECTS_NODE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (quality.overlaps > 0) {
+    diagnostics.push({
+      code: "PATH_OVERLAPS_EDGE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (quality.crossings > 0) {
+    diagnostics.push({
+      code: "PATH_CROSSES_EDGE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+  if (
+    manual &&
+    (quality.obstacleHits > 0 || quality.overlaps > 0 || quality.crossings > 0)
+  ) {
+    diagnostics.push({
+      code: "INVALID_MANUAL_ROUTE",
+      edgeId: edge.id,
+      from: edge.from,
+      to: edge.to,
+    });
+  }
+
+  return diagnostics;
+}
+
+function prioritizeLockedFormalRoutes(
+  metas: readonly FormalRouteMeta[],
+  manualRoutes: Readonly<Record<string, FormalManualRoute>>,
+): FormalRouteMeta[] {
+  const locked: FormalRouteMeta[] = [];
+  const automatic: FormalRouteMeta[] = [];
+
+  for (const meta of metas) {
+    if (manualRoutes[meta.id]) locked.push(meta);
+    else automatic.push(meta);
+  }
+
+  return [...locked, ...automatic];
 }
 
 function resolveAutoRoute(input: {
@@ -269,6 +453,7 @@ function resolveAutoRoute(input: {
     y2: number;
   }[];
   readonly routeCandidates: ReturnType<typeof selectFormalFlowchartSidePairs>;
+  readonly usedSides: FormalFlowchartUsedSides;
   readonly loopbackSlot: number;
   readonly crossColumnSlot: number;
   readonly columnTrunkSlot: number;
@@ -309,7 +494,7 @@ function resolveAutoRoute(input: {
 
     if (
       input.meta.sourceType === "flowchart-decision" &&
-      input.edge.label === "Tidak" &&
+      input.edge.kind === "no" &&
       destinationAbove
     ) {
       const horizontalLoop =
@@ -327,7 +512,7 @@ function resolveAutoRoute(input: {
 
     if (
       input.meta.sourceType === "flowchart-decision" &&
-      input.edge.label === "Ya" &&
+      input.edge.kind === "yes" &&
       destinationBelow
     ) {
       if (result.sourceSide !== "bottom") score += 8_000;
@@ -353,16 +538,40 @@ function resolveAutoRoute(input: {
   for (const [index, candidate] of input.routeCandidates
     .slice(0, MAX_TRIES)
     .entries()) {
+    const sourceUsage = formalSideUsageCount(
+      input.usedSides,
+      input.edge.from,
+      "out",
+      candidate.sourceSide,
+    );
+    const targetUsage = formalSideUsageCount(
+      input.usedSides,
+      input.edge.to,
+      "in",
+      candidate.targetSide,
+    );
+    const sourceDistance = formalAutoAnchorDistance(
+      input.source,
+      candidate.sourceSide,
+      sourceUsage,
+      input.meta.sourceType === "flowchart-decision",
+    );
+    const targetDistance = formalAutoAnchorDistance(
+      input.target,
+      candidate.targetSide,
+      targetUsage,
+      input.meta.targetType === "flowchart-decision",
+    );
     const path = routeFormalOrthogonal({
       source: {
         shape: input.source,
         side: candidate.sourceSide,
-        distance: 0.5,
+        distance: sourceDistance,
       },
       target: {
         shape: input.target,
         side: candidate.targetSide,
-        distance: 0.5,
+        distance: targetDistance,
       },
       obstacles: input.obstacles,
       shapeMargin: 10,
@@ -415,16 +624,40 @@ function resolveAutoRoute(input: {
     for (const [index, candidate] of input.routeCandidates
       .slice(0, MAX_TRIES)
       .entries()) {
+      const sourceUsage = formalSideUsageCount(
+        input.usedSides,
+        input.edge.from,
+        "out",
+        candidate.sourceSide,
+      );
+      const targetUsage = formalSideUsageCount(
+        input.usedSides,
+        input.edge.to,
+        "in",
+        candidate.targetSide,
+      );
+      const sourceDistance = formalAutoAnchorDistance(
+        input.source,
+        candidate.sourceSide,
+        sourceUsage,
+        input.meta.sourceType === "flowchart-decision",
+      );
+      const targetDistance = formalAutoAnchorDistance(
+        input.target,
+        candidate.targetSide,
+        targetUsage,
+        input.meta.targetType === "flowchart-decision",
+      );
       const path = routeFormalOrthogonal({
         source: {
           shape: input.source,
           side: candidate.sourceSide,
-          distance: 0.5,
+          distance: sourceDistance,
         },
         target: {
           shape: input.target,
           side: candidate.targetSide,
-          distance: 0.5,
+          distance: targetDistance,
         },
         obstacles: input.obstacles,
         shapeMargin: 10,
@@ -459,10 +692,38 @@ function resolveAutoRoute(input: {
   );
 }
 
+function formalSideUsageCount(
+  usedSides: FormalFlowchartUsedSides,
+  shapeId: string,
+  direction: "in" | "out",
+  side: FormalFlowchartSide,
+): number {
+  return usedSides[shapeId]?.[direction]?.[side]?.length ?? 0;
+}
+
+function formalAutoAnchorDistance(
+  rect: FormalFlowchartRect,
+  side: FormalFlowchartSide,
+  usageIndex: number,
+  decision: boolean,
+): number {
+  if (decision) return 0.5;
+  const sideLength =
+    side === "top" || side === "bottom" ? rect.width : rect.height;
+  return channelAnchorDistance(usageIndex, sideLength);
+}
+
 function applyManualRoute(
   auto: FormalFlowchartRouteResult,
   manual: FormalManualRoute | undefined,
-  bounds: FormalFlowchartBounds | null,
+  source: FormalFlowchartRect,
+  target: FormalFlowchartRect,
+  sourceDecision: boolean,
+  targetDecision: boolean,
+  routingBounds: FormalFlowchartBounds | null,
+  manualBounds: FormalFlowchartBounds | null,
+  obstacles: readonly FormalFlowchartRect[],
+  occupied: readonly ReturnType<typeof formalPathToSegments>[number][],
 ): FormalFlowchartRouteResult {
   if (!manual) return auto;
 
@@ -470,53 +731,130 @@ function applyManualRoute(
   const autoEnd = auto.points.at(-1);
   if (!autoStart || !autoEnd) return auto;
 
-  const start = resolveManualPoint(manual.startPoint, autoStart);
-  const end = resolveManualPoint(manual.endPoint, autoEnd);
   const sourceSide = manual.sSide ?? auto.sourceSide;
   const targetSide = manual.eSide ?? auto.targetSide;
+  const start = resolveManualAnchorPoint(
+    manual.startPoint,
+    manual.sourceDistance,
+    sourceSide,
+    source,
+    sourceDecision,
+    autoStart,
+  );
+  const end = resolveManualAnchorPoint(
+    manual.endPoint,
+    manual.targetDistance,
+    targetSide,
+    target,
+    targetDecision,
+    autoEnd,
+  );
 
   if (manual.kind === "orthogonal") {
+    const replayed = normalizeFormalOrthogonalPath(
+      [start, ...manual.bendPoints, end],
+      null,
+      { preserveCollinear: true },
+    );
+    const hasSemanticAnchors =
+      Number.isFinite(manual.sourceDistance) ||
+      Number.isFinite(manual.targetDistance);
+
+    // Pre-semantic-anchor configs historically replayed their absolute route
+    // exactly, including endpoint directions that the newer editor would not
+    // create. Preserve that migration contract until the user edits the route,
+    // at which point normalized anchor metadata is persisted.
+    if (!hasSemanticAnchors) {
+      return {
+        points: replayed,
+        sourceSide,
+        targetSide,
+      };
+    }
+
+    const repaired = repairFormalManualRoute({
+      path: replayed,
+      sourceSide,
+      targetSide,
+      obstacles,
+      occupied,
+      bounds: manualBounds ? formalBoundsToRect(manualBounds) : null,
+    });
+
+    if (!repaired) return auto;
+
     return {
-      points: normalizeFormalOrthogonalPath(
-        [start, ...manual.bendPoints, end],
-        null,
-        { preserveCollinear: true },
-      ),
+      points: repaired,
       sourceSide,
       targetSide,
     };
   }
 
-  const x = clampX(manual.x, bounds);
+  const x = clampX(manual.x, routingBounds);
+  const replayed = normalizeFormalOrthogonalPath([
+    start,
+    { x, y: start.y },
+    { x, y: end.y },
+    end,
+  ]);
+  const repaired = repairFormalManualRoute({
+    path: replayed,
+    sourceSide,
+    targetSide,
+    obstacles,
+    occupied,
+    bounds: manualBounds ? formalBoundsToRect(manualBounds) : null,
+  });
+
+  if (!repaired) return auto;
 
   return {
-    points: normalizeFormalOrthogonalPath([
-      start,
-      { x, y: start.y },
-      { x, y: end.y },
-      end,
-    ]),
+    points: repaired,
     sourceSide,
     targetSide,
   };
 }
 
-function resolveManualPoint(
+function formalBoundsToRect(
+  bounds: FormalFlowchartBounds,
+): FormalFlowchartRect {
+  return {
+    left: bounds.left,
+    top: bounds.top,
+    width: Math.max(0, bounds.right - bounds.left),
+    height: Math.max(0, bounds.bottom - bounds.top),
+  };
+}
+
+function resolveManualAnchorPoint(
   configured: DiagramPoint | undefined,
+  distance: number | undefined,
+  side: FormalFlowchartSide,
+  shape: FormalFlowchartRect,
+  decision: boolean,
   fallback: DiagramPoint,
 ): DiagramPoint {
-  if (
-    !configured ||
-    !Number.isFinite(configured.x) ||
-    !Number.isFinite(configured.y)
-  ) {
-    return { ...fallback };
+  if (Number.isFinite(distance)) {
+    if (decision) return pointOnFormalDecisionVertex(shape, side);
+
+    const point = pointOnRectSide(
+      shape,
+      side,
+      clampAnchorDistance(distance as number),
+    );
+    return { x: Math.round(point.x), y: Math.round(point.y) };
   }
 
-  // Persisted endpoints describe shape anchors. They may legitimately sit
-  // outside the inner routing corridor, so replay them exactly instead of
-  // clamping them to routing bounds.
-  return { x: Math.round(configured.x), y: Math.round(configured.y) };
+  if (
+    configured &&
+    Number.isFinite(configured.x) &&
+    Number.isFinite(configured.y)
+  ) {
+    // Backward-compatible replay for pre-semantic-anchor configs.
+    return { x: Math.round(configured.x), y: Math.round(configured.y) };
+  }
+
+  return { ...fallback };
 }
 
 function routeHandlePosition(path: readonly DiagramPoint[]): DiagramPoint {

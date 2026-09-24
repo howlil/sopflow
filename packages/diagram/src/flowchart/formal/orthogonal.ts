@@ -1,3 +1,11 @@
+import {
+  isOrthogonalPath,
+  pathToSegments,
+  scoreRouteDirectness,
+  segmentsCross,
+  segmentsNearby,
+  segmentsOverlap,
+} from "../../routeGeometry.js";
 import type { DiagramPoint } from "../../types.js";
 import type {
   FormalFlowchartOccupiedSegment,
@@ -24,100 +32,22 @@ export interface FormalOrthogonalRouteOptions {
   readonly lShapeOnly?: boolean;
 }
 
-function rangesOverlap(
-  a1: number,
-  a2: number,
-  b1: number,
-  b2: number,
-): boolean {
-  const aMin = Math.min(a1, a2);
-  const aMax = Math.max(a1, a2);
-  const bMin = Math.min(b1, b2);
-  const bMax = Math.max(b1, b2);
-  return aMin < bMax && bMin < aMax;
-}
-
 export function formalSegmentsOverlap(
   a: FormalFlowchartOccupiedSegment,
   b: FormalFlowchartOccupiedSegment,
 ): boolean {
-  if (a.y1 === a.y2 && b.y1 === b.y2 && a.y1 === b.y1) {
-    return rangesOverlap(a.x1, a.x2, b.x1, b.x2);
-  }
-
-  if (a.x1 === a.x2 && b.x1 === b.x2 && a.x1 === b.x1) {
-    return rangesOverlap(a.y1, a.y2, b.y1, b.y2);
-  }
-
-  return false;
+  return segmentsOverlap(a, b);
 }
 
 export function formalSegmentsCross(
   a: FormalFlowchartOccupiedSegment,
   b: FormalFlowchartOccupiedSegment,
 ): boolean {
-  if (a.y1 === a.y2 && b.x1 === b.x2) {
-    const x = b.x1;
-    const y = a.y1;
-    return (
-      x > Math.min(a.x1, a.x2) &&
-      x < Math.max(a.x1, a.x2) &&
-      y > Math.min(b.y1, b.y2) &&
-      y < Math.max(b.y1, b.y2)
-    );
-  }
-
-  if (a.x1 === a.x2 && b.y1 === b.y2) {
-    const x = a.x1;
-    const y = b.y1;
-    return (
-      y > Math.min(a.y1, a.y2) &&
-      y < Math.max(a.y1, a.y2) &&
-      x > Math.min(b.x1, b.x2) &&
-      x < Math.max(b.x1, b.x2)
-    );
-  }
-
-  return false;
-}
-
-function segmentsNearby(
-  a: FormalFlowchartOccupiedSegment,
-  b: FormalFlowchartOccupiedSegment,
-  threshold: number,
-): boolean {
-  if (
-    a.y1 === a.y2 &&
-    b.y1 === b.y2 &&
-    a.y1 !== b.y1 &&
-    Math.abs(a.y1 - b.y1) <= threshold
-  ) {
-    return rangesOverlap(a.x1, a.x2, b.x1, b.x2);
-  }
-
-  if (
-    a.x1 === a.x2 &&
-    b.x1 === b.x2 &&
-    a.x1 !== b.x1 &&
-    Math.abs(a.x1 - b.x1) <= threshold
-  ) {
-    return rangesOverlap(a.y1, a.y2, b.y1, b.y2);
-  }
-
-  return false;
+  return segmentsCross(a, b);
 }
 
 export function isFormalOrthogonalPath(path: readonly DiagramPoint[]): boolean {
-  if (path.length < 2) return false;
-
-  for (let index = 0; index < path.length - 1; index += 1) {
-    const a = path[index];
-    const b = path[index + 1];
-    if (!a || !b) return false;
-    if (a.x !== b.x && a.y !== b.y) return false;
-  }
-
-  return true;
+  return isOrthogonalPath(path);
 }
 
 function pointInRect(point: DiagramPoint, rect: FormalFlowchartRect): boolean {
@@ -294,23 +224,7 @@ export function formalPathOverlapsSegments(
 export function formalPathToSegments(
   path: readonly DiagramPoint[],
 ): FormalFlowchartOccupiedSegment[] {
-  const normalized = normalizeFormalOrthogonalPath(path);
-  const segments: FormalFlowchartOccupiedSegment[] = [];
-
-  for (let index = 0; index < normalized.length - 1; index += 1) {
-    const from = normalized[index];
-    const to = normalized[index + 1];
-    if (!from || !to) continue;
-
-    segments.push({
-      x1: from.x,
-      y1: from.y,
-      x2: to.x,
-      y2: to.y,
-    });
-  }
-
-  return segments;
+  return pathToSegments(normalizeFormalOrthogonalPath(path));
 }
 
 const OVERLAP_PENALTY = 8_000;
@@ -357,6 +271,7 @@ export function scoreFormalPath(
   }
 
   score += Math.max(0, normalized.length - 2) * 180;
+  score += scoreRouteDirectness(normalized) * 2;
   return score;
 }
 

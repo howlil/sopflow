@@ -277,6 +277,46 @@ function countBends(points: readonly DiagramPoint[]): number {
   return bends;
 }
 
+export function scoreRouteDirectness(points: readonly DiagramPoint[]): number {
+  const start = points[0];
+  const end = points.at(-1);
+  if (!start || !end || points.length < 2) return 0;
+
+  const minX = Math.min(start.x, end.x);
+  const maxX = Math.max(start.x, end.x);
+  const minY = Math.min(start.y, end.y);
+  const maxY = Math.max(start.y, end.y);
+  const xDirection = Math.sign(end.x - start.x);
+  const yDirection = Math.sign(end.y - start.y);
+  let backtracking = 0;
+  let overshoot = 0;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const from = points[index];
+    const to = points[index + 1];
+    if (!from || !to) continue;
+
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    if (xDirection !== 0 && Math.sign(dx) === -xDirection) {
+      backtracking += Math.abs(dx);
+    }
+    if (yDirection !== 0 && Math.sign(dy) === -yDirection) {
+      backtracking += Math.abs(dy);
+    }
+  }
+
+  for (const point of points.slice(1, -1)) {
+    overshoot +=
+      Math.max(0, minX - point.x) +
+      Math.max(0, point.x - maxX) +
+      Math.max(0, minY - point.y) +
+      Math.max(0, point.y - maxY);
+  }
+
+  return backtracking + overshoot * 0.5;
+}
+
 export function scorePath(
   points: readonly DiagramPoint[],
   occupied: readonly RouteSegment[] = [],
@@ -295,7 +335,12 @@ export function scorePath(
     }
   }
 
-  return score + countBends(points) * 240 + Math.max(0, points.length - 2) * 80;
+  return (
+    score +
+    countBends(points) * 240 +
+    Math.max(0, points.length - 2) * 80 +
+    scoreRouteDirectness(points) * 2
+  );
 }
 
 export function measureRouteQuality(

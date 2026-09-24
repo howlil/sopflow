@@ -346,7 +346,15 @@ describe("SopEditor document workbench", () => {
       />,
     );
 
-    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(onDiagramConfigChange).toHaveBeenCalledWith({
+        pathLayoutSeed: 7,
+        routes: {
+          "start:next:task": { kind: "trunk", x: 320 },
+        },
+      });
+    });
+    onDiagramConfigChange.mockClear();
 
     const rewiredDocument: SOPDocument = {
       ...initialDocument,

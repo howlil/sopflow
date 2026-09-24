@@ -1,4 +1,5 @@
 import {
+  distanceOnFormalShapeSide,
   dragFormalRouteSegmentFromOrigin,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
@@ -11,6 +12,7 @@ import {
   snapFormalEndpoint,
   validateFormalManualRoute,
   type DiagramPoint,
+  type FormalFlowchartOccupiedSegment,
   type FormalFlowchartRect,
   type FormalFlowchartSide,
   type FormalRouteChange,
@@ -36,6 +38,7 @@ export interface EditableFormalFlowchartPathProps {
   sourceIsDiamond?: boolean;
   targetIsDiamond?: boolean;
   obstacles?: readonly FormalFlowchartRect[];
+  occupiedSegments?: readonly FormalFlowchartOccupiedSegment[];
   routingBounds?: FormalFlowchartRect | null;
   onSelect: (connectionId: string) => void;
   onChange: (route: FormalRouteChange) => void;
@@ -63,6 +66,7 @@ export function EditableFormalFlowchartPath({
   sourceIsDiamond = false,
   targetIsDiamond = false,
   obstacles = [],
+  occupiedSegments = [],
   routingBounds = null,
   onSelect,
   onChange,
@@ -95,6 +99,7 @@ export function EditableFormalFlowchartPath({
       sourceSide: nextSourceSide,
       targetSide: nextTargetSide,
       obstacles,
+      occupied: occupiedSegments,
       bounds: routingBounds,
     });
     const effectivePath = validation.valid
@@ -108,10 +113,48 @@ export function EditableFormalFlowchartPath({
         });
     if (!effectivePath) return;
 
+    const effectiveStart = effectivePath[0];
+    const effectiveEnd = effectivePath.at(-1);
+    const sourceDistance =
+      sourceRect && effectiveStart
+        ? sourceIsDiamond
+          ? 0.5
+          : Math.max(
+              0.08,
+              Math.min(
+                0.92,
+                distanceOnFormalShapeSide(
+                  sourceRect,
+                  nextSourceSide,
+                  effectiveStart,
+                ),
+              ),
+            )
+        : undefined;
+    const targetDistance =
+      targetRect && effectiveEnd
+        ? targetIsDiamond
+          ? 0.5
+          : Math.max(
+              0.08,
+              Math.min(
+                0.92,
+                distanceOnFormalShapeSide(
+                  targetRect,
+                  nextTargetSide,
+                  effectiveEnd,
+                ),
+              ),
+            )
+        : undefined;
     const change = formalRouteChangeFromPath(
       effectivePath,
       nextSourceSide,
       nextTargetSide,
+      {
+        ...(sourceDistance !== undefined ? { sourceDistance } : {}),
+        ...(targetDistance !== undefined ? { targetDistance } : {}),
+      },
     );
     if (change) onChange(change);
   };

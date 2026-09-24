@@ -68,6 +68,64 @@ describe("buildBpmnModel", () => {
     expect(model.edges.find((edge) => edge.kind === "no")?.label).toBe("Tidak");
   });
 
+  it("routes same-lane feedback through a reserved top corridor", () => {
+    const feedbackDocument: SOPDocument = {
+      schemaVersion: "1",
+      id: "bpmn-feedback-corridor",
+      title: "Feedback corridor",
+      actors: [{ id: "staff", name: "Staff" }],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["staff"],
+          next: "task",
+        },
+        {
+          id: "task",
+          type: "task",
+          name: "Work",
+          actorIds: ["staff"],
+          next: "review",
+        },
+        {
+          id: "review",
+          type: "decision",
+          name: "Valid?",
+          actorIds: ["staff"],
+          yes: "end",
+          no: "task",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "End",
+          actorIds: ["staff"],
+        },
+      ],
+    };
+    const model = buildBpmnModel(feedbackDocument);
+    const feedback = model.edges.find((edge) => edge.id === "review:no:task");
+    const source = model.nodes.find((node) => node.id === "review");
+    const target = model.nodes.find((node) => node.id === "task");
+
+    if (!feedback || !source || !target) {
+      throw new Error("feedback fixture did not render");
+    }
+
+    const shapeTop = Math.min(
+      source.y - source.height / 2,
+      target.y - target.height / 2,
+    );
+    expect(feedback.sourceSide).toBe("top");
+    expect(feedback.targetSide).toBe("top");
+    expect(Math.min(...feedback.points.map((point) => point.y))).toBeLessThan(
+      shapeTop,
+    );
+    expect(feedback.routeKind).not.toBe("fallback");
+  });
+
   it("routes a self-loop around the BPMN node", () => {
     const selfLoopDocument: SOPDocument = {
       ...document,

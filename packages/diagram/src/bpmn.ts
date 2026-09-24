@@ -6,7 +6,12 @@ import type {
   DiagramRouteQuality,
   DiagramSide,
 } from "./types.js";
-import { extrudePoint, pointOnRectSide } from "./routeAnchors.js";
+import {
+  channelAnchorDistance,
+  extrudePoint,
+  pointOnRectSide,
+} from "./routeAnchors.js";
+import { placeRouteLabel } from "./routeLabels.js";
 import {
   compactOrthogonalPath,
   measureRouteQuality,
@@ -124,6 +129,19 @@ function buildBpmnModelPass(
       (node) => [node.id, measureBpmnNode(node.kind, node.label)] as const,
     ),
   );
+  const feedbackEdgeIds = graph.edges.flatMap((edge) => {
+    if (edge.from === edge.to) return [];
+    const source = layoutById.get(edge.from);
+    const target = layoutById.get(edge.to);
+    if (!source || !target || target.columnIndex > source.columnIndex)
+      return [];
+    return [edge.id];
+  });
+  const feedbackSlotById = new Map(
+    feedbackEdgeIds.map((edgeId, index) => [edgeId, index] as const),
+  );
+  const feedbackCorridorReserve =
+    feedbackEdgeIds.length > 0 ? 32 + (feedbackEdgeIds.length - 1) * 14 : 0;
   const maxColumn = Math.max(0, ...layoutNodes.map((node) => node.columnIndex));
   const columnWidths = Array.from({ length: maxColumn + 1 }, () => 96);
   for (const layout of layoutNodes) {
@@ -156,7 +174,7 @@ function buildBpmnModelPass(
       metrics.footprintHeight + 24,
     );
   }
-  let laneCursor = config.padding;
+  let laneCursor = config.padding + feedbackCorridorReserve;
   const lanes: BpmnLane[] = Array.from({ length: laneCount }, (_, index) => {
     const actor = document.actors[index];
     const laneHeight = laneHeights[index] ?? config.laneHeight;
@@ -218,14 +236,123 @@ function buildBpmnModelPass(
     ];
   });
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const routing = reconcileBpmnRoutes({
+    semanticEdges: graph.edges,
+    nodes,
+    nodeById,
+    width,
+    height,
+    order,
+    feedbackSlotById,
+    feedbackCorridorTop: config.padding + 8,
+  });
+  diagnostics.push(...routing.diagnostics);
+  const edges = routing.edges;
+
+  return {
+    lanes,
+    nodes,
+    connections: graph.connections,
+    edges,
+    diagnostics,
+    width,
+    height,
+    padding: config.padding,
+    headerWidth: config.headerWidth,
+    laneHeight: config.laneHeight,
+  };
+}
+
+interface BpmnRoutingPassResult {
+  readonly edges: readonly BpmnRoutedEdge[];
+  readonly diagnostics: readonly DiagramDiagnostic[];
+}
+
+function reconcileBpmnRoutes(input: {
+  readonly semanticEdges: readonly WorkflowEdge[];
+  readonly nodes: readonly BpmnNode[];
+  readonly nodeById: ReadonlyMap<StepId, BpmnNode>;
+  readonly width: number;
+  readonly height: number;
+  readonly order: "feedback-first" | "branch-first";
+  readonly feedbackSlotById: ReadonlyMap<string, number>;
+  readonly feedbackCorridorTop: number;
+}): BpmnRoutingPassResult {
+  const MAX_RECONCILE_PASSES = 4;
+  let priorityIds = new Set<string>();
+  let best: BpmnRoutingPassResult | null = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let pass = 0; pass < MAX_RECONCILE_PASSES; pass += 1) {
+    const planned = routeBpmnEdgesPass({
+      ...input,
+      priorityIds,
+      reconcilePass: pass,
+    });
+    const score = scoreBpmnEdges(planned.edges);
+
+    if (score < bestScore) {
+      best = planned;
+      bestScore = score;
+    }
+
+    const nextPriorityIds = new Set(
+      planned.edges
+        .filter((edge) => bpmnEdgeNeedsReconciliation(edge))
+        .map((edge) => edge.id),
+    );
+    if (nextPriorityIds.size === 0) break;
+
+    priorityIds = nextPriorityIds;
+  }
+
+  return best ?? { edges: [], diagnostics: [] };
+}
+
+function routeBpmnEdgesPass(input: {
+  readonly semanticEdges: readonly WorkflowEdge[];
+  readonly nodes: readonly BpmnNode[];
+  readonly nodeById: ReadonlyMap<StepId, BpmnNode>;
+  readonly width: number;
+  readonly height: number;
+  readonly order: "feedback-first" | "branch-first";
+  readonly priorityIds: ReadonlySet<string>;
+  readonly reconcilePass: number;
+  readonly feedbackSlotById: ReadonlyMap<string, number>;
+  readonly feedbackCorridorTop: number;
+}): BpmnRoutingPassResult {
+  const {
+    semanticEdges,
+    nodes,
+    nodeById,
+    width,
+    height,
+    order,
+    priorityIds,
+    reconcilePass,
+    feedbackSlotById,
+    feedbackCorridorTop,
+  } = input;
   const occupied: RouteSegment[] = [];
   const parallelCounts = new Map<string, number>();
   const portLedger = new BpmnPortLedger();
+  const diagnostics: DiagramDiagnostic[] = [];
+  const occupiedLabels: DiagramRect[] = [];
+  const labelObstacles = nodes.map(nodeRect);
   let selfLoopIndex = 0;
 
-  const orderedEdges = [...graph.edges].sort((first, second) =>
-    compareBpmnRoutingPriority(first, second, nodeById, order),
-  );
+  const orderedEdges = [...semanticEdges].sort((first, second) => {
+    const firstPriority = priorityIds.has(first.id) ? 1 : 0;
+    const secondPriority = priorityIds.has(second.id) ? 1 : 0;
+    if (firstPriority !== secondPriority) return firstPriority - secondPriority;
+
+    const priority = compareBpmnRoutingPriority(first, second, nodeById, order);
+    if (priority !== 0) return priority;
+
+    return reconcilePass % 2 === 0
+      ? first.id.localeCompare(second.id)
+      : second.id.localeCompare(first.id);
+  });
 
   const routedEdges = orderedEdges.flatMap<BpmnRoutedEdge>((edge) => {
     const from = nodeById.get(edge.from);
@@ -248,8 +375,18 @@ function buildBpmnModelPass(
                 from,
                 currentSelfLoopIndex,
                 Math.max(
-                  portLedger.peek(from.id, "out", "right"),
-                  portLedger.peek(from.id, "in", "right"),
+                  portLedger.peek(
+                    from.id,
+                    "out",
+                    "right",
+                    sideLength(nodeRect(from), "right"),
+                  ),
+                  portLedger.peek(
+                    from.id,
+                    "in",
+                    "right",
+                    sideLength(nodeRect(from), "right"),
+                  ),
                 ),
               ),
               sourceSide: "right",
@@ -268,8 +405,9 @@ function buildBpmnModelPass(
           parallelIndex,
           obstacles,
           occupied,
-          { width, height },
+          { width, height, feedbackCorridorTop },
           portLedger,
+          feedbackSlotById.get(edge.id),
         );
     const points = route.points;
     const quality = measureRouteQuality(points, obstacles, occupied);
@@ -277,6 +415,7 @@ function buildBpmnModelPass(
     portLedger.reserve(edge.from, "out", route.sourceSide);
     portLedger.reserve(edge.to, "in", route.targetSide);
     const routeDiagnostics = [...route.diagnostics];
+
     for (const [code, count] of [
       ["PATH_INTERSECTS_NODE", quality.obstacleHits],
       ["PATH_OVERLAPS_EDGE", quality.overlaps],
@@ -291,13 +430,19 @@ function buildBpmnModelPass(
         });
       }
     }
+
     diagnostics.push(...routeDiagnostics);
-    const labelPosition = edge.label
-      ? routeLabelPosition(
-          points,
-          selfLoop ? currentSelfLoopIndex : parallelIndex,
-        )
-      : undefined;
+    const labelPlacement = edge.label
+      ? placeRouteLabel({
+          path: points,
+          label: edge.label,
+          obstacles: labelObstacles,
+          occupiedLabels,
+          perpendicularOffset:
+            18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
+        })
+      : null;
+    if (labelPlacement) occupiedLabels.push(labelPlacement.bounds);
 
     return [
       {
@@ -308,34 +453,32 @@ function buildBpmnModelPass(
         targetSide: route.targetSide,
         quality,
         ...(routeDiagnostics.length > 0 ? { routeDiagnostics } : {}),
-        ...(labelPosition ? { labelPosition } : {}),
+        ...(labelPlacement ? { labelPosition: labelPlacement.position } : {}),
       },
     ];
   });
 
-  const edges = graph.edges.flatMap((edge) =>
+  const edges = semanticEdges.flatMap((edge) =>
     routedEdges.filter((routedEdge) => routedEdge.id === edge.id),
   );
-
-  return {
-    lanes,
-    nodes,
-    connections: graph.connections,
-    edges,
-    diagnostics,
-    width,
-    height,
-    padding: config.padding,
-    headerWidth: config.headerWidth,
-    laneHeight: config.laneHeight,
-  };
+  return { edges, diagnostics };
 }
 
-function scoreBpmnPlan(model: BpmnModel): number {
-  return model.edges.reduce((score, edge) => {
+function bpmnEdgeNeedsReconciliation(edge: BpmnRoutedEdge): boolean {
+  return (
+    edge.routeKind === "fallback" ||
+    (edge.quality?.obstacleHits ?? 0) > 0 ||
+    (edge.quality?.overlaps ?? 0) > 0 ||
+    (edge.quality?.crossings ?? 0) > 0
+  );
+}
+
+function scoreBpmnEdges(edges: readonly BpmnRoutedEdge[]): number {
+  return edges.reduce((score, edge) => {
     if (edge.points.length < 2) return score + 1_000_000_000;
     const quality = edge.quality;
     if (!quality) return score + 500_000;
+
     return (
       score +
       quality.obstacleHits * 100_000 +
@@ -346,6 +489,10 @@ function scoreBpmnPlan(model: BpmnModel): number {
       (edge.routeKind === "fallback" ? 50_000 : 0)
     );
   }, 0);
+}
+
+function scoreBpmnPlan(model: BpmnModel): number {
+  return scoreBpmnEdges(model.edges);
 }
 
 interface BpmnRouteResult {
@@ -409,8 +556,13 @@ function buildBpmnRoute(
   parallelIndex: number,
   obstacles: readonly DiagramRect[],
   occupied: readonly RouteSegment[],
-  config: { width: number; height: number },
+  config: {
+    width: number;
+    height: number;
+    feedbackCorridorTop: number;
+  },
   portLedger: BpmnPortLedger,
+  feedbackSlot?: number,
 ): BpmnRouteResult {
   const sameLane = from.laneIndex === to.laneIndex;
   const targetRight = to.x > from.x;
@@ -419,7 +571,35 @@ function buildBpmnRoute(
     path: DiagramPoint[];
     sourceSide: DiagramSide;
     targetSide: DiagramSide;
+    feedbackCorridor?: boolean;
   }> = [];
+  if (feedbackSlot !== undefined) {
+    const sourceDistance = portLedger.peek(
+      from.id,
+      "out",
+      "top",
+      sideLength(nodeRect(from), "top"),
+    );
+    const targetDistance = portLedger.peek(
+      to.id,
+      "in",
+      "top",
+      sideLength(nodeRect(to), "top"),
+    );
+    candidates.push({
+      path: routeBpmnFeedbackCorridor(
+        from,
+        to,
+        config.feedbackCorridorTop + feedbackSlot * 14,
+        sourceDistance,
+        targetDistance,
+      ),
+      sourceSide: "top",
+      targetSide: "top",
+      feedbackCorridor: true,
+    });
+  }
+
   const sourceSide =
     sameLane && targetRight
       ? "right"
@@ -440,8 +620,18 @@ function buildBpmnRoute(
         : targetBelow
           ? "top"
           : "bottom";
-  const sourceDistance = portLedger.peek(from.id, "out", sourceSide);
-  const targetDistance = portLedger.peek(to.id, "in", targetSide);
+  const sourceDistance = portLedger.peek(
+    from.id,
+    "out",
+    sourceSide,
+    sideLength(nodeRect(from), sourceSide),
+  );
+  const targetDistance = portLedger.peek(
+    to.id,
+    "in",
+    targetSide,
+    sideLength(nodeRect(to), targetSide),
+  );
 
   if (sameLane && targetRight) {
     candidates.push({
@@ -584,14 +774,18 @@ function buildBpmnRoute(
         ignoreTerminalSegments: true,
       }),
   );
-  const selected = safe.reduce<(typeof candidates)[number] | undefined>(
-    (best, candidate) =>
-      !best ||
-      scorePath(candidate.path, occupied) < scorePath(best.path, occupied)
-        ? candidate
-        : best,
-    undefined,
-  );
+  const selected =
+    (feedbackSlot !== undefined
+      ? safe.find((candidate) => candidate.feedbackCorridor)
+      : undefined) ??
+    safe.reduce<(typeof candidates)[number] | undefined>(
+      (best, candidate) =>
+        !best ||
+        scorePath(candidate.path, occupied) < scorePath(best.path, occupied)
+          ? candidate
+          : best,
+      undefined,
+    );
   const fallback = candidates[0] as (typeof candidates)[number];
   const chosen = selected ?? fallback;
   const diagnostics: DiagramDiagnostic[] = selected
@@ -612,6 +806,28 @@ function buildBpmnRoute(
     targetSide: chosen.targetSide,
     diagnostics,
   };
+}
+
+function routeBpmnFeedbackCorridor(
+  from: BpmnNode,
+  to: BpmnNode,
+  corridorY: number,
+  sourceDistance: number,
+  targetDistance: number,
+): DiagramPoint[] {
+  const start = pointOnRectSide(nodeRect(from), "top", sourceDistance);
+  const end = pointOnRectSide(nodeRect(to), "top", targetDistance);
+  const startJetty = extrudePoint(start, "top", 18);
+  const endJetty = extrudePoint(end, "top", 18);
+
+  return compactOrthogonalPath([
+    start,
+    startJetty,
+    { x: startJetty.x, y: corridorY },
+    { x: endJetty.x, y: corridorY },
+    endJetty,
+    end,
+  ]);
 }
 
 function selectBpmnRoute(
@@ -690,20 +906,6 @@ function selectBpmnRoute(
   };
 }
 
-function routeLabelPosition(
-  points: readonly DiagramPoint[],
-  index: number,
-): DiagramPoint | undefined {
-  const segments = pathToSegments(points);
-  const segment =
-    segments.find((candidate) => candidate.x1 === candidate.x2) ?? segments[0];
-  if (!segment) return undefined;
-  return {
-    x: (segment.x1 + segment.x2) / 2 + 6 + index * 12,
-    y: (segment.y1 + segment.y2) / 2 - 4,
-  };
-}
-
 function routeSelfLoop(
   node: BpmnNode,
   index: number,
@@ -730,9 +932,15 @@ function routeSelfLoop(
 class BpmnPortLedger {
   private readonly counts = new Map<string, number>();
 
-  peek(nodeId: StepId, direction: "in" | "out", side: DiagramSide): number {
-    return portDistance(
+  peek(
+    nodeId: StepId,
+    direction: "in" | "out",
+    side: DiagramSide,
+    sideLengthPx: number,
+  ): number {
+    return channelAnchorDistance(
       this.counts.get(this.key(nodeId, direction, side)) ?? 0,
+      sideLengthPx,
     );
   }
 
@@ -750,9 +958,8 @@ class BpmnPortLedger {
   }
 }
 
-function portDistance(index: number): number {
-  const slots = [0.5, 0.34, 0.66, 0.2, 0.8];
-  return slots[index] ?? (index % 2 === 0 ? 0.14 : 0.86);
+function sideLength(rect: DiagramRect, side: DiagramSide): number {
+  return side === "top" || side === "bottom" ? rect.width : rect.height;
 }
 
 function compareBpmnRoutingPriority(

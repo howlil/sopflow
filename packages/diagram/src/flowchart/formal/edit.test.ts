@@ -143,6 +143,60 @@ describe("formal flowchart path editing", () => {
     expect(repaired.at(-1)).toEqual({ x: 180, y: 220 });
   });
 
+  it("rejects manual paths that overlap or cross sibling connectors", () => {
+    const base = {
+      path: [
+        { x: 100, y: 100 },
+        { x: 180, y: 100 },
+        { x: 180, y: 220 },
+      ],
+      sourceSide: "right" as const,
+      targetSide: "top" as const,
+    };
+
+    expect(
+      validateFormalManualRoute({
+        ...base,
+        occupied: [{ x1: 120, y1: 100, x2: 160, y2: 100 }],
+      }),
+    ).toEqual({ valid: false, reason: "OVERLAPS_ROUTE" });
+
+    expect(
+      validateFormalManualRoute({
+        ...base,
+        occupied: [{ x1: 140, y1: 80, x2: 140, y2: 130 }],
+      }),
+    ).toEqual({ valid: false, reason: "CROSSES_ROUTE" });
+  });
+
+  it("repairs a connector crossing through a free channel", () => {
+    const occupied = [{ x1: 140, y1: 80, x2: 140, y2: 140 }];
+    const repaired = repairFormalManualRoute({
+      path: [
+        { x: 100, y: 100 },
+        { x: 180, y: 100 },
+        { x: 180, y: 220 },
+      ],
+      sourceSide: "right",
+      targetSide: "top",
+      occupied,
+      bounds: { left: 80, top: 60, width: 220, height: 220 },
+    });
+
+    expect(repaired).not.toBeNull();
+    if (!repaired) return;
+
+    expect(
+      validateFormalManualRoute({
+        path: repaired,
+        sourceSide: "right",
+        targetSide: "top",
+        occupied,
+        bounds: { left: 80, top: 60, width: 220, height: 220 },
+      }),
+    ).toEqual({ valid: true });
+  });
+
   it("rebuilds the endpoint-adjacent segment orthogonally", () => {
     const moved = rebuildFormalPathForEndpoint(path, "start", {
       point: { x: 80, y: 130 },

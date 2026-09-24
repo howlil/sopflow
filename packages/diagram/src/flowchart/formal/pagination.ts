@@ -2,8 +2,6 @@ import type { ActorId, StepId } from "@sopflow/core";
 import type { WorkflowEdge } from "../../workflow.js";
 import type { FormalFlowchartColumnBounds } from "./types.js";
 
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 export interface FormalPageRow {
   readonly stepId: StepId;
   readonly number: number;
@@ -179,7 +177,7 @@ export function splitFormalConnectionsByPage(
       continue;
     }
 
-    const letter = LETTERS[opcPairs.length % LETTERS.length] ?? "A";
+    const letter = formalOpcLabel(opcPairs.length);
     const opcOutId = buildFormalOpcId(edge.id, "out", opcIdPrefix);
     const opcInId = buildFormalOpcId(edge.id, "in", opcIdPrefix);
 
@@ -363,6 +361,19 @@ export function formalOpcStackTopPx(stackIndex: number): number {
     stackIndex *
     (FORMAL_OPC_CONNECTOR_HEIGHT_PX + FORMAL_OPC_CONNECTOR_STACK_GAP_PX)
   );
+}
+
+export function formalOpcLabel(index: number): string {
+  let value = Math.max(0, Math.floor(index)) + 1;
+  let label = "";
+
+  while (value > 0) {
+    value -= 1;
+    label = String.fromCharCode(65 + (value % 26)) + label;
+    value = Math.floor(value / 26);
+  }
+
+  return label || "A";
 }
 
 function buildFormalOpcId(

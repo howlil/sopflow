@@ -1,4 +1,4 @@
-import type { DiagramPoint } from "../../types.js";
+import type { DiagramEdgeKind, DiagramPoint } from "../../types.js";
 import {
   classifyFormalFlowchartRouteComplexity,
   formalRowSpan,
@@ -34,6 +34,7 @@ import type {
 
 export interface FormalRouteMeta {
   readonly id: string;
+  readonly kind: DiagramEdgeKind;
   readonly fromRow: number;
   readonly toRow: number;
   readonly fromActorId: string | null;
@@ -370,9 +371,9 @@ export function tryBuildFormalDedicatedRoute(input: {
     toRow: meta.toRow,
     sameColumn,
     crossColumn,
+    kind: meta.kind,
     sourceType: meta.sourceType,
     targetType: meta.targetType,
-    ...(meta.label ? { label: meta.label } : {}),
   };
   const complexity = classifyFormalFlowchartRouteComplexity(complexityInput);
 

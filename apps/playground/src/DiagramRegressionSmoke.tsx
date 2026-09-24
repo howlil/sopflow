@@ -88,6 +88,80 @@ const bpmnDocument: SOPDocument = {
   ],
 };
 
+const denseBpmnDocument: SOPDocument = {
+  schemaVersion: "1",
+  id: "browser-dense-bpmn-regression",
+  title: "Dense BPMN Regression",
+  actors: Array.from({ length: 8 }, (_, index) => ({
+    id: `actor-${index + 1}`,
+    name: `Actor ${index + 1}`,
+  })),
+  steps: [
+    ...Array.from({ length: 8 }, (_, index) => ({
+      id: `start-${String(index + 1).padStart(2, "0")}`,
+      type: "start" as const,
+      name: `Start ${index + 1}`,
+      actorIds: [`actor-${index + 1}`],
+      next: "target",
+    })),
+    {
+      id: "target",
+      type: "task" as const,
+      name: "Converged dense target",
+      actorIds: ["actor-1"],
+      next: "end",
+    },
+    {
+      id: "end",
+      type: "end" as const,
+      name: "Selesai",
+      actorIds: ["actor-1"],
+    },
+  ],
+};
+
+const denseOpcDocument: SOPDocument = {
+  schemaVersion: "1",
+  id: "browser-dense-opc-regression",
+  title: "Dense OPC Regression",
+  actors: [
+    { id: "staff", name: "Staff" },
+    { id: "manager", name: "Manager" },
+  ],
+  steps: [
+    {
+      id: "start",
+      type: "start",
+      name: "Mulai",
+      actorIds: ["staff"],
+      next: "decision-01",
+    },
+    ...Array.from({ length: 28 }, (_, index) => {
+      const number = index + 1;
+      const id = `decision-${String(number).padStart(2, "0")}`;
+      const next =
+        number === 28
+          ? "end"
+          : `decision-${String(number + 1).padStart(2, "0")}`;
+
+      return {
+        id,
+        type: "decision" as const,
+        name: `Decision ${number}`,
+        actorIds: [number % 2 === 0 ? "manager" : "staff"],
+        yes: next,
+        no: "end",
+      };
+    }),
+    {
+      id: "end",
+      type: "end",
+      name: "Selesai",
+      actorIds: ["manager"],
+    },
+  ],
+};
+
 type RegressionStatus = "pending" | "pass" | "fail";
 
 export function DiagramRegressionSmoke() {
@@ -106,13 +180,19 @@ export function DiagramRegressionSmoke() {
       }
 
       const nextFailures: string[] = [];
-      const pages = root.querySelectorAll("[data-sopflow-procedure-page]");
+      const formalRegression = root.querySelector<HTMLElement>(
+        '[data-regression-section="formal-shared-target"]',
+      );
+      const pages =
+        formalRegression?.querySelectorAll("[data-sopflow-procedure-page]") ??
+        [];
       if (pages.length !== 2) {
         nextFailures.push(`expected 2 formal pages, received ${pages.length}`);
       }
 
       const opcIds = Array.from(
-        root.querySelectorAll<HTMLElement>("[data-sopflow-opc]"),
+        formalRegression?.querySelectorAll<HTMLElement>("[data-sopflow-opc]") ??
+          [],
       ).map((element) => element.dataset.sopflowOpc ?? "");
       if (opcIds.length !== 4 || new Set(opcIds).size !== opcIds.length) {
         nextFailures.push(
@@ -121,7 +201,9 @@ export function DiagramRegressionSmoke() {
       }
 
       const editableRoutes = Array.from(
-        root.querySelectorAll<SVGGElement>("[data-sopflow-editable-route]"),
+        formalRegression?.querySelectorAll<SVGGElement>(
+          "[data-sopflow-editable-route]",
+        ) ?? [],
       );
       if (editableRoutes.length < 6) {
         nextFailures.push(
@@ -136,7 +218,9 @@ export function DiagramRegressionSmoke() {
         }
       }
 
-      const bpmn = root.querySelector<SVGElement>("[data-sopflow-bpmn] svg");
+      const bpmn = root.querySelector<SVGElement>(
+        '[data-regression-section="bpmn-labels"] [data-sopflow-bpmn] svg',
+      );
       const firstNode = bpmn?.querySelector<SVGGElement>(
         '[data-sopflow-step-id="long-a"]',
       );
@@ -181,6 +265,48 @@ export function DiagramRegressionSmoke() {
         nextFailures.push("BPMN path contains invalid SVG coordinates");
       }
 
+      const denseBpmn = root.querySelector<SVGElement>(
+        '[data-regression-section="bpmn-dense"] [data-sopflow-bpmn] svg',
+      );
+      const densePaths = Array.from(denseBpmn?.querySelectorAll("path") ?? []);
+      if (densePaths.length < 9) {
+        nextFailures.push(
+          `expected dense BPMN routes, received ${densePaths.length} paths`,
+        );
+      }
+      if (
+        densePaths.some((path) =>
+          /NaN|Infinity/.test(path.getAttribute("d") ?? ""),
+        )
+      ) {
+        nextFailures.push("dense BPMN path contains invalid coordinates");
+      }
+
+      const denseTarget = denseBpmn?.querySelector<SVGGElement>(
+        '[data-sopflow-step-id="target"]',
+      );
+      if (!denseTarget) {
+        nextFailures.push("dense BPMN fan-in target is missing");
+      } else {
+        const box = denseTarget.getBBox();
+        if (![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
+          nextFailures.push("dense BPMN target has invalid geometry");
+        }
+      }
+
+      const denseOpc = root.querySelector<HTMLElement>(
+        '[data-regression-section="formal-dense-opc"]',
+      );
+      const opcLabels = Array.from(
+        denseOpc?.querySelectorAll<HTMLElement>("[data-sopflow-opc]") ?? [],
+      ).map((element) => element.getAttribute("aria-label") ?? "");
+      if (!opcLabels.some((label) => label.endsWith("AA"))) {
+        nextFailures.push("dense OPC sequence never reached AA");
+      }
+      if (!opcLabels.some((label) => label.endsWith("AB"))) {
+        nextFailures.push("dense OPC sequence never reached AB");
+      }
+
       setFailures(nextFailures);
       setStatus(nextFailures.length === 0 ? "pass" : "fail");
     }, 600);
@@ -202,7 +328,10 @@ export function DiagramRegressionSmoke() {
             : failures.join(" | ")}
       </output>
 
-      <section aria-label="Formal browser regression">
+      <section
+        aria-label="Formal browser regression"
+        data-regression-section="formal-shared-target"
+      >
         <SopProcedureView
           document={sharedTargetDocument}
           manualEditing
@@ -213,8 +342,29 @@ export function DiagramRegressionSmoke() {
         />
       </section>
 
-      <section aria-label="BPMN browser regression">
+      <section
+        aria-label="BPMN browser regression"
+        data-regression-section="bpmn-labels"
+      >
         <SopBpmn document={bpmnDocument} />
+      </section>
+
+      <section
+        aria-label="Dense BPMN browser regression"
+        data-regression-section="bpmn-dense"
+      >
+        <SopBpmn document={denseBpmnDocument} />
+      </section>
+
+      <section
+        aria-label="Dense OPC browser regression"
+        data-regression-section="formal-dense-opc"
+      >
+        <SopProcedureView
+          document={denseOpcDocument}
+          firstPageRows={29}
+          nextPageRows={1}
+        />
       </section>
     </main>
   );
