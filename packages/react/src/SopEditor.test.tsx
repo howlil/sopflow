@@ -558,7 +558,9 @@ describe("SopEditor graph mutations", () => {
     ).toEqual(["start", "decision", "reject", "approve", "end"]);
 
     const decisionRow = getDesktopStepRow("decision");
-    expect(within(decisionRow).getByText("Ya → 4 · Tidak → 3")).toBeInTheDocument();
+    expect(
+      within(decisionRow).getByText("Ya → 4 · Tidak → 3"),
+    ).toBeInTheDocument();
   });
 
   it("shows decision branch targets inline using authoring order", () => {
