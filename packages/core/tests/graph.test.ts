@@ -248,8 +248,8 @@ describe("getPresentationStepIds", () => {
       "start",
       "decision",
       "approve",
-      "end",
       "fix",
+      "end",
     ]);
     expect(getPresentationStepIds(document)).toEqual([
       "start",
