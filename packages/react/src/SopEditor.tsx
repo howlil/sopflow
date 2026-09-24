@@ -201,11 +201,7 @@ export function SopEditor({
       }
       onDiagramConfigsChange?.(nextConfigs);
     },
-    [
-      controlledDiagramConfig,
-      controlledDiagramConfigs,
-      onDiagramConfigsChange,
-    ],
+    [controlledDiagramConfig, controlledDiagramConfigs, onDiagramConfigsChange],
   );
 
   const handleDiagramConfigChange = useCallback(
