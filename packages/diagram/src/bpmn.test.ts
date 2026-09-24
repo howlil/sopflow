@@ -331,6 +331,92 @@ describe("buildBpmnModel", () => {
     expect(secondLeft).toBeGreaterThan(firstRight);
   });
 
+  it("routes the dense sop-ta BPMN regression without obstacle fallback", () => {
+    const dense: SOPDocument = {
+      schemaVersion: "1",
+      id: "sop-ta-dense-bpmn",
+      title: "Dense BPMN",
+      actors: [
+        { id: "lane-0", name: "Lane 0" },
+        { id: "lane-1", name: "Lane 1" },
+        { id: "lane-2", name: "Lane 2" },
+        { id: "lane-3", name: "Lane 3" },
+      ],
+      presentationOrder: [
+        "start",
+        "receive",
+        "gateway",
+        "process",
+        "review",
+        "fallback",
+        "end",
+      ],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["lane-0"],
+          next: "receive",
+        },
+        {
+          id: "receive",
+          type: "task",
+          name: "Receive",
+          actorIds: ["lane-0"],
+          next: "gateway",
+        },
+        {
+          id: "gateway",
+          type: "decision",
+          name: "Valid?",
+          actorIds: ["lane-1"],
+          yes: "process",
+          no: "fallback",
+        },
+        {
+          id: "process",
+          type: "task",
+          name: "Process",
+          actorIds: ["lane-1"],
+          next: "review",
+        },
+        {
+          id: "review",
+          type: "task",
+          name: "Review",
+          actorIds: ["lane-2"],
+          next: "end",
+        },
+        {
+          id: "fallback",
+          type: "task",
+          name: "Fallback",
+          actorIds: ["lane-3"],
+          next: "receive",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "End",
+          actorIds: ["lane-2"],
+        },
+      ],
+    };
+
+    const model = buildBpmnModel(dense);
+
+    expect(model.edges).toHaveLength(7);
+    expect(
+      model.edges.flatMap((edge) => edge.routeDiagnostics ?? []).filter(
+        (diagnostic) => diagnostic.code === "PATH_INTERSECTS_NODE",
+      ),
+    ).toEqual([]);
+    expect(
+      model.edges.filter((edge) => edge.routeKind === "fallback"),
+    ).toEqual([]);
+  });
+
   it("keeps BPMN layout stable when step storage order changes", () => {
     const original = buildBpmnModel(document);
     const shuffled = buildBpmnModel({
