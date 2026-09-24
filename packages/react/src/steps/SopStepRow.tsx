@@ -1,9 +1,9 @@
 import {
   getPresentationSteps,
   type SOPDocument,
-  SopOperation,
-  Step,
-  ValidationIssue,
+  type SopOperation,
+  type Step,
+  type ValidationIssue,
 } from "@sopflow/core";
 import { ActorField } from "./fields/ActorField.js";
 import { DurationField } from "./fields/DurationField.js";
