@@ -8,7 +8,10 @@ import type {
 } from "./types.js";
 import {
   channelAnchorDistance,
+  clampAnchorDistance,
+  distanceOnRectSide,
   extrudePoint,
+  nearestRectSide,
   pointOnRectSide,
 } from "./routeAnchors.js";
 import { placeRouteLabel } from "./routeLabels.js";
@@ -23,7 +26,9 @@ import {
   type DiagramRect,
   type RouteSegment,
 } from "./routeGeometry.js";
+import { repairFormalManualRoute } from "./flowchart/formal/edit.js";
 import { layoutBpmnGraph } from "./bpmnLayout.js";
+import type { ProcedureManualRoute, SopDiagramConfig } from "./procedure.js";
 import { layoutNodeText } from "./text/layoutNodeText.js";
 import { projectWorkflow, type WorkflowEdge } from "./workflow.js";
 
@@ -32,6 +37,8 @@ export interface BpmnLayoutOptions {
   readonly headerWidth?: number;
   readonly stepGap?: number;
   readonly padding?: number;
+  /** Persisted route preferences for the BPMN projection. */
+  readonly diagramConfig?: SopDiagramConfig;
 }
 
 export interface BpmnLane {
@@ -79,7 +86,9 @@ export interface BpmnModel {
   readonly laneHeight: number;
 }
 
-const DEFAULTS: Required<BpmnLayoutOptions> = {
+const DEFAULTS: Required<
+  Pick<BpmnLayoutOptions, "laneHeight" | "headerWidth" | "stepGap" | "padding">
+> = {
   laneHeight: 112,
   headerWidth: 116,
   stepGap: 144,
@@ -245,6 +254,7 @@ function buildBpmnModelPass(
     order,
     feedbackSlotById,
     feedbackCorridorTop: config.padding + 8,
+    diagramConfig: options.diagramConfig ?? {},
   });
   diagnostics.push(...routing.diagnostics);
   const edges = routing.edges;
@@ -277,6 +287,7 @@ function reconcileBpmnRoutes(input: {
   readonly order: "feedback-first" | "branch-first";
   readonly feedbackSlotById: ReadonlyMap<string, number>;
   readonly feedbackCorridorTop: number;
+  readonly diagramConfig: SopDiagramConfig;
 }): BpmnRoutingPassResult {
   const MAX_RECONCILE_PASSES = 4;
   let priorityIds = new Set<string>();
@@ -320,6 +331,7 @@ function routeBpmnEdgesPass(input: {
   readonly reconcilePass: number;
   readonly feedbackSlotById: ReadonlyMap<string, number>;
   readonly feedbackCorridorTop: number;
+  readonly diagramConfig: SopDiagramConfig;
 }): BpmnRoutingPassResult {
   const {
     semanticEdges,
@@ -332,6 +344,7 @@ function routeBpmnEdgesPass(input: {
     reconcilePass,
     feedbackSlotById,
     feedbackCorridorTop,
+    diagramConfig,
   } = input;
   const occupied: RouteSegment[] = [];
   const parallelCounts = new Map<string, number>();
@@ -341,7 +354,11 @@ function routeBpmnEdgesPass(input: {
   const labelObstacles = nodes.map(nodeRect);
   let selfLoopIndex = 0;
 
-  const orderedEdges = [...semanticEdges].sort((first, second) => {
+  const sortedEdges = [...semanticEdges].sort((first, second) => {
+    const firstManual = diagramConfig.routes?.[first.id] ? 0 : 1;
+    const secondManual = diagramConfig.routes?.[second.id] ? 0 : 1;
+    if (firstManual !== secondManual) return firstManual - secondManual;
+
     const firstPriority = priorityIds.has(first.id) ? 1 : 0;
     const secondPriority = priorityIds.has(second.id) ? 1 : 0;
     if (firstPriority !== secondPriority) return firstPriority - secondPriority;
@@ -353,6 +370,18 @@ function routeBpmnEdgesPass(input: {
       ? first.id.localeCompare(second.id)
       : second.id.localeCompare(first.id);
   });
+  const lockedCount = sortedEdges.filter(
+    (edge) => diagramConfig.routes?.[edge.id] !== undefined,
+  ).length;
+  const lockedEdges = sortedEdges.slice(0, lockedCount);
+  const autoEdges = sortedEdges.slice(lockedCount);
+  const seed = Math.max(0, Math.floor(diagramConfig.pathLayoutSeed ?? 0));
+  const offset = autoEdges.length > 0 ? seed % autoEdges.length : 0;
+  const orderedEdges = [
+    ...lockedEdges,
+    ...autoEdges.slice(offset),
+    ...autoEdges.slice(0, offset),
+  ];
 
   const routedEdges = orderedEdges.flatMap<BpmnRoutedEdge>((edge) => {
     const from = nodeById.get(edge.from);
@@ -367,54 +396,75 @@ function routeBpmnEdgesPass(input: {
     const obstacles = nodes
       .filter((node) => node.id !== from.id && node.id !== to.id)
       .map(nodeRect);
-    const route = selfLoop
-      ? selectBpmnRoute(
-          [
-            {
-              path: routeSelfLoop(
-                from,
-                currentSelfLoopIndex,
-                Math.max(
-                  portLedger.peek(
-                    from.id,
-                    "out",
-                    "right",
-                    sideLength(nodeRect(from), "right"),
-                  ),
-                  portLedger.peek(
-                    from.id,
-                    "in",
-                    "right",
-                    sideLength(nodeRect(from), "right"),
+    const configuredRoute = diagramConfig.routes?.[edge.id];
+    const manualRoute = configuredRoute
+      ? resolveBpmnManualRoute(configuredRoute, from, to, obstacles, {
+          left: 0,
+          top: 0,
+          width,
+          height,
+        })
+      : null;
+    const route = manualRoute
+      ? manualRoute
+      : selfLoop
+        ? selectBpmnRoute(
+            [
+              {
+                path: routeSelfLoop(
+                  from,
+                  currentSelfLoopIndex,
+                  Math.max(
+                    portLedger.peek(
+                      from.id,
+                      "out",
+                      "right",
+                      sideLength(nodeRect(from), "right"),
+                      from.kind === "decision",
+                    ),
+                    portLedger.peek(
+                      from.id,
+                      "in",
+                      "right",
+                      sideLength(nodeRect(from), "right"),
+                      from.kind === "decision",
+                    ),
                   ),
                 ),
-              ),
-              sourceSide: "right",
-              targetSide: "right",
-            },
-          ],
-          obstacles,
-          occupied,
-          { width, height },
-          edge,
-        )
-      : buildBpmnRoute(
-          from,
-          to,
-          edge,
-          parallelIndex,
-          obstacles,
-          occupied,
-          { width, height, feedbackCorridorTop },
-          portLedger,
-          feedbackSlotById.get(edge.id),
-        );
+                sourceSide: "right",
+                targetSide: "right",
+              },
+            ],
+            obstacles,
+            occupied,
+            { width, height },
+            edge,
+          )
+        : buildBpmnRoute(
+            from,
+            to,
+            edge,
+            parallelIndex,
+            obstacles,
+            occupied,
+            { width, height, feedbackCorridorTop },
+            portLedger,
+            feedbackSlotById.get(edge.id),
+          );
     const points = route.points;
     const quality = measureRouteQuality(points, obstacles, occupied);
     occupied.push(...pathToSegments(points));
     portLedger.reserve(edge.from, "out", route.sourceSide);
     portLedger.reserve(edge.to, "in", route.targetSide);
     const routeDiagnostics = [...route.diagnostics];
+    if (configuredRoute && !manualRoute) {
+      routeDiagnostics.push({
+        code: "INVALID_MANUAL_ROUTE",
+        edgeId: edge.id,
+        from: edge.from,
+        to: edge.to,
+      });
+    }
 
     for (const [code, count] of [
       ["PATH_INTERSECTS_NODE", quality.obstacleHits],
@@ -432,16 +482,18 @@ function routeBpmnEdgesPass(input: {
     }
 
     diagnostics.push(...routeDiagnostics);
-    const labelPlacement = edge.label
-      ? placeRouteLabel({
-          path: points,
-          label: edge.label,
-          obstacles: labelObstacles,
-          occupiedLabels,
-          perpendicularOffset:
-            18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
-        })
-      : null;
+    const manualLabelPosition = configuredRoute?.labelPosition;
+    const labelPlacement =
+      edge.label && !manualLabelPosition
+        ? placeRouteLabel({
+            path: points,
+            label: edge.label,
+            obstacles: labelObstacles,
+            occupiedLabels,
+            perpendicularOffset:
+              18 + (selfLoop ? currentSelfLoopIndex : parallelIndex) * 4,
+          })
+        : null;
     if (labelPlacement) occupiedLabels.push(labelPlacement.bounds);
 
     return [
@@ -453,7 +505,11 @@ function routeBpmnEdgesPass(input: {
         targetSide: route.targetSide,
         quality,
         ...(routeDiagnostics.length > 0 ? { routeDiagnostics } : {}),
-        ...(labelPlacement ? { labelPosition: labelPlacement.position } : {}),
+        ...(manualLabelPosition
+          ? { labelPosition: manualLabelPosition }
+          : labelPlacement
+            ? { labelPosition: labelPlacement.position }
+            : {}),
       },
     ];
   });
@@ -549,6 +605,72 @@ function candidateBpmnPath(
   ]);
 }
 
+function resolveBpmnManualRoute(
+  route: ProcedureManualRoute,
+  from: BpmnNode,
+  to: BpmnNode,
+  obstacles: readonly DiagramRect[],
+  bounds: DiagramRect,
+): BpmnRouteResult | null {
+  if (route.kind !== "orthogonal") return null;
+  if (
+    route.bendPoints.some(
+      (point) => !Number.isFinite(point.x) || !Number.isFinite(point.y),
+    )
+  ) {
+    return null;
+  }
+
+  const fromRect = nodeRect(from);
+  const toRect = nodeRect(to);
+  const sourceSide =
+    route.sSide ??
+    (route.startPoint ? nearestRectSide(fromRect, route.startPoint) : "right");
+  const targetSide =
+    route.eSide ??
+    (route.endPoint ? nearestRectSide(toRect, route.endPoint) : "left");
+  const sourceDistance = clampAnchorDistance(
+    route.sourceDistance ??
+      (route.startPoint
+        ? distanceOnRectSide(fromRect, sourceSide, route.startPoint)
+        : 0.5),
+  );
+  const targetDistance = clampAnchorDistance(
+    route.targetDistance ??
+      (route.endPoint
+        ? distanceOnRectSide(toRect, targetSide, route.endPoint)
+        : 0.5),
+  );
+  const start = pointOnRectSide(
+    fromRect,
+    sourceSide,
+    from.kind === "decision" ? 0.5 : sourceDistance,
+  );
+  const end = pointOnRectSide(
+    toRect,
+    targetSide,
+    to.kind === "decision" ? 0.5 : targetDistance,
+  );
+  const raw = compactOrthogonalPath([start, ...route.bendPoints, end]);
+  const repaired = repairFormalManualRoute({
+    path: raw,
+    sourceSide,
+    targetSide,
+    obstacles,
+    bounds,
+    clearance: 2,
+  });
+  if (!repaired) return null;
+
+  return {
+    points: repaired,
+    kind: "manual",
+    sourceSide,
+    targetSide,
+    diagnostics: [],
+  };
+}
+
 function buildBpmnRoute(
   from: BpmnNode,
   to: BpmnNode,
@@ -579,12 +701,14 @@ function buildBpmnRoute(
       "out",
       "top",
       sideLength(nodeRect(from), "top"),
+      from.kind === "decision",
     );
     const targetDistance = portLedger.peek(
       to.id,
       "in",
       "top",
       sideLength(nodeRect(to), "top"),
+      to.kind === "decision",
     );
     candidates.push({
       path: routeBpmnFeedbackCorridor(
@@ -625,12 +749,14 @@ function buildBpmnRoute(
     "out",
     sourceSide,
     sideLength(nodeRect(from), sourceSide),
+    from.kind === "decision",
   );
   const targetDistance = portLedger.peek(
     to.id,
     "in",
     targetSide,
     sideLength(nodeRect(to), targetSide),
+    to.kind === "decision",
   );
 
   if (sameLane && targetRight) {
@@ -937,7 +1063,9 @@ class BpmnPortLedger {
     direction: "in" | "out",
     side: DiagramSide,
     sideLengthPx: number,
+    isDiamond = false,
   ): number {
+    if (isDiamond) return 0.5;
     return channelAnchorDistance(
       this.counts.get(this.key(nodeId, direction, side)) ?? 0,
       sideLengthPx,

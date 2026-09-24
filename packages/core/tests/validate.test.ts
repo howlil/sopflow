@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { exampleSop } from "./fixtures/exampleSop.js";
 import type { SOPDocument } from "../src/types.js";
 import {
+  validatePresentationOrder,
   validateReachability,
   validateReference,
   validateSop,
@@ -11,6 +12,37 @@ describe("validateSop", () => {
     const issues = validateSop(exampleSop);
 
     expect(issues).toEqual([]);
+  });
+
+  it("reports invalid authored presentation order", () => {
+    const issues = validateSop({
+      ...exampleSop,
+      presentationOrder: [
+        "start",
+        "prepare-document",
+        "prepare-document",
+        "missing",
+      ],
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "DUPLICATE_PRESENTATION_STEP",
+        stepId: "prepare-document",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "UNKNOWN_PRESENTATION_STEP",
+        stepId: "missing",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_PRESENTATION_STEP",
+        stepId: "check-document",
+      }),
+    );
   });
 
   it("detects duplicates step ids", () => {
@@ -300,6 +332,46 @@ describe("validateSop", () => {
       expect.objectContaining({
         code: "CANNOT_REACH_END",
         stepId: "start",
+      }),
+    );
+  });
+});
+
+describe("validatePresentationOrder", () => {
+  it("reports duplicate, unknown, and missing authored steps", () => {
+    const issues = validatePresentationOrder({
+      ...exampleSop,
+      presentationOrder: [
+        "start",
+        "prepare-document",
+        "prepare-document",
+        "missing",
+        "end",
+      ],
+    });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "DUPLICATE_PRESENTATION_STEP",
+        stepId: "prepare-document",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "UNKNOWN_PRESENTATION_STEP",
+        stepId: "missing",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_PRESENTATION_STEP",
+        stepId: "check-document",
+      }),
+    );
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_PRESENTATION_STEP",
+        stepId: "approve-document",
       }),
     );
   });

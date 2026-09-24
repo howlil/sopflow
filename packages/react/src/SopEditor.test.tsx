@@ -10,7 +10,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { validateSop, type SOPDocument } from "@sopflow/core";
-import type { SopDiagramConfig } from "@sopflow/diagram";
+import type { SopDiagramConfig, SopDiagramConfigs } from "@sopflow/diagram";
 
 import { SopEditor } from "./SopEditor.js";
 import type { SopHeaderValue } from "./header/types.js";
@@ -323,6 +323,38 @@ describe("SopEditor document workbench", () => {
     expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
   });
 
+  it("does not expose BPMN editing through the legacy flowchart-only config API", () => {
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramKind="bpmn"
+        diagramConfig={{}}
+        onDiagramConfigChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeDisabled();
+  });
+
+  it("allows BPMN editing through the per-kind config API", () => {
+    const configs: SopDiagramConfigs = { flowchart: {}, bpmn: {} };
+
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramKind="bpmn"
+        diagramConfigs={configs}
+        onDiagramConfigsChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
+  });
+
   it("prunes stale diagram routes when topology changes", async () => {
     const config: SopDiagramConfig = {
       pathLayoutSeed: 7,
@@ -508,6 +540,27 @@ describe("SopEditor graph mutations", () => {
     }
 
     expect(inserted.next).toBe("end");
+  });
+
+  it("renders and numbers the editor by authored presentation order", () => {
+    const authored: SOPDocument = {
+      ...decisionDocument,
+      presentationOrder: ["start", "decision", "reject", "approve", "end"],
+    };
+
+    const { container } = render(<EditorHarness initial={authored} />);
+    enterStepEditing();
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLElement>("tr[data-sopflow-step-id]"),
+      ).map((row) => row.dataset.sopflowStepId),
+    ).toEqual(["start", "decision", "reject", "approve", "end"]);
+
+    const decisionRow = getDesktopStepRow("decision");
+    expect(
+      within(decisionRow).getByText("Ya → 4 · Tidak → 3"),
+    ).toBeInTheDocument();
   });
 
   it("shows decision branch targets inline using authoring order", () => {

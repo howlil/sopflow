@@ -1,5 +1,9 @@
 import { useCallback, type KeyboardEvent } from "react";
-import type { SOPDocument, StepId } from "@sopflow/core";
+import {
+  getPresentationSteps,
+  type SOPDocument,
+  type StepId,
+} from "@sopflow/core";
 
 export interface UseStepKeyboardNavigationOptions {
   document: SOPDocument;
@@ -32,7 +36,7 @@ export function useStepKeyboardNavigation({
         return;
       }
 
-      const steps = document.steps;
+      const steps = getPresentationSteps(document);
 
       if (steps.length === 0) {
         return;
@@ -95,6 +99,6 @@ export function useStepKeyboardNavigation({
         onSelectedStepChange(nextStep.id);
       }
     },
-    [document.steps, selectedStepId, onSelectedStepChange],
+    [document, selectedStepId, onSelectedStepChange],
   );
 }

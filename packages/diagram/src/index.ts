@@ -71,9 +71,13 @@ export type {
 
 export {
   diagramConfigEquals,
+  diagramConfigsEqual,
   pruneSopDiagramConfig,
+  pruneSopDiagramConfigs,
   resetDiagramRoutes,
 } from "./diagramConfig.js";
+
+export type { SopDiagramConfigs } from "./diagramConfig.js";
 
 export { buildBpmnModel } from "./bpmn.js";
 export type {

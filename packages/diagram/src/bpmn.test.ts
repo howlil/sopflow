@@ -176,6 +176,63 @@ describe("buildBpmnModel", () => {
     expect(loops[0]?.labelPosition?.x).not.toBe(loops[1]?.labelPosition?.x);
   });
 
+  it("locks a persisted BPMN route before routing remaining edges", () => {
+    const automatic = buildBpmnModel(document);
+    const automaticEdge = automatic.edges.find(
+      (edge) => edge.id === "start:next:review",
+    );
+    if (!automaticEdge?.sourceSide || !automaticEdge.targetSide) {
+      throw new Error("automatic BPMN route not found");
+    }
+
+    const startPoint = automaticEdge.points[0];
+    const endPoint = automaticEdge.points.at(-1);
+    if (!startPoint || !endPoint) throw new Error("route endpoints missing");
+
+    const model = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          "start:next:review": {
+            kind: "orthogonal",
+            sSide: automaticEdge.sourceSide,
+            eSide: automaticEdge.targetSide,
+            startPoint,
+            endPoint,
+            bendPoints: automaticEdge.points.slice(1, -1),
+          },
+        },
+      },
+    });
+    const locked = model.edges.find((edge) => edge.id === "start:next:review");
+
+    expect(locked?.routeKind).toBe("manual");
+    expect(locked?.points[0]).toEqual(automaticEdge.points[0]);
+    expect(locked?.points.at(-1)).toEqual(automaticEdge.points.at(-1));
+    expect(
+      locked?.routeDiagnostics?.some(
+        (diagnostic) => diagnostic.code === "INVALID_MANUAL_ROUTE",
+      ) ?? false,
+    ).toBe(false);
+  });
+
+  it("falls back cleanly when a persisted BPMN route is invalid", () => {
+    const model = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          "start:next:review": { kind: "trunk", x: 100 },
+        },
+      },
+    });
+    const edge = model.edges.find(
+      (candidate) => candidate.id === "start:next:review",
+    );
+
+    expect(edge?.routeKind).not.toBe("manual");
+    expect(edge?.routeDiagnostics).toContainEqual(
+      expect.objectContaining({ code: "INVALID_MANUAL_ROUTE" }),
+    );
+  });
+
   it("uses an explicit fallback lane for an unassigned step", () => {
     const model = buildBpmnModel({
       ...document,
@@ -278,6 +335,92 @@ describe("buildBpmnModel", () => {
     const firstRight = first.x + first.width / 2;
     const secondLeft = second.x - second.width / 2;
     expect(secondLeft).toBeGreaterThan(firstRight);
+  });
+
+  it("routes the dense sop-ta BPMN regression without obstacle fallback", () => {
+    const dense: SOPDocument = {
+      schemaVersion: "1",
+      id: "sop-ta-dense-bpmn",
+      title: "Dense BPMN",
+      actors: [
+        { id: "lane-0", name: "Lane 0" },
+        { id: "lane-1", name: "Lane 1" },
+        { id: "lane-2", name: "Lane 2" },
+        { id: "lane-3", name: "Lane 3" },
+      ],
+      presentationOrder: [
+        "start",
+        "receive",
+        "gateway",
+        "process",
+        "review",
+        "fallback",
+        "end",
+      ],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["lane-0"],
+          next: "receive",
+        },
+        {
+          id: "receive",
+          type: "task",
+          name: "Receive",
+          actorIds: ["lane-0"],
+          next: "gateway",
+        },
+        {
+          id: "gateway",
+          type: "decision",
+          name: "Valid?",
+          actorIds: ["lane-1"],
+          yes: "process",
+          no: "fallback",
+        },
+        {
+          id: "process",
+          type: "task",
+          name: "Process",
+          actorIds: ["lane-1"],
+          next: "review",
+        },
+        {
+          id: "review",
+          type: "task",
+          name: "Review",
+          actorIds: ["lane-2"],
+          next: "end",
+        },
+        {
+          id: "fallback",
+          type: "task",
+          name: "Fallback",
+          actorIds: ["lane-3"],
+          next: "receive",
+        },
+        {
+          id: "end",
+          type: "end",
+          name: "End",
+          actorIds: ["lane-2"],
+        },
+      ],
+    };
+
+    const model = buildBpmnModel(dense);
+
+    expect(model.edges).toHaveLength(7);
+    expect(
+      model.edges
+        .flatMap((edge) => edge.routeDiagnostics ?? [])
+        .filter((diagnostic) => diagnostic.code === "PATH_INTERSECTS_NODE"),
+    ).toEqual([]);
+    expect(model.edges.filter((edge) => edge.routeKind === "fallback")).toEqual(
+      [],
+    );
   });
 
   it("keeps BPMN layout stable when step storage order changes", () => {

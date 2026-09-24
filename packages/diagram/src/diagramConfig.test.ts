@@ -2,7 +2,9 @@ import type { SOPDocument } from "@sopflow/core";
 import { describe, expect, it } from "vitest";
 import {
   diagramConfigEquals,
+  diagramConfigsEqual,
   pruneSopDiagramConfig,
+  pruneSopDiagramConfigs,
   resetDiagramRoutes,
 } from "./diagramConfig.js";
 import { projectWorkflow } from "./workflow.js";
@@ -61,6 +63,51 @@ describe("diagram config", () => {
         },
       },
     });
+  });
+
+  it("prunes flowchart and BPMN configs independently", () => {
+    const graph = projectWorkflow(document);
+    const configs = pruneSopDiagramConfigs(graph, {
+      flowchart: {
+        pathLayoutSeed: 1,
+        routes: {
+          "start:next:end": { kind: "trunk", x: 320 },
+          stale: { kind: "trunk", x: 400 },
+        },
+      },
+      bpmn: {
+        pathLayoutSeed: 4,
+        routes: {
+          "start:next:end": {
+            kind: "orthogonal",
+            bendPoints: [{ x: 200, y: 120 }],
+          },
+          stale: { kind: "trunk", x: 420 },
+        },
+      },
+    });
+
+    expect(configs.flowchart).toEqual({
+      pathLayoutSeed: 1,
+      routes: {
+        "start:next:end": { kind: "trunk", x: 320 },
+      },
+    });
+    expect(configs.bpmn).toEqual({
+      pathLayoutSeed: 4,
+      routes: {
+        "start:next:end": {
+          kind: "orthogonal",
+          bendPoints: [{ x: 200, y: 120 }],
+        },
+      },
+    });
+    expect(
+      diagramConfigsEqual(configs, {
+        ...(configs.bpmn ? { bpmn: configs.bpmn } : {}),
+        ...(configs.flowchart ? { flowchart: configs.flowchart } : {}),
+      }),
+    ).toBe(true);
   });
 
   it("resets routes while preserving the layout seed", () => {

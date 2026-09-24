@@ -2,9 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@sopflow/core": ["../../packages/core/src/index.ts"],
-      "@sopflow/diagram": ["../../packages/diagram/src/index.ts"],
-      "@sopflow/react": ["../../packages/react/src/index.ts"]
+      "@sopflow/core": [
+        "../../packages/core/src/index.ts"
+      ],
+      "@sopflow/diagram": [
+        "../../packages/diagram/src/index.ts"
+      ],
+      "@sopflow/react": [
+        "../../packages/react/src/index.ts"
+      ],
+      "@sopflow/sop-ap": [
+        "../../packages/sop-ap/src/index.ts"
+      ]
     }
   }
 }

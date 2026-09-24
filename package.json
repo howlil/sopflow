@@ -17,7 +17,9 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "pack:core": "pnpm --filter @sopflow/core pack",
     "pack:diagram": "pnpm --filter @sopflow/diagram pack",
-    "pack:react": "pnpm --filter @sopflow/react pack"
+    "pack:react": "pnpm --filter @sopflow/react pack",
+    "pack:sop-ap": "pnpm --filter @sopflow/sop-ap pack",
+    "pack:adapter-sop-ta": "pnpm --filter @sopflow/adapter-sop-ta pack"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13"

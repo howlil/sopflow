@@ -10,7 +10,10 @@ export type ValidationIssueCode =
   | "UNKNOWN_ACTOR_REFERENCE"
   | "UNKNOWN_STEP_REFERENCE"
   | "UNREACHABLE_STEP"
-  | "CANNOT_REACH_END";
+  | "CANNOT_REACH_END"
+  | "DUPLICATE_PRESENTATION_STEP"
+  | "UNKNOWN_PRESENTATION_STEP"
+  | "MISSING_PRESENTATION_STEP";
 
 export interface ValidationIssue {
   readonly code: ValidationIssueCode;
@@ -45,6 +48,7 @@ export function validateSop(document: SOPDocument): ValidationIssue[] {
     ...validateDecisionBranches(document),
     ...validateActorReference(document),
     ...validateReference(document),
+    ...validatePresentationOrder(document),
   );
 
   if (startSteps.length === 1) {
@@ -83,6 +87,48 @@ export function validateDecisionBranches(
 
     return issues;
   });
+}
+
+export function validatePresentationOrder(
+  document: SOPDocument,
+): ValidationIssue[] {
+  if (!document.presentationOrder) return [];
+
+  const issues: ValidationIssue[] = [];
+  const knownStepIds = new Set(document.steps.map((step) => step.id));
+  const seen = new Set<StepId>();
+
+  for (const stepId of document.presentationOrder) {
+    if (seen.has(stepId)) {
+      issues.push({
+        code: "DUPLICATE_PRESENTATION_STEP",
+        stepId,
+        message: `Presentation order contains duplicate step "${stepId}"`,
+      });
+      continue;
+    }
+
+    seen.add(stepId);
+
+    if (!knownStepIds.has(stepId)) {
+      issues.push({
+        code: "UNKNOWN_PRESENTATION_STEP",
+        stepId,
+        message: `Presentation order references unknown step "${stepId}"`,
+      });
+    }
+  }
+
+  for (const step of document.steps) {
+    if (seen.has(step.id)) continue;
+    issues.push({
+      code: "MISSING_PRESENTATION_STEP",
+      stepId: step.id,
+      message: `Presentation order is missing step "${step.id}"`,
+    });
+  }
+
+  return issues;
 }
 
 export function validateReference(document: SOPDocument): ValidationIssue[] {

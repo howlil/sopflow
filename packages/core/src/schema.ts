@@ -55,4 +55,5 @@ export const SOPDocumentSchema = z.object({
   title: RequiredText,
   actors: z.array(ActorSchema),
   steps: z.array(StepSchema),
+  presentationOrder: z.array(RequiredText).optional(),
 });

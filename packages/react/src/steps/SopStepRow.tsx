@@ -1,8 +1,9 @@
-import type {
-  SOPDocument,
-  SopOperation,
-  Step,
-  ValidationIssue,
+import {
+  getPresentationSteps,
+  type SOPDocument,
+  type SopOperation,
+  type Step,
+  type ValidationIssue,
 } from "@sopflow/core";
 import { ActorField } from "./fields/ActorField.js";
 import { DurationField } from "./fields/DurationField.js";
@@ -110,7 +111,7 @@ export function SopStepRow({
         <td>
           <StepTypeField
             step={step}
-            steps={document.steps}
+            steps={getPresentationSteps(document)}
             readOnly={disabled}
             onChange={changeStepType}
           />

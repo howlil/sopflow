@@ -49,4 +49,10 @@ export interface SOPDocument {
   readonly title: string;
   readonly actors: readonly Actor[];
   readonly steps: readonly Step[];
+  /**
+   * Optional authored/display order. Workflow execution remains defined only by
+   * next/yes/no references. Legacy documents without this field fall back to a
+   * deterministic graph-derived order.
+   */
+  readonly presentationOrder?: readonly StepId[];
 }

@@ -156,6 +156,42 @@ export function getOrderedSteps(document: SOPDocument): Step[] {
     .filter((step): step is Step => step !== undefined);
 }
 
+/**
+ * Resolve authored/display order without changing workflow execution semantics.
+ * Invalid or incomplete presentationOrder values stay renderable: known unique
+ * ids are kept first and missing steps are appended in deterministic graph order.
+ * validateSop() reports the contract violation separately.
+ */
+export function getPresentationStepIds(document: SOPDocument): StepId[] {
+  if (!document.presentationOrder) return getOrderedStepIds(document);
+
+  const known = new Set(document.steps.map((step) => step.id));
+  const seen = new Set<StepId>();
+  const ordered: StepId[] = [];
+
+  for (const id of document.presentationOrder) {
+    if (!known.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+
+  for (const id of getOrderedStepIds(document)) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+
+  return ordered;
+}
+
+export function getPresentationSteps(document: SOPDocument): Step[] {
+  const steps = createStepMap(document);
+
+  return getPresentationStepIds(document)
+    .map((stepId) => steps.get(stepId))
+    .filter((step): step is Step => step !== undefined);
+}
+
 export function getReachableStepIds(document: SOPDocument): Set<StepId> {
   const start = document.steps.find((step) => step.type === "start");
 

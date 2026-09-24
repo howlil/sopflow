@@ -1,6 +1,6 @@
 import type { ActorId, SOPDocument, Step, StepId } from "./types.js";
 import { SopCoreError } from "./errors.js";
-import { getIncomingConnections } from "./graph.js";
+import { getIncomingConnections, getPresentationSteps } from "./graph.js";
 import { applyValidatedOperations, type SopOperation } from "./operations.js";
 
 function requireStep(document: SOPDocument, stepId: StepId): Step {
@@ -274,7 +274,7 @@ export function getStepRemovalOptions(
     return { requiresReplacement: false, candidates: [] };
   }
 
-  const candidates = document.steps.filter((candidate) => {
+  const candidates = getPresentationSteps(document).filter((candidate) => {
     if (candidate.id === stepId) return false;
 
     try {

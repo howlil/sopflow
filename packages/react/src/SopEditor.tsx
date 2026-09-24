@@ -7,10 +7,11 @@ import {
   type StepId,
 } from "@sopflow/core";
 import {
-  diagramConfigEquals,
+  diagramConfigsEqual,
   projectWorkflow,
-  pruneSopDiagramConfig,
+  pruneSopDiagramConfigs,
   type SopDiagramConfig,
+  type SopDiagramConfigs,
 } from "@sopflow/diagram";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -41,8 +42,12 @@ export interface SopEditorProps {
   onModeChange?: (mode: SopDocumentMode) => void;
   diagramKind?: SopDiagramKind;
   onDiagramKindChange?: (kind: SopDiagramKind) => void;
+  /** @deprecated Use diagramConfigs.flowchart. */
   diagramConfig?: SopDiagramConfig;
+  /** @deprecated Use onDiagramConfigsChange. */
   onDiagramConfigChange?: (config: SopDiagramConfig) => void;
+  diagramConfigs?: SopDiagramConfigs;
+  onDiagramConfigsChange?: (configs: SopDiagramConfigs) => void;
   manualEditing?: boolean;
   onManualEditingChange?: (editing: boolean) => void;
   readOnly?: boolean;
@@ -66,6 +71,8 @@ export function SopEditor({
   onDiagramKindChange,
   diagramConfig: controlledDiagramConfig,
   onDiagramConfigChange,
+  diagramConfigs: controlledDiagramConfigs,
+  onDiagramConfigsChange,
   manualEditing: controlledManualEditing,
   onManualEditingChange,
   readOnly = false,
@@ -108,8 +115,8 @@ export function SopEditor({
   const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
   const [internalDiagramKind, setInternalDiagramKind] =
     useState<SopDiagramKind>("flowchart");
-  const [internalDiagramConfig, setInternalDiagramConfig] =
-    useState<SopDiagramConfig>({});
+  const [internalDiagramConfigs, setInternalDiagramConfigs] =
+    useState<SopDiagramConfigs>({});
   const [internalManualEditing, setInternalManualEditing] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const openInspectorRef = useRef<HTMLButtonElement>(null);
@@ -129,16 +136,32 @@ export function SopEditor({
       : internalSelectedStepId;
   const mode = controlledMode ?? internalMode;
   const diagramKind = controlledDiagramKind ?? internalDiagramKind;
-  const rawDiagramConfig = controlledDiagramConfig ?? internalDiagramConfig;
+  const rawDiagramConfigs = useMemo<SopDiagramConfigs>(() => {
+    if (controlledDiagramConfigs !== undefined) return controlledDiagramConfigs;
+    if (controlledDiagramConfig !== undefined) {
+      return { ...internalDiagramConfigs, flowchart: controlledDiagramConfig };
+    }
+    return internalDiagramConfigs;
+  }, [
+    controlledDiagramConfig,
+    controlledDiagramConfigs,
+    internalDiagramConfigs,
+  ]);
   const workflowGraph = useMemo(() => projectWorkflow(value), [value]);
-  const diagramConfig = useMemo(
-    () => pruneSopDiagramConfig(workflowGraph, rawDiagramConfig),
-    [rawDiagramConfig, workflowGraph],
+  const diagramConfigs = useMemo(
+    () => pruneSopDiagramConfigs(workflowGraph, rawDiagramConfigs),
+    [rawDiagramConfigs, workflowGraph],
   );
+  const diagramConfig = diagramConfigs[diagramKind] ?? {};
   const manualEditing = controlledManualEditing ?? internalManualEditing;
   const diagramConfigMutable =
-    controlledDiagramConfig === undefined ||
-    onDiagramConfigChange !== undefined;
+    controlledDiagramConfigs !== undefined
+      ? onDiagramConfigsChange !== undefined
+      : controlledDiagramConfig !== undefined
+        ? diagramKind === "flowchart"
+          ? onDiagramConfigChange !== undefined
+          : onDiagramConfigsChange !== undefined
+        : true;
 
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
@@ -162,20 +185,60 @@ export function SopEditor({
     [controlledSelectedStepId, onSelectedStepChangeProp],
   );
 
+  const handleDiagramConfigsChange = useCallback(
+    (nextConfigs: SopDiagramConfigs) => {
+      if (controlledDiagramConfigs === undefined) {
+        const internalNext =
+          controlledDiagramConfig === undefined
+            ? nextConfigs
+            : nextConfigs.bpmn
+              ? { bpmn: nextConfigs.bpmn }
+              : {};
+
+        setInternalDiagramConfigs((current) =>
+          diagramConfigsEqual(current, internalNext) ? current : internalNext,
+        );
+      }
+      onDiagramConfigsChange?.(nextConfigs);
+    },
+    [controlledDiagramConfig, controlledDiagramConfigs, onDiagramConfigsChange],
+  );
+
   const handleDiagramConfigChange = useCallback(
     (nextConfig: SopDiagramConfig) => {
-      if (controlledDiagramConfig === undefined) {
-        setInternalDiagramConfig(nextConfig);
+      const nextConfigs: SopDiagramConfigs = {
+        ...diagramConfigs,
+        [diagramKind]: nextConfig,
+      };
+      handleDiagramConfigsChange(nextConfigs);
+      if (diagramKind === "flowchart") {
+        onDiagramConfigChange?.(nextConfig);
       }
-      onDiagramConfigChange?.(nextConfig);
     },
-    [controlledDiagramConfig, onDiagramConfigChange],
+    [
+      diagramConfigs,
+      diagramKind,
+      handleDiagramConfigsChange,
+      onDiagramConfigChange,
+    ],
   );
 
   useEffect(() => {
-    if (diagramConfigEquals(rawDiagramConfig, diagramConfig)) return;
-    handleDiagramConfigChange(diagramConfig);
-  }, [diagramConfig, handleDiagramConfigChange, rawDiagramConfig]);
+    if (diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)) return;
+    handleDiagramConfigsChange(diagramConfigs);
+    if (
+      controlledDiagramConfig !== undefined &&
+      diagramConfigs.flowchart !== undefined
+    ) {
+      onDiagramConfigChange?.(diagramConfigs.flowchart);
+    }
+  }, [
+    controlledDiagramConfig,
+    diagramConfigs,
+    handleDiagramConfigsChange,
+    onDiagramConfigChange,
+    rawDiagramConfigs,
+  ]);
 
   const handleManualEditingChange = useCallback(
     (editing: boolean) => {
@@ -206,11 +269,8 @@ export function SopEditor({
         setInternalDiagramKind(nextKind);
       }
       onDiagramKindChange?.(nextKind);
-      if (nextKind !== "flowchart") {
-        handleManualEditingChange(false);
-      }
     },
-    [controlledDiagramKind, handleManualEditingChange, onDiagramKindChange],
+    [controlledDiagramKind, onDiagramKindChange],
   );
 
   return (
@@ -324,7 +384,12 @@ export function SopEditor({
   );
 }
 
-export type { SopDiagramConfig, SopDiagramKind, SopDocumentMode };
+export type {
+  SopDiagramConfig,
+  SopDiagramConfigs,
+  SopDiagramKind,
+  SopDocumentMode,
+};
 
 function InspectorIcon() {
   return (
