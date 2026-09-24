@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   buildSetDecisionBranchesOperations,
+  getPresentationSteps,
   type DecisionStep,
   type SOPDocument,
   type SopOperation,
@@ -43,7 +44,11 @@ export function DecisionEditor({
     return null;
   }
 
-  const selectableSteps = document.steps.filter(
+  const orderedSteps = getPresentationSteps(document);
+  const orderById = new Map(
+    orderedSteps.map((candidate, index) => [candidate.id, index + 1] as const),
+  );
+  const selectableSteps = orderedSteps.filter(
     (candidate) => candidate.id !== step.id,
   );
 
@@ -98,13 +103,14 @@ export function DecisionEditor({
           >
             <option value="">Pilih tahap</option>
 
-            {selectableSteps.map((candidate, index) => (
+            {selectableSteps.map((candidate) => (
               <option
                 key={candidate.id}
                 value={candidate.id}
                 disabled={candidate.id === yesId}
               >
-                {index + 1}. {candidate.name || "Tanpa judul"}
+                {orderById.get(candidate.id) ?? "?"}.{" "}
+                {candidate.name || "Tanpa judul"}
               </option>
             ))}
           </Select>
@@ -119,13 +125,14 @@ export function DecisionEditor({
           >
             <option value="">Pilih tahap</option>
 
-            {selectableSteps.map((candidate, index) => (
+            {selectableSteps.map((candidate) => (
               <option
                 key={candidate.id}
                 value={candidate.id}
                 disabled={candidate.id === noId}
               >
-                {index + 1}. {candidate.name || "Tanpa judul"}
+                {orderById.get(candidate.id) ?? "?"}.{" "}
+                {candidate.name || "Tanpa judul"}
               </option>
             ))}
           </Select>
