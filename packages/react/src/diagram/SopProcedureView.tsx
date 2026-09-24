@@ -2,8 +2,10 @@ import type { SOPDocument, StepId, ValidationIssue } from "@sopflow/core";
 import {
   buildFormalProcedurePages,
   buildProcedureModel,
+  diagramConfigEquals,
   formalPathToSegments,
   pointsToPath,
+  pruneProcedurePagedRoutes,
   removeProcedureManualRoute,
   routeProcedureEdges,
   setProcedureManualRoute,
@@ -25,6 +27,7 @@ import {
 } from "@sopflow/diagram";
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -96,7 +99,11 @@ export function SopProcedureView(props: SopProcedureViewProps) {
     props.diagramConfig === undefined &&
     (props.manualPathOffsets !== undefined ||
       props.onManualPathOffsetsChange !== undefined);
-  const diagramConfig = props.diagramConfig ?? internalDiagramConfig;
+  const rawDiagramConfig = props.diagramConfig ?? internalDiagramConfig;
+  const diagramConfig = useMemo(
+    () => pruneProcedurePagedRoutes(pages, rawDiagramConfig),
+    [pages, rawDiagramConfig],
+  );
   const updateDiagramConfig = useCallback(
     (next: SopDiagramConfig) => {
       if (props.diagramConfig === undefined) {
@@ -106,6 +113,11 @@ export function SopProcedureView(props: SopProcedureViewProps) {
     },
     [props.diagramConfig, props.onDiagramConfigChange],
   );
+
+  useEffect(() => {
+    if (diagramConfigEquals(rawDiagramConfig, diagramConfig)) return;
+    updateDiagramConfig(diagramConfig);
+  }, [diagramConfig, rawDiagramConfig, updateDiagramConfig]);
 
   // Preserve the deprecated trunk-offset API without letting it constrain the
   // modern paginated renderer. Current editor consumers always use diagramConfig.
