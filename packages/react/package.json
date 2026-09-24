@@ -12,15 +12,20 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "files": ["dist"],
-  "sideEffects": ["**/*.css"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
   },
   "dependencies": {
     "@sopflow/core": "workspace:*",
-    "@sopflow/diagram": "workspace:*"
+    "@sopflow/diagram": "workspace:*",
+    "@sopflow/sop-ap": "workspace:*"
   },
   "scripts": {
     "build": "tsdown",
