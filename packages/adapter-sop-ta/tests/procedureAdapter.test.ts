@@ -132,8 +132,8 @@ describe("sop-ta compatibility adapter", () => {
     );
   });
 
-  it("rejects export when generic Sopflow semantics cannot be represented losslessly", () => {
-    const document = importSopTaDocument({
+  it("rejects export when a generic task jumps outside authored sequence", () => {
+    const imported = importSopTaDocument({
       id: "legacy",
       title: "Legacy SOP",
       actors: [
@@ -142,11 +142,19 @@ describe("sop-ta compatibility adapter", () => {
       ],
       rows,
     });
+    const document = {
+      ...imported,
+      steps: imported.steps.map((step) =>
+        step.id === "fix" && step.type === "task"
+          ? { ...step, next: "review" }
+          : step,
+      ),
+    };
 
     expect(validateSopTaCompatibility(document)).toContainEqual(
       expect.objectContaining({
         code: "NON_SEQUENTIAL_TASK",
-        stepId: "review",
+        stepId: "fix",
       }),
     );
     expect(() => exportSopTaDocument(document)).toThrow(
