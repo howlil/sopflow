@@ -169,12 +169,8 @@ export function SopBpmn({
                   selected={selectedConnectionId === edge.id}
                   {...(edge.sourceSide ? { sourceSide: edge.sourceSide } : {})}
                   {...(edge.targetSide ? { targetSide: edge.targetSide } : {})}
-                  {...(bpmnNodeRect(nodeById.get(edge.from))
-                    ? { sourceRect: bpmnNodeRect(nodeById.get(edge.from)) }
-                    : {})}
-                  {...(bpmnNodeRect(nodeById.get(edge.to))
-                    ? { targetRect: bpmnNodeRect(nodeById.get(edge.to)) }
-                    : {})}
+                  sourceRect={bpmnNodeRect(nodeById.get(edge.from)!)}
+                  targetRect={bpmnNodeRect(nodeById.get(edge.to)!)}
                   sourceIsDiamond={nodeById.get(edge.from)?.kind === "decision"}
                   targetIsDiamond={nodeById.get(edge.to)?.kind === "decision"}
                   obstacles={model.nodes
@@ -238,8 +234,7 @@ export function SopBpmn({
   );
 }
 
-function bpmnNodeRect(node: BpmnNode | undefined): DiagramRect | undefined {
-  if (!node) return undefined;
+function bpmnNodeRect(node: BpmnNode): DiagramRect {
   return {
     left: node.x - node.width / 2,
     top: node.y - node.height / 2,
