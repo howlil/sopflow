@@ -203,9 +203,7 @@ describe("buildBpmnModel", () => {
         },
       },
     });
-    const locked = model.edges.find(
-      (edge) => edge.id === "start:next:review",
-    );
+    const locked = model.edges.find((edge) => edge.id === "start:next:review");
 
     expect(locked?.routeKind).toBe("manual");
     expect(locked?.points).toEqual(automaticEdge.points);
