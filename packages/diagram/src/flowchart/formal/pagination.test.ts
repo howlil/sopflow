@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { WorkflowEdge } from "../../workflow.js";
 import {
   buildFormalTableColumnPercents,
+  formalOpcLabel,
   getFormalOpcEndpointsForPage,
   getFormalPageForRow,
   layoutFormalOpcEndpoints,
@@ -21,6 +22,15 @@ const rows: FormalPageRow[] = [
 ];
 
 describe("formal flowchart pagination parity", () => {
+  it("keeps OPC labels unique after Z", () => {
+    expect(formalOpcLabel(0)).toBe("A");
+    expect(formalOpcLabel(25)).toBe("Z");
+    expect(formalOpcLabel(26)).toBe("AA");
+    expect(formalOpcLabel(27)).toBe("AB");
+    expect(formalOpcLabel(51)).toBe("AZ");
+    expect(formalOpcLabel(52)).toBe("BA");
+  });
+
   it("splits the first page and following pages deterministically", () => {
     expect(
       splitFormalRowsIntoPages(rows, 2, 2).map((page) => page.length),
