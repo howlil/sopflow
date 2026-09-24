@@ -1,5 +1,6 @@
-import type {
-  SOPDocument,
+import {
+  getPresentationSteps,
+  type SOPDocument,
   SopOperation,
   StepId,
   ValidationIssue,
@@ -31,6 +32,7 @@ export function SopStepsEditor({
   disabled = false,
 }: SopStepsEditorProps) {
   const editorRef = useRef<HTMLElement>(null);
+  const steps = getPresentationSteps(document);
   const handleKeyDown = useStepKeyboardNavigation({
     document,
     selectedStepId,
@@ -81,7 +83,7 @@ export function SopStepsEditor({
       ref={editorRef}
       className={styles.editor}
       aria-label="Navigasi langkah SOP"
-      data-empty={document.steps.length === 0 || undefined}
+      data-empty={steps.length === 0 || undefined}
       data-disabled={disabled || undefined}
       {...keyboardNavigationProps}
     >
@@ -96,7 +98,7 @@ export function SopStepsEditor({
         </div>
       </div>
 
-      {document.steps.length === 0 ? (
+      {steps.length === 0 ? (
         disabled ? (
           <div className={styles.emptyReadonly}>Belum ada langkah SOP.</div>
         ) : (
@@ -126,7 +128,7 @@ export function SopStepsEditor({
                 </thead>
 
                 <tbody>
-                  {document.steps.map((step, index) => (
+                  {steps.map((step, index) => (
                     <SopStepRow
                       key={step.id}
                       step={step}
@@ -146,7 +148,7 @@ export function SopStepsEditor({
           </div>
 
           <div className={styles.mobile}>
-            {document.steps.map((step, index) => (
+            {steps.map((step, index) => (
               <SopStepCard
                 key={step.id}
                 step={step}
