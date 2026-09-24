@@ -397,6 +397,76 @@ describe("formal SOP-AP flowchart routing parity", () => {
     expect(routed?.points.at(-1)).toEqual({ x: 250, y: 318 });
   });
 
+  it("repairs stale manual bends when reflow moves an obstacle into the path", () => {
+    const rows = [
+      row("start", 1, "start", "staff"),
+      row("obstacle", 2, "task", "manager"),
+      row("end", 3, "end", "staff"),
+    ] as const;
+    const edges: WorkflowEdge[] = [
+      edge("start:next:end", "start", "end", "next"),
+    ];
+    const geometry: FormalFlowchartGeometry = {
+      width: 800,
+      height: 520,
+      pelaksanaBounds: pelaksana,
+      columns: { staff, manager },
+      gridLayout: grid,
+      shapes: new Map([
+        [
+          "start",
+          shape("start", "staff", 0, "start", {
+            left: 249,
+            top: 100,
+            width: 82,
+            height: 42,
+          }),
+        ],
+        [
+          "obstacle",
+          shape("obstacle", "manager", 1, "task", {
+            left: 349,
+            top: 180,
+            width: 82,
+            height: 80,
+          }),
+        ],
+        [
+          "end",
+          shape("end", "staff", 2, "end", {
+            left: 249,
+            top: 340,
+            width: 82,
+            height: 42,
+          }),
+        ],
+      ]),
+    };
+
+    const [routed] = planFormalProcedureEdges({ rows, edges }, geometry, {
+      "start:next:end": {
+        kind: "orthogonal",
+        sSide: "right",
+        eSide: "right",
+        sourceDistance: 0.5,
+        targetDistance: 0.5,
+        // These persisted bends used to be clear, but now cross the moved
+        // manager shape after the layout reflow.
+        bendPoints: [
+          { x: 390, y: 121 },
+          { x: 390, y: 361 },
+        ],
+      },
+    });
+
+    expect(routed).toBeDefined();
+    expect(routed?.points[0]).toEqual({ x: 331, y: 121 });
+    expect(routed?.points.at(-1)).toEqual({ x: 331, y: 361 });
+    expect(routed?.routeDiagnostics ?? []).not.toContainEqual(
+      expect.objectContaining({ code: "PATH_INTERSECTS_NODE" }),
+    );
+  });
+
   it("reports unresolved conflicts between locked manual routes", () => {
     const rows = [
       row("a", 1, "task", "staff"),
