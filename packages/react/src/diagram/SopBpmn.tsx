@@ -7,6 +7,7 @@ import {
   setProcedureManualRoute,
   type BpmnNode,
   type DiagramRect,
+  type FormalRouteChange,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
 import { useEffect, useId, useMemo, useState } from "react";
@@ -60,14 +61,7 @@ export function SopBpmn({
     if (!manualEditing) setSelectedConnectionId(null);
   }, [manualEditing]);
 
-  const changeRoute = (
-    edgeId: string,
-    route: Parameters<
-      NonNullable<
-        React.ComponentProps<typeof EditableFormalFlowchartPath>["onChange"]
-      >
-    >[0],
-  ) => {
+  const changeRoute = (edgeId: string, route: FormalRouteChange) => {
     if (!onDiagramConfigChange) return;
     const currentRoute = diagramConfig.routes?.[edgeId];
     onDiagramConfigChange(
