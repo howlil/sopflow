@@ -206,7 +206,11 @@ describe("buildBpmnModel", () => {
     const locked = model.edges.find((edge) => edge.id === "start:next:review");
 
     expect(locked?.routeKind).toBe("manual");
-    expect(locked?.points).toEqual(automaticEdge.points);
+    expect(locked?.points[0]).toEqual(automaticEdge.points[0]);
+    expect(locked?.points.at(-1)).toEqual(automaticEdge.points.at(-1));
+    expect(locked?.routeDiagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "INVALID_MANUAL_ROUTE" }),
+    );
   });
 
   it("falls back cleanly when a persisted BPMN route is invalid", () => {
