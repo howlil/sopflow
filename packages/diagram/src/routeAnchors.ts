@@ -92,6 +92,35 @@ export function channelAnchorDistance(
   const step = spacingPx / sideLengthPx;
   const offsetIndex = Math.ceil(channelIndex / 2);
   const direction = channelIndex % 2 === 1 ? -1 : 1;
+  const physicalCandidate = 0.5 + direction * offsetIndex * step;
 
-  return clampAnchorDistance(0.5 + direction * offsetIndex * step);
+  if (
+    physicalCandidate >= ROUTE_ANCHOR_MIN_DISTANCE &&
+    physicalCandidate <= ROUTE_ANCHOR_MAX_DISTANCE
+  ) {
+    return physicalCandidate;
+  }
+
+  // Once the physical spacing cannot fit on a short side, keep allocating
+  // deterministic distinct positions instead of collapsing every extra port
+  // onto the same clamped endpoint.
+  const safeSpan = ROUTE_ANCHOR_MAX_DISTANCE - ROUTE_ANCHOR_MIN_DISTANCE;
+  return (
+    ROUTE_ANCHOR_MIN_DISTANCE +
+    safeSpan * vanDerCorput(channelIndex + 1)
+  );
+}
+
+function vanDerCorput(value: number): number {
+  let index = Math.max(1, Math.floor(value));
+  let fraction = 0;
+  let denominator = 1;
+
+  while (index > 0) {
+    denominator *= 2;
+    fraction += (index % 2) / denominator;
+    index = Math.floor(index / 2);
+  }
+
+  return fraction;
 }
