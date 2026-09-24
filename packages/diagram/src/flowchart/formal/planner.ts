@@ -797,7 +797,9 @@ function applyManualRoute(
   };
 }
 
-function formalBoundsToRect(bounds: FormalFlowchartBounds): FormalFlowchartRect {
+function formalBoundsToRect(
+  bounds: FormalFlowchartBounds,
+): FormalFlowchartRect {
   return {
     left: bounds.left,
     top: bounds.top,
