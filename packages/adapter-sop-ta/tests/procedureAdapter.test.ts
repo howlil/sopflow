@@ -3,16 +3,17 @@ import {
   exportSopTaDocument,
   importSopTaDocument,
   validateSopTaCompatibility,
+  type SopTaProcedureRow,
 } from "../src/index.js";
 
-const rows = [
+const rows: SopTaProcedureRow[] = [
   {
     id: "start",
     urutan: 1,
     kegiatan: "Mulai",
     pelaksana: "staff",
-    type: "terminator" as const,
-    terminatorRole: "start" as const,
+    type: "terminator",
+    terminatorRole: "start",
     kelengkapan: "-",
     waktu: 1,
     satuanWaktu: "m",
@@ -24,7 +25,7 @@ const rows = [
     urutan: 2,
     kegiatan: "Valid?",
     pelaksana: "manager",
-    type: "decision" as const,
+    type: "decision",
     id_next_step_if_yes: "end",
     id_next_step_if_no: "fix",
     kelengkapan: "Berkas",
@@ -38,7 +39,7 @@ const rows = [
     urutan: 3,
     kegiatan: "Perbaiki",
     pelaksana: "staff",
-    type: "task" as const,
+    type: "task",
     kelengkapan: "Catatan",
     waktu: 1,
     satuanWaktu: "h",
@@ -51,7 +52,7 @@ const rows = [
     kegiatan: "Selesai",
     pelaksana: "manager",
     type: "terminator" as const,
-    terminatorRole: "end" as const,
+    terminatorRole: "end",
     kelengkapan: "-",
     waktu: 1,
     satuanWaktu: "m",
@@ -91,16 +92,15 @@ describe("sop-ta compatibility adapter", () => {
   });
 
   it("round-trips a compatible linear sop-ta document without losing quality fields", () => {
-    const linearRows = rows.map((row) =>
-      row.id === "review"
-        ? {
-            ...row,
-            type: "task" as const,
-            id_next_step_if_yes: undefined,
-            id_next_step_if_no: undefined,
-          }
-        : row,
-    );
+    const linearRows = rows.map<SopTaProcedureRow>((row) => {
+      if (row.id !== "review") return row;
+      const {
+        id_next_step_if_yes: _yes,
+        id_next_step_if_no: _no,
+        ...rest
+      } = row;
+      return { ...rest, type: "task" };
+    });
     const document = importSopTaDocument({
       id: "legacy",
       title: "Legacy SOP",
