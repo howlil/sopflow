@@ -542,6 +542,25 @@ describe("SopEditor graph mutations", () => {
     expect(inserted.next).toBe("end");
   });
 
+  it("renders and numbers the editor by authored presentation order", () => {
+    const authored: SOPDocument = {
+      ...decisionDocument,
+      presentationOrder: ["start", "decision", "reject", "approve", "end"],
+    };
+
+    const { container } = render(<EditorHarness initial={authored} />);
+    enterStepEditing();
+
+    expect(
+      Array.from(
+        container.querySelectorAll<HTMLElement>("tr[data-sopflow-step-id]"),
+      ).map((row) => row.dataset.sopflowStepId),
+    ).toEqual(["start", "decision", "reject", "approve", "end"]);
+
+    const decisionRow = getDesktopStepRow("decision");
+    expect(within(decisionRow).getByText("Ya → 4 · Tidak → 3")).toBeInTheDocument();
+  });
+
   it("shows decision branch targets inline using authoring order", () => {
     render(<EditorHarness initial={decisionDocument} />);
 
