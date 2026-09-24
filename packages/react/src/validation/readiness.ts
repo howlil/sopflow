@@ -1,35 +1,24 @@
+import type { SOPDocument, ValidationIssue } from "@sopflow/core";
 import {
-  validateSop,
-  type SOPDocument,
-  type ValidationIssue,
-} from "@sopflow/core";
+  getSopApReadinessIssues,
+  isSopApReady,
+  type SopApReadinessIssue,
+} from "@sopflow/sop-ap";
 import type { SopHeaderValue } from "../header/types.js";
-import {
-  validateSopHeader,
-  type SopHeaderValidationIssue,
-} from "./headerValidation.js";
 
-export type SopReadinessIssue =
-  | ({ readonly kind: "graph" } & ValidationIssue)
-  | SopHeaderValidationIssue;
+export type SopReadinessIssue = SopApReadinessIssue;
 
 export function getSopReadinessIssues(
   document: SOPDocument,
   header: SopHeaderValue,
   graphIssues?: readonly ValidationIssue[],
 ): SopReadinessIssue[] {
-  return [
-    ...(graphIssues ?? validateSop(document)).map((issue) => ({
-      ...issue,
-      kind: "graph" as const,
-    })),
-    ...validateSopHeader(document, header),
-  ];
+  return getSopApReadinessIssues(document, header, graphIssues);
 }
 
 export function isSopReady(
   document: SOPDocument,
   header: SopHeaderValue,
 ): boolean {
-  return getSopReadinessIssues(document, header).length === 0;
+  return isSopApReady(document, header);
 }
