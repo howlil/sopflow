@@ -157,8 +157,10 @@ export function SopEditor({
   const diagramConfigMutable =
     controlledDiagramConfigs !== undefined
       ? onDiagramConfigsChange !== undefined
-      : controlledDiagramConfig !== undefined && diagramKind === "flowchart"
-        ? onDiagramConfigChange !== undefined
+      : controlledDiagramConfig !== undefined
+        ? diagramKind === "flowchart"
+          ? onDiagramConfigChange !== undefined
+          : onDiagramConfigsChange !== undefined
         : true;
 
   const mutationDisabled = readOnly || loading || !onChange;
