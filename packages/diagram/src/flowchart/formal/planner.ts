@@ -245,6 +245,7 @@ export function planFormalProcedureEdges(
         sourceGeometry.kind === "decision",
         targetGeometry.kind === "decision",
         routingBounds,
+        geometry.pelaksanaBounds,
         obstacles,
         occupied,
       );
@@ -719,7 +720,8 @@ function applyManualRoute(
   target: FormalFlowchartRect,
   sourceDecision: boolean,
   targetDecision: boolean,
-  bounds: FormalFlowchartBounds | null,
+  routingBounds: FormalFlowchartBounds | null,
+  manualBounds: FormalFlowchartBounds | null,
   obstacles: readonly FormalFlowchartRect[],
   occupied: readonly ReturnType<typeof formalPathToSegments>[number][],
 ): FormalFlowchartRouteResult {
@@ -760,7 +762,7 @@ function applyManualRoute(
       targetSide,
       obstacles,
       occupied,
-      bounds: bounds ? formalBoundsToRect(bounds) : null,
+      bounds: manualBounds ? formalBoundsToRect(manualBounds) : null,
     });
 
     if (!repaired) return auto;
@@ -772,7 +774,7 @@ function applyManualRoute(
     };
   }
 
-  const x = clampX(manual.x, bounds);
+  const x = clampX(manual.x, routingBounds);
   const replayed = normalizeFormalOrthogonalPath([
     start,
     { x, y: start.y },
