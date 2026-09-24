@@ -12,10 +12,12 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "prepack": "pnpm build"
   },
@@ -30,6 +32,12 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["sop", "sop-ap", "government", "workflow", "typescript"],
+  "keywords": [
+    "sop",
+    "sop-ap",
+    "government",
+    "workflow",
+    "typescript"
+  ],
   "license": "MIT"
 }
