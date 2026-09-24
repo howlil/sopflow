@@ -49,6 +49,35 @@ export interface FormalProcedurePageModel {
   readonly bottomOpc: readonly FormalPositionedOpcEndpoint[];
 }
 
+export function pruneProcedurePagedRoutes(
+  pages: readonly FormalProcedurePageModel[],
+  config: SopDiagramConfig,
+): SopDiagramConfig {
+  if (!config.pagedRoutes) return config;
+
+  const crossPageEdgeIds = new Set(
+    pages.flatMap((page) =>
+      page.edges
+        .filter((edge) => edge.segment !== "local")
+        .map((edge) => edge.semanticEdgeId),
+    ),
+  );
+  const pagedRoutes = Object.fromEntries(
+    Object.entries(config.pagedRoutes).filter(([edgeId]) =>
+      crossPageEdgeIds.has(edgeId),
+    ),
+  );
+
+  if (
+    Object.keys(pagedRoutes).length === Object.keys(config.pagedRoutes).length
+  ) {
+    return config;
+  }
+
+  const { pagedRoutes: _removedPagedRoutes, ...rest } = config;
+  return Object.keys(pagedRoutes).length > 0 ? { ...rest, pagedRoutes } : rest;
+}
+
 export function resolveProcedurePageRouteOverrides(
   edges: readonly FormalProcedurePageEdge[],
   config: SopDiagramConfig,
