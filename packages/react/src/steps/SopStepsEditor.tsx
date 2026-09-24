@@ -1,9 +1,9 @@
 import {
   getPresentationSteps,
   type SOPDocument,
-  SopOperation,
-  StepId,
-  ValidationIssue,
+  type SopOperation,
+  type StepId,
+  type ValidationIssue,
 } from "@sopflow/core";
 import { useEffect, useRef } from "react";
 import styles from "./SopStepsEditor.module.css";
