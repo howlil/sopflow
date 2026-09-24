@@ -756,6 +756,22 @@ function applyManualRoute(
       null,
       { preserveCollinear: true },
     );
+    const hasSemanticAnchors =
+      Number.isFinite(manual.sourceDistance) ||
+      Number.isFinite(manual.targetDistance);
+
+    // Pre-semantic-anchor configs historically replayed their absolute route
+    // exactly, including endpoint directions that the newer editor would not
+    // create. Preserve that migration contract until the user edits the route,
+    // at which point normalized anchor metadata is persisted.
+    if (!hasSemanticAnchors) {
+      return {
+        points: replayed,
+        sourceSide,
+        targetSide,
+      };
+    }
+
     const repaired = repairFormalManualRoute({
       path: replayed,
       sourceSide,
