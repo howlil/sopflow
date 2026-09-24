@@ -146,7 +146,7 @@ export function validateSopTaCompatibility(
     issues.push({
       code: "INVALID_START_POSITION",
       message: "sop-ta requires exactly one start row at the beginning",
-      stepId: starts[0]?.id,
+      ...(starts[0] ? { stepId: starts[0].id } : {}),
     });
   }
 
@@ -159,7 +159,7 @@ export function validateSopTaCompatibility(
     issues.push({
       code: "INVALID_END_POSITION",
       message: "sop-ta requires the end row to be last",
-      stepId: ends[0]?.id,
+      ...(ends[0] ? { stepId: ends[0].id } : {}),
     });
   }
 
