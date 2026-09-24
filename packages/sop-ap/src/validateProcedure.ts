@@ -8,8 +8,8 @@ export type SopApProcedureValidationCode =
   | "MISSING_ACTOR"
   | "MISSING_STEP"
   | "INVALID_ACTOR_COUNT"
+  | "MISSING_ACTIVITY"
   | "MISSING_INPUT"
-  | "MISSING_DURATION"
   | "MISSING_OUTPUT"
   | "MISSING_NOTE";
 
@@ -53,25 +53,21 @@ export function validateSopApProcedure(
       });
     }
 
+    if (!step.name.trim()) {
+      issues.push({
+        kind: "procedure",
+        code: "MISSING_ACTIVITY",
+        stepId: step.id,
+        message: `${prefix}: kegiatan wajib diisi`,
+      });
+    }
+
     if (!step.input?.trim()) {
       issues.push({
         kind: "procedure",
         code: "MISSING_INPUT",
         stepId: step.id,
         message: `${prefix}: kelengkapan wajib diisi`,
-      });
-    }
-
-    if (
-      !step.duration ||
-      !Number.isFinite(step.duration.value) ||
-      step.duration.value < 0
-    ) {
-      issues.push({
-        kind: "procedure",
-        code: "MISSING_DURATION",
-        stepId: step.id,
-        message: `${prefix}: waktu wajib diisi`,
       });
     }
 
