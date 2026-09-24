@@ -1,4 +1,8 @@
-import type { SOPDocument, StepId } from "@sopflow/core";
+import {
+  getPresentationSteps,
+  type SOPDocument,
+  type StepId,
+} from "@sopflow/core";
 
 export type SopApProcedureValidationCode =
   | "MISSING_ACTOR"
@@ -37,7 +41,7 @@ export function validateSopApProcedure(
     });
   }
 
-  for (const [index, step] of document.steps.entries()) {
+  for (const [index, step] of getPresentationSteps(document).entries()) {
     const prefix = `Langkah ${index + 1}`;
 
     if (step.actorIds.length !== 1) {
