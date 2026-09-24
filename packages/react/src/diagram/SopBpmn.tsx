@@ -169,8 +169,8 @@ export function SopBpmn({
                   selected={selectedConnectionId === edge.id}
                   {...(edge.sourceSide ? { sourceSide: edge.sourceSide } : {})}
                   {...(edge.targetSide ? { targetSide: edge.targetSide } : {})}
-                  sourceRect={bpmnNodeRect(nodeById.get(edge.from)!)}
-                  targetRect={bpmnNodeRect(nodeById.get(edge.to)!)}
+                  sourceRect={requireBpmnNodeRect(nodeById, edge.from)}
+                  targetRect={requireBpmnNodeRect(nodeById, edge.to)}
                   sourceIsDiamond={nodeById.get(edge.from)?.kind === "decision"}
                   targetIsDiamond={nodeById.get(edge.to)?.kind === "decision"}
                   obstacles={model.nodes
@@ -232,6 +232,17 @@ export function SopBpmn({
       </svg>
     </section>
   );
+}
+
+function requireBpmnNodeRect(
+  nodes: ReadonlyMap<StepId, BpmnNode>,
+  stepId: StepId,
+): DiagramRect {
+  const node = nodes.get(stepId);
+  if (!node) {
+    throw new Error(`Routed BPMN edge references missing node "${stepId}"`);
+  }
+  return bpmnNodeRect(node);
 }
 
 function bpmnNodeRect(node: BpmnNode): DiagramRect {
