@@ -176,6 +176,59 @@ describe("buildBpmnModel", () => {
     expect(loops[0]?.labelPosition?.x).not.toBe(loops[1]?.labelPosition?.x);
   });
 
+  it("locks a persisted BPMN route before routing remaining edges", () => {
+    const automatic = buildBpmnModel(document);
+    const automaticEdge = automatic.edges.find(
+      (edge) => edge.id === "start:next:review",
+    );
+    if (!automaticEdge?.sourceSide || !automaticEdge.targetSide) {
+      throw new Error("automatic BPMN route not found");
+    }
+
+    const startPoint = automaticEdge.points[0];
+    const endPoint = automaticEdge.points.at(-1);
+    if (!startPoint || !endPoint) throw new Error("route endpoints missing");
+
+    const model = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          "start:next:review": {
+            kind: "orthogonal",
+            sSide: automaticEdge.sourceSide,
+            eSide: automaticEdge.targetSide,
+            startPoint,
+            endPoint,
+            bendPoints: automaticEdge.points.slice(1, -1),
+          },
+        },
+      },
+    });
+    const locked = model.edges.find(
+      (edge) => edge.id === "start:next:review",
+    );
+
+    expect(locked?.routeKind).toBe("manual");
+    expect(locked?.points).toEqual(automaticEdge.points);
+  });
+
+  it("falls back cleanly when a persisted BPMN route is invalid", () => {
+    const model = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          "start:next:review": { kind: "trunk", x: 100 },
+        },
+      },
+    });
+    const edge = model.edges.find(
+      (candidate) => candidate.id === "start:next:review",
+    );
+
+    expect(edge?.routeKind).not.toBe("manual");
+    expect(edge?.routeDiagnostics).toContainEqual(
+      expect.objectContaining({ code: "INVALID_MANUAL_ROUTE" }),
+    );
+  });
+
   it("uses an explicit fallback lane for an unassigned step", () => {
     const model = buildBpmnModel({
       ...document,
