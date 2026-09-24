@@ -10,7 +10,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { validateSop, type SOPDocument } from "@sopflow/core";
-import type { SopDiagramConfig } from "@sopflow/diagram";
+import type { SopDiagramConfig, SopDiagramConfigs } from "@sopflow/diagram";
 
 import { SopEditor } from "./SopEditor.js";
 import type { SopHeaderValue } from "./header/types.js";
@@ -317,6 +317,38 @@ describe("SopEditor document workbench", () => {
         header={initialHeader}
         diagramConfig={{}}
         onDiagramConfigChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
+  });
+
+  it("does not expose BPMN editing through the legacy flowchart-only config API", () => {
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramKind="bpmn"
+        diagramConfig={{}}
+        onDiagramConfigChange={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Edit Manual" })).toBeDisabled();
+  });
+
+  it("allows BPMN editing through the per-kind config API", () => {
+    const configs: SopDiagramConfigs = { flowchart: {}, bpmn: {} };
+
+    render(
+      <SopEditor
+        value={initialDocument}
+        onChange={() => {}}
+        header={initialHeader}
+        diagramKind="bpmn"
+        diagramConfigs={configs}
+        onDiagramConfigsChange={() => {}}
       />,
     );
 
