@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { SOPDocument } from "@sopflow/core";
+import { buildBpmnModel, type SopDiagramConfig } from "@sopflow/diagram";
 import { SopBpmn } from "./SopBpmn.js";
 
 const document: SOPDocument = {
@@ -79,6 +80,46 @@ describe("SopBpmn", () => {
     expect(lines.join(" ")).toBe(longLabel);
     expect(lines.join(" ")).not.toContain("…");
     expect(lines.length).toBeGreaterThan(1);
+  });
+
+  it("removes a selected persisted BPMN route through the manual editor", () => {
+    const automatic = buildBpmnModel(document);
+    const edge = automatic.edges.find(
+      (candidate) => candidate.id === "start:next:review",
+    );
+    if (!edge?.sourceSide || !edge.targetSide) {
+      throw new Error("automatic route fixture missing");
+    }
+
+    const config: SopDiagramConfig = {
+      routes: {
+        [edge.id]: {
+          kind: "orthogonal",
+          bendPoints: edge.points.slice(1, -1),
+          sSide: edge.sourceSide,
+          eSide: edge.targetSide,
+          startPoint: edge.points[0],
+          endPoint: edge.points.at(-1),
+        },
+      },
+    };
+    const onDiagramConfigChange = vi.fn();
+
+    render(
+      <SopBpmn
+        document={document}
+        manualEditing
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Edit route start:next:review" }),
+    );
+    fireEvent.keyDown(globalThis, { key: "Delete" });
+
+    expect(onDiagramConfigChange).toHaveBeenCalledWith({});
   });
 
   it("uses the shared controlled selection contract", () => {
