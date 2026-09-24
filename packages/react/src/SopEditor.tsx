@@ -155,11 +155,11 @@ export function SopEditor({
   const diagramConfig = diagramConfigs[diagramKind] ?? {};
   const manualEditing = controlledManualEditing ?? internalManualEditing;
   const diagramConfigMutable =
-    controlledDiagramConfigs === undefined ||
-    onDiagramConfigsChange !== undefined ||
-    (diagramKind === "flowchart" &&
-      (controlledDiagramConfig === undefined ||
-        onDiagramConfigChange !== undefined));
+    controlledDiagramConfigs !== undefined
+      ? onDiagramConfigsChange !== undefined
+      : controlledDiagramConfig !== undefined && diagramKind === "flowchart"
+        ? onDiagramConfigChange !== undefined
+        : true;
 
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
@@ -249,11 +249,8 @@ export function SopEditor({
         setInternalDiagramKind(nextKind);
       }
       onDiagramKindChange?.(nextKind);
-      if (nextKind !== "flowchart") {
-        handleManualEditingChange(false);
-      }
     },
-    [controlledDiagramKind, handleManualEditingChange, onDiagramKindChange],
+    [controlledDiagramKind, onDiagramKindChange],
   );
 
   return (
