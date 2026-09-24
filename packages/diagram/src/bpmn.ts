@@ -86,7 +86,9 @@ export interface BpmnModel {
   readonly laneHeight: number;
 }
 
-const DEFAULTS: Required<BpmnLayoutOptions> = {
+const DEFAULTS: Required<
+  Pick<BpmnLayoutOptions, "laneHeight" | "headerWidth" | "stepGap" | "padding">
+> = {
   laneHeight: 112,
   headerWidth: 116,
   stepGap: 144,
