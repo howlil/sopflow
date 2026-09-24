@@ -277,9 +277,7 @@ function countBends(points: readonly DiagramPoint[]): number {
   return bends;
 }
 
-export function scoreRouteDirectness(
-  points: readonly DiagramPoint[],
-): number {
+export function scoreRouteDirectness(points: readonly DiagramPoint[]): number {
   const start = points[0];
   const end = points.at(-1);
   if (!start || !end || points.length < 2) return 0;
