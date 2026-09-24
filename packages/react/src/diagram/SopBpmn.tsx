@@ -1,14 +1,27 @@
 import type { SOPDocument, StepId } from "@sopflow/core";
-import { buildBpmnModel, pointsToPath, type BpmnNode } from "@sopflow/diagram";
-import { useId, useMemo } from "react";
+import {
+  buildBpmnModel,
+  formalPathToSegments,
+  pointsToPath,
+  removeProcedureManualRoute,
+  setProcedureManualRoute,
+  type BpmnNode,
+  type DiagramRect,
+  type SopDiagramConfig,
+} from "@sopflow/diagram";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import "../styles/token.css";
+import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
 import styles from "./SopBpmn.module.css";
 
 export interface SopBpmnProps {
   document: SOPDocument;
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
+  diagramConfig?: SopDiagramConfig;
+  onDiagramConfigChange?: (config: SopDiagramConfig) => void;
+  manualEditing?: boolean;
   className?: string;
 }
 
@@ -16,10 +29,72 @@ export function SopBpmn({
   document,
   selectedStepId = null,
   onSelectedStepChange,
+  diagramConfig = {},
+  onDiagramConfigChange,
+  manualEditing = false,
   className,
 }: SopBpmnProps) {
   const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
-  const model = useMemo(() => buildBpmnModel(document), [document]);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(
+    null,
+  );
+  const model = useMemo(
+    () => buildBpmnModel(document, { diagramConfig }),
+    [diagramConfig, document],
+  );
+  const nodeById = useMemo(
+    () => new Map(model.nodes.map((node) => [node.id, node] as const)),
+    [model.nodes],
+  );
+  const routeSegmentsById = useMemo(
+    () =>
+      new Map(
+        model.edges.map(
+          (edge) => [edge.id, formalPathToSegments(edge.points)] as const,
+        ),
+      ),
+    [model.edges],
+  );
+
+  useEffect(() => {
+    if (!manualEditing) setSelectedConnectionId(null);
+  }, [manualEditing]);
+
+  const changeRoute = (
+    edgeId: string,
+    route: Parameters<
+      NonNullable<
+        React.ComponentProps<typeof EditableFormalFlowchartPath>["onChange"]
+      >
+    >[0],
+  ) => {
+    if (!onDiagramConfigChange) return;
+    const currentRoute = diagramConfig.routes?.[edgeId];
+    onDiagramConfigChange(
+      setProcedureManualRoute(diagramConfig, edgeId, {
+        kind: "orthogonal",
+        bendPoints: route.bendPoints.map((point) => ({ ...point })),
+        sSide: route.sourceSide,
+        eSide: route.targetSide,
+        ...(route.sourceDistance !== undefined
+          ? { sourceDistance: route.sourceDistance }
+          : {}),
+        ...(route.targetDistance !== undefined
+          ? { targetDistance: route.targetDistance }
+          : {}),
+        startPoint: { ...route.startPoint },
+        endPoint: { ...route.endPoint },
+        ...(currentRoute?.labelPosition
+          ? { labelPosition: currentRoute.labelPosition }
+          : {}),
+      }),
+    );
+  };
+
+  const resetRoute = (edgeId: string) => {
+    if (!onDiagramConfigChange) return;
+    onDiagramConfigChange(removeProcedureManualRoute(diagramConfig, edgeId));
+  };
 
   return (
     <section
@@ -93,6 +168,39 @@ export function SopBpmn({
                   {edge.label}
                 </text>
               ) : null}
+              {manualEditing && onDiagramConfigChange ? (
+                <EditableFormalFlowchartPath
+                  path={edge.points}
+                  connectionId={edge.id}
+                  selected={selectedConnectionId === edge.id}
+                  sourceSide={edge.sourceSide}
+                  targetSide={edge.targetSide}
+                  sourceRect={bpmnNodeRect(nodeById.get(edge.from))}
+                  targetRect={bpmnNodeRect(nodeById.get(edge.to))}
+                  sourceIsDiamond={nodeById.get(edge.from)?.kind === "decision"}
+                  targetIsDiamond={nodeById.get(edge.to)?.kind === "decision"}
+                  obstacles={model.nodes
+                    .filter(
+                      (node) => node.id !== edge.from && node.id !== edge.to,
+                    )
+                    .map((node) => bpmnNodeRect(node))
+                    .filter((rect): rect is DiagramRect => rect !== undefined)}
+                  occupiedSegments={model.edges
+                    .filter((candidate) => candidate.id !== edge.id)
+                    .flatMap(
+                      (candidate) => routeSegmentsById.get(candidate.id) ?? [],
+                    )}
+                  routingBounds={{
+                    left: 0,
+                    top: 0,
+                    width: model.width,
+                    height: model.height,
+                  }}
+                  onSelect={setSelectedConnectionId}
+                  onChange={(route) => changeRoute(edge.id, route)}
+                  onReset={() => resetRoute(edge.id)}
+                />
+              ) : null}
             </g>
           ))}
         </g>
@@ -130,6 +238,16 @@ export function SopBpmn({
       </svg>
     </section>
   );
+}
+
+function bpmnNodeRect(node: BpmnNode | undefined): DiagramRect | undefined {
+  if (!node) return undefined;
+  return {
+    left: node.x - node.width / 2,
+    top: node.y - node.height / 2,
+    width: node.width,
+    height: node.height,
+  };
 }
 
 function BpmnShape({ node }: { node: BpmnNode }) {
