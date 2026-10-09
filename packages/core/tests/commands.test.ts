@@ -159,6 +159,22 @@ describe("graph commands", () => {
     );
   });
 
+  it("keeps valid removal options when unrelated draft fields are incomplete", () => {
+    const draft: SOPDocument = {
+      ...exampleSop,
+      steps: exampleSop.steps.map((step) =>
+        step.id === "prepare-document" ? { ...step, name: "" } : step,
+      ),
+    };
+
+    expect(getStepRemovalOptions(draft, "approve-document").candidates.map(
+      (step) => step.id,
+    )).toContain("end");
+    expect(() =>
+      buildRemoveStepAndReconnectOperations(draft, "approve-document", "end"),
+    ).not.toThrow();
+  });
+
   it("rewires incoming edges before removing a referenced step", () => {
     const result = applyOperations(
       exampleSop,
