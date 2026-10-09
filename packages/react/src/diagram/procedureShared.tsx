@@ -1,4 +1,5 @@
 import type { StepId } from "@sopflow/core";
+import styles from "./SopProcedureView.module.css";
 import type {
   FormalFlowchartBounds,
   FormalFlowchartColumnBounds,
