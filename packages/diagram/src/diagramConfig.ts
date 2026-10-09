@@ -74,8 +74,11 @@ export function pruneSopDiagramConfig(
     return migrated;
   }
 
-  const { routes: _oldRoutes, pagedRoutes: _oldPagedRoutes, ...otherConfig } =
-    config;
+  const {
+    routes: _oldRoutes,
+    pagedRoutes: _oldPagedRoutes,
+    ...otherConfig
+  } = config;
   const migratedRoutes = migrateRoutes(config.routes);
   const migratedPagedRoutes = migrateRoutes(config.pagedRoutes);
   const migratedConfig: SopDiagramConfig = {
