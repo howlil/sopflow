@@ -37,7 +37,9 @@ export function buildWorkflowEdgeId(
   kind: DiagramEdgeKind,
   to: StepId,
 ): string {
-  return `${from}:${kind}:${to}`;
+  const escapeEndpoint = (id: StepId) =>
+    id.replaceAll("%", "%25").replaceAll(":", "%3A");
+  return `${escapeEndpoint(from)}:${kind}:${escapeEndpoint(to)}`;
 }
 
 export function projectWorkflow(document: SOPDocument): WorkflowGraph {

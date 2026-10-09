@@ -9,6 +9,7 @@ import {
 } from "../src/mutate.js";
 import {
   applyOperationInput,
+  applyOperations,
   applyValidatedOperations,
 } from "../src/operations.js";
 import { validateSop } from "../src/validate.js";
@@ -86,6 +87,34 @@ describe("core invariants", () => {
     ]);
 
     expect(validateSop(result)).toEqual([]);
+  });
+
+  it("rejects schema-invalid strict edits while allowing drafts", () => {
+    const step = exampleSop.steps.find((item) => item.id === "prepare-document");
+    if (!step || step.type !== "task") throw new Error("Missing fixture task");
+    const operations = [{
+      type: "update-step" as const,
+      step: { ...step, name: "", duration: { value: -1, unit: "day" as const } },
+    }];
+
+    expect(
+      applyOperations(exampleSop, operations).steps.find((item) => item.id === step.id)?.name,
+    ).toBe("");
+
+    try {
+      applyValidatedOperations(exampleSop, operations);
+      throw new Error("Expected strict validation failure");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SopCoreError);
+      const result = error as SopCoreError;
+      expect(result.code).toBe("INVALID_DOCUMENT");
+      expect(result.details?.schemaIssues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ path: ["steps", expect.any(Number), "name"] }),
+          expect.objectContaining({ path: ["steps", expect.any(Number), "duration", "value"] }),
+        ]),
+      );
+    }
   });
 
   it("does not accept invalid operation input", () => {

@@ -22,6 +22,11 @@ export interface CoreErrorDetails {
   readonly targetId?: StepId;
   readonly issues?: readonly ValidationIssue[];
   readonly operationErrors?: readonly string[];
+  readonly schemaIssues?: readonly {
+    readonly code: string;
+    readonly path: readonly PropertyKey[];
+    readonly message: string;
+  }[];
 }
 
 export class SopCoreError extends Error {
@@ -46,10 +51,14 @@ export function isSopCoreError(error: unknown): error is SopCoreError {
 
 export function invalidDocumentError(
   issues: readonly ValidationIssue[],
+  schemaIssues: NonNullable<CoreErrorDetails["schemaIssues"]> = [],
 ): SopCoreError {
   return new SopCoreError(
     "INVALID_DOCUMENT",
     "Operation would produce an invalid SOP document",
-    { issues },
+    {
+      issues,
+      ...(schemaIssues.length > 0 ? { schemaIssues } : {}),
+    },
   );
 }

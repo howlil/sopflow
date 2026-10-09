@@ -44,7 +44,44 @@ export function pruneSopDiagramConfig(
   config: SopDiagramConfig,
 ): SopDiagramConfig {
   const validEdgeIds = new Set(graph.edges.map((edge) => edge.id));
-  const routesPruned = pruneProcedureManualRoutes(config, validEdgeIds);
+  // Legacy keys are migrated only if they refer unambiguously to one edge.
+  const legacyTargets = new Map<string, string | null>();
+  for (const edge of graph.edges) {
+    const oldId = `${edge.from}:${edge.kind}:${edge.to}`;
+    if (oldId === edge.id) continue;
+    const previous = legacyTargets.get(oldId);
+    legacyTargets.set(
+      oldId,
+      previous === undefined ? edge.id : previous === edge.id ? edge.id : null,
+    );
+  }
+
+  function migrateRoutes<T>(
+    routes: Readonly<Record<string, T>> | undefined,
+  ): Readonly<Record<string, T>> | undefined {
+    if (!routes) return undefined;
+    const migrated: Record<string, T> = {};
+    for (const [id, value] of Object.entries(routes)) {
+      if (validEdgeIds.has(id)) migrated[id] = value;
+    }
+    for (const [id, value] of Object.entries(routes)) {
+      if (validEdgeIds.has(id)) continue;
+      const canonicalId = legacyTargets.get(id);
+      if (canonicalId && !Object.hasOwn(migrated, canonicalId)) {
+        migrated[canonicalId] = value;
+      }
+    }
+    return migrated;
+  }
+
+  const migratedConfig: SopDiagramConfig = {
+    ...config,
+    ...(config.routes ? { routes: migrateRoutes(config.routes) } : {}),
+    ...(config.pagedRoutes
+      ? { pagedRoutes: migrateRoutes(config.pagedRoutes) }
+      : {}),
+  };
+  const routesPruned = pruneProcedureManualRoutes(migratedConfig, validEdgeIds);
 
   if (!routesPruned.pagedRoutes) return routesPruned;
 

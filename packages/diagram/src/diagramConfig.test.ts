@@ -65,6 +65,42 @@ describe("diagram config", () => {
     });
   });
 
+  it("migrates unambiguous legacy route keys", () => {
+    const graph = projectWorkflow({
+      ...document,
+      steps: [
+        { id: "a", type: "task", name: "A", actorIds: [], next: "b:next:c" },
+        { id: "b:next:c", type: "end", name: "End", actorIds: [] },
+      ],
+    });
+    expect(pruneSopDiagramConfig(graph, {
+      routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
+      pagedRoutes: {
+        "a:next:b:next:c": { source: { kind: "trunk", x: 360 } },
+      },
+    })).toEqual({
+      routes: { "a:next:b%3Anext%3Ac": { kind: "trunk", x: 320 } },
+      pagedRoutes: {
+        "a:next:b%3Anext%3Ac": { source: { kind: "trunk", x: 360 } },
+      },
+    });
+  });
+
+  it("drops ambiguous legacy aliases", () => {
+    const graph = projectWorkflow({
+      ...document,
+      steps: [
+        { id: "a", type: "task", name: "A", actorIds: [], next: "b:next:c" },
+        { id: "a:next:b", type: "task", name: "B", actorIds: [], next: "c" },
+        { id: "b:next:c", type: "end", name: "End 1", actorIds: [] },
+        { id: "c", type: "end", name: "End 2", actorIds: [] },
+      ],
+    });
+    expect(pruneSopDiagramConfig(graph, {
+      routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
+    })).toEqual({});
+  });
+
   it("prunes flowchart and BPMN configs independently", () => {
     const graph = projectWorkflow(document);
     const configs = pruneSopDiagramConfigs(graph, {
