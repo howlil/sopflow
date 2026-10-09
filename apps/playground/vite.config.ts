@@ -28,6 +28,12 @@ const sourceAliases = [
       new URL("../../packages/core/src/index.ts", import.meta.url),
     ),
   },
+  {
+    find: /^@sopflow\/sop-ap$/,
+    replacement: fileURLToPath(
+      new URL("../../packages/sop-ap/src/index.ts", import.meta.url),
+    ),
+  },
 ];
 
 export default defineConfig(({ command }) => ({

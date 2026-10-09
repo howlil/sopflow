@@ -2,6 +2,7 @@ import { useId, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
 import { InspectorSection } from "../primitives/InspectorSection.js";
+import { Input } from "../primitives/Input.js";
 import type { SopHeaderValue, SopSignatory } from "./types.js";
 import styles from "./SopHeaderFields.module.css";
 
@@ -169,8 +170,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nomor SOP">
-          <input
-            className={styles.input}
+          <Input
             type="text"
             value={header.number}
             disabled={headerDisabled}
@@ -183,8 +183,7 @@ export function SopHeaderFields({
 
       <InspectorSection title="Tanggal">
         <Field label="Tanggal pembuatan">
-          <input
-            className={styles.input}
+          <Input
             type="date"
             value={header.createdDate}
             disabled={headerDisabled}
@@ -196,8 +195,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Tanggal revisi">
-          <input
-            className={styles.input}
+          <Input
             type="date"
             value={header.revisionDate}
             disabled={headerDisabled}
@@ -209,8 +207,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Tanggal efektif">
-          <input
-            className={styles.input}
+          <Input
             type="date"
             value={header.effectiveDate}
             disabled={headerDisabled}
@@ -224,8 +221,7 @@ export function SopHeaderFields({
 
       <InspectorSection title="Pengesahan">
         <Field label="Jabatan">
-          <input
-            className={styles.input}
+          <Input
             type="text"
             value={header.signatory?.role ?? ""}
             disabled={headerDisabled}
@@ -236,8 +232,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nama">
-          <input
-            className={styles.input}
+          <Input
             type="text"
             value={header.signatory?.name ?? ""}
             disabled={headerDisabled}
@@ -248,8 +243,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nomor identitas">
-          <input
-            className={styles.input}
+          <Input
             type="text"
             value={header.signatory?.identifier ?? ""}
             disabled={headerDisabled}

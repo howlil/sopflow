@@ -70,7 +70,6 @@ export function Dialog({
             type="button"
             className={styles.closeButton}
             aria-label="Tutup dialog"
-            tabIndex={-1}
             onClick={onClose}
           >
             ×

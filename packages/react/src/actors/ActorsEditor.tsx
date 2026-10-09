@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
 import { DeleteActorDialog } from "./DeleteActorDialog.js";
+import { Input } from "../primitives/Input.js";
 import styles from "./ActorsEditor.module.css";
 
 export interface ActorsEditorProps {
@@ -82,8 +83,7 @@ export function ActorsEditor({
                   {actor.name || "Tanpa nama"}
                 </span>
               ) : (
-                <input
-                  className={styles.nameInput}
+                <Input
                   value={actor.name}
                   placeholder="Nama pelaksana"
                   aria-label={`Nama pelaksana ${index + 1}`}

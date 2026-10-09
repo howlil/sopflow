@@ -10,6 +10,8 @@ export { FormField } from "./primitives/FormField.js";
 export type { FormFieldProps } from "./primitives/FormField.js";
 export { InspectorSection } from "./primitives/InspectorSection.js";
 export type { InspectorSectionProps } from "./primitives/InspectorSection.js";
+export { Input } from "./primitives/Input.js";
+export type { InputProps } from "./primitives/Input.js";
 export { Select } from "./primitives/Select.js";
 export type { SelectProps } from "./primitives/Select.js";
 export { SopEditor } from "./SopEditor.js";

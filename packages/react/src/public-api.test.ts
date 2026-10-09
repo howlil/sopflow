@@ -11,6 +11,7 @@ describe("@sopflow/react public API", () => {
         "Dialog",
         "FormField",
         "InspectorSection",
+        "Input",
         "Select",
         "SopBpmn",
         "SopDiagram",
@@ -32,6 +33,7 @@ describe("@sopflow/react public API", () => {
     expect(publicApi.Dialog).toBeTypeOf("function");
     expect(publicApi.FormField).toBeTypeOf("function");
     expect(publicApi.InspectorSection).toBeTypeOf("function");
+    expect(publicApi.Input).toBeTypeOf("function");
     expect(publicApi.Select).toBeTypeOf("function");
     expect(publicApi.SopBpmn).toBeTypeOf("function");
     expect(publicApi.SopDiagram).toBeTypeOf("function");
