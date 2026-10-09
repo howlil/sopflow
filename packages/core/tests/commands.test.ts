@@ -167,9 +167,11 @@ describe("graph commands", () => {
       ),
     };
 
-    expect(getStepRemovalOptions(draft, "approve-document").candidates.map(
-      (step) => step.id,
-    )).toContain("end");
+    expect(
+      getStepRemovalOptions(draft, "approve-document").candidates.map(
+        (step) => step.id,
+      ),
+    ).toContain("end");
     expect(() =>
       buildRemoveStepAndReconnectOperations(draft, "approve-document", "end"),
     ).not.toThrow();
