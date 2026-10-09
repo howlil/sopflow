@@ -41,8 +41,12 @@ const document: SOPDocument = {
 
 describe("projectWorkflow", () => {
   it("keeps edge IDs unique even for delimiter and escape characters", () => {
-    expect(buildWorkflowEdgeId("a", "next", "b:next:c")).toBe("a:next:b%3Anext%3Ac");
-    expect(buildWorkflowEdgeId("a:next:b", "next", "c")).toBe("a%3Anext%3Ab:next:c");
+    expect(buildWorkflowEdgeId("a", "next", "b:next:c")).toBe(
+      "a:next:b%3Anext%3Ac",
+    );
+    expect(buildWorkflowEdgeId("a:next:b", "next", "c")).toBe(
+      "a%3Anext%3Ab:next:c",
+    );
     expect(buildWorkflowEdgeId("a", "next", "b:next:c")).not.toBe(
       buildWorkflowEdgeId("a:next:b", "next", "c"),
     );
@@ -51,7 +55,6 @@ describe("projectWorkflow", () => {
     );
     expect(buildWorkflowEdgeId("start", "next", "end")).toBe("start:next:end");
   });
-
 
   it("projects stable nodes and edges without changing authoring order", () => {
     const graph = projectWorkflow(document);

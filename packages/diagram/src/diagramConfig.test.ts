@@ -73,12 +73,14 @@ describe("diagram config", () => {
         { id: "b:next:c", type: "end", name: "End", actorIds: [] },
       ],
     });
-    expect(pruneSopDiagramConfig(graph, {
-      routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
-      pagedRoutes: {
-        "a:next:b:next:c": { source: { kind: "trunk", x: 360 } },
-      },
-    })).toEqual({
+    expect(
+      pruneSopDiagramConfig(graph, {
+        routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
+        pagedRoutes: {
+          "a:next:b:next:c": { source: { kind: "trunk", x: 360 } },
+        },
+      }),
+    ).toEqual({
       routes: { "a:next:b%3Anext%3Ac": { kind: "trunk", x: 320 } },
       pagedRoutes: {
         "a:next:b%3Anext%3Ac": { source: { kind: "trunk", x: 360 } },
@@ -96,9 +98,11 @@ describe("diagram config", () => {
         { id: "c", type: "end", name: "End 2", actorIds: [] },
       ],
     });
-    expect(pruneSopDiagramConfig(graph, {
-      routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
-    })).toEqual({});
+    expect(
+      pruneSopDiagramConfig(graph, {
+        routes: { "a:next:b:next:c": { kind: "trunk", x: 320 } },
+      }),
+    ).toEqual({});
   });
 
   it("prunes flowchart and BPMN configs independently", () => {

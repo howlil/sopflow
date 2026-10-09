@@ -76,9 +76,9 @@ export function pruneSopDiagramConfig(
 
   const migratedConfig: SopDiagramConfig = {
     ...config,
-    ...(config.routes ? { routes: migrateRoutes(config.routes) } : {}),
+    ...(config.routes ? { routes: migrateRoutes(config.routes) ?? {} } : {}),
     ...(config.pagedRoutes
-      ? { pagedRoutes: migrateRoutes(config.pagedRoutes) }
+      ? { pagedRoutes: migrateRoutes(config.pagedRoutes) ?? {} }
       : {}),
   };
   const routesPruned = pruneProcedureManualRoutes(migratedConfig, validEdgeIds);

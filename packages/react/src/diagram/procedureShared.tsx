@@ -53,7 +53,10 @@ export function ProcedureShape({ kind }: { kind: ProcedureRowModel["kind"] }) {
   );
 }
 
-export function toLocalRect(rect: DOMRect, rootRect: DOMRect): FormalFlowchartRect {
+export function toLocalRect(
+  rect: DOMRect,
+  rootRect: DOMRect,
+): FormalFlowchartRect {
   return {
     left: Math.round(rect.left - rootRect.left),
     top: Math.round(rect.top - rootRect.top),

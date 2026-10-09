@@ -73,7 +73,6 @@ describe("SopWorkspace", () => {
     });
   });
 
-
   it("opens the step editor inside the document", async () => {
     const user = userEvent.setup();
     render(<WorkspaceHarness />);

@@ -90,15 +90,25 @@ describe("core invariants", () => {
   });
 
   it("rejects schema-invalid strict edits while allowing drafts", () => {
-    const step = exampleSop.steps.find((item) => item.id === "prepare-document");
-    if (!step || step.type !== "task") throw new Error("Missing fixture task");
-    const operations = [{
-      type: "update-step" as const,
-      step: { ...step, name: "", duration: { value: -1, unit: "day" as const } },
-    }];
+    const step = exampleSop.steps.find(
+      (item) => item.id === "prepare-document",
+    );
+    if (step?.type !== "task") throw new Error("Missing fixture task");
+    const operations = [
+      {
+        type: "update-step" as const,
+        step: {
+          ...step,
+          name: "",
+          duration: { value: -1, unit: "day" as const },
+        },
+      },
+    ];
 
     expect(
-      applyOperations(exampleSop, operations).steps.find((item) => item.id === step.id)?.name,
+      applyOperations(exampleSop, operations).steps.find(
+        (item) => item.id === step.id,
+      )?.name,
     ).toBe("");
 
     try {
@@ -110,8 +120,12 @@ describe("core invariants", () => {
       expect(result.code).toBe("INVALID_DOCUMENT");
       expect(result.details?.schemaIssues).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ path: ["steps", expect.any(Number), "name"] }),
-          expect.objectContaining({ path: ["steps", expect.any(Number), "duration", "value"] }),
+          expect.objectContaining({
+            path: ["steps", expect.any(Number), "name"],
+          }),
+          expect.objectContaining({
+            path: ["steps", expect.any(Number), "duration", "value"],
+          }),
         ]),
       );
     }
