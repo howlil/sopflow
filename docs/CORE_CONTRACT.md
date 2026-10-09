@@ -28,3 +28,11 @@ can still be a draft until its final state is passed to
 
 `steps` is a collection, not an execution-order list. Execution and display order
 are derived from graph edges with `getOrderedSteps()`.
+
+## Strict operations and drafts
+
+`applyOperations()` and low-level mutations may create intermediate drafts while enforcing local reference safety. `applyValidatedOperations()` validates the **final** document against the same Zod schema and semantic workflow rules as `parseSop()`. Schema failures appear in `SopCoreError.details.schemaIssues`; graph validation failures remain in `details.issues`.
+
+`SOPDocument` owns graph semantics and optional authored `presentationOrder`. SOP-AP header metadata and diagram manual route configs are separate application-persisted state. Embedding applications should persist `value`, `header`, and `diagramConfigs` together.
+
+Diagram edge IDs escape `%` and `:` within step IDs. `pruneSopDiagramConfigs()` migrates unambiguous legacy route keys; ambiguous collisions are dropped rather than mapped onto the wrong edge.

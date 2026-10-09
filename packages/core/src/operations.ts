@@ -1,7 +1,7 @@
 import type { Actor, ActorId, SOPDocument, Step, StepId } from "./types.js";
 import { SopCoreError, invalidDocumentError } from "./errors.js";
 import { parseSopOperation } from "./operation-schema.js";
-import { validateSop } from "./validate.js";
+import { parseSop } from "./parse.js";
 import {
   addActor,
   updateActor,
@@ -119,10 +119,18 @@ export function applyValidatedOperations(
   operations: readonly SopOperation[],
 ): SOPDocument {
   const nextDocument = applyOperations(document, operations);
-  const issues = validateSop(nextDocument);
+  // Strict batches share parseSop's schema and semantic contract.
+  // applyOperations remains intentionally permissive for draft edits.
+  const parsed = parseSop(nextDocument);
 
-  if (issues.length > 0) {
-    throw invalidDocumentError(issues);
+  if (!parsed.success) {
+    const issues = parsed.issues.flatMap((issue) =>
+      issue.source === "semantic" ? [issue.issue] : [],
+    );
+    const schemaIssues = parsed.issues.flatMap((issue) =>
+      issue.source === "schema" ? [issue] : [],
+    );
+    throw invalidDocumentError(issues, schemaIssues);
   }
 
   return nextDocument;

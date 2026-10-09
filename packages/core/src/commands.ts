@@ -1,7 +1,18 @@
 import type { ActorId, SOPDocument, Step, StepId } from "./types.js";
-import { SopCoreError } from "./errors.js";
+import { SopCoreError, invalidDocumentError } from "./errors.js";
 import { getIncomingConnections, getPresentationSteps } from "./graph.js";
-import { applyValidatedOperations, type SopOperation } from "./operations.js";
+import { applyOperations, type SopOperation } from "./operations.js";
+import { validateSop } from "./validate.js";
+
+// Command planning checks graph topology only, so unrelated draft fields
+// do not block editing. Publishing still uses strict schema validation.
+function assertGraphValidAfterOperations(
+  document: SOPDocument,
+  operations: readonly SopOperation[],
+): void {
+  const issues = validateSop(applyOperations(document, operations));
+  if (issues.length > 0) throw invalidDocumentError(issues);
+}
 
 function requireStep(document: SOPDocument, stepId: StepId): Step {
   const step = document.steps.find((candidate) => candidate.id === stepId);
@@ -278,7 +289,7 @@ export function getStepRemovalOptions(
     if (candidate.id === stepId) return false;
 
     try {
-      applyValidatedOperations(
+      assertGraphValidAfterOperations(
         document,
         buildRemoveStepAndReconnectOperations(document, stepId, candidate.id, {
           validate: false,
@@ -355,7 +366,7 @@ export function buildRemoveStepAndReconnectOperations(
   operations.push({ type: "remove-step", stepId });
 
   if (options.validate !== false) {
-    applyValidatedOperations(document, operations);
+    assertGraphValidAfterOperations(document, operations);
   }
 
   return operations;

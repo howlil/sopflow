@@ -1,7 +1,11 @@
 import type { SOPDocument, StepId } from "@sopflow/core";
 import { useState } from "react";
 
-import { SopEditor, type SopDiagramKind } from "../SopEditor.js";
+import {
+  SopEditor,
+  type SopDiagramConfigs,
+  type SopDiagramKind,
+} from "../SopEditor.js";
 import type { SopHeaderValue } from "../header/types.js";
 import type { SopReadinessIssue } from "../validation/readiness.js";
 
@@ -16,6 +20,8 @@ export interface SopWorkspaceProps {
   onViewChange?: (view: SopWorkspaceView) => void;
   diagramKind?: SopDiagramKind;
   onDiagramKindChange?: (kind: SopDiagramKind) => void;
+  diagramConfigs?: SopDiagramConfigs;
+  onDiagramConfigsChange?: (configs: SopDiagramConfigs) => void;
   selectedStepId?: StepId | null;
   onSelectedStepChange?: (stepId: StepId | null) => void;
   readOnly?: boolean;
@@ -35,6 +41,8 @@ export function SopWorkspace({
   onViewChange,
   diagramKind,
   onDiagramKindChange,
+  diagramConfigs,
+  onDiagramConfigsChange,
   selectedStepId,
   onSelectedStepChange,
   readOnly = false,
@@ -73,6 +81,8 @@ export function SopWorkspace({
       {...(onHeaderChange ? { onHeaderChange } : {})}
       {...(diagramKind ? { diagramKind } : {})}
       {...(onDiagramKindChange ? { onDiagramKindChange } : {})}
+      {...(diagramConfigs !== undefined ? { diagramConfigs } : {})}
+      {...(onDiagramConfigsChange ? { onDiagramConfigsChange } : {})}
       {...(selectedStepId !== undefined ? { selectedStepId } : {})}
       {...(onSelectedStepChange ? { onSelectedStepChange } : {})}
       {...(className ? { className } : {})}

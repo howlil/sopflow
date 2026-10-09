@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { SOPDocument } from "@sopflow/core";
 
@@ -55,6 +55,24 @@ function WorkspaceHarness() {
 }
 
 describe("SopWorkspace", () => {
+  it("forwards controlled route configurations and prune callbacks", async () => {
+    const onDiagramConfigsChange = vi.fn();
+    render(
+      <SopWorkspace
+        value={document}
+        header={header}
+        diagramConfigs={{
+          flowchart: { routes: { obsolete: { kind: "trunk", x: 200 } } },
+        }}
+        onDiagramConfigsChange={onDiagramConfigsChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onDiagramConfigsChange).toHaveBeenCalledWith({});
+    });
+  });
+
   it("opens the step editor inside the document", async () => {
     const user = userEvent.setup();
     render(<WorkspaceHarness />);
