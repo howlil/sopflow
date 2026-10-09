@@ -1,17 +1,21 @@
 # Sopflow
 
-Sopflow adalah toolkit TypeScript untuk memodelkan dan mengembangkan structured Standard Operating Procedure (SOP).
+Sopflow adalah TypeScript toolkit untuk memodelkan, mengedit, dan memvisualisasikan **Standard Operating Procedure (SOP)**. Repository ini berisi reusable packages dan React playground, bukan backend administrasi atau sistem approval produksi.
 
-## Workspace
+## Packages
 
-```text
-packages/core      @sopflow/core — domain, schema, graph, validation, operations, history
-packages/diagram   @sopflow/diagram — workflow projection, layout, routing, SVG models
-packages/react     @sopflow/react — reusable React editor and diagram presentation
-apps/playground    integration consumer/workbench untuk mencoba package Sopflow
-```
+| Package | Ownership |
+| --- | --- |
+| `@sopflow/core` | SOPDocument, schema, graph invariants, operations, undo/redo primitives |
+| `@sopflow/diagram` | Framework-independent workflow projection, layout, routing, and SVG models |
+| `@sopflow/sop-ap` | SOP Administrasi Pemerintahan header/procedure readiness rules |
+| `@sopflow/adapter-sop-ta` | Legacy sop-ta procedure format compatibility |
+| `@sopflow/react` | React SOP workspace, editor, inspector, flowchart/BPMN surfaces |
+| `apps/playground` | Integration consumer and browser diagram regression fixtures |
 
-## Mulai
+Dependency flow: `core → diagram/sop-ap/adapter → react → playground`. Core and diagram remain framework-agnostic.
+
+## Development
 
 ```bash
 pnpm install
@@ -19,18 +23,19 @@ pnpm check
 pnpm --filter playground start
 ```
 
-## Package
+`pnpm check` runs Biome, TypeScript checks, tests, and builds. CI also verifies package tarballs and headless-browser diagram regressions.
 
-Package dibagi menurut ownership: [`@sopflow/core`](./packages/core) memiliki domain dan workflow invariant, [`@sopflow/diagram`](./packages/diagram) memiliki projection/layout/routing framework-agnostic, dan [`@sopflow/react`](./packages/react) memiliki presentation serta interaction React. `apps/playground` hanya consumer integrasi.
+## Document and integration contract
 
-Playground mencakup route projection, step mutation, decision branches, graph
-diagnostics, validation evidence, undo/redo, strict dan draft operation batches,
-serta parse/export `SOPDocument` melalui public core API.
+- `SOPDocument` stores semantic workflow steps and actors. `next`/`yes`/`no` define execution.
+- `presentationOrder` controls authored row order, not execution.
+- `applyOperations()` supports intermediate drafts. `applyValidatedOperations()` and `parseSop()` both enforce schema and semantic validity.
+- `SopWorkspace` accepts controlled `value`, `header`, and optional per-kind `diagramConfigs`. The consuming application owns persistence; manual route overrides are not part of `SOPDocument`.
+- `@sopflow/sop-ap` validates government-specific readiness separately from core invariants.
+- Playground demonstrates the React workspace and validation states. Core history/JSON operation functions are available through `@sopflow/core`, but are not primary playground UI features.
 
-## Roadmap
+See [core contract](./docs/CORE_CONTRACT.md), [product contract](./PRODUCT.md), [design contract](./DESIGN.md), and [roadmap](./docs/ROADMAP.md).
 
-Roadmap pengembangan tersedia di [`docs/ROADMAP.md`](./docs/ROADMAP.md).
-
-## Lisensi
+## License
 
 MIT

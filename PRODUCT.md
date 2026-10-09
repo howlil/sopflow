@@ -1,67 +1,40 @@
-# Product
+# Sopflow — Product Contract
 
-<!-- impeccable:product-schema 1 -->
+## Purpose
 
-## Platform
+Sopflow is a reusable TypeScript toolkit for structured SOP authoring and visualization. It extracts a framework-neutral workflow model from the legacy sop-ta application and exposes reusable React editor components.
 
-web
+## Primary consumers
 
-## Users
+Developers embedding an SOP editor, workflow designers authoring structured procedures, and SOP-AP consumers requiring government-specific readiness validation.
 
-Primary users are developers and workflow designers evaluating `@sopflow/core`
-while building or reviewing a structured SOP. They need to see the document,
-change graph operations, inspect validation, and understand the resulting state.
+## Core jobs
 
-## Product Purpose
+1. Model a SOP as typed actors and steps with explicit connections.
+2. Edit steps and actor references without dangling graph references.
+3. Render a formal SOP flowchart or BPMN diagram from the same semantic workflow.
+4. Review draft validation and SOP-AP profile readiness.
+5. Persist application-owned SOP, header, and diagram routing data.
 
-Sopflow models structured Standard Operating Procedures as typed documents and
-graph operations. The playground makes the core package tangible by letting a
-person edit a small SOP and inspect the graph, validation, operation history,
-and serialized document in one place.
+## Ownership
 
-## Positioning
+- **core:** schema, workflow invariants, mutations, operations, history primitives.
+- **diagram:** projection, layout, manual routing, route configuration; no React/DOM.
+- **sop-ap:** SOP-AP-specific header and procedure readiness, separate from core rules.
+- **adapter-sop-ta:** legacy procedure conversion at the compatibility boundary.
+- **react:** reusable UI, interaction state, DOM measurements.
+- **playground:** developer integration consumer and browser regression fixtures.
 
-The playground is a transparent consumer of the core package: every visible
-result should be traceable to a public core API rather than a UI-only rule.
+## Current UX
 
-## Operating Context
+The playground presents a document-style workspace with SOP header, diagram preview, editable steps, properties inspector, and validation issues. Undo/redo and JSON batch operations are core capabilities, but not currently primary editor controls.
 
-This is a local OSS package playground used alongside TypeScript development.
-The user works with a workflow document, selects steps, changes operations,
-checks graph health, and may copy or import serialized JSON.
+## Data ownership
 
-## Capabilities and Constraints
+`SOPDocument` is the workflow record. `header` is SOP-AP-specific metadata. `diagramConfigs` stores per-kind presentation overrides. The consuming application persists them. Strict operations validate schema plus semantics; drafts may be incomplete.
 
-- The core package is framework-agnostic and owns schema, graph, validation,
-  mutation, operations, and history behavior.
-- The playground must exercise all meaningful core features through public APIs.
-- The document may be shown as a draft while an operation is being explored;
-  strict batch actions must expose core validation failures.
-- There are no supplied customer claims, testimonials, or external brand assets.
-- The surface must remain responsive and keyboard usable.
+## Out of scope
 
-## Brand Commitments
+Generic packages do not contain database adapters, authentication, approval lifecycle, tenant-specific settings, or sop-ta backend implementation.
 
-The name Sopflow and the structured-SOP vocabulary are confirmed. No additional
-visual brand commitments were supplied; the existing dark UI is treated as
-evidence, not as a binding visual system for this redesign.
-
-## Evidence on Hand
-
-- `packages/core` source and tests are the source of truth for package behavior.
-- `apps/playground` is the current consumer surface.
-- `docs/ROADMAP.md` defines the intended package milestones.
-- No production data or external imagery is available; all displayed SOP data
-  is clearly illustrative.
-
-## Product Principles
-
-- Show the graph, not a fake dashboard summary.
-- Make every operation inspectable and reversible.
-- Let invalid states explain themselves at the point of failure.
-- Keep the core package observable without coupling it to React.
-
-## Accessibility & Inclusion
-
-The web surface must preserve keyboard focus, visible focus states, readable
-contrast, semantic controls, responsive layouts, and reduced-motion safety.
+See [DESIGN.md](./DESIGN.md) and [docs/CORE_CONTRACT.md](./docs/CORE_CONTRACT.md).

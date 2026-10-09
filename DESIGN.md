@@ -1,39 +1,35 @@
-# Sopflow Playground Design
+# Sopflow Design Contract
 
-## Direction
+## Current surface
 
-The playground is a compact route workbench for developers inspecting a typed
-workflow. It should feel like a working technical artifact: the graph is the
-hero, step records are scannable, and validation reads as evidence rather than
-as a decorative status card.
+The primary UI is an A4-like SOP document workspace with a properties inspector, not the previous horizontal JSON operation workbench. The playground is a local integration consumer of `@sopflow/react`.
 
-## Surface contract
+## Information hierarchy
 
-- First viewport: document identity, route projection, and step records are
-  visible without opening a menu.
-- Primary move: select a route node, inspect its incoming/outgoing edges, and
-  change a core operation.
-- Secondary moves: run JSON operations, parse/export a document, inspect
-  validation evidence, undo, redo, and reset.
-- Invalid states stay visible and explain the failed core constraint.
-- The same information survives narrow layouts by stacking the rail, route,
-  records, diagnostics, and inspector.
+1. Document header: title, institution, SOP metadata, and supporting lists.
+2. Main document surface: preview of a formal SOP flowchart or BPMN diagram.
+3. Step editing: table on wide screens; compact step cards on narrow screens.
+4. Properties inspector: header and actor editing.
+5. Validation: visible readiness issues combining graph and SOP-AP requirements.
 
-## Visual grammar
+## Interaction contract
 
-- Paper surfaces and navy ink reference route cards and engineering workbenches.
-- Vermilion marks the active operation; yellow marks health and attention.
-- Rules, spacing, and typography provide structure; elevation is intentionally
-  quiet and never used to turn every section into a floating card.
-- IBM Plex Mono is reserved for identifiers, diagnostics, and measurements.
-- IBM Plex Sans carries titles and controls.
-- The graph projection is a horizontal route with explicit terminal treatment;
-  it is not a metric dashboard.
-- Lower tools share one ruled workspace so validation, operations, and document
-  JSON read as supporting instruments rather than unrelated cards.
+- Editing steps changes canonical `SOPDocument` and reprojects diagrams.
+- Selected steps remain consistent across preview and editor.
+- Manual flowchart/BPMN routing changes use per-kind `diagramConfigs`, never workflow mutations.
+- Invalid drafts stay visible with explanation; strict operations reject invalid final states.
+- Embedding applications own save, load, and error states.
+- Read-only/loading modes disable mutations.
+- Keyboard access, focus indication, responsive layouts, and reduced-motion support remain requirements.
 
-## States
+## Implementation boundaries
 
-The surface names ready, invalid, selected, disabled, empty inspector, malformed
-JSON, draft batch, and strict batch outcomes. Focus rings remain visible and
-reduced motion disables transitions.
+- Domain rules: `@sopflow/core`; SOP-AP readiness: `@sopflow/sop-ap`.
+- Geometry, routing, diagram configuration: `@sopflow/diagram`.
+- DOM measurement and React/SVG presentation: `@sopflow/react`.
+- Shared procedure shape, measurement, and formatting helpers: `packages/react/src/diagram/procedureShared.tsx`. Avoid duplicating between single-page/paginated rendering.
+- React CSS tokens: `packages/react/src/styles/token.css`.
+
+## Verification
+
+Unit and component tests guard graph mutations, editing, diagram routing, pagination, and accessibility. CI runs a headless browser diagram regression.
