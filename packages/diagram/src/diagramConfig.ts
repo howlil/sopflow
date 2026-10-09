@@ -74,11 +74,14 @@ export function pruneSopDiagramConfig(
     return migrated;
   }
 
+  const { routes: _oldRoutes, pagedRoutes: _oldPagedRoutes, ...rest } = config;
+  const routes = migrateRoutes(config.routes);
+  const pagedRoutes = migrateRoutes(config.pagedRoutes);
   const migratedConfig: SopDiagramConfig = {
-    ...config,
-    ...(config.routes ? { routes: migrateRoutes(config.routes) ?? {} } : {}),
-    ...(config.pagedRoutes
-      ? { pagedRoutes: migrateRoutes(config.pagedRoutes) ?? {} }
+    ...rest,
+    ...(routes && Object.keys(routes).length > 0 ? { routes } : {}),
+    ...(pagedRoutes && Object.keys(pagedRoutes).length > 0
+      ? { pagedRoutes }
       : {}),
   };
   const routesPruned = pruneProcedureManualRoutes(migratedConfig, validEdgeIds);
