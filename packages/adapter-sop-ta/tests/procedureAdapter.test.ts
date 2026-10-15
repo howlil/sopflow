@@ -82,6 +82,23 @@ describe("sop-ta compatibility adapter", () => {
     }
   });
 
+  it("rejects missing units instead of silently dropping duration values", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, satuanWaktu: undefined } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "UNKNOWN_DURATION_UNIT", rowId: "fix" }),
+      );
+    }
+  });
+
   it("rejects negative durations before lossy normalization", () => {
     const result = tryImportSopTaDocument({
       id: "legacy",

@@ -1,5 +1,6 @@
 import {
   getPresentationSteps,
+  parseSop,
   type ActorId,
   type Duration,
   type SOPDocument,
@@ -97,7 +98,6 @@ export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResu
     }
     if (
       row.waktu !== undefined &&
-      row.satuanWaktu !== undefined &&
       !normalizeSopTaUnit(row.satuanWaktu)
     ) {
       issues.push({
@@ -111,7 +111,14 @@ export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResu
 
   try {
     const document = importSopTaDocument(input);
-    return { success: true, document };
+    const parsed = parseSop(document);
+    if (!parsed.success) {
+      return {
+        success: false,
+        issues: parsed.errors.map((message) => ({ code: "IMPORT_FAILED", message })),
+      };
+    }
+    return { success: true, document: parsed.data };
   } catch (error) {
     return {
       success: false,

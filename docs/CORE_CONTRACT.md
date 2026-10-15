@@ -36,3 +36,22 @@ are derived from graph edges with `getOrderedSteps()`.
 `SOPDocument` owns graph semantics and optional authored `presentationOrder`. SOP-AP header metadata and diagram manual route configs are separate application-persisted state. Embedding applications should persist `value`, `header`, and `diagramConfigs` together.
 
 Diagram edge IDs escape `%` and `:` within step IDs. `pruneSopDiagramConfigs()` migrates unambiguous legacy route keys; ambiguous collisions are dropped rather than mapped onto the wrong edge.
+
+## Strict publication validation and legacy import
+
+A document may remain incomplete while a user is editing a draft. Publication
+readiness is stricter: `getSopApReadinessIssues` checks the canonical Zod
+schema, semantic workflow graph, and SOP-AP profile requirements. Applications
+must not equate a zero-issue semantic graph with a publishable document.
+
+The compatibility adapter keeps `importSopTaDocument` for older consumers.
+Use `tryImportSopTaDocument` for lossless imports at new integration
+boundaries. It returns `{ success: false, issues }` for unknown actors,
+ambiguous legacy actor mappings, invalid or unrecognized durations, and
+schema/semantic import failures. Resolve those issues in the original source
+rather than silently dropping fields.
+
+In React, `readOnly` and `loading` also prevent manual diagram-route mutation
+callbacks. Host applications continue to own durable document, header, and
+per-kind diagram configuration state. A read-only editor may normalize stale
+configurations for rendering, but it must not persist changes to the host.
