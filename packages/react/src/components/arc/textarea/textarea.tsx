@@ -238,7 +238,7 @@ function MessageRow({
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   function Textarea(
-    { label, description, error, id, className, ...props },
+    { label, compact = false, description, error, id, className, ...props },
     ref,
   ) {
     const generatedId = useId();
