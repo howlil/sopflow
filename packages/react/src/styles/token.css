@@ -66,4 +66,31 @@
   --sopflow-font-sm: var(--sopflow-font-size-sm);
   --sopflow-font-xs: var(--sopflow-font-size-xs);
   --sopflow-font-document: var(--sopflow-font-size-document);
+
+  /* Scoped bridge for official Arc UI components; never leak to app :root. */
+  --background: var(--sopflow-background);
+  --surface: var(--sopflow-surface);
+  --surface-muted: var(--sopflow-surface-muted);
+  --foreground: var(--sopflow-text);
+  --text-secondary: var(--sopflow-text-muted);
+  --text-muted: var(--sopflow-text-muted);
+  --border: var(--sopflow-border);
+  --border-strong: #bdbdbd;
+  --danger: var(--sopflow-error-text);
+  --focus-ring: transparent;
+  --radius-control: var(--sopflow-radius-pill);
+  --control-height-sm: 2rem;
+  --control-height-md: 2.25rem;
+  --control-height-lg: 2.75rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --text-sm: var(--sopflow-font-xs);
+  --leading-body: 1.4;
+  --shadow-resting: 0 1px 2px rgb(0 0 0 / .045);
+  --duration-instant: var(--sopflow-motion-fast);
+  --duration-fast: var(--sopflow-motion-fast);
+  --duration-standard: var(--sopflow-motion-standard);
+  --ease-standard: var(--sopflow-ease-standard);
 }

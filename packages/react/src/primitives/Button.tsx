@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
-import styles from "./Button.module.css";
+import { Button as ArcButton } from "../components/arc/button/button.js";
+import "../styles/token.css";
 
 export type ButtonVariant = "secondary" | "primary" | "danger" | "ghost";
 export type ButtonSize = "compact" | "default";
@@ -9,18 +10,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
+/** Stable @sopflow/react API over the official Arc UI Button implementation. */
 export function Button({
   variant = "secondary",
   size = "compact",
-  className,
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <ArcButton
       {...props}
-      className={[styles.button, styles[variant], styles[size], className]
-        .filter(Boolean)
-        .join(" ")}
+      data-sopflow-root
+      variant={variant}
+      size={size === "compact" ? "sm" : "md"}
     />
   );
 }
