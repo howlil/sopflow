@@ -17,7 +17,11 @@ import {
   useMotionValue,
   useReducedMotion,
 } from "motion/react";
-import type { HTMLMotionProps, TargetAndTransition, Variants } from "motion/react";
+import type {
+  HTMLMotionProps,
+  TargetAndTransition,
+  Variants,
+} from "motion/react";
 import { motionTokens } from "../lib/motion-tokens.js";
 import styles from "./button.module.css";
 
