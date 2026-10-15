@@ -14,7 +14,7 @@ export function getStepIssues(
 }
 
 export function hasStepIssue(
-  issues: readonly ValidationIssue[],
+  issues: readonly StepDiagnostic[],
   stepId: StepId,
   codes?: string[],
 ): boolean {
