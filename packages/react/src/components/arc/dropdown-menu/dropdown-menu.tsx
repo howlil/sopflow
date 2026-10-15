@@ -20,6 +20,7 @@ export interface DropdownMenuProps {
   label: string;
   items: DropdownItem[];
   icon?: ReactNode;
+  compact?: boolean;
 }
 
 type Highlight = {
@@ -108,7 +109,7 @@ function TriggerLabel({ text }: { text: string }) {
   );
 }
 
-export function DropdownMenu({ label, items, icon }: DropdownMenuProps) {
+export function DropdownMenu({ label, items, icon, compact = false }: DropdownMenuProps) {
   const reduced = useReducedMotion();
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const pointer = useRef(false);
@@ -146,22 +147,19 @@ export function DropdownMenu({ label, items, icon }: DropdownMenuProps) {
         }
       }}
     >
-      <DropdownPrimitive.Trigger className={styles.trigger} type="button">
-        {icon && (
-          <span className={styles.triggerIcon} aria-hidden="true">
-            {icon}
-          </span>
-        )}
-        <TriggerLabel text={label} />
-        <ChevronDown
-          className={styles.chevron}
-          size={15}
-          strokeWidth={1.8}
-          aria-hidden="true"
-        />
+      <DropdownPrimitive.Trigger
+        className={styles.trigger}
+        data-compact={compact || undefined}
+        aria-label={label}
+        type="button"
+      >
+        {icon && <span className={styles.triggerIcon} aria-hidden="true">{icon}</span>}
+        {!compact && <TriggerLabel text={label} />}
+        {!compact && <ChevronDown className={styles.chevron} size={15} strokeWidth={1.8} aria-hidden="true" />}
       </DropdownPrimitive.Trigger>
       <DropdownPrimitive.Portal>
         <DropdownPrimitive.Content
+          data-sopflow-root
           className={styles.menu}
           sideOffset={6}
           align="end"

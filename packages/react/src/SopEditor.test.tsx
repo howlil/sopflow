@@ -541,9 +541,7 @@ describe("SopEditor graph mutations", () => {
     await user.click(getReviewField());
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(
-      within(row).getByRole("button", {
-        name: /tambah langkah setelah/i,
-      }),
+      screen.getByRole("menuitem", { name: /tambah langkah setelah/i }),
     );
 
     const document = readDocument();
@@ -604,7 +602,7 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getField("Disetujui?"));
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(within(row).getByRole("button", { name: /atur cabang/i }));
+    await user.click(screen.getByRole("menuitem", { name: /atur cabang/i }));
 
     await user.selectOptions(screen.getByLabelText(/tidak/i), "end");
     await user.click(screen.getByRole("button", { name: /simpan/i }));
@@ -631,7 +629,7 @@ describe("SopEditor graph mutations", () => {
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(
-      within(row).getByRole("button", { name: /hapus langkah/i }),
+      screen.getByRole("menuitem", { name: /hapus langkah/i }),
     );
     await user.selectOptions(
       screen.getByLabelText(/sambungkan langkah sebelumnya/i),
@@ -661,7 +659,7 @@ describe("SopEditor graph mutations", () => {
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(
-      within(row).getByRole("button", { name: /hapus langkah/i }),
+      screen.getByRole("menuitem", { name: /hapus langkah/i }),
     );
     await user.selectOptions(
       screen.getByLabelText(/sambungkan langkah sebelumnya/i),
@@ -787,9 +785,7 @@ describe("SopEditor dialog accessibility", () => {
     const row = getStepRow(getReviewField());
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
 
-    const deleteTrigger = within(row).getByRole("button", {
-      name: /hapus langkah/i,
-    });
+    const deleteTrigger = screen.getByRole("menuitem", { name: /hapus langkah/i });
 
     await user.click(deleteTrigger);
 
@@ -819,7 +815,7 @@ describe("SopEditor dialog accessibility", () => {
         within(row).getByRole("button", { name: /aksi untuk/i }),
       );
       await user.click(
-        within(row).getByRole("button", { name: /hapus langkah/i }),
+        screen.getByRole("menuitem", { name: /hapus langkah/i }),
       );
 
       const dialog = await screen.findByRole("alertdialog");

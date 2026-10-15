@@ -36,3 +36,7 @@
   .trigger, .chevron, .item, .highlight { transition: none; }
   .menu, .menu[data-state="closed"] { transform: none; transition: opacity var(--duration-instant) linear; }
 }
+
+/* SOP action-cell compact variant; all menu interaction remains upstream Radix + Arc motion. */
+.trigger[data-compact] { width: 2.25rem; height: 2.25rem; min-height: 2.25rem; justify-content: center; border: 0; border-radius: var(--sopflow-control-radius); padding: 0; background: transparent; }
+.trigger[data-compact]:hover { background: var(--sopflow-surface-muted); }
