@@ -30,16 +30,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Bootstrap UIArc formatting
-        run: |
-          pnpm exec biome check --write packages/react/src/components/arc/button/button.tsx packages/react/src/components/arc/lib/motion-tokens.ts packages/react/src/primitives/Button.uiarc.test.tsx
-          for file in packages/react/src/components/arc/button/button.tsx packages/react/src/components/arc/lib/motion-tokens.ts packages/react/src/primitives/Button.uiarc.test.tsx; do
-            echo "__ARC_FORMAT_BEGIN__:${file}"
-            base64 -w0 "${file}"
-            echo
-            echo "__ARC_FORMAT_END__"
-          done
-
       - name: Check workspace
         run: pnpm check
 

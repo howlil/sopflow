@@ -13,7 +13,17 @@ describe("SOPFlow Arc UI Button compatibility", () => {
   });
   it("keeps disabled and native button attributes", () => {
     const onClick = vi.fn();
-    render(<Button type="button" size="default" variant="danger" disabled onClick={onClick}>Hapus</Button>);
+    render(
+      <Button
+        type="button"
+        size="default"
+        variant="danger"
+        disabled
+        onClick={onClick}
+      >
+        Hapus
+      </Button>,
+    );
     const button = screen.getByRole("button", { name: "Hapus" });
     expect(button.hasAttribute("disabled")).toBe(true);
     fireEvent.click(button);
