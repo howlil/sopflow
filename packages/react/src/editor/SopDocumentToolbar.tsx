@@ -70,7 +70,7 @@ export function SopDocumentToolbar({
         <fieldset className={[styles.tabs, styles.modeTabs].join(" ")}>
           <legend className={styles.srOnly}>Mode dokumen</legend>
           <Button
-            variant="ghost"
+          variant="ghost"
             type="button"
             className={styles.tab}
             data-active={mode === "preview" || undefined}
@@ -82,7 +82,7 @@ export function SopDocumentToolbar({
             <ToolbarIcon type="preview" />
           </Button>
           <Button
-            variant="ghost"
+          variant="ghost"
             type="button"
             className={styles.tab}
             data-active={mode === "steps" || undefined}
@@ -99,7 +99,7 @@ export function SopDocumentToolbar({
       {!readOnly ? (
         <div className={styles.group}>
           <Button
-            variant="ghost"
+          variant="ghost"
             type="button"
             className={styles.button}
             data-active={manualEditing || undefined}
@@ -124,7 +124,7 @@ export function SopDocumentToolbar({
         aria-label="Jenis diagram"
       >
         <Button
-            variant="ghost"
+          variant="ghost"
           type="button"
           className={styles.tab}
           id={`${diagramPanelId}-tab-flowchart`}
@@ -145,7 +145,7 @@ export function SopDocumentToolbar({
           <ToolbarIcon type="flowchart" />
         </Button>
         <Button
-            variant="ghost"
+          variant="ghost"
           type="button"
           className={styles.tab}
           id={`${diagramPanelId}-tab-bpmn`}
