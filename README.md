@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/brand/logo.svg" alt="SOPFlow logo" width="420" />
+</p>
+
 # Sopflow
 
 Sopflow adalah TypeScript toolkit untuk memodelkan, mengedit, dan memvisualisasikan **Standard Operating Procedure (SOP)**. Repository ini berisi reusable packages dan React playground, bukan backend administrasi atau sistem approval produksi.
