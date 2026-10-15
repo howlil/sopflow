@@ -163,6 +163,8 @@ export function SopEditor({
           : onDiagramConfigsChange !== undefined
         : true;
 
+  const canEditRoutes = !readOnly && !loading && diagramConfigMutable;
+  const effectiveManualEditing = manualEditing && canEditRoutes;
   const mutationDisabled = readOnly || loading || !onChange;
   const headerDisabled = readOnly || loading || !onHeaderChange;
   const issues = useMemo(() => validateSop(value), [value]);
@@ -187,6 +189,7 @@ export function SopEditor({
 
   const handleDiagramConfigsChange = useCallback(
     (nextConfigs: SopDiagramConfigs) => {
+      if (!canEditRoutes) return;
       if (controlledDiagramConfigs === undefined) {
         const internalNext =
           controlledDiagramConfig === undefined
@@ -201,11 +204,17 @@ export function SopEditor({
       }
       onDiagramConfigsChange?.(nextConfigs);
     },
-    [controlledDiagramConfig, controlledDiagramConfigs, onDiagramConfigsChange],
+    [
+      canEditRoutes,
+      controlledDiagramConfig,
+      controlledDiagramConfigs,
+      onDiagramConfigsChange,
+    ],
   );
 
   const handleDiagramConfigChange = useCallback(
     (nextConfig: SopDiagramConfig) => {
+      if (!canEditRoutes) return;
       const nextConfigs: SopDiagramConfigs = {
         ...diagramConfigs,
         [diagramKind]: nextConfig,
@@ -216,6 +225,7 @@ export function SopEditor({
       }
     },
     [
+      canEditRoutes,
       diagramConfigs,
       diagramKind,
       handleDiagramConfigsChange,
@@ -224,7 +234,11 @@ export function SopEditor({
   );
 
   useEffect(() => {
-    if (diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)) return;
+    if (
+      !canEditRoutes ||
+      diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)
+    )
+      return;
     handleDiagramConfigsChange(diagramConfigs);
     if (
       controlledDiagramConfig !== undefined &&
@@ -233,6 +247,7 @@ export function SopEditor({
       onDiagramConfigChange?.(diagramConfigs.flowchart);
     }
   }, [
+    canEditRoutes,
     controlledDiagramConfig,
     diagramConfigs,
     handleDiagramConfigsChange,
@@ -242,12 +257,13 @@ export function SopEditor({
 
   const handleManualEditingChange = useCallback(
     (editing: boolean) => {
+      if (editing && !canEditRoutes) return;
       if (controlledManualEditing === undefined) {
         setInternalManualEditing(editing);
       }
       onManualEditingChange?.(editing);
     },
-    [controlledManualEditing, onManualEditingChange],
+    [canEditRoutes, controlledManualEditing, onManualEditingChange],
   );
 
   const handleModeChange = useCallback(
@@ -321,11 +337,11 @@ export function SopEditor({
               onModeChange={handleModeChange}
               diagramKind={diagramKind}
               onDiagramKindChange={handleDiagramKindChange}
-              manualEditing={manualEditing}
+              manualEditing={effectiveManualEditing}
               onManualEditingChange={handleManualEditingChange}
               diagramConfig={diagramConfig}
               onDiagramConfigChange={handleDiagramConfigChange}
-              manualEditingSupported={diagramConfigMutable}
+              manualEditingSupported={canEditRoutes}
               disabled={mutationDisabled}
               readOnly={readOnly}
             />

@@ -13,7 +13,14 @@ import {
   type ProcedureModel,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   ProcedureShape,
@@ -23,7 +30,8 @@ import {
   measureGridLayout,
   display,
   durationLabel,
-  decisionSummary,
+  buildProcedureAnnotations,
+  procedureColumnWidths,
 } from "./procedureShared.js";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
 import styles from "./SopProcedureView.module.css";
@@ -57,8 +65,13 @@ export function SopProcedurePage({
   const [selectedConnectionId, setSelectedConnectionId] = useState<
     string | null
   >(null);
-  const actorWidth = Math.max(10, 70 / model.actorColumns.length);
+  const columnWidths = procedureColumnWidths(model.actorColumns.length);
+  const markerId = `sopflow-procedure-arrow-${useId().replace(/:/g, "")}`;
   const totalColumns = model.actorColumns.length + 6;
+  const annotations = useMemo(
+    () => buildProcedureAnnotations(model, issues),
+    [model, issues],
+  );
   const routingRowById = useMemo(
     () => new Map(page.routingRows.map((row) => [row.stepId, row] as const)),
     [page.routingRows],
@@ -225,18 +238,18 @@ export function SopProcedurePage({
     >
       <table className={styles.table}>
         <colgroup>
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "25%" }} />
+          <col style={{ width: columnWidths.number }} />
+          <col style={{ width: columnWidths.activity }} />
           {model.actorColumns.map((actor, index) => (
             <col
               key={actor.actorId ?? `fallback-${index}`}
-              style={{ width: `${actorWidth}%` }}
+              style={{ width: columnWidths.actor }}
             />
           ))}
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "15%" }} />
+          <col style={{ width: columnWidths.input }} />
+          <col style={{ width: columnWidths.duration }} />
+          <col style={{ width: columnWidths.output }} />
+          <col style={{ width: columnWidths.note }} />
         </colgroup>
 
         <thead>
@@ -282,9 +295,7 @@ export function SopProcedurePage({
           ) : (
             page.rows.map((row) => {
               const selected = selectedStepId === row.stepId;
-              const issueCount = issues.filter(
-                (issue) => issue.stepId === row.stepId,
-              ).length;
+              const issueCount = annotations.issueCounts.get(row.stepId) ?? 0;
 
               return (
                 <tr
@@ -315,7 +326,9 @@ export function SopProcedurePage({
                     {row.kind === "decision" || issueCount > 0 ? (
                       <div className={styles.activityMeta}>
                         {row.kind === "decision" ? (
-                          <span>{decisionSummary(row.stepId, model)}</span>
+                          <span>
+                            {annotations.decisionLabels.get(row.stepId)}
+                          </span>
                         ) : null}
                         {issueCount > 0 ? (
                           <span className={styles.issue}>
@@ -388,7 +401,7 @@ export function SopProcedurePage({
         >
           <defs>
             <marker
-              id={`sopflow-procedure-arrow-${page.pageIndex}`}
+              id={markerId}
               markerWidth="10"
               markerHeight="8"
               refX="7"
@@ -404,15 +417,19 @@ export function SopProcedurePage({
             const selected = selectedConnectionId === edge.id;
             const sourceShape = geometry.shapes.get(edge.from);
             const targetShape = geometry.shapes.get(edge.to);
-            const obstacles = [...geometry.shapes.values()]
-              .filter(
-                (shape) =>
-                  shape.stepId !== edge.from && shape.stepId !== edge.to,
-              )
-              .map((shape) => shape.rect);
-            const occupiedSegments = [...routeSegmentsById.entries()]
-              .filter(([edgeId]) => edgeId !== edge.id)
-              .flatMap(([, segments]) => segments);
+            const obstacles = editingEnabled
+              ? [...geometry.shapes.values()]
+                  .filter(
+                    (shape) =>
+                      shape.stepId !== edge.from && shape.stepId !== edge.to,
+                  )
+                  .map((shape) => shape.rect)
+              : [];
+            const occupiedSegments = editingEnabled
+              ? [...routeSegmentsById.entries()]
+                  .filter(([edgeId]) => edgeId !== edge.id)
+                  .flatMap(([, segments]) => segments)
+              : [];
             const pelaksanaBounds = geometry.pelaksanaBounds;
             const formalBounds = pelaksanaBounds
               ? {
@@ -449,7 +466,7 @@ export function SopProcedurePage({
                   d={pointsToPath(edge.points)}
                   className={styles.edge}
                   data-selected={selected || undefined}
-                  markerEnd={`url(#sopflow-procedure-arrow-${page.pageIndex})`}
+                  markerEnd={`url(#${markerId})`}
                 />
                 {edge.label && edge.labelPosition ? (
                   <text

@@ -1,5 +1,7 @@
 import {
   validateSop,
+  getSopSchemaIssues,
+  type SopSchemaIssue,
   type SOPDocument,
   type ValidationIssue,
 } from "@sopflow/core";
@@ -14,6 +16,7 @@ import {
 } from "./validateProcedure.js";
 
 export type SopApReadinessIssue =
+  | ({ readonly kind: "schema" } & SopSchemaIssue)
   | ({ readonly kind: "graph" } & ValidationIssue)
   | SopApHeaderValidationIssue
   | SopApProcedureValidationIssue;
@@ -24,6 +27,10 @@ export function getSopApReadinessIssues(
   graphIssues?: readonly ValidationIssue[],
 ): SopApReadinessIssue[] {
   return [
+    ...getSopSchemaIssues(document).map((issue) => ({
+      ...issue,
+      kind: "schema" as const,
+    })),
     ...(graphIssues ?? validateSop(document)).map((issue) => ({
       ...issue,
       kind: "graph" as const,

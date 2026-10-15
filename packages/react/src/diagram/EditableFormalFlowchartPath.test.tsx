@@ -122,7 +122,7 @@ describe("EditableFormalFlowchartPath", () => {
     expect(onReset).not.toHaveBeenCalled();
   });
 
-  it("resets the selected manual route with Delete", () => {
+  it("resets the selected manual route with Delete only when route is focused", () => {
     const onReset = vi.fn();
 
     render(
@@ -141,8 +141,16 @@ describe("EditableFormalFlowchartPath", () => {
       </svg>,
     );
 
-    globalThis.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete" }));
+    const route = screen.getByRole("button", { name: "Edit route edge-1" });
+    fireEvent.keyDown(route, { key: "Delete" });
 
     expect(onReset).toHaveBeenCalledOnce();
+
+    // A keyboard shortcut outside this route must not mutate the diagram.
+    const unrelated = document.createElement("button");
+    document.body.append(unrelated);
+    fireEvent.keyDown(unrelated, { key: "Delete" });
+    expect(onReset).toHaveBeenCalledOnce();
+    unrelated.remove();
   });
 });

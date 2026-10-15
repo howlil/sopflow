@@ -177,9 +177,9 @@ export function SopStepCard({
         />
       ) : null}
 
-      {!disabled ? (
+      {!disabled && isDeleteDialogOpen ? (
         <DeleteStepDialog
-          open={isDeleteDialogOpen}
+          open={true}
           step={step}
           document={document}
           disabled={disabled}

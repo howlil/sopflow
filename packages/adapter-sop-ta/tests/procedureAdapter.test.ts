@@ -3,6 +3,7 @@ import {
   exportSopTaDocument,
   exportSopTaPatchItems,
   importSopTaDocument,
+  tryImportSopTaDocument,
   validateSopTaCompatibility,
   type SopTaProcedureRow,
 } from "../src/index.js";
@@ -63,6 +64,58 @@ const rows: SopTaProcedureRow[] = [
 ];
 
 describe("sop-ta compatibility adapter", () => {
+
+  it("rejects unknown legacy actors instead of silently dropping references", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, pelaksana: "missing-actor" } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "UNKNOWN_ACTOR", rowId: "fix" }),
+      );
+    }
+  });
+
+  it("rejects missing units instead of silently dropping duration values", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) => {
+        if (row.id !== "fix") return row;
+        const { satuanWaktu: _unit, ...withoutUnit } = row;
+        return withoutUnit;
+      }),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "UNKNOWN_DURATION_UNIT", rowId: "fix" }),
+      );
+    }
+  });
+
+  it("rejects negative durations before lossy normalization", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) => row.id === "fix" ? { ...row, waktu: -2 } : row),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "INVALID_DURATION", rowId: "fix" }),
+      );
+    }
+  });
+
   it("imports authored order and explicit workflow semantics", () => {
     const document = importSopTaDocument({
       id: "legacy",

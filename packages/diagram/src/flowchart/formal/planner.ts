@@ -134,6 +134,22 @@ export function planFormalProcedureEdges(
   const columnTrunkSlots = assignFormalColumnTrunkSlots(routeMetas);
   const pathLayoutSeed = options.pathLayoutSeed ?? 0;
   const maxReconcilePasses = Math.max(1, options.maxReconcilePasses ?? 4);
+  const shapes = [...geometry.shapes.values()];
+  const labelObstacles = shapes.map((shape) => shape.rect);
+  // Static geometry is shared across all routing/reconciliation passes.
+  const obstaclesByEdge = new Map(
+    model.edges.map(
+      (edge) =>
+        [
+          edge.id,
+          shapes
+            .filter(
+              (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
+            )
+            .map((shape) => shape.rect),
+        ] as const,
+    ),
+  );
 
   let priorityIds = new Set<string>();
   let bestPlan: Map<string, FormalPlannedEdge> | null = null;
@@ -162,10 +178,6 @@ export function planFormalProcedureEdges(
     >();
     const planned = new Map<string, FormalPlannedEdge>();
     const occupiedLabels: DiagramRect[] = [];
-    const labelObstacles = [...geometry.shapes.values()].map(
-      (shape) => shape.rect,
-    );
-
     for (const meta of orderedMetas) {
       const edge = edgeById.get(meta.id);
       if (!edge) continue;
@@ -176,11 +188,7 @@ export function planFormalProcedureEdges(
 
       const source = sourceGeometry.rect;
       const target = targetGeometry.rect;
-      const obstacles = [...geometry.shapes.values()]
-        .filter(
-          (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
-        )
-        .map((shape) => shape.rect);
+      const obstacles = obstaclesByEdge.get(edge.id) ?? [];
 
       const sourceColumn = resolveFormalColumnForConnection(
         meta.fromActorId,
@@ -295,7 +303,11 @@ export function planFormalProcedureEdges(
       });
     }
 
-    const passScore = scoreFormalPlan(planned, segmentsByConnection, geometry);
+    const passScore = scoreFormalPlan(
+      planned,
+      segmentsByConnection,
+      obstaclesByEdge,
+    );
     if (passScore < bestScore) {
       bestScore = passScore;
       bestPlan = planned;
@@ -313,7 +325,11 @@ export function planFormalProcedureEdges(
     const routed = selected.get(edge.id);
     if (!routed) return [];
 
-    const quality = measureFormalEdgeQuality(routed, geometry, bestSegments);
+    const quality = measureFormalEdgeQuality(
+      routed,
+      obstaclesByEdge,
+      bestSegments,
+    );
     const routeDiagnostics = formalRouteDiagnostics(
       routed,
       quality,
@@ -336,14 +352,14 @@ function scoreFormalPlan(
     string,
     ReturnType<typeof formalPathToSegments>
   >,
-  geometry: FormalFlowchartGeometry,
+  obstaclesByEdge: ReadonlyMap<string, readonly FormalFlowchartRect[]>,
 ): number {
   let score = 0;
 
   for (const edge of planned.values()) {
     const quality = measureFormalEdgeQuality(
       edge,
-      geometry,
+      obstaclesByEdge,
       segmentsByConnection,
     );
     score +=
@@ -359,15 +375,13 @@ function scoreFormalPlan(
 
 function measureFormalEdgeQuality(
   edge: FormalPlannedEdge,
-  geometry: FormalFlowchartGeometry,
+  obstaclesByEdge: ReadonlyMap<string, readonly FormalFlowchartRect[]>,
   segmentsByConnection: ReadonlyMap<
     string,
     ReturnType<typeof formalPathToSegments>
   >,
 ): DiagramRouteQuality {
-  const obstacles = [...geometry.shapes.values()]
-    .filter((shape) => shape.stepId !== edge.from && shape.stepId !== edge.to)
-    .map((shape) => shape.rect);
+  const obstacles = obstaclesByEdge.get(edge.id) ?? [];
   const occupied = [...segmentsByConnection.entries()]
     .filter(([connectionId]) => connectionId !== edge.id)
     .flatMap(([, segments]) => [...segments]);

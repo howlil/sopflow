@@ -48,7 +48,9 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
             <li
               key={`${issue.kind}:${issue.code}:${issueDetail(issue)}:${issue.message}`}
             >
-              {issue.message}
+              {issue.kind === "schema" && issue.path.length > 0
+                ? `${issue.path.join(".")}: ${issue.message}`
+                : issue.message}
             </li>
           ))}
         </ul>
@@ -58,5 +60,6 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
 }
 
 function issueDetail(issue: SopReadinessIssue): string {
+  if (issue.kind === "schema") return issue.path.join(".");
   return "field" in issue ? issue.field : (issue.stepId ?? "");
 }

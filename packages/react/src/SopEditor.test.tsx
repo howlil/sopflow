@@ -454,6 +454,37 @@ describe("SopEditor document workbench", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("never prunes controlled route configuration through callbacks in read-only or loading mode", () => {
+    const onDiagramConfigChange = vi.fn();
+    const config: SopDiagramConfig = {
+      routes: { "stale:next:missing": { kind: "trunk", x: 320 } },
+    };
+    const { rerender } = render(
+      <SopEditor
+        value={initialDocument}
+        header={initialHeader}
+        readOnly
+        manualEditing
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+
+    rerender(
+      <SopEditor
+        value={initialDocument}
+        header={initialHeader}
+        loading
+        manualEditing
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+      />,
+    );
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+  });
+
   it("keeps read-only mode free of editing controls", () => {
     render(
       <SopEditor value={initialDocument} header={initialHeader} readOnly />,

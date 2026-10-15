@@ -1,4 +1,4 @@
-import type { StepId } from "@sopflow/core";
+import type { StepId, ValidationIssue } from "@sopflow/core";
 import styles from "./SopProcedureView.module.css";
 import type {
   FormalFlowchartBounds,
@@ -239,4 +239,55 @@ export function decisionSummary(stepId: StepId, model: ProcedureModel): string {
   const no = branches.find((edge) => edge.kind === "no");
 
   return `Ya → ${yes ? (orderById.get(yes.to) ?? "?") : "?"} · Tidak → ${no ? (orderById.get(no.to) ?? "?") : "?"}`;
+}
+
+/** Preserve column proportions while keeping the sum exactly at 100%. */
+export function procedureColumnWidths(actorCount: number) {
+  const count = Math.max(1, actorCount);
+  const actorWeight = Math.max(10, 70 / count);
+  const total = 85 + count * actorWeight;
+  const percent = (weight: number): string => `${(100 * weight) / total}%`;
+  return {
+    number: percent(5),
+    activity: percent(25),
+    actor: percent(actorWeight),
+    input: percent(15),
+    duration: percent(10),
+    output: percent(15),
+    note: percent(15),
+  };
+}
+
+/** Linear-time labels and issue counts, shared by every row of a procedure. */
+export function buildProcedureAnnotations(
+  model: ProcedureModel,
+  issues: readonly ValidationIssue[],
+) {
+  const numberById = new Map(
+    model.rows.map((row) => [row.stepId, row.number] as const),
+  );
+  const branchesById = new Map<string, { yes?: string; no?: string }>();
+  for (const edge of model.graph.edges) {
+    if (edge.kind !== "yes" && edge.kind !== "no") continue;
+    const branches = branchesById.get(edge.from) ?? {};
+    branches[edge.kind] = edge.to;
+    branchesById.set(edge.from, branches);
+  }
+
+  const issueCounts = new Map<string, number>();
+  for (const issue of issues) {
+    if (!issue.stepId) continue;
+    issueCounts.set(issue.stepId, (issueCounts.get(issue.stepId) ?? 0) + 1);
+  }
+
+  const decisionLabels = new Map<StepId, string>();
+  for (const row of model.rows) {
+    if (row.kind !== "decision") continue;
+    const branches = branchesById.get(row.stepId);
+    const yes = branches?.yes ? (numberById.get(branches.yes) ?? "?") : "?";
+    const no = branches?.no ? (numberById.get(branches.no) ?? "?") : "?";
+    decisionLabels.set(row.stepId, `Ya → ${yes} · Tidak → ${no}`);
+  }
+
+  return { issueCounts, decisionLabels };
 }

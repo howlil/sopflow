@@ -1,5 +1,8 @@
 export {
   importSopTaDocument,
+  tryImportSopTaDocument,
+  type SopTaImportIssue,
+  type SopTaImportResult,
   exportSopTaDocument,
   exportSopTaPatchItems,
   validateSopTaCompatibility,

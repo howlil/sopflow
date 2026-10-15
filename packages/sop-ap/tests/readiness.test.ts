@@ -108,4 +108,27 @@ describe("SOP AP readiness", () => {
       }),
     );
   });
+  it("does not mark invalid schema documents as ready even when graph and profile pass", () => {
+    const unnamedActor: SOPDocument = {
+      ...document,
+      actors: [{ id: "staff", name: "" }],
+    };
+    expect(isSopApReady(unnamedActor, header)).toBe(false);
+    expect(getSopApReadinessIssues(unnamedActor, header)).toContainEqual(
+      expect.objectContaining({ kind: "schema", path: ["actors", 0, "name"] }),
+    );
+  });
+
+  it("rejects invalid durations in strict readiness", () => {
+    const invalid: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "start" ? { ...step, duration: { value: -5, unit: "minute" } } : step,
+      ),
+    };
+    expect(isSopApReady(invalid, header)).toBe(false);
+    expect(getSopApReadinessIssues(invalid, header)).toContainEqual(
+      expect.objectContaining({ kind: "schema", path: ["steps", 0, "duration", "value"] }),
+    );
+  });
 });

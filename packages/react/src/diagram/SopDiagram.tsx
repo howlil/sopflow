@@ -4,7 +4,7 @@ import {
   type SvgNodeModel,
 } from "@sopflow/diagram";
 import type { SOPDocument, StepId } from "@sopflow/core";
-import { useEffect, useId } from "react";
+import { useEffect, useId, useMemo } from "react";
 
 import "../styles/token.css";
 
@@ -34,7 +34,7 @@ export function SopDiagram({
   pannable = true,
   className,
 }: SopDiagramProps) {
-  const diagram = buildDiagram(document);
+  const diagram = useMemo(() => buildDiagram(document), [document]);
   const arrowMarkerId = `sopflow-arrow-${useId().replace(/:/g, "")}`;
   const safeMinZoom = Number.isFinite(minZoom) ? minZoom : 0.4;
   const safeMaxZoom = Number.isFinite(maxZoom) ? maxZoom : 1.75;
