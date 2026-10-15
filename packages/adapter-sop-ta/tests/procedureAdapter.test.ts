@@ -155,9 +155,11 @@ describe("sop-ta compatibility adapter", () => {
       id: "legacy",
       title: "Legacy SOP",
       actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
-      rows: rows.map((row) =>
-        row.id === "fix" ? { ...row, waktu: undefined, satuanWaktu: "h" } : row,
-      ),
+      rows: rows.map((row) => {
+        if (row.id !== "fix") return row;
+        const { waktu: _unused, ...withoutDuration } = row;
+        return { ...withoutDuration, satuanWaktu: "h" };
+      }),
     });
     expect(result.success).toBe(false);
     if (!result.success) {
