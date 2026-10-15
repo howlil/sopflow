@@ -17,7 +17,7 @@ import {
   useMotionValue,
   useReducedMotion,
 } from "motion/react";
-import type { TargetAndTransition, Variants } from "motion/react";
+import type { HTMLMotionProps, TargetAndTransition, Variants } from "motion/react";
 import { motionTokens } from "../lib/motion-tokens.js";
 import styles from "./button.module.css";
 
@@ -254,7 +254,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         variants={pressVariants}
         whileTap={reduceMotion || anchorsLayer || inert ? {} : "pressed"}
         transition={motionTokens.spring.snappy}
-        {...props}
+        {...(props as unknown as HTMLMotionProps<"button">)}
         // Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
         aria-disabled={loading || props["aria-disabled"] || undefined}
         onClick={loading ? (event) => event.preventDefault() : onClick}
