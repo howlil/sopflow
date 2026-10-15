@@ -118,10 +118,11 @@ describe("SopBpmn", () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit route start:next:review" }),
-    );
-    fireEvent.keyDown(window, { key: "Delete" });
+    const route = screen.getByRole("button", {
+      name: "Edit route start:next:review",
+    });
+    fireEvent.click(route);
+    fireEvent.keyDown(route, { key: "Delete" });
 
     expect(onDiagramConfigChange).toHaveBeenCalledWith({});
   });
