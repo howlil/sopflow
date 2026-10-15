@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 856 184" role="img" aria-labelledby="title description">
+  <title id="title">SOPFlow logo</title>
+  <desc id="description">SOPFlow flowing ribbon mark and outlined lowercase wordmark on transparent background.</desc>
+  <g fill="none" stroke="#1E6BFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M 46 92 C 96 92 96 38 145 38 L 175 38"/>
+  <path d="M 46 92 C 96 92 96 38 145 38 L 175 38" transform="translate(26 54)"/>
+</g><g transform="translate(247 12) scale(1.57)" fill="none" stroke="#101627" stroke-width="9.3" stroke-linecap="round" stroke-linejoin="round"><path d="M39 34C33.4 28.7 23.7 27.6 17.3 31.3C9.1 36.2 12.7 43 24.7 46.2L31.7 48C44.7 51.6 41.8 62.4 31.9 66.2C24.3 69.1 17.1 65.3 12.2 61"/>
+<circle cx="76.5" cy="48.7" r="18.4"/>
+<path d="M113 31V82M113 42.9C117.3 34.4 124.1 30.3 132.3 30.3C142.7 30.3 151.6 38.5 151.6 48.7C151.6 59 142.7 67.1 132.3 67.1C124.4 67.1 117.5 63.1 113 55.3"/>
+<path d="M193.5 17.5C184.6 14.5 176.6 19.2 176.6 30.8V65.8M165.5 34.5H193.8"/>
+<path d="M215.1 15.5V56.6C215.1 63.8 218.7 67.1 226 66.4"/>
+<circle cx="261" cy="48.7" r="18.4"/>
+<path d="M300 31.7L311.8 64.3L327.7 41.2L343.5 64.3L355 31.7"/></g>
+</svg>
