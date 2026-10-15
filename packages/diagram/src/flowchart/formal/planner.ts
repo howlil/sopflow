@@ -138,12 +138,17 @@ export function planFormalProcedureEdges(
   const labelObstacles = shapes.map((shape) => shape.rect);
   // Static geometry is shared across all routing/reconciliation passes.
   const obstaclesByEdge = new Map(
-    model.edges.map((edge) => [
-      edge.id,
-      shapes
-        .filter((shape) => shape.stepId !== edge.from && shape.stepId !== edge.to)
-        .map((shape) => shape.rect),
-    ] as const),
+    model.edges.map(
+      (edge) =>
+        [
+          edge.id,
+          shapes
+            .filter(
+              (shape) => shape.stepId !== edge.from && shape.stepId !== edge.to,
+            )
+            .map((shape) => shape.rect),
+        ] as const,
+    ),
   );
 
   let priorityIds = new Set<string>();
