@@ -1,3 +1,4 @@
+import { Ellipsis } from "lucide-react";
 import { useState } from "react";
 import type { Step } from "@sopflow/core";
 
@@ -33,7 +34,7 @@ export function StepActions({
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        •••
+        <Ellipsis size={16} aria-hidden="true" />
       </button>
 
       {open ? (

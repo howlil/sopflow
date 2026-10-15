@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import type { Actor } from "@sopflow/core";
 
 import styles from "./ActorField.module.css";
@@ -51,7 +52,7 @@ export function ActorField({
       >
         <span className={styles.summaryText}>{compactActorLabel(names)}</span>
         <span className={styles.chevron} aria-hidden="true">
-          ▾
+          <ChevronDown size={16} aria-hidden="true" />
         </span>
       </summary>
 

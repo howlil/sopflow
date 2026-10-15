@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import styles from "./EditorStatus.module.css";
 import { useEffect, useState } from "react";
 
@@ -41,7 +42,7 @@ export function EditorStatus({
             aria-label="Tutup pesan error"
             onClick={() => setDismissedError(visibleError)}
           >
-            ×
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
       ) : null}

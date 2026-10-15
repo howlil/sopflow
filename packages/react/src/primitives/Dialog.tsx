@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDialogFocus } from "./dialog/useDialogFocus.js";
@@ -73,7 +74,7 @@ export function Dialog({
             tabIndex={-1}
             onClick={onClose}
           >
-            ×
+            <X size={16} aria-hidden="true" />
           </button>
         </header>
 
