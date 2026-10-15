@@ -27,7 +27,7 @@ export function StepActions({
     items.push({
       label: "Atur cabang decision",
       icon: <GitBranch size={15} aria-hidden="true" />,
-      onSelect: onConfigureDecision,
+      ...(onConfigureDecision ? { onSelect: onConfigureDecision } : {}),
       disabled: !onConfigureDecision,
     });
   } else {
