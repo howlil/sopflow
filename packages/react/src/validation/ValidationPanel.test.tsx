@@ -32,6 +32,22 @@ describe("ValidationPanel", () => {
     ).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("shows the schema field path for invalid drafts", async () => {
+    const user = userEvent.setup();
+    render(
+      <ValidationPanel
+        issues={[{
+          kind: "schema",
+          code: "too_small",
+          path: ["actors", 0, "name"],
+          message: "Required",
+        }]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Lihat masalah" }));
+    expect(screen.getByText("actors.0.name: Required")).toBeInTheDocument();
+  });
+
   it("reports a ready document", () => {
     render(<ValidationPanel issues={[]} />);
 
