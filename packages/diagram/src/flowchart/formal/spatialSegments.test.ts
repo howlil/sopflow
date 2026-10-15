@@ -14,26 +14,41 @@ describe("route scoring spatial index", () => {
   it("matches exhaustive quality scoring for intersections and long segments", () => {
     const index = createRouteSegmentSpatialIndex(segments);
     const routes = [
-      [{ x: 0, y: 0 }, { x: 500, y: 0 }],
-      [{ x: 100, y: -100 }, { x: 100, y: 100 }],
-      [{ x: 9000, y: 9000 }, { x: 9200, y: 9000 }],
-      [{ x: -20000, y: 0 }, { x: 20000, y: 0 }],
+      [
+        { x: 0, y: 0 },
+        { x: 500, y: 0 },
+      ],
+      [
+        { x: 100, y: -100 },
+        { x: 100, y: 100 },
+      ],
+      [
+        { x: 9000, y: 9000 },
+        { x: 9200, y: 9000 },
+      ],
+      [
+        { x: -20000, y: 0 },
+        { x: 20000, y: 0 },
+      ],
     ];
     for (const ownerId of ["self", "cross", "overlap", "far", "long"]) {
       const brute = [...segments]
         .filter(([id]) => id !== ownerId)
         .flatMap(([, entries]) => entries);
       for (const route of routes) {
-        expect(measureRouteQuality(route, [], index.nearby(ownerId, route))).toEqual(
-          measureRouteQuality(route, [], brute),
-        );
+        expect(
+          measureRouteQuality(route, [], index.nearby(ownerId, route)),
+        ).toEqual(measureRouteQuality(route, [], brute));
       }
     }
   });
 
   it("omits distant segments while retaining crossing candidates", () => {
     const index = createRouteSegmentSpatialIndex(segments);
-    const nearby = index.nearby("self", [{ x: 90, y: 0 }, { x: 110, y: 0 }]);
+    const nearby = index.nearby("self", [
+      { x: 90, y: 0 },
+      { x: 110, y: 0 },
+    ]);
     expect(nearby).toContainEqual(segments.get("cross")?.[0]);
     expect(nearby).not.toContainEqual(segments.get("far")?.[0]);
     expect(nearby).not.toContainEqual(segments.get("self")?.[0]);

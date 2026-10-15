@@ -17,6 +17,7 @@
     "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
+    "bench:routes": "vitest bench src/flowchart/formal/planner.bench.ts",
     "prepack": "pnpm build"
   },
   "dependencies": {
