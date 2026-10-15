@@ -33,7 +33,7 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
   /** Controls presence. Hiding the alert collapses its height and fades it out. */
   open?: boolean;
   /** Shows a dismiss button. An uncontrolled alert collapses first, then calls this. */
-  onDismiss?: () => void;
+  onDismiss?: (() => void) | undefined;
 }
 type AlertBoxProps = Omit<AlertProps, "open"> & {
   reduce: boolean | null;
@@ -95,7 +95,7 @@ function HeightFrame({
   morphKey,
   children,
 }: {
-  className?: string;
+  className?: string | undefined;
   reduce: boolean | null;
   morphKey: string;
   children: ReactNode;

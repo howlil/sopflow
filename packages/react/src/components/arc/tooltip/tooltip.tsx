@@ -85,7 +85,7 @@ function TooltipText({ text }: { text: string }) {
     <motion.span
       className={styles.text}
       initial={false}
-      animate={size ? { width: size.width, height: size.height } : undefined}
+      animate={size ? { width: size.width, height: size.height } : {}}
       transition={
         size?.animate && !reduced ? motionTokens.spring.morph : { duration: 0 }
       }

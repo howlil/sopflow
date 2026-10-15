@@ -144,10 +144,10 @@ function FieldMessage({
   className,
   alert,
 }: {
-  id?: string;
-  text?: string;
-  className?: string;
-  alert?: boolean;
+  id?: string | undefined;
+  text?: string | undefined;
+  className?: string | undefined;
+  alert?: boolean | undefined;
 }) {
   return (
     <AnimatePresence initial={false}>
@@ -171,10 +171,10 @@ function MessageRow({
   className,
   alert,
 }: {
-  id?: string;
+  id?: string | undefined;
   text: string;
-  className?: string;
-  alert?: boolean;
+  className?: string | undefined;
+  alert?: boolean | undefined;
 }) {
   const reduced = useReducedMotion();
   const copyRef = useRef<HTMLSpanElement>(null);
