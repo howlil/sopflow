@@ -80,6 +80,9 @@ The React package contains ~45 production TSX files including Arc Button. Compon
 ## 5. Status tracking
 
 - P0 monochrome foundation, official Arc Button and toolbar are already integrated in PR #54 and CI green.
-- PR #55 stages the remaining official Arc source, scoped tokens and package dependencies.
+- PR #55 vendors Input, Textarea, Select, MultiSelect, Dialog, Tooltip, DropdownMenu, SegmentedControl, Accordion and Alert source, plus pinned dependencies and a scoped Arc foundation.
+- **Integrated with real SOPFlow call sites:** Arc Input in institution/metadata fields and ActorsEditor; Arc Textarea in dense step fields and header metadata (keeping auto-resize); Arc Select in StepTypeField (with forbidden decision-collapse option disabled). Native date/file field semantics and formal document renderers remain untouched.
+- **Visual**: Lucide icons replace raw glyphs for step-action trigger, dialog close, status dismissal and actor chevron.
+- **Remaining before declaring complete:** migrate actor MultiSelect, step DropdownMenu, modal Dialog, tooltips, optional inspector accordion and alert presentation; verify printed document equivalence and React 18 consumers.
 - **Do not claim unconnected vendored components are integrated.** Implement adapters and migrate call sites, then test each controlled interaction before promotion.
 - Both PRs remain draft until visual/print consumer proof and React peer compatibility are complete.
