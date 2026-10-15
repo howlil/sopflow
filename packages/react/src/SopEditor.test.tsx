@@ -779,7 +779,8 @@ describe("SopEditor dialog accessibility", () => {
     render(<EditorHarness />);
 
     const row = getStepRow(getReviewField());
-    await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
+    const menuTrigger = within(row).getByRole("button", { name: /aksi untuk/i });
+    await user.click(menuTrigger);
 
     const deleteTrigger = screen.getByRole("menuitem", {
       name: /hapus langkah/i,
@@ -796,7 +797,7 @@ describe("SopEditor dialog accessibility", () => {
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(deleteTrigger);
+    expect(document.activeElement).toBe(menuTrigger);
   });
 
   it("keeps tab focus inside a dialog", async () => {

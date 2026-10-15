@@ -109,6 +109,17 @@ function TriggerLabel({ text }: { text: string }) {
   );
 }
 
+/** The last keyboard/pointer action trigger is an accessible restoration target
+ * when a menu item opens a modal and its portaled item unmounts. */
+function markMenuTrigger(button: HTMLButtonElement) {
+  document
+    .querySelectorAll("[data-sopflow-dialog-return-focus]")
+    .forEach((element) =>
+      element.removeAttribute("data-sopflow-dialog-return-focus"),
+    );
+  button.setAttribute("data-sopflow-dialog-return-focus", "true");
+}
+
 export function DropdownMenu({
   label,
   items,
@@ -156,6 +167,8 @@ export function DropdownMenu({
         className={styles.trigger}
         data-compact={compact || undefined}
         aria-label={label}
+        onPointerDown={(event) => { if (compact) markMenuTrigger(event.currentTarget); }}
+        onFocus={(event) => { if (compact) markMenuTrigger(event.currentTarget); }}
         type="button"
       >
         {icon && (
