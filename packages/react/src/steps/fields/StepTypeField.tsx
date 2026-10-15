@@ -65,7 +65,9 @@ export function StepTypeField({
         options={[
           {
             value: "task",
-            label: cannotCollapseDecision ? "Task — satukan cabang dulu" : "Task",
+            label: cannotCollapseDecision
+                ? "Task — satukan cabang dulu"
+                : "Task",
             disabled: cannotCollapseDecision,
           },
           { value: "decision", label: "Decision" },
