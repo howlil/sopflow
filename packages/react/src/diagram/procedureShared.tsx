@@ -263,7 +263,9 @@ export function buildProcedureAnnotations(
   model: ProcedureModel,
   issues: readonly ValidationIssue[],
 ) {
-  const numberById = new Map(model.rows.map((row) => [row.stepId, row.number] as const));
+  const numberById = new Map(
+    model.rows.map((row) => [row.stepId, row.number] as const),
+  );
   const branchesById = new Map<string, { yes?: string; no?: string }>();
   for (const edge of model.graph.edges) {
     if (edge.kind !== "yes" && edge.kind !== "no") continue;

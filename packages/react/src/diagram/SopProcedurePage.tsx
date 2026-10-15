@@ -326,7 +326,9 @@ export function SopProcedurePage({
                     {row.kind === "decision" || issueCount > 0 ? (
                       <div className={styles.activityMeta}>
                         {row.kind === "decision" ? (
-                          <span>{annotations.decisionLabels.get(row.stepId)}</span>
+                          <span>
+                            {annotations.decisionLabels.get(row.stepId)}
+                          </span>
                         ) : null}
                         {issueCount > 0 ? (
                           <span className={styles.issue}>

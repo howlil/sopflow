@@ -36,12 +36,14 @@ describe("ValidationPanel", () => {
     const user = userEvent.setup();
     render(
       <ValidationPanel
-        issues={[{
-          kind: "schema",
-          code: "too_small",
-          path: ["actors", 0, "name"],
-          message: "Required",
-        }]}
+        issues={[
+          {
+            kind: "schema",
+            code: "too_small",
+            path: ["actors", 0, "name"],
+            message: "Required",
+          },
+        ]}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Lihat masalah" }));

@@ -454,7 +454,6 @@ describe("SopEditor document workbench", () => {
     ).not.toBeInTheDocument();
   });
 
-
   it("never prunes controlled route configuration through callbacks in read-only or loading mode", () => {
     const onDiagramConfigChange = vi.fn();
     const config: SopDiagramConfig = {
