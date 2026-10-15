@@ -5,6 +5,7 @@ import styles from "./StepTypeField.module.css";
 export interface StepTypeFieldProps {
   step: Step;
   steps?: readonly Step[];
+  orderByStepId?: ReadonlyMap<string, number>;
   onChange: (type: "task" | "decision") => void;
   disabled?: boolean;
   readOnly?: boolean;
@@ -13,12 +14,15 @@ export interface StepTypeFieldProps {
 export function StepTypeField({
   step,
   steps = [],
+  orderByStepId,
   onChange,
   disabled = false,
   readOnly = false,
 }: StepTypeFieldProps) {
   const branchSummary =
-    step.type === "decision" ? decisionBranchSummary(step, steps) : null;
+    step.type === "decision"
+      ? decisionBranchSummary(step, steps, orderByStepId)
+      : null;
 
   if (readOnly) {
     return (
@@ -83,10 +87,13 @@ export function StepTypeField({
 function decisionBranchSummary(
   step: Extract<Step, { type: "decision" }>,
   steps: readonly Step[],
+  orderByStepId?: ReadonlyMap<string, number>,
 ): string {
-  const orderById = new Map(
-    steps.map((candidate, index) => [candidate.id, index + 1] as const),
-  );
+  const orderById =
+    orderByStepId ??
+    new Map(
+      steps.map((candidate, index) => [candidate.id, index + 1] as const),
+    );
 
   const yes = orderById.get(step.yes) ?? "?";
   const no = orderById.get(step.no) ?? "?";

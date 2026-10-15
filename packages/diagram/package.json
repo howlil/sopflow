@@ -17,6 +17,7 @@
     "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
+    "bench:routes": "pnpm build && node ../../scripts/bench-routing.mjs",
     "prepack": "pnpm build"
   },
   "dependencies": {

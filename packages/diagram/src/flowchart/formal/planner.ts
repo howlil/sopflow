@@ -7,6 +7,10 @@ import type {
 import { measureRouteQuality, type DiagramRect } from "../../routeGeometry.js";
 import { routeLabelBounds } from "../../routeLabels.js";
 import {
+  createRouteSegmentSpatialIndex,
+  type RouteSegmentSpatialIndex,
+} from "./spatialSegments.js";
+import {
   channelAnchorDistance,
   clampAnchorDistance,
   pointOnRectSide,
@@ -320,6 +324,7 @@ export function planFormalProcedureEdges(
   }
 
   const selected = bestPlan ?? new Map<string, FormalPlannedEdge>();
+  const bestIndex = createRouteSegmentSpatialIndex(bestSegments);
 
   return model.edges.flatMap((edge) => {
     const routed = selected.get(edge.id);
@@ -328,7 +333,7 @@ export function planFormalProcedureEdges(
     const quality = measureFormalEdgeQuality(
       routed,
       obstaclesByEdge,
-      bestSegments,
+      bestIndex,
     );
     const routeDiagnostics = formalRouteDiagnostics(
       routed,
@@ -355,12 +360,13 @@ function scoreFormalPlan(
   obstaclesByEdge: ReadonlyMap<string, readonly FormalFlowchartRect[]>,
 ): number {
   let score = 0;
+  const spatialIndex = createRouteSegmentSpatialIndex(segmentsByConnection);
 
   for (const edge of planned.values()) {
     const quality = measureFormalEdgeQuality(
       edge,
       obstaclesByEdge,
-      segmentsByConnection,
+      spatialIndex,
     );
     score +=
       quality.obstacleHits * 100_000 +
@@ -376,15 +382,10 @@ function scoreFormalPlan(
 function measureFormalEdgeQuality(
   edge: FormalPlannedEdge,
   obstaclesByEdge: ReadonlyMap<string, readonly FormalFlowchartRect[]>,
-  segmentsByConnection: ReadonlyMap<
-    string,
-    ReturnType<typeof formalPathToSegments>
-  >,
+  spatialIndex: RouteSegmentSpatialIndex,
 ): DiagramRouteQuality {
   const obstacles = obstaclesByEdge.get(edge.id) ?? [];
-  const occupied = [...segmentsByConnection.entries()]
-    .filter(([connectionId]) => connectionId !== edge.id)
-    .flatMap(([, segments]) => [...segments]);
+  const occupied = spatialIndex.nearby(edge.id, edge.points);
 
   return measureRouteQuality(edge.points, obstacles, occupied);
 }

@@ -1,12 +1,16 @@
-import type { Step, ValidationIssue } from "@sopflow/core";
-import { getStepIssues, hasStepIssue } from "../../validation/getStepIssues.js";
+import type { Step } from "@sopflow/core";
+import {
+  getStepIssues,
+  hasStepIssue,
+  type StepDiagnostic,
+} from "../../validation/getStepIssues.js";
 import {
   useStepActions,
   type UseStepActionsOptions,
 } from "./useStepActions.js";
 
 export type StepEditorControllerOptions = UseStepActionsOptions & {
-  issues: readonly ValidationIssue[];
+  issues: readonly StepDiagnostic[];
 };
 
 export function useStepEditorController({

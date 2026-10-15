@@ -116,6 +116,59 @@ describe("sop-ta compatibility adapter", () => {
     }
   });
 
+  it("rejects conflicting actor sources in strict import", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, pelaksanaIds: ["manager"] } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "ACTOR_REPRESENTATION_CONFLICT", rowId: "fix" }),
+      );
+    }
+  });
+
+  it("rejects silently ignored branch fields in strict import", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, id_next_step_if_no: "start" } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "UNSUPPORTED_BRANCH_METADATA", rowId: "fix" }),
+      );
+    }
+  });
+
+  it("rejects orphaned duration units in strict import", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) => {
+        if (row.id !== "fix") return row;
+        const { waktu: _unused, ...withoutDuration } = row;
+        return { ...withoutDuration, satuanWaktu: "h" };
+      }),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "UNPAIRED_DURATION_UNIT", rowId: "fix" }),
+      );
+    }
+  });
+
   it("imports authored order and explicit workflow semantics", () => {
     const document = importSopTaDocument({
       id: "legacy",
@@ -223,6 +276,19 @@ describe("sop-ta compatibility adapter", () => {
         pelaksanaId: "manager",
       }),
     ]);
+  });
+
+  it("rejects structurally invalid documents before export", () => {
+    const valid = importSopTaDocument({
+      id: "legacy", title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows,
+    });
+    const invalid = { ...valid, actors: [{ id: "staff", name: "Staff" }] };
+    expect(validateSopTaCompatibility(invalid)).toContainEqual(
+      expect.objectContaining({ code: "INVALID_DOCUMENT" }),
+    );
+    expect(() => exportSopTaPatchItems(invalid)).toThrow(/not losslessly compatible/i);
   });
 
   it("rejects export when a generic task jumps outside authored sequence", () => {

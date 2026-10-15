@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { SOPDocument } from "@sopflow/core";
 import { SopProcedureView } from "./SopProcedureView.js";
 
@@ -41,6 +41,35 @@ const document: SOPDocument = {
 };
 
 describe("SopProcedureView", () => {
+  it("retains a saved cross-page override when pagination becomes local", () => {
+    const onDiagramConfigChange = vi.fn();
+    const config = {
+      pagedRoutes: {
+        "start:next:review": { source: { kind: "trunk" as const, x: 320 } },
+      },
+    };
+    const { rerender } = render(
+      <SopProcedureView
+        document={document}
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+        firstPageRows={1}
+        nextPageRows={1}
+      />,
+    );
+    onDiagramConfigChange.mockClear();
+    rerender(
+      <SopProcedureView
+        document={document}
+        diagramConfig={config}
+        onDiagramConfigChange={onDiagramConfigChange}
+        firstPageRows={4}
+        nextPageRows={4}
+      />,
+    );
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
+  });
+
   it("renders SOP-AP grouped actor and mutu baku headers", () => {
     render(<SopProcedureView document={document} />);
 

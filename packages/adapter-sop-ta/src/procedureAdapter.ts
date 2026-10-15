@@ -40,7 +40,8 @@ export interface SopTaCompatibilityIssue {
     | "INVALID_START_POSITION"
     | "INVALID_END_POSITION"
     | "INVALID_ACTOR_COUNT"
-    | "NON_SEQUENTIAL_TASK";
+    | "NON_SEQUENTIAL_TASK"
+    | "INVALID_DOCUMENT";
   readonly message: string;
   readonly stepId?: string;
 }
@@ -49,6 +50,9 @@ export interface SopTaCompatibilityIssue {
 export interface SopTaImportIssue {
   readonly code:
     | "UNKNOWN_ACTOR"
+    | "ACTOR_REPRESENTATION_CONFLICT"
+    | "UNSUPPORTED_BRANCH_METADATA"
+    | "UNPAIRED_DURATION_UNIT"
     | "AMBIGUOUS_ACTOR_MAPPING"
     | "INVALID_DURATION"
     | "UNKNOWN_DURATION_UNIT"
@@ -68,7 +72,60 @@ export type SopTaImportResult =
 export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResult {
   const issues: SopTaImportIssue[] = [];
   const knownActorIds = new Set(input.actors.map((actor) => actor.id));
-  for (const row of input.rows) {
+  const orderedRows = [...input.rows].sort(
+    (left, right) => left.urutan - right.urutan || left.id.localeCompare(right.id),
+  );
+  for (const [rowIndex, row] of orderedRows.entries()) {
+    const explicitIds = row.pelaksanaIds?.length ? [...new Set(row.pelaksanaIds)] : [];
+    const primaryId = row.pelaksana?.trim();
+    const mappedIds = Object.entries(row.pelaksanaMapping ?? {})
+      .filter(([, value]) => value.trim())
+      .map(([actorId]) => actorId);
+    if (
+      (primaryId && explicitIds.length > 0 &&
+        (explicitIds.length !== 1 || explicitIds[0] !== primaryId)) ||
+      (mappedIds.length > 0 && (explicitIds.length > 0 || primaryId) &&
+        (mappedIds.length !== 1 ||
+          mappedIds[0] !== (explicitIds[0] ?? primaryId)))
+    ) {
+      issues.push({
+        code: "ACTOR_REPRESENTATION_CONFLICT",
+        rowId: row.id,
+        message: `Row "${row.id}" supplies conflicting actor representations`,
+      });
+    }
+    if (row.satuanWaktu !== undefined && row.waktu === undefined) {
+      issues.push({
+        code: "UNPAIRED_DURATION_UNIT",
+        rowId: row.id,
+        message: `Row "${row.id}" supplies a unit without a duration`,
+      });
+    }
+    let effectiveType: Step["type"];
+    try {
+      effectiveType = resolveLegacyType(row, rowIndex, orderedRows.length);
+    } catch (error) {
+      issues.push({
+        code: "IMPORT_FAILED",
+        rowId: row.id,
+        message: error instanceof Error ? error.message : "Invalid row type",
+      });
+      continue;
+    }
+    const nextRow = orderedRows[rowIndex + 1];
+    const unsupportedBranch =
+      (effectiveType !== "decision" && row.id_next_step_if_no !== undefined) ||
+      (effectiveType === "start" && row.id_next_step_if_yes !== undefined &&
+        row.id_next_step_if_yes !== nextRow?.id) ||
+      (effectiveType === "end" && row.id_next_step_if_yes !== undefined) ||
+      (effectiveType !== "start" && effectiveType !== "end" && row.terminatorRole !== undefined);
+    if (unsupportedBranch) {
+      issues.push({
+        code: "UNSUPPORTED_BRANCH_METADATA",
+        rowId: row.id,
+        message: `Row "${row.id}" contains branch metadata the adapter cannot preserve`,
+      });
+    }
     for (const actorId of resolveActorIds(row)) {
       if (!knownActorIds.has(actorId)) {
         issues.push({
@@ -257,6 +314,13 @@ export function validateSopTaCompatibility(
 ): SopTaCompatibilityIssue[] {
   const ordered = getPresentationSteps(document);
   const issues: SopTaCompatibilityIssue[] = [];
+  const parsed = parseSop(document);
+  if (!parsed.success) {
+    issues.push({
+      code: "INVALID_DOCUMENT",
+      message: `SOP document is invalid: ${parsed.errors.join("; ")}`,
+    });
+  }
 
   if (ordered.length < 2) {
     issues.push({

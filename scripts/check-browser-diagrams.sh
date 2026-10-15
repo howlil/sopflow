@@ -4,6 +4,8 @@ set -euo pipefail
 PORT=4173
 LOG_FILE="${RUNNER_TEMP:-/tmp}/sopflow-playground.log"
 DOM_FILE="${RUNNER_TEMP:-/tmp}/sopflow-diagram-regression.html"
+SCREENSHOT_FILE="${RUNNER_TEMP:-/tmp}/sopflow-diagram-regression.png"
+PRINT_FILE="${RUNNER_TEMP:-/tmp}/sopflow-diagram-regression.pdf"
 PROFILE_DIR="${RUNNER_TEMP:-/tmp}/sopflow-chrome-profile"
 
 pnpm --filter playground dev --host 127.0.0.1 --port "${PORT}" >"${LOG_FILE}" 2>&1 &
@@ -52,4 +54,18 @@ if ! grep -q 'data-diagram-regression="pass"' "${DOM_FILE}"; then
   exit 1
 fi
 
-echo "Diagram browser regression passed with ${CHROME_BIN}"
+# Preserve actual raster and print output for human visual regression review.
+# This is NOT a pixel-golden comparison; structural checks remain the CI gate.
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --window-size=1365,900 --user-data-dir="${PROFILE_DIR}" \
+  --virtual-time-budget=5000 --screenshot="${SCREENSHOT_FILE}" \
+  "http://127.0.0.1:${PORT}/?diagram-regression=1" >/dev/null 2>&1
+test -s "${SCREENSHOT_FILE}"
+
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --user-data-dir="${PROFILE_DIR}" --virtual-time-budget=5000 \
+  --print-to-pdf="${PRINT_FILE}" \
+  "http://127.0.0.1:${PORT}/?diagram-regression=1" >/dev/null 2>&1
+test -s "${PRINT_FILE}"
+
+echo "Diagram browser and print smoke regression passed with ${CHROME_BIN}"

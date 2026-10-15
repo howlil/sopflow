@@ -1,17 +1,20 @@
 import {
   getPresentationSteps,
+  getSopSchemaIssues,
   type SOPDocument,
   type SopOperation,
   type StepId,
   type ValidationIssue,
 } from "@sopflow/core";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import styles from "./SopStepsEditor.module.css";
 import { AddStepButton } from "./AddStepButton.js";
 import { EmptyStepsState } from "./EmptyStepsState.js";
 import { SopStepCard } from "./SopStepCard.js";
 import { SopStepRow } from "./SopStepRow.js";
 import { useStepKeyboardNavigation } from "./hooks/useStepKeyboardNavigation.js";
+import { useCompactStepsLayout } from "./hooks/useCompactStepsLayout.js";
+import type { StepDiagnostic } from "../validation/getStepIssues.js";
 
 export interface SopStepsEditorProps {
   document: SOPDocument;
@@ -32,7 +35,22 @@ export function SopStepsEditor({
   disabled = false,
 }: SopStepsEditorProps) {
   const editorRef = useRef<HTMLElement>(null);
-  const steps = getPresentationSteps(document);
+  const steps = useMemo(() => getPresentationSteps(document), [document]);
+  const stepOrder = useMemo(
+    () => new Map(steps.map((step, index) => [step.id, index + 1] as const)),
+    [steps],
+  );
+  const isCompact = useCompactStepsLayout();
+  const issuesByStepId = useMemo(() => {
+    const grouped = new Map<string, StepDiagnostic[]>();
+    for (const issue of [...issues, ...getSopSchemaIssues(document)]) {
+      if (!issue.stepId) continue;
+      const list = grouped.get(issue.stepId) ?? [];
+      list.push(issue);
+      grouped.set(issue.stepId, list);
+    }
+    return grouped;
+  }, [document, issues]);
   const handleKeyDown = useStepKeyboardNavigation({
     document,
     selectedStepId,
@@ -106,63 +124,69 @@ export function SopStepsEditor({
         )
       ) : (
         <>
-          <div className={styles.desktop}>
-            <section
-              className={styles.tableViewport}
-              aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
-              data-sopflow-steps-scroll
-            >
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th className={styles.numberColumn}>No</th>
-                    <th className={styles.activityColumn}>Kegiatan</th>
-                    <th className={styles.typeColumn}>Tipe</th>
-                    <th className={styles.actorColumn}>Pelaksana</th>
-                    <th className={styles.inputColumn}>Kelengkapan</th>
-                    <th className={styles.durationColumn}>Waktu</th>
-                    <th className={styles.outputColumn}>Output</th>
-                    <th className={styles.noteColumn}>Keterangan</th>
-                    <th className={styles.actionColumn}>Aksi</th>
-                  </tr>
-                </thead>
+          {!isCompact ? (
+            <div className={styles.desktop}>
+              <section
+                className={styles.tableViewport}
+                aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
+                data-sopflow-steps-scroll
+              >
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th className={styles.numberColumn}>No</th>
+                      <th className={styles.activityColumn}>Kegiatan</th>
+                      <th className={styles.typeColumn}>Tipe</th>
+                      <th className={styles.actorColumn}>Pelaksana</th>
+                      <th className={styles.inputColumn}>Kelengkapan</th>
+                      <th className={styles.durationColumn}>Waktu</th>
+                      <th className={styles.outputColumn}>Output</th>
+                      <th className={styles.noteColumn}>Keterangan</th>
+                      <th className={styles.actionColumn}>Aksi</th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {steps.map((step, index) => (
-                    <SopStepRow
-                      key={step.id}
-                      step={step}
-                      index={index}
-                      document={document}
-                      issues={issues}
-                      selected={selectedStepId === step.id}
-                      onSelect={() => onSelectedStepChange(step.id)}
-                      onOperation={onOperation}
-                      onOperations={onOperations}
-                      disabled={disabled}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </section>
-          </div>
-
-          <div className={styles.mobile}>
-            {steps.map((step, index) => (
-              <SopStepCard
-                key={step.id}
-                step={step}
-                index={index}
-                document={document}
-                issues={issues}
-                selected={selectedStepId === step.id}
-                onSelect={() => onSelectedStepChange(step.id)}
-                onOperation={onOperation}
-                onOperations={onOperations}
-                disabled={disabled}
-              />
-            ))}
-          </div>
+                  <tbody>
+                    {steps.map((step, index) => (
+                      <SopStepRow
+                        key={step.id}
+                        step={step}
+                        index={index}
+                        document={document}
+                        issues={issuesByStepId.get(step.id) ?? []}
+                        orderedSteps={steps}
+                        stepOrder={stepOrder}
+                        selected={selectedStepId === step.id}
+                        onSelect={() => onSelectedStepChange(step.id)}
+                        onOperation={onOperation}
+                        onOperations={onOperations}
+                        disabled={disabled}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            </div>
+          ) : (
+            <div className={styles.mobile}>
+              {steps.map((step, index) => (
+                <SopStepCard
+                  key={step.id}
+                  step={step}
+                  index={index}
+                  document={document}
+                  issues={issuesByStepId.get(step.id) ?? []}
+                  orderedSteps={steps}
+                  stepOrder={stepOrder}
+                  selected={selectedStepId === step.id}
+                  onSelect={() => onSelectedStepChange(step.id)}
+                  onOperation={onOperation}
+                  onOperations={onOperations}
+                  disabled={disabled}
+                />
+              ))}
+            </div>
+          )}
 
           {!disabled ? (
             <AddStepButton document={document} onOperations={onOperations} />

@@ -355,7 +355,7 @@ describe("SopEditor document workbench", () => {
     expect(screen.getByRole("button", { name: "Edit Manual" })).toBeEnabled();
   });
 
-  it("prunes stale diagram routes when topology changes", async () => {
+  it("prunes deleted semantic edges without discarding viewport-local routes", async () => {
     const config: SopDiagramConfig = {
       pathLayoutSeed: 7,
       routes: {
@@ -378,15 +378,9 @@ describe("SopEditor document workbench", () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(onDiagramConfigChange).toHaveBeenCalledWith({
-        pathLayoutSeed: 7,
-        routes: {
-          "start:next:task": { kind: "trunk", x: 320 },
-        },
-      });
-    });
-    onDiagramConfigChange.mockClear();
+    // The edge exists but is local on this page: its saved pagedRoutes
+    // override must survive until the semantic workflow edge is removed.
+    expect(onDiagramConfigChange).not.toHaveBeenCalled();
 
     const rewiredDocument: SOPDocument = {
       ...initialDocument,

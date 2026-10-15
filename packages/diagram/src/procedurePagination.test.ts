@@ -43,7 +43,7 @@ describe("buildFormalProcedurePages", () => {
     expect(pages[1]?.routingRows.some((row) => row.kind === "opc")).toBe(true);
   });
 
-  it("drops paged route overrides when an edge becomes local", () => {
+  it("preserves saved overrides when a cross-page edge becomes local", () => {
     const model = buildProcedureModel(linearDocument(4));
     const crossPages = buildFormalProcedurePages(model, {
       firstPageRows: 2,
@@ -69,7 +69,10 @@ describe("buildFormalProcedurePages", () => {
       firstPageRows: 4,
       nextPageRows: 4,
     });
-    expect(pruneProcedurePagedRoutes(localPages, configured)).toEqual({});
+    expect(pruneProcedurePagedRoutes(localPages, configured)).toEqual(
+      configured,
+    );
+    expect(pruneProcedurePagedRoutes([], configured)).toEqual({});
   });
 
   it("maps cross-page manual routes through semantic edge ids", () => {

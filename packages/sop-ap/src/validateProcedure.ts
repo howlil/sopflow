@@ -11,7 +11,8 @@ export type SopApProcedureValidationCode =
   | "MISSING_ACTIVITY"
   | "MISSING_INPUT"
   | "MISSING_OUTPUT"
-  | "MISSING_NOTE";
+  | "MISSING_NOTE"
+  | "IDENTICAL_DECISION_TARGETS";
 
 export interface SopApProcedureValidationIssue {
   readonly kind: "procedure";
@@ -50,6 +51,17 @@ export function validateSopApProcedure(
         code: "INVALID_ACTOR_COUNT",
         stepId: step.id,
         message: `${prefix}: SOP AP membutuhkan tepat satu pelaksana`,
+      });
+    }
+
+    // Converting a task to a decision starts with both branches on its
+    // previous target. This is a valid draft but must not be published.
+    if (step.type === "decision" && step.yes === step.no) {
+      issues.push({
+        kind: "procedure",
+        code: "IDENTICAL_DECISION_TARGETS",
+        stepId: step.id,
+        message: `${prefix}: tujuan cabang Ya dan Tidak harus berbeda`,
       });
     }
 
