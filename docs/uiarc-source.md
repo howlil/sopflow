@@ -8,3 +8,12 @@ Current slice migrates the button primitive; the remaining planned UIArc-native 
 `Host → SopWorkspace → SopEditor → Button/Editor controls → official Arc primitive → Arc Motion`
 
 Domain operations and graph projection still go to `@sopflow/core` and `@sopflow/diagram`; no UIArc logic enters those packages. The workbook's toolbar, inspector, document and graph projections keep their current layout and semantics. Scoped tokens under `data-sopflow-root` avoid changing host app styles.
+
+## Design-graph verification
+
+Job → Flow → Surface<C,V,N> → Moves → Environment → Proof.
+
+For button interactions: the SOP document remains canonical; button actions
+call existing SOPFlow handlers; Arc handles hover/press/label motion; focus,
+disabled and reduced-motion states require DOM-level tests. UI changes cannot
+alter authored steps, formal workflow projection, or A4 output.
