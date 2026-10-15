@@ -3,7 +3,6 @@ import type {
   DiagramDiagnostic,
   DiagramPoint,
   DiagramRouteKind,
-  DiagramRouteQuality,
   DiagramSide,
 } from "../types.js";
 import {

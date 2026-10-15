@@ -39,12 +39,19 @@ function resolveLocal(from, request) {
 
 for (const file of files) {
   const code = readFileSync(file, "utf8");
-  const requests = [
-    ...code.matchAll(/\bfrom\s*["']([^"']+)["']/g),
-    ...code.matchAll(/^\s*import\s*["']([^"']+)["']/gm),
-    ...code.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g),
-  ].map((match) => match[1]);
-  for (const request of new Set(requests)) {
+  // Runtime cycles only: a type-only import is erased by TypeScript, so
+  // it cannot participate in module initialization cycles.
+  const imports = [
+    ...code.matchAll(/^\\s*(?:import|export)\\s+(?:type\\s+)?[^;]*?\\s+from\\s*["']([^"']+)["']/gm),
+    ...code.matchAll(/^\\s*import\\s*["']([^"']+)["']/gm),
+    ...code.matchAll(/\\bimport\\s*\\(\\s*["']([^"']+)["']\\s*\\)/g),
+  ].map((match) => ({
+    request: match[1],
+    runtime: !/^\\s*(?:import|export)\\s+type\\b/.test(match[0]) &&
+      !/^\\s*(?:import|export)\\s*\\{\\s*type\\b[^}]*\\}\\s*from/.test(match[0]),
+  }));
+  const requests = [...new Map(imports.map((item) => [item.request, item])).values()];
+  for (const {request, runtime} of requests) {
     if (request.startsWith("@sopflow/")) {
       if (/^@sopflow\/[^/]+\/src\//.test(request)) {
         errors.push(`Internal package deep import: ${slash(relative(root,file))} -> ${request}`);
@@ -67,7 +74,7 @@ for (const file of files) {
       }
       continue;
     }
-    dependencies.get(file).push(target);
+    if (runtime) dependencies.get(file).push(target);
     const from = slash(relative(root, file));
     const to = slash(relative(root, target));
     if (from.startsWith("packages/diagram/src/bpmn/") &&

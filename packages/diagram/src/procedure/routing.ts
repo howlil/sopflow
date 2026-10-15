@@ -1,4 +1,4 @@
-import type { ActorId, StepId } from "@sopflow/core";
+import type { StepId } from "@sopflow/core";
 import type {
   DiagramDiagnostic,
   DiagramPoint,
