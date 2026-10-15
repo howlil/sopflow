@@ -241,7 +241,7 @@ function MessageRow({
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, description, error, id, className, ...props },
+  { label, compact = false, description, error, id, className, ...props },
   ref,
 ) {
   const generatedId = useId();
