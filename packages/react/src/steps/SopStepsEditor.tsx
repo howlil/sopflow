@@ -1,17 +1,20 @@
 import {
   getPresentationSteps,
+  getSopSchemaIssues,
   type SOPDocument,
   type SopOperation,
   type StepId,
   type ValidationIssue,
 } from "@sopflow/core";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import styles from "./SopStepsEditor.module.css";
 import { AddStepButton } from "./AddStepButton.js";
 import { EmptyStepsState } from "./EmptyStepsState.js";
 import { SopStepCard } from "./SopStepCard.js";
 import { SopStepRow } from "./SopStepRow.js";
 import { useStepKeyboardNavigation } from "./hooks/useStepKeyboardNavigation.js";
+import { useCompactStepsLayout } from "./hooks/useCompactStepsLayout.js";
+import type { StepDiagnostic } from "../validation/getStepIssues.js";
 
 export interface SopStepsEditorProps {
   document: SOPDocument;
@@ -32,7 +35,22 @@ export function SopStepsEditor({
   disabled = false,
 }: SopStepsEditorProps) {
   const editorRef = useRef<HTMLElement>(null);
-  const steps = getPresentationSteps(document);
+  const steps = useMemo(() => getPresentationSteps(document), [document]);
+  const stepOrder = useMemo(
+    () => new Map(steps.map((step, index) => [step.id, index + 1] as const)),
+    [steps],
+  );
+  const isCompact = useCompactStepsLayout();
+  const issuesByStepId = useMemo(() => {
+    const grouped = new Map<string, StepDiagnostic[]>();
+    for (const issue of [...issues, ...getSopSchemaIssues(document)]) {
+      if (!issue.stepId) continue;
+      const list = grouped.get(issue.stepId) ?? [];
+      list.push(issue);
+      grouped.set(issue.stepId, list);
+    }
+    return grouped;
+  }, [document, issues]);
   const handleKeyDown = useStepKeyboardNavigation({
     document,
     selectedStepId,
@@ -106,6 +124,7 @@ export function SopStepsEditor({
         )
       ) : (
         <>
+          {!isCompact ? (
           <div className={styles.desktop}>
             <section
               className={styles.tableViewport}
@@ -134,7 +153,9 @@ export function SopStepsEditor({
                       step={step}
                       index={index}
                       document={document}
-                      issues={issues}
+                      issues={issuesByStepId.get(step.id) ?? []}
+                      orderedSteps={steps}
+                      stepOrder={stepOrder}
                       selected={selectedStepId === step.id}
                       onSelect={() => onSelectedStepChange(step.id)}
                       onOperation={onOperation}
@@ -146,7 +167,7 @@ export function SopStepsEditor({
               </table>
             </section>
           </div>
-
+          ) : (
           <div className={styles.mobile}>
             {steps.map((step, index) => (
               <SopStepCard
@@ -154,7 +175,9 @@ export function SopStepsEditor({
                 step={step}
                 index={index}
                 document={document}
-                issues={issues}
+                issues={issuesByStepId.get(step.id) ?? []}
+                orderedSteps={steps}
+                stepOrder={stepOrder}
                 selected={selectedStepId === step.id}
                 onSelect={() => onSelectedStepChange(step.id)}
                 onOperation={onOperation}
@@ -163,6 +186,7 @@ export function SopStepsEditor({
               />
             ))}
           </div>
+          )}
 
           {!disabled ? (
             <AddStepButton document={document} onOperations={onOperations} />

@@ -243,8 +243,8 @@ export function decisionSummary(stepId: StepId, model: ProcedureModel): string {
 
 /** Preserve column proportions while keeping the sum exactly at 100%. */
 export function procedureColumnWidths(actorCount: number) {
-  const count = Math.max(1, actorCount);
-  const actorWeight = Math.max(10, 70 / count);
+  const count = Math.max(0, actorCount);
+  const actorWeight = count > 0 ? Math.max(10, 70 / count) : 0;
   const total = 85 + count * actorWeight;
   const percent = (weight: number): string => `${(100 * weight) / total}%`;
   return {

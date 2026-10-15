@@ -72,7 +72,10 @@ export type SopTaImportResult =
 export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResult {
   const issues: SopTaImportIssue[] = [];
   const knownActorIds = new Set(input.actors.map((actor) => actor.id));
-  for (const row of input.rows) {
+  const orderedRows = [...input.rows].sort(
+    (left, right) => left.urutan - right.urutan || left.id.localeCompare(right.id),
+  );
+  for (const [rowIndex, row] of orderedRows.entries()) {
     const explicitIds = row.pelaksanaIds?.length ? [...new Set(row.pelaksanaIds)] : [];
     const primaryId = row.pelaksana?.trim();
     const mappedIds = Object.entries(row.pelaksanaMapping ?? {})
@@ -98,12 +101,18 @@ export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResu
         message: `Row "${row.id}" supplies a unit without a duration`,
       });
     }
-    const sortedIndex = [...input.rows]
-      .sort((left, right) => left.urutan - right.urutan || left.id.localeCompare(right.id))
-      .findIndex((candidate) => candidate === row);
-    const effectiveType = resolveLegacyType(row, sortedIndex, input.rows.length);
-    const nextRow = [...input.rows]
-      .sort((left, right) => left.urutan - right.urutan || left.id.localeCompare(right.id))[sortedIndex + 1];
+    let effectiveType: Step["type"];
+    try {
+      effectiveType = resolveLegacyType(row, rowIndex, orderedRows.length);
+    } catch (error) {
+      issues.push({
+        code: "IMPORT_FAILED",
+        rowId: row.id,
+        message: error instanceof Error ? error.message : "Invalid row type",
+      });
+      continue;
+    }
+    const nextRow = orderedRows[rowIndex + 1];
     const unsupportedBranch =
       (effectiveType !== "decision" && row.id_next_step_if_no !== undefined) ||
       (effectiveType === "start" && row.id_next_step_if_yes !== undefined &&

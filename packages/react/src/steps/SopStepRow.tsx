@@ -3,7 +3,6 @@ import {
   type SOPDocument,
   type SopOperation,
   type Step,
-  type ValidationIssue,
 } from "@sopflow/core";
 import { ActorField } from "./fields/ActorField.js";
 import { DurationField } from "./fields/DurationField.js";
@@ -16,13 +15,16 @@ import { StepNameField } from "./fields/StepNameField.js";
 import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
 import { useStepEditorController } from "./hooks/useStepEditorController.js";
+import type { StepDiagnostic } from "../validation/getStepIssues.js";
 import styles from "./SopStepRow.module.css";
 
 export interface SopStepRowProps {
   step: Step;
   index: number;
   document: SOPDocument;
-  issues: ValidationIssue[];
+  issues: readonly StepDiagnostic[];
+  orderedSteps?: readonly Step[];
+  stepOrder?: ReadonlyMap<string, number>;
   selected?: boolean;
   onSelect: () => void;
   onOperation: (operation: SopOperation) => void;
@@ -35,6 +37,8 @@ export function SopStepRow({
   index,
   document,
   issues,
+  orderedSteps,
+  stepOrder,
   selected = false,
   onSelect,
   onOperation,
@@ -111,7 +115,8 @@ export function SopStepRow({
         <td>
           <StepTypeField
             step={step}
-            steps={getPresentationSteps(document)}
+            steps={orderedSteps ?? getPresentationSteps(document)}
+            {...(stepOrder ? { orderByStepId: stepOrder } : {})}
             readOnly={disabled}
             onChange={changeStepType}
           />
@@ -170,7 +175,7 @@ export function SopStepRow({
         </td>
       </tr>
 
-      {!disabled && step.type === "decision" ? (
+      {!disabled && isDecisionEditorOpen && step.type === "decision" ? (
         <DecisionEditor
           open={isDecisionEditorOpen}
           step={step}
