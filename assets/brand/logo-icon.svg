@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 184" role="img" aria-labelledby="title description">
+  <title id="title">SOPFlow logo-icon</title>
+  <desc id="description">Two identical fully rounded blue ribbons forming a smooth flowing S with balanced negative space.</desc>
+  <g fill="none" stroke="#1E6BFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M 46 92 C 96 92 96 38 145 38 L 175 38"/>
+  <path d="M 46 92 C 96 92 96 38 145 38 L 175 38" transform="translate(26 54)"/>
+</g>
+</svg>
