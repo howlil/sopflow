@@ -17,7 +17,8 @@
   line-height: 1.25rem;
 
   resize: none;
-  outline: none;\n  transition: background-color var(--sopflow-motion-fast) var(--sopflow-ease-standard), border-color var(--sopflow-motion-fast) var(--sopflow-ease-standard);
+  outline: none;
+  transition: background-color var(--sopflow-motion-fast) var(--sopflow-ease-standard), border-color var(--sopflow-motion-fast) var(--sopflow-ease-standard);
 
   overflow-y: hidden;
 }
