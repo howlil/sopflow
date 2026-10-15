@@ -11,10 +11,11 @@
   },
   "scripts": {
     "lint": "biome check .",
+    "check:arch": "node scripts/check-boundaries.mjs",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "check": "pnpm lint && pnpm check:arch && pnpm typecheck && pnpm test && pnpm build",
     "pack:core": "pnpm --filter @sopflow/core pack",
     "pack:diagram": "pnpm --filter @sopflow/diagram pack",
     "pack:react": "pnpm --filter @sopflow/react pack",
