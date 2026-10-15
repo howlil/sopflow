@@ -1,5 +1,6 @@
 import { useRef, type KeyboardEvent } from "react";
 
+import { Button } from "../primitives/Button.js";
 import styles from "./SopDocumentToolbar.module.css";
 
 export type SopDocumentMode = "preview" | "steps";
@@ -68,7 +69,8 @@ export function SopDocumentToolbar({
       {!readOnly ? (
         <fieldset className={[styles.tabs, styles.modeTabs].join(" ")}>
           <legend className={styles.srOnly}>Mode dokumen</legend>
-          <button
+          <Button
+            variant="ghost"
             type="button"
             className={styles.tab}
             data-active={mode === "preview" || undefined}
@@ -78,8 +80,9 @@ export function SopDocumentToolbar({
             onClick={() => onModeChange("preview")}
           >
             <ToolbarIcon type="preview" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             type="button"
             className={styles.tab}
             data-active={mode === "steps" || undefined}
@@ -89,13 +92,14 @@ export function SopDocumentToolbar({
             onClick={() => onModeChange("steps")}
           >
             <ToolbarIcon type="steps" />
-          </button>
+          </Button>
         </fieldset>
       ) : null}
 
       {!readOnly ? (
         <div className={styles.group}>
-          <button
+          <Button
+            variant="ghost"
             type="button"
             className={styles.button}
             data-active={manualEditing || undefined}
@@ -106,7 +110,7 @@ export function SopDocumentToolbar({
             onClick={() => onManualEditingChange(!manualEditing)}
           >
             <ToolbarIcon type="manual" />
-          </button>
+          </Button>
         </div>
       ) : null}
 
@@ -119,7 +123,8 @@ export function SopDocumentToolbar({
         role="tablist"
         aria-label="Jenis diagram"
       >
-        <button
+        <Button
+            variant="ghost"
           type="button"
           className={styles.tab}
           id={`${diagramPanelId}-tab-flowchart`}
@@ -138,8 +143,9 @@ export function SopDocumentToolbar({
           onClick={() => onDiagramKindChange("flowchart")}
         >
           <ToolbarIcon type="flowchart" />
-        </button>
-        <button
+        </Button>
+        <Button
+            variant="ghost"
           type="button"
           className={styles.tab}
           id={`${diagramPanelId}-tab-bpmn`}
@@ -158,7 +164,7 @@ export function SopDocumentToolbar({
           onClick={() => onDiagramKindChange("bpmn")}
         >
           <ToolbarIcon type="bpmn" />
-        </button>
+        </Button>
       </div>
     </div>
   );
