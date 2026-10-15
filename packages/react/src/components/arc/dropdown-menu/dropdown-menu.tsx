@@ -109,7 +109,12 @@ function TriggerLabel({ text }: { text: string }) {
   );
 }
 
-export function DropdownMenu({ label, items, icon, compact = false }: DropdownMenuProps) {
+export function DropdownMenu({
+  label,
+  items,
+  icon,
+  compact = false,
+}: DropdownMenuProps) {
   const reduced = useReducedMotion();
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const pointer = useRef(false);
@@ -153,9 +158,20 @@ export function DropdownMenu({ label, items, icon, compact = false }: DropdownMe
         aria-label={label}
         type="button"
       >
-        {icon && <span className={styles.triggerIcon} aria-hidden="true">{icon}</span>}
+        {icon && (
+          <span className={styles.triggerIcon} aria-hidden="true">
+            {icon}
+          </span>
+        )}
         {!compact && <TriggerLabel text={label} />}
-        {!compact && <ChevronDown className={styles.chevron} size={15} strokeWidth={1.8} aria-hidden="true" />}
+        {!compact && (
+          <ChevronDown
+            className={styles.chevron}
+            size={15}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+        )}
       </DropdownPrimitive.Trigger>
       <DropdownPrimitive.Portal>
         <DropdownPrimitive.Content
