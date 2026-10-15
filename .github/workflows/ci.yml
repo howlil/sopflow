@@ -47,3 +47,13 @@ jobs:
 
       - name: Browser diagram regression
         run: bash scripts/check-browser-diagrams.sh
+
+      - name: Upload visual regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sopflow-diagram-preview
+          path: |
+            ${{ runner.temp }}/sopflow-diagram-regression.png
+            ${{ runner.temp }}/sopflow-diagram-regression.pdf
+          if-no-files-found: ignore

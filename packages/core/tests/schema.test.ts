@@ -1,8 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { exampleSop } from "./fixtures/exampleSop.js";
 import { SOPDocumentSchema } from "../src/schema.js";
+import { getSopSchemaIssues } from "../src/schemaValidation.js";
 
 describe("SOPDocumentSchema", () => {
+  it("attaches step IDs to schema diagnostics for field-level editor feedback", () => {
+    const invalid = {
+      ...exampleSop,
+      steps: exampleSop.steps.map((step) =>
+        step.id === "prepare-document"
+          ? { ...step, duration: { value: -1, unit: "minute" as const } }
+          : step,
+      ),
+    };
+    expect(getSopSchemaIssues(invalid)).toContainEqual(
+      expect.objectContaining({
+        stepId: "prepare-document",
+        path: expect.arrayContaining(["steps"]),
+      }),
+    );
+  });
+
+
   it("accents valid SOP document", () => {
     const result = SOPDocumentSchema.safeParse(exampleSop);
 

@@ -1,5 +1,9 @@
 import type { Step } from "@sopflow/core";
-import { getStepIssues, hasStepIssue, type StepDiagnostic } from "../../validation/getStepIssues.js";
+import {
+  getStepIssues,
+  hasStepIssue,
+  type StepDiagnostic,
+} from "../../validation/getStepIssues.js";
 import {
   useStepActions,
   type UseStepActionsOptions,

@@ -20,7 +20,9 @@ export function StepTypeField({
   readOnly = false,
 }: StepTypeFieldProps) {
   const branchSummary =
-    step.type === "decision" ? decisionBranchSummary(step, steps, orderByStepId) : null;
+    step.type === "decision"
+      ? decisionBranchSummary(step, steps, orderByStepId)
+      : null;
 
   if (readOnly) {
     return (
@@ -87,9 +89,11 @@ function decisionBranchSummary(
   steps: readonly Step[],
   orderByStepId?: ReadonlyMap<string, number>,
 ): string {
-  const orderById = orderByStepId ?? new Map(
-    steps.map((candidate, index) => [candidate.id, index + 1] as const),
-  );
+  const orderById =
+    orderByStepId ??
+    new Map(
+      steps.map((candidate, index) => [candidate.id, index + 1] as const),
+    );
 
   const yes = orderById.get(step.yes) ?? "?";
   const no = orderById.get(step.no) ?? "?";

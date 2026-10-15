@@ -69,7 +69,9 @@ describe("buildFormalProcedurePages", () => {
       firstPageRows: 4,
       nextPageRows: 4,
     });
-    expect(pruneProcedurePagedRoutes(localPages, configured)).toEqual(configured);
+    expect(pruneProcedurePagedRoutes(localPages, configured)).toEqual(
+      configured,
+    );
     expect(pruneProcedurePagedRoutes([], configured)).toEqual({});
   });
 

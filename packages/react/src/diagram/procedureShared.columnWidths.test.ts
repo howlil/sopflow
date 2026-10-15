@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { procedureColumnWidths } from "./procedureShared.js";
 
 describe("procedure column widths", () => {
-  it.each([1, 2, 3, 4, 8, 12])(
+  it.each([0, 1, 2, 3, 4, 8, 12])(
     "allocates exactly 100 percent across %i actor columns",
     (actorCount) => {
       const widths = procedureColumnWidths(actorCount);
