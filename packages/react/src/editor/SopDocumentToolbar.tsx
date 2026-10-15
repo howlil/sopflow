@@ -133,7 +133,7 @@ export function SopDocumentToolbar({
           aria-controls={diagramPanelId}
           tabIndex={diagramKind === "flowchart" ? 0 : -1}
           disabled={mode === "steps"}
-          ref={(element) => {
+          buttonRef={(element) => {
             diagramTabRefs.current.flowchart = element;
           }}
           data-active={diagramKind === "flowchart" || undefined}
@@ -154,7 +154,7 @@ export function SopDocumentToolbar({
           aria-controls={diagramPanelId}
           tabIndex={diagramKind === "bpmn" ? 0 : -1}
           disabled={mode === "steps"}
-          ref={(element) => {
+          buttonRef={(element) => {
             diagramTabRefs.current.bpmn = element;
           }}
           data-active={diagramKind === "bpmn" || undefined}
