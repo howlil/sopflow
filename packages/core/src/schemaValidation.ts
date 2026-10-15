@@ -2,6 +2,7 @@ import { SOPDocumentSchema } from "./schema.js";
 
 export interface SopSchemaIssue {
   readonly code: string;
+  readonly stepId?: string;
   readonly path: readonly PropertyKey[];
   readonly message: string;
 }
