@@ -15,6 +15,7 @@ import {
 } from "@sopflow/diagram";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import "./styles/uiarc-scoped.css";
 import "./styles/token.css";
 
 import { ActorsEditor } from "./actors/ActorsEditor.js";

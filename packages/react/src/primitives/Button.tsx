@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 import { Button as ArcButton } from "../components/arc/button/button.js";
+import "../styles/uiarc-scoped.css";
 import "../styles/token.css";
 
 export type ButtonVariant = "secondary" | "primary" | "danger" | "ghost";
