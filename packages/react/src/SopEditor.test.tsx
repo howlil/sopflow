@@ -628,9 +628,7 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getReviewField());
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(
-      screen.getByRole("menuitem", { name: /hapus langkah/i }),
-    );
+    await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
     await user.selectOptions(
       screen.getByLabelText(/sambungkan langkah sebelumnya/i),
       "end",
@@ -658,9 +656,7 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getField("Shared"));
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(
-      screen.getByRole("menuitem", { name: /hapus langkah/i }),
-    );
+    await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
     await user.selectOptions(
       screen.getByLabelText(/sambungkan langkah sebelumnya/i),
       "end",
@@ -785,7 +781,9 @@ describe("SopEditor dialog accessibility", () => {
     const row = getStepRow(getReviewField());
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
 
-    const deleteTrigger = screen.getByRole("menuitem", { name: /hapus langkah/i });
+    const deleteTrigger = screen.getByRole("menuitem", {
+      name: /hapus langkah/i,
+    });
 
     await user.click(deleteTrigger);
 
