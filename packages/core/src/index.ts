@@ -17,6 +17,8 @@ export {
 export type { IncomingConnection, SopGraphIndex } from "./graph.js";
 
 export { parseSop } from "./parse.js";
+export { getSopSchemaIssues } from "./schemaValidation.js";
+export type { SopSchemaIssue } from "./schemaValidation.js";
 export type {
   ParseSOPFailure,
   ParseSOPIssue,

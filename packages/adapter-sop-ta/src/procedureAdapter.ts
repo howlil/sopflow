@@ -44,6 +44,85 @@ export interface SopTaCompatibilityIssue {
   readonly stepId?: string;
 }
 
+
+export interface SopTaImportIssue {
+  readonly code:
+    | "UNKNOWN_ACTOR"
+    | "AMBIGUOUS_ACTOR_MAPPING"
+    | "INVALID_DURATION"
+    | "UNKNOWN_DURATION_UNIT"
+    | "IMPORT_FAILED";
+  readonly rowId?: string;
+  readonly message: string;
+}
+
+export type SopTaImportResult =
+  | { readonly success: true; readonly document: SOPDocument }
+  | { readonly success: false; readonly issues: readonly SopTaImportIssue[] };
+
+/**
+ * Strict import for boundaries that cannot silently discard legacy fields.
+ * The existing importSopTaDocument is retained for backward compatibility.
+ */
+export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResult {
+  const issues: SopTaImportIssue[] = [];
+  const knownActorIds = new Set(input.actors.map((actor) => actor.id));
+  for (const row of input.rows) {
+    for (const actorId of resolveActorIds(row)) {
+      if (!knownActorIds.has(actorId)) {
+        issues.push({
+          code: "UNKNOWN_ACTOR",
+          rowId: row.id,
+          message: `Row "${row.id}" references unknown actor "${actorId}"`,
+        });
+      }
+    }
+    if (
+      !row.pelaksanaIds?.length &&
+      !row.pelaksana?.trim() &&
+      Object.values(row.pelaksanaMapping ?? {}).filter((value) => value.trim()).length > 1
+    ) {
+      issues.push({
+        code: "AMBIGUOUS_ACTOR_MAPPING",
+        rowId: row.id,
+        message: `Row "${row.id}" has multiple actor mappings`,
+      });
+    }
+    if (row.waktu !== undefined && (!Number.isFinite(row.waktu) || row.waktu < 0)) {
+      issues.push({
+        code: "INVALID_DURATION",
+        rowId: row.id,
+        message: `Row "${row.id}" has invalid duration`,
+      });
+    }
+    if (
+      row.waktu !== undefined &&
+      row.satuanWaktu !== undefined &&
+      !normalizeSopTaUnit(row.satuanWaktu)
+    ) {
+      issues.push({
+        code: "UNKNOWN_DURATION_UNIT",
+        rowId: row.id,
+        message: `Row "${row.id}" has unknown duration unit "${row.satuanWaktu}"`,
+      });
+    }
+  }
+  if (issues.length > 0) return { success: false, issues };
+
+  try {
+    const document = importSopTaDocument(input);
+    return { success: true, document };
+  } catch (error) {
+    return {
+      success: false,
+      issues: [{
+        code: "IMPORT_FAILED",
+        message: error instanceof Error ? error.message : "Legacy import failed",
+      }],
+    };
+  }
+}
+
 export function importSopTaDocument(input: SopTaImportInput): SOPDocument {
   const rows = [...input.rows].sort(
     (left, right) => left.urutan - right.urutan || left.id.localeCompare(right.id),
