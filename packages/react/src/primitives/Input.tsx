@@ -5,6 +5,7 @@ import "../styles/token.css";
 
 /** Contract adapter: existing field labels stay visible in FormField; Arc renders the input. */
 export function SopInput(props: InputHTMLAttributes<HTMLInputElement>) {
-  const label = typeof props["aria-label"] === "string" ? props["aria-label"] : "Field";
+  const label =
+    typeof props["aria-label"] === "string" ? props["aria-label"] : "Field";
   return <ArcInput {...props} compact label={label} />;
 }
