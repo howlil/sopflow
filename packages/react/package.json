@@ -26,7 +26,13 @@
     "@sopflow/core": "workspace:*",
     "@sopflow/diagram": "workspace:*",
     "@sopflow/sop-ap": "workspace:*",
-    "motion": "^12.23.24"
+    "motion": "^12.23.24",
+    "lucide-react": "^0.468.0",
+    "@radix-ui/react-select": "^2.1.0",
+    "@radix-ui/react-dialog": "^2.1.0",
+    "@radix-ui/react-tooltip": "^2.1.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.0",
+    "@radix-ui/react-accordion": "^2.1.0"
   },
   "scripts": {
     "build": "tsdown",
