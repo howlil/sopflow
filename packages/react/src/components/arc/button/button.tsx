@@ -247,6 +247,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       .filter(Boolean)
       .join(" ");
 
+    const tapProps: HTMLMotionProps<"button"> =
+      reduceMotion || anchorsLayer || inert ? {} : { whileTap: "pressed" };
+
     return (
       <motion.button
         ref={setRefs}
@@ -256,7 +259,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={loading || undefined}
         custom={buttonRef}
         variants={pressVariants}
-        whileTap={reduceMotion || anchorsLayer || inert ? {} : "pressed"}
+        {...tapProps}
         transition={motionTokens.spring.snappy}
         {...(props as unknown as HTMLMotionProps<"button">)}
         // Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
