@@ -28,7 +28,7 @@ import {
 } from "./routeGeometry.js";
 import { repairFormalManualRoute } from "./flowchart/formal/edit.js";
 import { layoutBpmnGraph } from "./bpmnLayout.js";
-import type { ProcedureManualRoute, SopDiagramConfig } from "./procedure.js";
+import type { ProcedureManualRoute, SopDiagramConfig } from "./config/types.js";
 import { layoutNodeText } from "./text/layoutNodeText.js";
 import { projectWorkflow, type WorkflowEdge } from "./workflow.js";
 
