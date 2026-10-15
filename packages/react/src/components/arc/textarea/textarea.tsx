@@ -247,7 +247,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const errorId = error ? `${controlId}-error` : undefined;
     return (
       <div className={styles.field} data-compact={compact || undefined}>
-        <label className={compact ? styles.srOnly : undefined} htmlFor={controlId}>{label}</label>
+        <label
+            className={compact ? styles.srOnly : undefined}
+            htmlFor={controlId}
+          >
+            {label}
+          </label>
         <textarea
           {...props}
           id={controlId}
