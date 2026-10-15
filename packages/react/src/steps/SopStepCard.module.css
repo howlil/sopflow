@@ -14,7 +14,7 @@
   border-color: var(--sopflow-selected-border);
   background: var(--sopflow-selected-surface);
 
-  box-shadow: inset 3px 0 0 var(--sopflow-selected-border);
+  box-shadow: inset 2px 0 0 var(--sopflow-selected-border);
 }
 
 .card[data-error="true"] {
