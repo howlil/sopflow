@@ -5,6 +5,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import styles from "./AutoResizeTextarea.module.css";
+import { Textarea as ArcTextarea } from "../components/arc/textarea/textarea.js";
 
 export interface AutoResizeTextareaProps
   extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {
@@ -64,7 +65,9 @@ export function AutoResizeTextarea({
   }
 
   return (
-    <textarea
+    <ArcTextarea
+      compact
+      label={typeof props["aria-label"] === "string" ? props["aria-label"] : "Kegiatan"}
       {...props}
       ref={ref}
       value={value}

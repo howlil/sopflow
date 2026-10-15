@@ -20,3 +20,7 @@
 .column > span { display: inline-block; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .control { transition: none; } }
+
+/* SOP dense row: keep one-row auto height and hide only duplicate outer label. */
+.field[data-compact] .control { min-height: 2.25rem; resize: none; padding: .375rem .5rem; border-radius: var(--sopflow-control-radius); font-size: var(--sopflow-font-xs); line-height: 1.25rem; box-shadow: none; }
+.field[data-compact] .control:focus-visible { box-shadow: none; }

@@ -7,6 +7,7 @@ import styles from "./textarea.module.css";
 export interface TextareaProps
   extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
+  compact?: boolean;
   description?: string;
   error?: string;
 }
@@ -245,8 +246,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const hintId = description ? `${controlId}-description` : undefined;
     const errorId = error ? `${controlId}-error` : undefined;
     return (
-      <div className={styles.field}>
-        <label htmlFor={controlId}>{label}</label>
+      <div className={styles.field} data-compact={compact || undefined}>
+        <label className={compact ? styles.srOnly : undefined} htmlFor={controlId}>{label}</label>
         <textarea
           {...props}
           id={controlId}

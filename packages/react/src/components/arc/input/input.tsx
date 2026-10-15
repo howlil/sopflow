@@ -8,6 +8,7 @@ import styles from "./input.module.css";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
+  compact?: boolean;
   description?: string;
   error?: string;
 }
@@ -251,8 +252,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     [props["aria-describedby"], hintId, errorId].filter(Boolean).join(" ") ||
     undefined;
   return (
-    <div className={styles.field}>
-      <label className={styles.label} htmlFor={controlId}>
+    <div className={styles.field} data-compact={compact || undefined}>
+      <label className={compact ? styles.srOnly : styles.label} htmlFor={controlId}>
         {label}
       </label>
       <input
