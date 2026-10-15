@@ -37,7 +37,7 @@ jobs:
 
       - name: Format upstream Arc source
         run: |
-          pnpm exec biome check --write packages/react/src/components/arc
+          pnpm exec biome format --write packages/react/src/components/arc
           for file in packages/react/src/components/arc/{input,textarea,select,multi-select,dialog,tooltip,dropdown-menu,segmented-control,accordion,alert}/*.tsx; do
             echo "__ARC_FORMAT_BEGIN__:${file}"
             base64 -w0 "${file}"
