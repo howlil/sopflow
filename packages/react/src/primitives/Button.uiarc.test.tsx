@@ -26,6 +26,7 @@ describe("SOPFlow Arc UI Button compatibility", () => {
     );
     const button = screen.getByRole("button", { name: "Hapus" });
     expect(button.hasAttribute("disabled")).toBe(true);
+    expect(button.hasAttribute("tabindex")).toBe(false);
     fireEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
   });
