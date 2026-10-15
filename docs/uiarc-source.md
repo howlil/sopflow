@@ -17,3 +17,11 @@ For button interactions: the SOP document remains canonical; button actions
 call existing SOPFlow handlers; Arc handles hover/press/label motion; focus,
 disabled and reduced-motion states require DOM-level tests. UI changes cannot
 alter authored steps, formal workflow projection, or A4 output.
+
+## Dependency and compiler compatibility
+
+Motion is installed as a direct runtime dependency in `@sopflow/react`, with
+`pnpm-lock.yaml` resolved by pnpm in CI and committed. Official source requires
+two build-target adaptations: the relative JS import extension for NodeNext,
+and an empty `whileTap` animation when the button must not scale. Other
+upstream behavior and its MIT attribution remain intact.
