@@ -250,7 +250,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <motion.button
         ref={setRefs}
-        tabIndex={props.tabIndex ?? 0}
+        tabIndex={props.tabIndex}
         className={classes}
         disabled={disabled}
         aria-busy={loading || undefined}
