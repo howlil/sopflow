@@ -10,7 +10,7 @@
   padding: 0.75rem;
 
   background: rgb(23 23 23 / 46%);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(7px);
   isolation: isolate;
 }
 
