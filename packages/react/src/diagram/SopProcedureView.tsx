@@ -37,7 +37,7 @@ import {
   measureGridLayout,
   display,
   durationLabel,
-  decisionSummary,
+  buildProcedureAnnotations,
   procedureColumnWidths,
 } from "./procedureShared.js";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
@@ -296,6 +296,10 @@ function LegacySinglePageSopProcedureView({
   const columnWidths = procedureColumnWidths(model.actorColumns.length);
   const markerId = `sopflow-procedure-arrow-${useId().replace(/:/g, "")}`;
   const totalColumns = model.actorColumns.length + 6;
+  const annotations = useMemo(
+    () => buildProcedureAnnotations(model, issues),
+    [model, issues],
+  );
 
   const measure = useCallback(() => {
     const root = rootRef.current;
@@ -621,9 +625,7 @@ function LegacySinglePageSopProcedureView({
           ) : (
             model.rows.map((row) => {
               const selected = selectedStepId === row.stepId;
-              const issueCount = issues.filter(
-                (issue) => issue.stepId === row.stepId,
-              ).length;
+              const issueCount = annotations.issueCounts.get(row.stepId) ?? 0;
 
               return (
                 <tr
@@ -654,7 +656,7 @@ function LegacySinglePageSopProcedureView({
                     {row.kind === "decision" || issueCount > 0 ? (
                       <div className={styles.activityMeta}>
                         {row.kind === "decision" ? (
-                          <span>{decisionSummary(row.stepId, model)}</span>
+                          <span>{annotations.decisionLabels.get(row.stepId)}</span>
                         ) : null}
                         {issueCount > 0 ? (
                           <span className={styles.issue}>

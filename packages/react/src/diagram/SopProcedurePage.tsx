@@ -30,7 +30,7 @@ import {
   measureGridLayout,
   display,
   durationLabel,
-  decisionSummary,
+  buildProcedureAnnotations,
   procedureColumnWidths,
 } from "./procedureShared.js";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
@@ -68,6 +68,10 @@ export function SopProcedurePage({
   const columnWidths = procedureColumnWidths(model.actorColumns.length);
   const markerId = `sopflow-procedure-arrow-${useId().replace(/:/g, "")}`;
   const totalColumns = model.actorColumns.length + 6;
+  const annotations = useMemo(
+    () => buildProcedureAnnotations(model, issues),
+    [model, issues],
+  );
   const routingRowById = useMemo(
     () => new Map(page.routingRows.map((row) => [row.stepId, row] as const)),
     [page.routingRows],
@@ -291,9 +295,7 @@ export function SopProcedurePage({
           ) : (
             page.rows.map((row) => {
               const selected = selectedStepId === row.stepId;
-              const issueCount = issues.filter(
-                (issue) => issue.stepId === row.stepId,
-              ).length;
+              const issueCount = annotations.issueCounts.get(row.stepId) ?? 0;
 
               return (
                 <tr
@@ -324,7 +326,7 @@ export function SopProcedurePage({
                     {row.kind === "decision" || issueCount > 0 ? (
                       <div className={styles.activityMeta}>
                         {row.kind === "decision" ? (
-                          <span>{decisionSummary(row.stepId, model)}</span>
+                          <span>{annotations.decisionLabels.get(row.stepId)}</span>
                         ) : null}
                         {issueCount > 0 ? (
                           <span className={styles.issue}>
