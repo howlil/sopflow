@@ -254,9 +254,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   return (
     <div className={styles.field} data-compact={compact || undefined}>
       <label
-          className={compact ? styles.srOnly : styles.label}
-          htmlFor={controlId}
-        >
+        className={compact ? styles.srOnly : styles.label}
+        htmlFor={controlId}
+      >
         {label}
       </label>
       <input
