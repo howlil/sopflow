@@ -1,5 +1,5 @@
 import type { Step } from "@sopflow/core";
-import { Select } from "../../primitives/Select.js";
+import { Select as ArcSelect } from "../../components/arc/select/select.js";
 import styles from "./StepTypeField.module.css";
 
 export interface StepTypeFieldProps {
@@ -57,25 +57,21 @@ export function StepTypeField({
 
   return (
     <div className={styles.stack}>
-      <Select
+      <ArcSelect
+        label="Tipe langkah"
+        compact
         value={step.type}
         disabled={disabled}
-        aria-label="Tipe langkah"
-        title={
-          cannotCollapseDecision
-            ? "Satukan target cabang Ya dan Tidak sebelum mengubah menjadi Task"
-            : undefined
-        }
-        onChange={(event) =>
-          onChange(event.target.value as "task" | "decision")
-        }
-      >
-        <option value="task" disabled={cannotCollapseDecision}>
-          {cannotCollapseDecision ? "Task — satukan cabang dulu" : "Task"}
-        </option>
-
-        <option value="decision">Decision</option>
-      </Select>
+        options={[
+          {
+            value: "task",
+            label: cannotCollapseDecision ? "Task — satukan cabang dulu" : "Task",
+            disabled: cannotCollapseDecision,
+          },
+          { value: "decision", label: "Decision" },
+        ]}
+        onValueChange={(value) => onChange(value as "task" | "decision")}
+      />
 
       {branchSummary ? (
         <span className={styles.branchSummary}>{branchSummary}</span>

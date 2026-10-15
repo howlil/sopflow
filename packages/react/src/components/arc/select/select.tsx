@@ -15,6 +15,7 @@ export interface SelectProps
     "children"
   > {
   label: string;
+  compact?: boolean;
   description?: string;
   placeholder?: string;
   id?: string;
@@ -64,6 +65,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
   function Select(
     {
       label,
+      compact = false,
       description,
       placeholder = "Select an option",
       options,
@@ -93,7 +95,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
     }
 
     return (
-      <div className={styles.field}>
+      <div className={styles.field} data-compact={compact || undefined}>
         <label htmlFor={controlId}>{label}</label>
         <SelectPrimitive.Root
           {...rootProps}
@@ -134,6 +136,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
           </SelectPrimitive.Trigger>
           <SelectPrimitive.Portal>
             <SelectPrimitive.Content
+              data-sopflow-root
               className={styles.content}
               position="popper"
               sideOffset={4}

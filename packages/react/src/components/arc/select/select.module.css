@@ -32,3 +32,8 @@
 @media (prefers-reduced-motion: reduce) { .trigger, .chevron, .item { transition: none; } .content { animation: select-fade var(--duration-instant) var(--ease-standard) both; } .content[data-state="closed"] { animation: select-fade-out var(--duration-instant) var(--ease-standard) both; } .indicator { animation: none; } }
 @keyframes select-fade { from { opacity: 0; } }
 @keyframes select-fade-out { to { opacity: 0; } }
+
+/* Compact single-row SOP select, preserving official Radix menu/motion. */
+.field[data-compact] { gap: 0; }
+.field[data-compact] > label { position: absolute; height: 1px; width: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.field[data-compact] .trigger { min-height: 2.25rem; padding: .375rem .5rem; border-radius: var(--sopflow-control-radius); font-size: var(--sopflow-font-xs); }
