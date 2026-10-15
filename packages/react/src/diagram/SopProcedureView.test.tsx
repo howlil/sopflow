@@ -70,7 +70,6 @@ describe("SopProcedureView", () => {
     expect(onDiagramConfigChange).not.toHaveBeenCalled();
   });
 
-
   it("renders SOP-AP grouped actor and mutu baku headers", () => {
     render(<SopProcedureView document={document} />);
 

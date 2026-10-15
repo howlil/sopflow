@@ -21,7 +21,6 @@ describe("SOPDocumentSchema", () => {
     );
   });
 
-
   it("accents valid SOP document", () => {
     const result = SOPDocumentSchema.safeParse(exampleSop);
 
