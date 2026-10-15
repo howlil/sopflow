@@ -7,7 +7,14 @@ import {
   type ProcedureManualTrunks,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { SopProcedurePage } from "./SopProcedurePage.js";
 import { LegacySinglePageSopProcedureView } from "./LegacySinglePageProcedureView.js";
 import styles from "./SopProcedureView.module.css";

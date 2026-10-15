@@ -1,5 +1,11 @@
 import type { ActorId, StepId } from "@sopflow/core";
-import type { DiagramDiagnostic, DiagramPoint, DiagramRouteKind, DiagramRouteQuality, DiagramSide } from "../types.js";
+import type {
+  DiagramDiagnostic,
+  DiagramPoint,
+  DiagramRouteKind,
+  DiagramRouteQuality,
+  DiagramSide,
+} from "../types.js";
 import type { WorkflowEdge } from "../workflow.js";
 import type { SopDiagramConfig } from "../config/types.js";
 

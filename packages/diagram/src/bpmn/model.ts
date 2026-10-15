@@ -4,7 +4,12 @@ import { layoutBpmnGraph } from "./layout.js";
 import { reconcileBpmnRoutes } from "./routing.js";
 import { scoreBpmnPlan } from "./scoring.js";
 import { measureBpmnNode, positive, nonNegative } from "./geometry.js";
-import type { BpmnLayoutOptions, BpmnModel, BpmnLane, BpmnNode } from "./types.js";
+import type {
+  BpmnLayoutOptions,
+  BpmnModel,
+  BpmnLane,
+  BpmnNode,
+} from "./types.js";
 import type { DiagramDiagnostic } from "../types.js";
 
 const DEFAULTS: Required<

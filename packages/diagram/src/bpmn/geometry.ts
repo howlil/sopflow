@@ -80,7 +80,10 @@ export function positive(value: number | undefined, fallback: number): number {
     : fallback;
 }
 
-export function nonNegative(value: number | undefined, fallback: number): number {
+export function nonNegative(
+  value: number | undefined,
+  fallback: number,
+): number {
   return Number.isFinite(value) && (value ?? -1) >= 0
     ? (value as number)
     : fallback;

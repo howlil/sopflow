@@ -85,4 +85,3 @@ export function removeProcedureManualRoute(
 
   return Object.keys(routes).length > 0 ? { ...rest, routes } : rest;
 }
-

@@ -1,17 +1,36 @@
 import type { StepId } from "@sopflow/core";
-import type { DiagramDiagnostic, DiagramPoint, DiagramRouteKind, DiagramRouteQuality, DiagramSide } from "../types.js";
+import type {
+  DiagramDiagnostic,
+  DiagramPoint,
+  DiagramRouteKind,
+  DiagramRouteQuality,
+  DiagramSide,
+} from "../types.js";
 import {
-  channelAnchorDistance, clampAnchorDistance, distanceOnRectSide,
-  extrudePoint, nearestRectSide, pointOnRectSide,
+  channelAnchorDistance,
+  clampAnchorDistance,
+  distanceOnRectSide,
+  extrudePoint,
+  nearestRectSide,
+  pointOnRectSide,
 } from "../routeAnchors.js";
 import { placeRouteLabel } from "../routeLabels.js";
 import {
-  compactOrthogonalPath, measureRouteQuality, pathIntersectsRectangles,
-  pathOverlapsSegments, pathToSegments, pathWithinBounds, scorePath,
-  type DiagramRect, type RouteSegment,
+  compactOrthogonalPath,
+  measureRouteQuality,
+  pathIntersectsRectangles,
+  pathOverlapsSegments,
+  pathToSegments,
+  pathWithinBounds,
+  scorePath,
+  type DiagramRect,
+  type RouteSegment,
 } from "../routeGeometry.js";
 import { repairFormalManualRoute } from "../flowchart/formal/edit.js";
-import type { SopDiagramConfig, ProcedureManualRoute } from "../config/types.js";
+import type {
+  SopDiagramConfig,
+  ProcedureManualRoute,
+} from "../config/types.js";
 import type { WorkflowEdge } from "../workflow.js";
 import type { BpmnNode, BpmnRoutedEdge } from "./types.js";
 import { scoreBpmnEdges } from "./scoring.js";

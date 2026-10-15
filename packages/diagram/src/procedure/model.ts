@@ -1,4 +1,10 @@
-import { getPresentationSteps, type ActorId, type Duration, type SOPDocument, type StepId } from "@sopflow/core";
+import {
+  getPresentationSteps,
+  type ActorId,
+  type Duration,
+  type SOPDocument,
+  type StepId,
+} from "@sopflow/core";
 import type { DiagramPoint } from "../types.js";
 import type { DiagramRect } from "../routeGeometry.js";
 import type { FormalFlowchartGeometry } from "../flowchart/formal/types.js";
@@ -98,4 +104,3 @@ export function buildProcedureModel(document: SOPDocument): ProcedureModel {
     graph,
   };
 }
-

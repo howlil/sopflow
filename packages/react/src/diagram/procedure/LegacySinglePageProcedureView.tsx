@@ -15,7 +15,15 @@ import {
   type ProcedureNodeGeometry,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
-import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   ProcedureShape,
   toLocalRect,
@@ -28,7 +36,10 @@ import {
   procedureColumnWidths,
 } from "./procedureShared.js";
 import { EditableFormalFlowchartPath } from "../EditableFormalFlowchartPath.js";
-import type { SopManualPathOffsets, SopProcedureViewProps } from "./SopProcedureView.js";
+import type {
+  SopManualPathOffsets,
+  SopProcedureViewProps,
+} from "./SopProcedureView.js";
 import styles from "./SopProcedureView.module.css";
 
 export function LegacySinglePageSopProcedureView({

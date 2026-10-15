@@ -1,18 +1,28 @@
 import type { ActorId, StepId } from "@sopflow/core";
 import type {
-  DiagramDiagnostic, DiagramPoint, DiagramRouteKind,
-  DiagramRouteQuality, DiagramSide,
+  DiagramDiagnostic,
+  DiagramPoint,
+  DiagramRouteKind,
+  DiagramRouteQuality,
+  DiagramSide,
 } from "../types.js";
 import {
-  measureRouteQuality, pathIntersectsRectangles, pathOverlapsSegments,
-  pathToSegments, pathWithinBounds, scorePath,
-  type DiagramRect, type RouteSegment,
+  measureRouteQuality,
+  pathIntersectsRectangles,
+  pathOverlapsSegments,
+  pathToSegments,
+  pathWithinBounds,
+  scorePath,
+  type DiagramRect,
+  type RouteSegment,
 } from "../routeGeometry.js";
 import { planFormalProcedureEdges } from "../flowchart/formal/planner.js";
 import type { WorkflowEdge } from "../workflow.js";
 import type { ProcedureModel, ProcedureGeometry } from "./model.js";
 import type {
-  ProcedureManualRoute, ProcedureRoutingOverrides, ProcedureManualTrunks,
+  ProcedureManualRoute,
+  ProcedureRoutingOverrides,
+  ProcedureManualTrunks,
   SopDiagramConfig,
 } from "../config/types.js";
 
