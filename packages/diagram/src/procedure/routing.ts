@@ -21,6 +21,7 @@ import type { WorkflowEdge } from "../workflow.js";
 import type { ProcedureModel, ProcedureGeometry } from "./model.js";
 import type {
   ProcedureManualRoute,
+  ProcedureManualRoutes,
   ProcedureRoutingOverrides,
   ProcedureManualTrunks,
   SopDiagramConfig,
