@@ -13,7 +13,14 @@ import {
   type ProcedureModel,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
-import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   ProcedureShape,
@@ -406,15 +413,19 @@ export function SopProcedurePage({
             const selected = selectedConnectionId === edge.id;
             const sourceShape = geometry.shapes.get(edge.from);
             const targetShape = geometry.shapes.get(edge.to);
-            const obstacles = editingEnabled ? [...geometry.shapes.values()]
-              .filter(
-                (shape) =>
-                  shape.stepId !== edge.from && shape.stepId !== edge.to,
-              )
-              .map((shape) => shape.rect) : [];
-            const occupiedSegments = editingEnabled ? [...routeSegmentsById.entries()]
-              .filter(([edgeId]) => edgeId !== edge.id)
-              .flatMap(([, segments]) => segments) : [];
+            const obstacles = editingEnabled
+              ? [...geometry.shapes.values()]
+                  .filter(
+                    (shape) =>
+                      shape.stepId !== edge.from && shape.stepId !== edge.to,
+                  )
+                  .map((shape) => shape.rect)
+              : [];
+            const occupiedSegments = editingEnabled
+              ? [...routeSegmentsById.entries()]
+                  .filter(([edgeId]) => edgeId !== edge.id)
+                  .flatMap(([, segments]) => segments)
+              : [];
             const pelaksanaBounds = geometry.pelaksanaBounds;
             const formalBounds = pelaksanaBounds
               ? {

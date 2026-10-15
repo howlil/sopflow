@@ -204,7 +204,12 @@ export function SopEditor({
       }
       onDiagramConfigsChange?.(nextConfigs);
     },
-    [canEditRoutes, controlledDiagramConfig, controlledDiagramConfigs, onDiagramConfigsChange],
+    [
+      canEditRoutes,
+      controlledDiagramConfig,
+      controlledDiagramConfigs,
+      onDiagramConfigsChange,
+    ],
   );
 
   const handleDiagramConfigChange = useCallback(
@@ -229,7 +234,11 @@ export function SopEditor({
   );
 
   useEffect(() => {
-    if (!canEditRoutes || diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)) return;
+    if (
+      !canEditRoutes ||
+      diagramConfigsEqual(rawDiagramConfigs, diagramConfigs)
+    )
+      return;
     handleDiagramConfigsChange(diagramConfigs);
     if (
       controlledDiagramConfig !== undefined &&

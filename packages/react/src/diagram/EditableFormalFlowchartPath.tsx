@@ -302,7 +302,11 @@ export function EditableFormalFlowchartPath({
   };
 
   const handlePathKeyDown = (event: ReactKeyboardEvent<SVGPathElement>) => {
-    if (selected && onReset && (event.key === "Delete" || event.key === "Backspace")) {
+    if (
+      selected &&
+      onReset &&
+      (event.key === "Delete" || event.key === "Backspace")
+    ) {
       event.preventDefault();
       event.stopPropagation();
       onReset();
