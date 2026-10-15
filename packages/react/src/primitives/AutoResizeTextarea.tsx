@@ -67,7 +67,11 @@ export function AutoResizeTextarea({
   return (
     <ArcTextarea
       compact
-      label={typeof props["aria-label"] === "string" ? props["aria-label"] : "Kegiatan"}
+      label={
+          typeof props["aria-label"] === "string"
+            ? props["aria-label"]
+            : "Kegiatan"
+        }
       {...props}
       ref={ref}
       value={value}
