@@ -23,6 +23,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,7 @@ import {
   display,
   durationLabel,
   decisionSummary,
+  procedureColumnWidths,
 } from "./procedureShared.js";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
 import { SopProcedurePage } from "./SopProcedurePage.js";
@@ -291,7 +293,8 @@ function LegacySinglePageSopProcedureView({
     [controlledDiagramConfig, onDiagramConfigChange],
   );
 
-  const actorWidth = Math.max(10, 70 / model.actorColumns.length);
+  const columnWidths = procedureColumnWidths(model.actorColumns.length);
+  const markerId = `sopflow-procedure-arrow-${useId().replace(/:/g, "")}`;
   const totalColumns = model.actorColumns.length + 6;
 
   const measure = useCallback(() => {
@@ -569,18 +572,18 @@ function LegacySinglePageSopProcedureView({
     >
       <table className={styles.table}>
         <colgroup>
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "25%" }} />
+          <col style={{ width: columnWidths.number }} />
+          <col style={{ width: columnWidths.activity }} />
           {model.actorColumns.map((actor, index) => (
             <col
               key={actor.actorId ?? `fallback-${index}`}
-              style={{ width: `${actorWidth}%` }}
+              style={{ width: columnWidths.actor }}
             />
           ))}
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "15%" }} />
+          <col style={{ width: columnWidths.input }} />
+          <col style={{ width: columnWidths.duration }} />
+          <col style={{ width: columnWidths.output }} />
+          <col style={{ width: columnWidths.note }} />
         </colgroup>
 
         <thead>
@@ -725,7 +728,7 @@ function LegacySinglePageSopProcedureView({
         >
           <defs>
             <marker
-              id="sopflow-procedure-arrow"
+              id={markerId}
               markerWidth="10"
               markerHeight="8"
               refX="7"
@@ -804,7 +807,7 @@ function LegacySinglePageSopProcedureView({
                   data-editable={
                     manualEditing && usesLegacyManualPaths ? true : undefined
                   }
-                  markerEnd="url(#sopflow-procedure-arrow)"
+                  markerEnd={`url(#${markerId})`}
                   onPointerDown={
                     manualEditing && usesLegacyManualPaths
                       ? (event) => {

@@ -240,3 +240,20 @@ export function decisionSummary(stepId: StepId, model: ProcedureModel): string {
 
   return `Ya → ${yes ? (orderById.get(yes.to) ?? "?") : "?"} · Tidak → ${no ? (orderById.get(no.to) ?? "?") : "?"}`;
 }
+
+/** Preserve column proportions while keeping the sum exactly at 100%. */
+export function procedureColumnWidths(actorCount: number) {
+  const count = Math.max(1, actorCount);
+  const actorWeight = Math.max(10, 70 / count);
+  const total = 85 + count * actorWeight;
+  const percent = (weight: number): string => `${(100 * weight) / total}%`;
+  return {
+    number: percent(5),
+    activity: percent(25),
+    actor: percent(actorWeight),
+    input: percent(15),
+    duration: percent(10),
+    output: percent(15),
+    note: percent(15),
+  };
+}

@@ -18,7 +18,6 @@ import {
   type FormalRouteChange,
 } from "@sopflow/diagram";
 import {
-  useEffect,
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -73,21 +72,6 @@ export function EditableFormalFlowchartPath({
   onReset,
 }: EditableFormalFlowchartPathProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
-
-  useEffect(() => {
-    if (!selected || !onReset) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Delete" && event.key !== "Backspace") return;
-      if (isEditableKeyboardTarget(event.target)) return;
-
-      event.preventDefault();
-      onReset();
-    };
-
-    globalThis.addEventListener("keydown", handleKeyDown);
-    return () => globalThis.removeEventListener("keydown", handleKeyDown);
-  }, [onReset, selected]);
 
   const emitPath = (
     nextPath: readonly DiagramPoint[],
@@ -318,6 +302,12 @@ export function EditableFormalFlowchartPath({
   };
 
   const handlePathKeyDown = (event: ReactKeyboardEvent<SVGPathElement>) => {
+    if (selected && onReset && (event.key === "Delete" || event.key === "Backspace")) {
+      event.preventDefault();
+      event.stopPropagation();
+      onReset();
+      return;
+    }
     if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
@@ -454,17 +444,6 @@ export function EditableFormalFlowchartPath({
           })
         : null}
     </g>
-  );
-}
-
-function isEditableKeyboardTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
   );
 }
 
