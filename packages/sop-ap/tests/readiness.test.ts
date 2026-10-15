@@ -119,6 +119,34 @@ describe("SOP AP readiness", () => {
     );
   });
 
+  it("keeps a decision draft editable but blocks publication until branches differ", () => {
+    const decisionDraft: SOPDocument = {
+      ...document,
+      presentationOrder: ["start", "decision", "end"],
+      steps: [
+        { ...document.steps[0]!, next: "decision" } as SOPDocument["steps"][number],
+        {
+          id: "decision",
+          type: "decision",
+          name: "Periksa",
+          actorIds: ["staff"],
+          yes: "end",
+          no: "end",
+          ...quality,
+        },
+        document.steps[1]!,
+      ],
+    };
+    expect(getSopApReadinessIssues(decisionDraft, header)).toContainEqual(
+      expect.objectContaining({
+        kind: "procedure",
+        code: "IDENTICAL_DECISION_TARGETS",
+        stepId: "decision",
+      }),
+    );
+    expect(isSopApReady(decisionDraft, header)).toBe(false);
+  });
+
   it("rejects invalid durations in strict readiness", () => {
     const invalid: SOPDocument = {
       ...document,

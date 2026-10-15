@@ -60,16 +60,14 @@ export function pruneProcedurePagedRoutes(
 ): SopDiagramConfig {
   if (!config.pagedRoutes) return config;
 
-  const crossPageEdgeIds = new Set(
-    pages.flatMap((page) =>
-      page.edges
-        .filter((edge) => edge.segment !== "local")
-        .map((edge) => edge.semanticEdgeId),
-    ),
+  // Prune only deleted semantic edges. Page breaks can change after a resize,
+  // so a temporarily local edge must retain its saved cross-page override.
+  const semanticEdgeIds = new Set(
+    pages.flatMap((page) => page.edges.map((edge) => edge.semanticEdgeId)),
   );
   const pagedRoutes = Object.fromEntries(
     Object.entries(config.pagedRoutes).filter(([edgeId]) =>
-      crossPageEdgeIds.has(edgeId),
+      semanticEdgeIds.has(edgeId),
     ),
   );
 
