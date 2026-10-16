@@ -82,7 +82,8 @@ export function SopStepCard({
       data-disabled={disabled || undefined}
     >
       <header className={styles.header}>
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           className={styles.selectButton}
           aria-pressed={selected}

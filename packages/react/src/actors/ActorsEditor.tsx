@@ -59,7 +59,8 @@ export function ActorsEditor({
         </div>
 
         {!disabled ? (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             className={styles.addButton}
             onClick={handleAdd}
@@ -97,7 +98,8 @@ export function ActorsEditor({
               )}
 
               {!disabled ? (
-                <Button variant="ghost"
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${actor.name || "pelaksana"}`}

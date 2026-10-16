@@ -133,7 +133,8 @@ export function SopHeaderFields({
                 className={styles.logoPreviewImage}
               />
               {!headerDisabled ? (
-                <Button variant="ghost"
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.logoRemove}
                   onClick={() => {
@@ -340,7 +341,8 @@ function ListSection({
       title={title}
       actions={
         !disabled ? (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
@@ -373,7 +375,8 @@ function ListSection({
               )}
 
               {!disabled ? (
-                <Button variant="ghost"
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${title.toLowerCase()} ${index + 1}`}

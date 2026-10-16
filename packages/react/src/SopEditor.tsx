@@ -316,7 +316,8 @@ export function SopEditor({
         >
           <div className={styles.mainPane} data-sopflow-main-pane>
             {!inspectorOpen ? (
-              <Button variant="ghost"
+              <Button
+                variant="ghost"
                 type="button"
                 className={styles.openInspector}
                 aria-label="Buka panel properti"
@@ -357,7 +358,8 @@ export function SopEditor({
             >
               <div className={styles.inspectorHeader}>
                 <h2 className={styles.inspectorTitle}>Properti</h2>
-                <Button variant="ghost"
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.inspectorToggle}
                   aria-label="Tutup panel properti"

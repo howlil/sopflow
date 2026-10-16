@@ -28,7 +28,8 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
         </div>
 
         {!ready ? (
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             className={styles.toggle}
             aria-expanded={expanded}
