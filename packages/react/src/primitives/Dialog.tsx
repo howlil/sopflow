@@ -50,7 +50,9 @@ export function Dialog({
             '[data-sopflow-dialog-return-focus="true"]',
           );
           returnFocusRef.current =
-            !active || active === document.body || active.closest('[role="menu"]')
+            !active ||
+            active === document.body ||
+            active.closest('[role="menu"]')
               ? (menuOrigin ?? active)
               : active;
         }}
