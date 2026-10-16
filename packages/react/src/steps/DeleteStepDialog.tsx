@@ -10,7 +10,7 @@ import {
 import { Button } from "../primitives/Button.js";
 import { Dialog } from "../primitives/Dialog.js";
 import { FormField as Field } from "../primitives/FormField.js";
-import { Select } from "../primitives/Select.js";
+import { Select } from "../components/arc/select/select.js";
 import styles from "./DeleteStepDialog.module.css";
 
 export interface DeleteStepDialogProps {
@@ -99,19 +99,17 @@ export function DeleteStepDialog({
             className={styles.field}
           >
             <Select
-              aria-label="Sambungkan langkah sebelumnya ke"
+              compact
+              label="Sambungkan langkah sebelumnya ke"
               value={replacementId}
+              placeholder="Pilih langkah"
               disabled={disabled || hasNoValidReplacement}
-              onChange={(event) => setReplacementId(event.target.value)}
-            >
-              <option value="">Pilih langkah</option>
-
-              {candidates.map((candidate, index) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {index + 1}. {candidate.name || "Tanpa judul"}
-                </option>
-              ))}
-            </Select>
+              onValueChange={setReplacementId}
+              options={candidates.map((candidate, index) => ({
+                value: candidate.id,
+                label: `${index + 1}. ${candidate.name || "Tanpa judul"}`,
+              }))}
+            />
           </Field>
 
           {hasNoValidReplacement ? (

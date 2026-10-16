@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import type { SOPDocument, TaskStep } from "@sopflow/core";
@@ -44,7 +45,8 @@ const document: SOPDocument = {
 };
 
 describe("DeleteStepDialog", () => {
-  it("filters replacement targets that would make the final workflow invalid", () => {
+  it("filters replacement targets that would make the final workflow invalid", async () => {
+    const user = userEvent.setup();
     render(
       <DeleteStepDialog
         open
@@ -55,13 +57,14 @@ describe("DeleteStepDialog", () => {
       />,
     );
 
-    const select = screen.getByLabelText(
-      /sambungkan langkah sebelumnya ke/i,
-    ) as HTMLSelectElement;
-    const values = Array.from(select.options).map((option) => option.value);
-
-    expect(values).toContain("end");
-    expect(values).not.toContain("a");
-    expect(values).not.toContain("start");
+    await user.click(
+      screen.getByRole("combobox", {
+        name: /sambungkan langkah sebelumnya ke/i,
+      }),
+    );
+    const options = within(screen.getByRole("listbox"));
+    expect(options.getByRole("option", { name: /End/i })).toBeInTheDocument();
+    expect(options.queryByRole("option", { name: /Start/i })).toBeNull();
+    expect(options.queryByRole("option", { name: /^2\. A$/i })).toBeNull();
   });
 });
