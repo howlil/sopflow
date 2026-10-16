@@ -604,7 +604,9 @@ describe("SopEditor graph mutations", () => {
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(screen.getByRole("menuitem", { name: /atur cabang/i }));
 
-    await user.click(screen.getByRole("combobox", { name: /Tahap jika Tidak/i }));
+    await user.click(
+      screen.getByRole("combobox", { name: /Tahap jika Tidak/i }),
+    );
     await user.click(screen.getByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /simpan/i }));
 
