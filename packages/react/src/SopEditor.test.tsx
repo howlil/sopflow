@@ -606,9 +606,7 @@ describe("SopEditor graph mutations", () => {
 
     screen.getByRole("combobox", { name: /Tahap jika Tidak/i }).focus();
     await user.keyboard("{ArrowDown}");
-    await user.click(
-      await screen.findByRole("option", { name: /Selesai/i }),
-    );
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /simpan/i }));
 
     const document = readDocument();
@@ -637,9 +635,7 @@ describe("SopEditor graph mutations", () => {
       .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
       .focus();
     await user.keyboard("{ArrowDown}");
-    await user.click(
-      await screen.findByRole("option", { name: /Selesai/i }),
-    );
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
@@ -668,9 +664,7 @@ describe("SopEditor graph mutations", () => {
       .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
       .focus();
     await user.keyboard("{ArrowDown}");
-    await user.click(
-      await screen.findByRole("option", { name: /Selesai/i }),
-    );
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
