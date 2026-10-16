@@ -1,27 +1,17 @@
-# UIArc source integration and design graph
+# Official UIArc source — SOPFlow
 
-Official source: https://github.com/kuratlielia/arc-library (MIT).
-Original Button and CSS Module are copied, with only the internal motion-token import adjusted. The exact upstream motion presets live under `components/arc/lib`.
-The public SOPFlow Button is a thin backward-compatible adapter.
-Current slice migrates the button primitive; the remaining planned UIArc-native select, textarea, dialog, tooltip and segmented controls require verified API adapters and dependency support.
+Upstream official MIT repository: https://github.com/kuratlielia/arc-library.
+All vendored TSX/CSS Modules in `packages/react/src/components/arc` originated from the official registry. The MIT license remains in `packages/react/src/components/arc/LICENSE`; the official Motion tokens are in `components/arc/lib/motion-tokens.ts`.
 
-`Host → SopWorkspace → SopEditor → Button/Editor controls → official Arc primitive → Arc Motion`
+## Integration contracts
+- Official Arc Button, Input, Textarea, Select, MultiSelect, DropdownMenu, Dialog, Tooltip and Alert render interactive generic controls. SOPFlow retains only thin callbacks/props and domain adapters.
+- Arc Accordion and SegmentedControl are vendored but unused where their semantics conflict with always-expanded inspector sections or diagram tabs with disabled states.
+- Exported SOPFlow `Button` and `Select` public APIs are preserved. The native Select export is legacy compatibility only, not an internally preferred component.
+- Import paths use `.js` NodeNext extensions where required by the package. `motion`, Radix and Lucide versions are pinned through `pnpm-lock.yaml`.
+- Scope Arc tokens to `[data-sopflow-root]`; portaled dialogs, selects and tooltips carry this data attribute. Never import a global `:root` Arc stylesheet in a published component package.
+- Arc Motion owns control interactions; no custom animation timing duplicated in SOPFlow domain modules. Reduced-motion remains supported.
+- Upstream compatibility adaptations: compact labelled field rendering (without duplicate FormField label), safe ResizeObserver absence, React exact optional props, disabled tap gesture behavior, and SOPFlow dialog focus semantics. Do not remove those without corresponding regression proof.
 
-Domain operations and graph projection still go to `@sopflow/core` and `@sopflow/diagram`; no UIArc logic enters those packages. The workbook's toolbar, inspector, document and graph projections keep their current layout and semantics. Scoped tokens under `data-sopflow-root` avoid changing host app styles.
+The dependency graph is `Host → SopWorkspace → SopEditor → Arc UI adapter → official primitive → Motion/Radix`, with mutations independently handled by `@sopflow/core`.
 
-## Design-graph verification
-
-Job → Flow → Surface<C,V,N> → Moves → Environment → Proof.
-
-For button interactions: the SOP document remains canonical; button actions
-call existing SOPFlow handlers; Arc handles hover/press/label motion; focus,
-disabled and reduced-motion states require DOM-level tests. UI changes cannot
-alter authored steps, formal workflow projection, or A4 output.
-
-## Dependency and compiler compatibility
-
-Motion is installed as a direct runtime dependency in `@sopflow/react`, with
-`pnpm-lock.yaml` resolved by pnpm in CI and committed. Official source requires
-two build-target adaptations: the relative JS import extension for NodeNext,
-and an empty `whileTap` animation when the button must not scale. Other
-upstream behavior and its MIT attribution remain intact.
+Implementation graph, detailed status and outstanding release gates: [design-graph-uiarc-migration.md](design-graph-uiarc-migration.md).

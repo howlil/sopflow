@@ -541,9 +541,7 @@ describe("SopEditor graph mutations", () => {
     await user.click(getReviewField());
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(
-      within(row).getByRole("button", {
-        name: /tambah langkah setelah/i,
-      }),
+      screen.getByRole("menuitem", { name: /tambah langkah setelah/i }),
     );
 
     const document = readDocument();
@@ -604,9 +602,11 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getField("Disetujui?"));
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(within(row).getByRole("button", { name: /atur cabang/i }));
+    await user.click(screen.getByRole("menuitem", { name: /atur cabang/i }));
 
-    await user.selectOptions(screen.getByLabelText(/tidak/i), "end");
+    screen.getByRole("combobox", { name: /Tahap jika Tidak/i }).focus();
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /simpan/i }));
 
     const document = readDocument();
@@ -630,13 +630,12 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getReviewField());
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(
-      within(row).getByRole("button", { name: /hapus langkah/i }),
-    );
-    await user.selectOptions(
-      screen.getByLabelText(/sambungkan langkah sebelumnya/i),
-      "end",
-    );
+    await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
+    screen
+      .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
+      .focus();
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
@@ -660,13 +659,12 @@ describe("SopEditor graph mutations", () => {
     const row = getStepRow(getField("Shared"));
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
-    await user.click(
-      within(row).getByRole("button", { name: /hapus langkah/i }),
-    );
-    await user.selectOptions(
-      screen.getByLabelText(/sambungkan langkah sebelumnya/i),
-      "end",
-    );
+    await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
+    screen
+      .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
+      .focus();
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
@@ -730,7 +728,7 @@ describe("SopEditor actor mutations", () => {
     expect(actorTrigger).not.toBeNull();
 
     await user.click(actorTrigger as HTMLElement);
-    await user.click(within(row).getByRole("checkbox", { name: "Manager" }));
+    await user.click(within(row).getByRole("option", { name: "Manager" }));
 
     const document = readDocument();
     const review = document.steps.find((step) => step.id === "review");
@@ -785,9 +783,12 @@ describe("SopEditor dialog accessibility", () => {
     render(<EditorHarness />);
 
     const row = getStepRow(getReviewField());
-    await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
+    const menuTrigger = within(row).getByRole("button", {
+      name: /aksi untuk/i,
+    });
+    await user.click(menuTrigger);
 
-    const deleteTrigger = within(row).getByRole("button", {
+    const deleteTrigger = screen.getByRole("menuitem", {
       name: /hapus langkah/i,
     });
 
@@ -802,7 +803,7 @@ describe("SopEditor dialog accessibility", () => {
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(deleteTrigger);
+    expect(document.activeElement).toBe(menuTrigger);
   });
 
   it("keeps tab focus inside a dialog", async () => {
@@ -819,7 +820,7 @@ describe("SopEditor dialog accessibility", () => {
         within(row).getByRole("button", { name: /aksi untuk/i }),
       );
       await user.click(
-        within(row).getByRole("button", { name: /hapus langkah/i }),
+        screen.getByRole("menuitem", { name: /hapus langkah/i }),
       );
 
       const dialog = await screen.findByRole("alertdialog");

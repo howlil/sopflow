@@ -1,3 +1,4 @@
+import { Button } from "../primitives/Button.js";
 import type { ReactNode } from "react";
 import {
   getPresentationSteps,
@@ -81,14 +82,15 @@ export function SopStepCard({
       data-disabled={disabled || undefined}
     >
       <header className={styles.header}>
-        <button
+        <Button
+          variant="ghost"
           type="button"
           className={styles.selectButton}
           aria-pressed={selected}
           onClick={onSelect}
         >
           <strong className={styles.title}>Langkah {index + 1}</strong>
-        </button>
+        </Button>
 
         <StepActions
           step={step}

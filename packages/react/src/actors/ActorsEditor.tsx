@@ -1,8 +1,10 @@
+import { Button } from "../primitives/Button.js";
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
 import { DeleteActorDialog } from "./DeleteActorDialog.js";
 import styles from "./ActorsEditor.module.css";
+import { SopInput } from "../primitives/Input.js";
 
 export interface ActorsEditorProps {
   document: SOPDocument;
@@ -57,13 +59,14 @@ export function ActorsEditor({
         </div>
 
         {!disabled ? (
-          <button
+          <Button
+            variant="ghost"
             type="button"
             className={styles.addButton}
             onClick={handleAdd}
           >
             + Tambah pelaksana
-          </button>
+          </Button>
         ) : null}
       </header>
 
@@ -82,7 +85,7 @@ export function ActorsEditor({
                   {actor.name || "Tanpa nama"}
                 </span>
               ) : (
-                <input
+                <SopInput
                   className={styles.nameInput}
                   value={actor.name}
                   placeholder="Nama pelaksana"
@@ -95,14 +98,15 @@ export function ActorsEditor({
               )}
 
               {!disabled ? (
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${actor.name || "pelaksana"}`}
                   onClick={() => setActorToDelete(actor)}
                 >
                   Hapus
-                </button>
+                </Button>
               ) : null}
             </div>
           ))}

@@ -1,6 +1,8 @@
-import { useId, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { useDialogFocus } from "./dialog/useDialogFocus.js";
+import { useRef, type ReactNode } from "react";
+import {
+  Dialog as ArcDialog,
+  DialogContent as ArcDialogContent,
+} from "../components/arc/dialog/dialog.js";
 import styles from "./Dialog.module.css";
 
 export interface DialogProps {
@@ -13,6 +15,7 @@ export interface DialogProps {
   onClose: () => void;
 }
 
+/** Maintains the SOPFlow controlled-dialog contract using official Arc UI / Radix. */
 export function Dialog({
   open,
   title,
@@ -22,66 +25,57 @@ export function Dialog({
   footer,
   onClose,
 }: DialogProps) {
-  const titleId = useId();
-  const descriptionId = useId();
-  const { dialogRef, handleKeyDown } = useDialogFocus({
-    open,
-    onClose,
-  });
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   if (!open) return null;
 
-  return createPortal(
-    <div className={styles.backdrop} data-sopflow-root>
-      <button
-        type="button"
-        className={styles.backdropClose}
-        aria-label="Tutup dialog dengan klik di luar"
-        tabIndex={-1}
-        onClick={onClose}
-      />
-
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: Dialog owns keyboard focus trapping. */}
-      {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: Dialog role is intentionally configurable for alert dialogs. */}
-      <div
-        ref={dialogRef}
-        className={styles.dialog}
+  return (
+    <ArcDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <ArcDialogContent
+        title={title}
+        description={description}
         role={role}
-        aria-modal="true"
-        aria-labelledby={titleId}
-        {...(description ? { "aria-describedby": descriptionId } : {})}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
+        className={styles.dialog}
+        onOpenAutoFocus={(event) => {
+          const active =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null;
+          const menuOrigin = document.querySelector<HTMLElement>(
+            '[data-sopflow-dialog-return-focus="true"]',
+          );
+          returnFocusRef.current =
+            !active ||
+            active === document.body ||
+            active.closest('[role="menu"]')
+              ? (menuOrigin ?? active)
+              : active;
+
+          const content = event.currentTarget;
+          const firstField =
+            content instanceof HTMLElement
+              ? content.querySelector<HTMLElement>(
+                  "select:not([disabled]), input:not([disabled]), textarea:not([disabled])",
+                )
+              : null;
+          if (firstField) {
+            event.preventDefault();
+            firstField.focus();
+          }
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          returnFocusRef.current?.focus();
+        }}
       >
-        <header className={styles.header}>
-          <div className={styles.heading}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-
-            {description ? (
-              <p id={descriptionId} className={styles.description}>
-                {description}
-              </p>
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            className={styles.closeButton}
-            aria-label="Tutup dialog"
-            tabIndex={-1}
-            onClick={onClose}
-          >
-            ×
-          </button>
-        </header>
-
-        <div className={styles.body}>{children}</div>
-
+        {children}
         {footer ? <footer className={styles.footer}>{footer}</footer> : null}
-      </div>
-    </div>,
-    globalThis.document.body,
+      </ArcDialogContent>
+    </ArcDialog>
   );
 }

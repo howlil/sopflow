@@ -27,5 +27,16 @@
     "rules": {
       "preset": "recommended"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "packages/react/src/components/arc/**/*.ts",
+        "packages/react/src/components/arc/**/*.tsx"
+      ],
+      "linter": {
+        "enabled": false
+      }
+    }
+  ]
 }

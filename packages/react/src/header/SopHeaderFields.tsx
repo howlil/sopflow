@@ -1,6 +1,9 @@
+import { Button } from "../primitives/Button.js";
 import { useId, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
+import { SopInput } from "../primitives/Input.js";
+import { Textarea as ArcTextarea } from "../components/arc/textarea/textarea.js";
 import { InspectorSection } from "../primitives/InspectorSection.js";
 import type { SopHeaderValue, SopSignatory } from "./types.js";
 import styles from "./SopHeaderFields.module.css";
@@ -63,7 +66,9 @@ export function SopHeaderFields({
     >
       <InspectorSection title="Identitas lembaga">
         <Field label="Nama lembaga">
-          <textarea
+          <ArcTextarea
+            compact
+            label="Field SOP"
             className={styles.textarea}
             rows={3}
             value={header.institutionName}
@@ -128,7 +133,8 @@ export function SopHeaderFields({
                 className={styles.logoPreviewImage}
               />
               {!headerDisabled ? (
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.logoRemove}
                   onClick={() => {
@@ -138,7 +144,7 @@ export function SopHeaderFields({
                   }}
                 >
                   Hapus logo
-                </button>
+                </Button>
               ) : null}
             </div>
           ) : null}
@@ -152,7 +158,9 @@ export function SopHeaderFields({
 
       <InspectorSection title="Identitas SOP">
         <Field label="Nama SOP">
-          <textarea
+          <ArcTextarea
+            compact
+            label="Field SOP"
             className={styles.textarea}
             rows={2}
             value={document.title}
@@ -169,7 +177,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nomor SOP">
-          <input
+          <SopInput
             className={styles.input}
             type="text"
             value={header.number}
@@ -183,7 +191,7 @@ export function SopHeaderFields({
 
       <InspectorSection title="Tanggal">
         <Field label="Tanggal pembuatan">
-          <input
+          <SopInput
             className={styles.input}
             type="date"
             value={header.createdDate}
@@ -196,7 +204,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Tanggal revisi">
-          <input
+          <SopInput
             className={styles.input}
             type="date"
             value={header.revisionDate}
@@ -209,7 +217,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Tanggal efektif">
-          <input
+          <SopInput
             className={styles.input}
             type="date"
             value={header.effectiveDate}
@@ -224,7 +232,7 @@ export function SopHeaderFields({
 
       <InspectorSection title="Pengesahan">
         <Field label="Jabatan">
-          <input
+          <SopInput
             className={styles.input}
             type="text"
             value={header.signatory?.role ?? ""}
@@ -236,7 +244,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nama">
-          <input
+          <SopInput
             className={styles.input}
             type="text"
             value={header.signatory?.name ?? ""}
@@ -248,7 +256,7 @@ export function SopHeaderFields({
         </Field>
 
         <Field label="Nomor identitas">
-          <input
+          <SopInput
             className={styles.input}
             type="text"
             value={header.signatory?.identifier ?? ""}
@@ -333,14 +341,15 @@ function ListSection({
       title={title}
       actions={
         !disabled ? (
-          <button
+          <Button
+            variant="ghost"
             type="button"
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
             onClick={() => onChange([...value, ""])}
           >
             +
-          </button>
+          </Button>
         ) : null
       }
     >
@@ -366,14 +375,15 @@ function ListSection({
               )}
 
               {!disabled ? (
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${title.toLowerCase()} ${index + 1}`}
                   onClick={() => removeItem(index)}
                 >
                   ×
-                </button>
+                </Button>
               ) : null}
             </div>
           ))}

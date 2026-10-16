@@ -34,15 +34,23 @@ describe("ActorField", () => {
 
     await user.click(trigger as HTMLElement);
 
-    expect(screen.getByRole("checkbox", { name: "Staff" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Manager" })).not.toBeChecked();
+    expect(screen.getByRole("option", { name: "Staff" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("option", { name: "Manager" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
 
-    await user.click(screen.getByRole("checkbox", { name: "Manager" }));
+    await user.click(screen.getByRole("option", { name: "Manager" }));
 
     expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
-    expect(trigger).toHaveTextContent("Staff +1");
+    expect(trigger?.querySelector('[aria-hidden="true"]')).toHaveTextContent(
+      "Staff+1",
+    );
 
-    await user.click(screen.getByRole("checkbox", { name: "Staff" }));
+    await user.click(screen.getByRole("option", { name: "Staff" }));
 
     expect(screen.getByTestId("value")).toHaveTextContent("manager");
     expect(trigger).toHaveTextContent("Manager");

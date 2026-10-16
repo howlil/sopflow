@@ -10,7 +10,7 @@ import {
 import { Button } from "../primitives/Button.js";
 import { Dialog } from "../primitives/Dialog.js";
 import { FormField as Field } from "../primitives/FormField.js";
-import { Select } from "../primitives/Select.js";
+import { Select } from "../components/arc/select/select.js";
 import styles from "./DecisionEditor.module.css";
 
 export interface DecisionEditorProps {
@@ -96,46 +96,34 @@ export function DecisionEditor({
       <div className={styles.fields}>
         <Field label="Tahap jika Tidak">
           <Select
-            aria-label="Tahap jika Tidak"
+            compact
+            label="Tahap jika Tidak"
+            placeholder="Pilih tahap"
             value={noId}
             disabled={disabled}
-            onChange={(event) => setNoId(event.target.value)}
-          >
-            <option value="">Pilih tahap</option>
-
-            {selectableSteps.map((candidate) => (
-              <option
-                key={candidate.id}
-                value={candidate.id}
-                disabled={candidate.id === yesId}
-              >
-                {orderById.get(candidate.id) ?? "?"}.{" "}
-                {candidate.name || "Tanpa judul"}
-              </option>
-            ))}
-          </Select>
+            onValueChange={setNoId}
+            options={selectableSteps.map((candidate) => ({
+              value: candidate.id,
+              label: `${orderById.get(candidate.id) ?? "?"}. ${candidate.name || "Tanpa judul"}`,
+              disabled: candidate.id === yesId,
+            }))}
+          />
         </Field>
 
         <Field label="Tahap jika Ya">
           <Select
-            aria-label="Tahap jika Ya"
+            compact
+            label="Tahap jika Ya"
+            placeholder="Pilih tahap"
             value={yesId}
             disabled={disabled}
-            onChange={(event) => setYesId(event.target.value)}
-          >
-            <option value="">Pilih tahap</option>
-
-            {selectableSteps.map((candidate) => (
-              <option
-                key={candidate.id}
-                value={candidate.id}
-                disabled={candidate.id === noId}
-              >
-                {orderById.get(candidate.id) ?? "?"}.{" "}
-                {candidate.name || "Tanpa judul"}
-              </option>
-            ))}
-          </Select>
+            onValueChange={setYesId}
+            options={selectableSteps.map((candidate) => ({
+              value: candidate.id,
+              label: `${orderById.get(candidate.id) ?? "?"}. ${candidate.name || "Tanpa judul"}`,
+              disabled: candidate.id === noId,
+            }))}
+          />
         </Field>
       </div>
 

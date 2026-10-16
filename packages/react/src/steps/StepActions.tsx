@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { GitBranch, Ellipsis, Plus, Trash2 } from "lucide-react";
 import type { Step } from "@sopflow/core";
-
+import { DropdownMenu } from "../components/arc/dropdown-menu/dropdown-menu.js";
+import type { DropdownItem } from "../components/arc/dropdown-menu/dropdown-menu.js";
 import styles from "./StepActions.module.css";
 
 export interface StepActionsProps {
@@ -11,6 +12,7 @@ export interface StepActionsProps {
   disabled?: boolean;
 }
 
+/** SOP action policy remains domain-specific; UI and keyboard interaction are Arc-owned. */
 export function StepActions({
   step,
   onAddAfter,
@@ -18,64 +20,40 @@ export function StepActions({
   onConfigureDecision,
   disabled = false,
 }: StepActionsProps) {
-  const [open, setOpen] = useState(false);
+  if (disabled) return null;
 
-  if (disabled) {
-    return null;
+  const items: DropdownItem[] = [];
+  if (step.type === "decision") {
+    items.push({
+      label: "Atur cabang decision",
+      icon: <GitBranch size={15} aria-hidden="true" />,
+      ...(onConfigureDecision ? { onSelect: onConfigureDecision } : {}),
+      disabled: !onConfigureDecision,
+    });
+  } else {
+    items.push({
+      label: "Tambah langkah setelah ini",
+      icon: <Plus size={15} aria-hidden="true" />,
+      onSelect: onAddAfter,
+    });
   }
-
+  if (step.type !== "start" && step.type !== "end") {
+    items.push({
+      label: "Hapus langkah",
+      icon: <Trash2 size={15} aria-hidden="true" />,
+      destructive: true,
+      separatorBefore: true,
+      onSelect: onDelete,
+    });
+  }
   return (
     <div className={styles.menu}>
-      <button
-        type="button"
-        className={styles.trigger}
-        aria-label={`Aksi untuk ${step.name || "langkah"}`}
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        •••
-      </button>
-
-      {open ? (
-        <div className={styles.content}>
-          {step.type === "decision" ? (
-            <button
-              type="button"
-              className={styles.item}
-              onClick={() => {
-                onConfigureDecision?.();
-              }}
-            >
-              Atur cabang decision
-            </button>
-          ) : null}
-
-          {step.type !== "decision" ? (
-            <button
-              type="button"
-              className={styles.item}
-              onClick={() => {
-                setOpen(false);
-                onAddAfter();
-              }}
-            >
-              Tambah langkah setelah ini
-            </button>
-          ) : null}
-
-          {step.type !== "start" && step.type !== "end" ? (
-            <button
-              type="button"
-              className={styles.dangerItem}
-              onClick={() => {
-                onDelete();
-              }}
-            >
-              Hapus langkah
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      <DropdownMenu
+        compact
+        label={`Aksi untuk ${step.name || "langkah"}`}
+        icon={<Ellipsis size={16} aria-hidden="true" />}
+        items={items}
+      />
     </div>
   );
 }

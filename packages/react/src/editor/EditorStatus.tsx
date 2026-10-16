@@ -1,3 +1,4 @@
+import { Alert } from "../components/arc/alert/alert.js";
 import styles from "./EditorStatus.module.css";
 import { useEffect, useState } from "react";
 
@@ -33,17 +34,15 @@ export function EditorStatus({
       ) : null}
 
       {visibleError ? (
-        <div className={styles.error} role="alert">
-          <span className={styles.errorMessage}>{visibleError}</span>
-          <button
-            type="button"
-            className={styles.dismiss}
-            aria-label="Tutup pesan error"
-            onClick={() => setDismissedError(visibleError)}
-          >
-            ×
-          </button>
-        </div>
+        <Alert
+          tone="danger"
+          title="Kesalahan editor"
+          dismissLabel="Tutup pesan error"
+          open
+          onDismiss={() => setDismissedError(visibleError)}
+        >
+          {visibleError}
+        </Alert>
       ) : null}
     </div>
   );

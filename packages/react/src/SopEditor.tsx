@@ -1,3 +1,4 @@
+import { Button } from "./primitives/Button.js";
 import {
   applyOperation as applySopOperation,
   applyOperations as applySopOperations,
@@ -15,6 +16,7 @@ import {
 } from "@sopflow/diagram";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import "./styles/uiarc-scoped.css";
 import "./styles/token.css";
 
 import { ActorsEditor } from "./actors/ActorsEditor.js";
@@ -314,16 +316,17 @@ export function SopEditor({
         >
           <div className={styles.mainPane} data-sopflow-main-pane>
             {!inspectorOpen ? (
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 className={styles.openInspector}
                 aria-label="Buka panel properti"
                 title="Buka panel properti"
-                ref={openInspectorRef}
+                buttonRef={openInspectorRef}
                 onClick={() => setInspectorOpen(true)}
               >
                 <InspectorIcon />
-              </button>
+              </Button>
             ) : null}
             <SopDocumentCanvas
               document={value}
@@ -355,16 +358,17 @@ export function SopEditor({
             >
               <div className={styles.inspectorHeader}>
                 <h2 className={styles.inspectorTitle}>Properti</h2>
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   className={styles.inspectorToggle}
                   aria-label="Tutup panel properti"
                   title="Tutup panel properti"
-                  ref={closeInspectorRef}
+                  buttonRef={closeInspectorRef}
                   onClick={() => setInspectorOpen(false)}
                 >
                   <InspectorIcon />
-                </button>
+                </Button>
               </div>
 
               <div className={styles.inspectorContent}>
