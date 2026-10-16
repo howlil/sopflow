@@ -1,6 +1,8 @@
 import { useRef, type KeyboardEvent } from "react";
 
-import { Button } from "../primitives/Button.js";
+import { Eye, List, PenLine, GitFork, Workflow } from "lucide-react";
+import { Button } from "../components/arc/button/button.js";
+import { Tooltip } from "../components/arc/tooltip/tooltip.js";
 import styles from "./SopDocumentToolbar.module.css";
 
 export type SopDocumentMode = "preview" | "steps";
@@ -69,48 +71,54 @@ export function SopDocumentToolbar({
       {!readOnly ? (
         <fieldset className={[styles.tabs, styles.modeTabs].join(" ")}>
           <legend className={styles.srOnly}>Mode dokumen</legend>
-          <Button
-            variant="ghost"
-            type="button"
-            className={styles.tab}
-            data-active={mode === "preview" || undefined}
-            aria-pressed={mode === "preview"}
-            aria-label="Preview"
-            title="Preview"
-            onClick={() => onModeChange("preview")}
-          >
-            <ToolbarIcon type="preview" />
-          </Button>
-          <Button
-            variant="ghost"
-            type="button"
-            className={styles.tab}
-            data-active={mode === "steps" || undefined}
-            aria-pressed={mode === "steps"}
-            aria-label="Edit langkah"
-            title="Edit langkah"
-            onClick={() => onModeChange("steps")}
-          >
-            <ToolbarIcon type="steps" />
-          </Button>
+          <Tooltip content="Preview">
+            <Button
+              size="sm"
+              variant="ghost"
+              type="button"
+              className={styles.tab}
+              data-active={mode === "preview" || undefined}
+              aria-pressed={mode === "preview"}
+              aria-label="Preview"
+              onClick={() => onModeChange("preview")}
+            >
+              <ToolbarIcon type="preview" />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Edit langkah">
+            <Button
+              size="sm"
+              variant="ghost"
+              type="button"
+              className={styles.tab}
+              data-active={mode === "steps" || undefined}
+              aria-pressed={mode === "steps"}
+              aria-label="Edit langkah"
+              onClick={() => onModeChange("steps")}
+            >
+              <ToolbarIcon type="steps" />
+            </Button>
+          </Tooltip>
         </fieldset>
       ) : null}
 
       {!readOnly ? (
         <div className={styles.group}>
-          <Button
-            variant="ghost"
-            type="button"
-            className={styles.button}
-            data-active={manualEditing || undefined}
-            aria-pressed={manualEditing}
-            aria-label="Edit Manual"
-            title="Edit Manual"
-            disabled={!manualEditingSupported || mode === "steps"}
-            onClick={() => onManualEditingChange(!manualEditing)}
-          >
-            <ToolbarIcon type="manual" />
-          </Button>
+          <Tooltip content="Edit Manual">
+            <Button
+              size="sm"
+              variant="ghost"
+              type="button"
+              className={styles.button}
+              data-active={manualEditing || undefined}
+              aria-pressed={manualEditing}
+              aria-label="Edit Manual"
+              disabled={!manualEditingSupported || mode === "steps"}
+              onClick={() => onManualEditingChange(!manualEditing)}
+            >
+              <ToolbarIcon type="manual" />
+            </Button>
+          </Tooltip>
         </div>
       ) : null}
 
@@ -123,48 +131,52 @@ export function SopDocumentToolbar({
         role="tablist"
         aria-label="Jenis diagram"
       >
-        <Button
-          variant="ghost"
-          type="button"
-          className={styles.tab}
-          id={`${diagramPanelId}-tab-flowchart`}
-          role="tab"
-          aria-selected={diagramKind === "flowchart"}
-          aria-controls={diagramPanelId}
-          tabIndex={diagramKind === "flowchart" ? 0 : -1}
-          disabled={mode === "steps"}
-          buttonRef={(element) => {
-            diagramTabRefs.current.flowchart = element;
-          }}
-          data-active={diagramKind === "flowchart" || undefined}
-          aria-label="Flowchart"
-          title="Flowchart"
-          onKeyDown={(event) => handleDiagramKeyDown(event, "flowchart")}
-          onClick={() => onDiagramKindChange("flowchart")}
-        >
-          <ToolbarIcon type="flowchart" />
-        </Button>
-        <Button
-          variant="ghost"
-          type="button"
-          className={styles.tab}
-          id={`${diagramPanelId}-tab-bpmn`}
-          role="tab"
-          aria-selected={diagramKind === "bpmn"}
-          aria-controls={diagramPanelId}
-          tabIndex={diagramKind === "bpmn" ? 0 : -1}
-          disabled={mode === "steps"}
-          buttonRef={(element) => {
-            diagramTabRefs.current.bpmn = element;
-          }}
-          data-active={diagramKind === "bpmn" || undefined}
-          aria-label="BPMN"
-          title="BPMN"
-          onKeyDown={(event) => handleDiagramKeyDown(event, "bpmn")}
-          onClick={() => onDiagramKindChange("bpmn")}
-        >
-          <ToolbarIcon type="bpmn" />
-        </Button>
+        <Tooltip content="Flowchart">
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            className={styles.tab}
+            id={`${diagramPanelId}-tab-flowchart`}
+            role="tab"
+            aria-selected={diagramKind === "flowchart"}
+            aria-controls={diagramPanelId}
+            tabIndex={diagramKind === "flowchart" ? 0 : -1}
+            disabled={mode === "steps"}
+            ref={(element) => {
+              diagramTabRefs.current.flowchart = element;
+            }}
+            data-active={diagramKind === "flowchart" || undefined}
+            aria-label="Flowchart"
+            onKeyDown={(event) => handleDiagramKeyDown(event, "flowchart")}
+            onClick={() => onDiagramKindChange("flowchart")}
+          >
+            <ToolbarIcon type="flowchart" />
+          </Button>
+        </Tooltip>
+        <Tooltip content="BPMN">
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            className={styles.tab}
+            id={`${diagramPanelId}-tab-bpmn`}
+            role="tab"
+            aria-selected={diagramKind === "bpmn"}
+            aria-controls={diagramPanelId}
+            tabIndex={diagramKind === "bpmn" ? 0 : -1}
+            disabled={mode === "steps"}
+            ref={(element) => {
+              diagramTabRefs.current.bpmn = element;
+            }}
+            data-active={diagramKind === "bpmn" || undefined}
+            aria-label="BPMN"
+            onKeyDown={(event) => handleDiagramKeyDown(event, "bpmn")}
+            onClick={() => onDiagramKindChange("bpmn")}
+          >
+            <ToolbarIcon type="bpmn" />
+          </Button>
+        </Tooltip>
       </div>
     </div>
   );
@@ -173,62 +185,15 @@ export function SopDocumentToolbar({
 type ToolbarIconType = "preview" | "steps" | "manual" | "flowchart" | "bpmn";
 
 function ToolbarIcon({ type }: { type: ToolbarIconType }) {
-  const commonProps = {
+  const props = {
     className: styles.icon,
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
+    size: 16,
     strokeWidth: 1.6,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
   };
-
-  if (type === "preview") {
-    return (
-      <svg {...commonProps} aria-hidden="true">
-        <path d="M1.5 8s2.2-4 6.5-4 6.5 4 6.5 4-2.2 4-6.5 4-6.5-4-6.5-4Z" />
-        <circle cx="8" cy="8" r="1.8" />
-      </svg>
-    );
-  }
-
-  if (type === "steps") {
-    return (
-      <svg {...commonProps} aria-hidden="true">
-        <path d="M5 4h8M5 8h8M5 12h8" />
-        <circle cx="2.5" cy="4" r=".7" fill="currentColor" stroke="none" />
-        <circle cx="2.5" cy="8" r=".7" fill="currentColor" stroke="none" />
-        <circle cx="2.5" cy="12" r=".7" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  }
-
-  if (type === "manual") {
-    return (
-      <svg {...commonProps} aria-hidden="true">
-        <path d="m9.8 2.3 3.9 3.9-7.6 7.5-3.5.6.6-3.5 7.6-7.5Z" />
-        <path d="m8.4 3.7 3.9 3.9" />
-      </svg>
-    );
-  }
-
-  if (type === "flowchart") {
-    return (
-      <svg {...commonProps} aria-hidden="true">
-        <rect x="5.25" y="1.75" width="5.5" height="3" rx="1" />
-        <rect x="1.75" y="11.25" width="5.5" height="3" rx="1" />
-        <rect x="8.75" y="11.25" width="5.5" height="3" rx="1" />
-        <path d="M8 4.75v3M8 7.75H4.5v3.5M8 7.75h3.5v3.5" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg {...commonProps} aria-hidden="true">
-      <circle cx="3.25" cy="8" r="2" />
-      <rect x="9" y="2.25" width="4" height="3.5" rx=".7" />
-      <rect x="9" y="10.25" width="4" height="3.5" rx=".7" />
-      <path d="M5.25 8h2.25M7.5 8V4h1.5M7.5 8v4h1.5" />
-    </svg>
-  );
+  if (type === "preview") return <Eye {...props} />;
+  if (type === "steps") return <List {...props} />;
+  if (type === "manual") return <PenLine {...props} />;
+  if (type === "flowchart") return <GitFork {...props} />;
+  return <Workflow {...props} />;
 }

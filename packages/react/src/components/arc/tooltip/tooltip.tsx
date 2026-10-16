@@ -159,6 +159,7 @@ export function Tooltip({ content, children, side = "top" }: TooltipProps) {
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
+            data-sopflow-root
             className={styles.tooltip}
             data-instant={instant || undefined}
             side={side}
