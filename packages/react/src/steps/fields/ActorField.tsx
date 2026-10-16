@@ -1,6 +1,4 @@
-import { ChevronDown } from "lucide-react";
 import type { Actor } from "@sopflow/core";
-
 import { MultiSelect } from "../../components/arc/multi-select/multi-select.js";
 import styles from "./ActorField.module.css";
 
@@ -35,7 +33,13 @@ export function ActorField({
 
   if (disabled) {
     return (
-      <span className={styles.disabled} data-error={e  return (
+      <span className={styles.disabled} data-error={error || undefined}>
+        {compactActorLabel(names)}
+      </span>
+    );
+  }
+
+  return (
     <MultiSelect
       compact
       label="Pelaksana"
@@ -45,21 +49,16 @@ export function ActorField({
       maxVisible={1}
       onValueChange={(next) => {
         const selected = new Set(next);
-        onChange(actors.map((actor) => actor.id).filter((id) => selected.has(id)));
+        onChange(
+          actors.map((actor) => actor.id).filter((id) => selected.has(id)),
+        );
       }}
     />
-  );bel>
-            );
-          })
-        )}
-      </fieldset>
-    </details>
   );
 }
 
 function compactActorLabel(names: readonly string[]): string {
   if (names.length === 0) return "Pilih pelaksana";
   if (names.length === 1) return names[0] ?? "Pilih pelaksana";
-
   return `${names[0]} +${names.length - 1}`;
 }
