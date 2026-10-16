@@ -77,12 +77,39 @@ The React package contains ~45 production TSX files including Arc Button. Compon
 ### Acceptance criteria
 `pnpm install --frozen-lockfile && pnpm check`; CI package `pack`; browser diagram regression. Visual compare at 360/768/1024/1440; no added routes or persistent navigation, no overflow beyond existing intentional A4 scroll, no change to printed SOP model. Prefer complete keyboard and reduced-motion verification before merging.
 
-## 5. Status tracking
+## 5. Implementation status — 2026-10-16
 
-- P0 monochrome foundation, official Arc Button and toolbar are already integrated in PR #54 and CI green.
-- PR #55 vendors Input, Textarea, Select, MultiSelect, Dialog, Tooltip, DropdownMenu, SegmentedControl, Accordion and Alert source, plus pinned dependencies and a scoped Arc foundation.
-- **Integrated with real SOPFlow call sites:** Arc Input in institution/metadata fields and ActorsEditor; Arc Textarea in dense step fields and header metadata (keeping auto-resize); Arc Select in StepTypeField (with forbidden decision-collapse option disabled). Native date/file field semantics and formal document renderers remain untouched.
-- **Visual**: Lucide icons replace raw glyphs for step-action trigger, dialog close, status dismissal and actor chevron.
-- **Remaining before declaring complete:** migrate actor MultiSelect, step DropdownMenu, modal Dialog, tooltips, optional inspector accordion and alert presentation; verify printed document equivalence and React 18 consumers.
-- **Do not claim unconnected vendored components are integrated.** Implement adapters and migrate call sites, then test each controlled interaction before promotion.
-- Both PRs remain draft until visual/print consumer proof and React peer compatibility are complete.
+### Applied to real workbench call sites
+
+| Boundary | Source and integration | Verification |
+| --- | --- | --- |
+| Action and icon buttons | Official Arc Button, SOPFlow function adapter for the public export; all remaining React workbench native action buttons migrated, including inspector, header, actors and validation | Native click/disabled/public API tests, inspector focus refs |
+| Input / Textarea | Official Arc Input and Textarea in header, actor name and step fields; compact label/height adapter, existing auto-resize height logic | Controlled field tests and typecheck |
+| Select | Official Arc Radix Select in step type, decision branches, and remove/reconnect dialog; native exported `Select` retained only for backwards compatibility | Branch-rule regression tests; Radix keyboard option selection |
+| Actor assignment | Official Arc MultiSelect, preserving canonical actor ID order, compact chips and readonly/disabled presentations | Controlled multi-actor and removal tests |
+| Step action menu | Official Arc DropdownMenu + Lucide, domain actions selected by step type | End-to-end React integration tests and focus restore |
+| Dialog | Official Arc Dialog with SOPFlow role/controlled adapter, Rich ReactNode description and first form-field focus | Escape, focus trap, cancel and delete tests |
+| Toolbar and affordances | Official Arc Button + Tooltip and Lucide icons; original button group, roving ARIA tab interaction and disabled diagram tabs preserved | Keyboard tab regression and layout checks |
+| Transient errors | Official Arc Alert for editor errors, dismiss and reappearance controlled by error state | EditorStatus regression tests |
+| Formal output | Existing SOP document, page renderer, diagram and routing retained | Core tests + browser diagram regression |
+
+### Explicit semantic exceptions
+
+- `Accordion` source is available from Arc but **is not substituted for inspector sections**. Inspector sections are intentionally always visible; adding collapse states would change the approved UX and interrupt data entry.
+- `SegmentedControl` source is available but **is not substituted for the diagram tablist**. The official API lacks SOPFlow's disabled-option and roving-focus semantics; official Arc buttons provide the look and motion without replacing the existing accessibility contract.
+- `primitives/Select` remains a native, published **backwards-compatibility API**. All internal document selectors use official Arc; removing or silently changing the exported synthetic/native event type would be breaking.
+- Native `input[type=file]` is still necessary for browser File APIs. SOP document tables, data, route handles and print markup are domain surfaces, not UI primitives.
+
+### Design Thinking A/E/R implementation proof
+
+`X → Graph → Effect<A,E,R>`: `X` = UI-only modernization, `A` = controlled document edits and previews, `E` = focus transitions / invalid decision branches / unavailable ResizeObserver / reduced-motion / React version mismatch, `R` = Arc source, Motion, Radix, DOM, package version and host contracts.
+
+**Ordering and cardinality:** each UI selection maps to one existing SOPFlow domain handler; source of truth stays in the host's controlled SOP document. UIArc is not permitted to own or persist document state. Dialog focus and return-to-action ordering are covered by tests. Selections cannot bypass the decision branch guard. Resizing and tooltip morphing fail gracefully if `ResizeObserver` is absent.
+
+**Trust and side effects:** UIArc components live in `packages/react` only, under a `data-sopflow-root` scoped foundation; portal content carries the scope. No Arc import enters `core`, `diagram`, or `sop-ap`.
+
+### Verified and remaining release gates
+
+- Latest GitHub CI for the workbench Button sweep succeeded: lint, architecture, typecheck, all React/core tests, production build, package pack and browser diagram regression.
+- **Still required before merge:** React 18 *consumer* smoke test against packed `@sopflow/react`, visual before/after across all 43 specimens and responsive widths, keyboard-driven browser acceptance on Obsidian/host environments, and exact A4/print/PDF visual parity. Do not claim these have passed without their evidence.
+- PR #54 provides the foundation; stacked draft PR #55 contains the complete compatible component integration. **Do not merge until the remaining gates are satisfied.**

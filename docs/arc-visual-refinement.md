@@ -1,5 +1,7 @@
 # SOPFlow visual refinement — Design Thinking / Arc UI migration
 
+**Current implementation:** see [design-graph-uiarc-migration.md](design-graph-uiarc-migration.md) for completed Arc integrations, explicit accessibility exceptions and open release gates. The historical phase plan below describes the original roadmap, not the current TODO list.
+
 Status: **P0 foundation implemented on the `design/uiarc-monochrome-foundation` branch. P1–P4 pending validation.**
 
 ## Intent, user flow and invariants
