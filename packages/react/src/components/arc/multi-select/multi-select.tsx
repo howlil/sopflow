@@ -24,6 +24,7 @@ export interface MultiSelectProps {
   maxVisible?: number;
   disabled?: boolean;
   className?: string;
+  compact?: boolean;
 }
 
 const enter = motionTokens.ease.enter;
@@ -158,6 +159,7 @@ export function MultiSelect({
   maxVisible = 2,
   disabled = false,
   className,
+  compact = false,
 }: MultiSelectProps) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -254,6 +256,7 @@ export function MultiSelect({
     <div
       ref={rootRef}
       className={[styles.field, className].filter(Boolean).join(" ")}
+      data-compact={compact || undefined}
     >
       <span id={labelId} className={styles.label}>
         {label}
@@ -262,6 +265,7 @@ export function MultiSelect({
         <button
           type="button"
           className={`${styles.trigger} ${selected.length ? styles.hasClear : ""}`}
+          data-sopflow-actor-trigger={compact || undefined}
           disabled={disabled}
           aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="listbox"
