@@ -25,7 +25,8 @@
   "dependencies": {
     "@sopflow/core": "workspace:*",
     "@sopflow/diagram": "workspace:*",
-    "@sopflow/sop-ap": "workspace:*"
+    "@sopflow/sop-ap": "workspace:*",
+    "motion": "^12.23.24"
   },
   "scripts": {
     "build": "tsdown",

@@ -1,5 +1,6 @@
-import type { ButtonHTMLAttributes } from "react";
-import styles from "./Button.module.css";
+import type { ButtonHTMLAttributes, Ref } from "react";
+import { Button as ArcButton } from "../components/arc/button/button.js";
+import "../styles/token.css";
 
 export type ButtonVariant = "secondary" | "primary" | "danger" | "ghost";
 export type ButtonSize = "compact" | "default";
@@ -7,20 +8,24 @@ export type ButtonSize = "compact" | "default";
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Optional internal DOM ref for roving toolbar focus, React 18 compatible. */
+  buttonRef?: Ref<HTMLButtonElement>;
 }
 
+/** Stable @sopflow/react Button API over the official Arc UI implementation. */
 export function Button({
   variant = "secondary",
   size = "compact",
-  className,
+  buttonRef,
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <ArcButton
       {...props}
-      className={[styles.button, styles[variant], styles[size], className]
-        .filter(Boolean)
-        .join(" ")}
+      ref={buttonRef}
+      data-sopflow-root
+      variant={variant}
+      size={size === "compact" ? "sm" : "md"}
     />
   );
 }

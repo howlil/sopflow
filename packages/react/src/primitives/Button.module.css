@@ -3,7 +3,7 @@
   box-sizing: border-box;
 
   border: 1px solid var(--sopflow-border);
-  border-radius: var(--sopflow-control-radius);
+  border-radius: var(--sopflow-radius-pill);
   padding: 0.25rem 0.625rem;
 
   font: inherit;
@@ -58,4 +58,8 @@
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button { transition: none; }
 }
