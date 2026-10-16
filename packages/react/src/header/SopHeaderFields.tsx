@@ -1,3 +1,4 @@
+import { Button } from "../primitives/Button.js";
 import { useId, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
@@ -132,7 +133,7 @@ export function SopHeaderFields({
                 className={styles.logoPreviewImage}
               />
               {!headerDisabled ? (
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={styles.logoRemove}
                   onClick={() => {
@@ -142,7 +143,7 @@ export function SopHeaderFields({
                   }}
                 >
                   Hapus logo
-                </button>
+                </Button>
               ) : null}
             </div>
           ) : null}
@@ -339,14 +340,14 @@ function ListSection({
       title={title}
       actions={
         !disabled ? (
-          <button
+          <Button variant="ghost"
             type="button"
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
             onClick={() => onChange([...value, ""])}
           >
             +
-          </button>
+          </Button>
         ) : null
       }
     >
@@ -372,14 +373,14 @@ function ListSection({
               )}
 
               {!disabled ? (
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${title.toLowerCase()} ${index + 1}`}
                   onClick={() => removeItem(index)}
                 >
                   ×
-                </button>
+                </Button>
               ) : null}
             </div>
           ))}

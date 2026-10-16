@@ -1,3 +1,4 @@
+import { Button } from "../primitives/Button.js";
 import { useState } from "react";
 
 import type { SopReadinessIssue } from "./readiness.js";
@@ -27,14 +28,14 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
         </div>
 
         {!ready ? (
-          <button
+          <Button variant="ghost"
             type="button"
             className={styles.toggle}
             aria-expanded={expanded}
             onClick={() => setExpanded((current) => !current)}
           >
             {expanded ? "Sembunyikan masalah" : "Lihat masalah"}
-          </button>
+          </Button>
         ) : null}
       </div>
 

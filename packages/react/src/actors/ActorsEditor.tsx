@@ -1,3 +1,4 @@
+import { Button } from "../primitives/Button.js";
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
@@ -58,13 +59,13 @@ export function ActorsEditor({
         </div>
 
         {!disabled ? (
-          <button
+          <Button variant="ghost"
             type="button"
             className={styles.addButton}
             onClick={handleAdd}
           >
             + Tambah pelaksana
-          </button>
+          </Button>
         ) : null}
       </header>
 
@@ -96,14 +97,14 @@ export function ActorsEditor({
               )}
 
               {!disabled ? (
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={styles.removeButton}
                   aria-label={`Hapus ${actor.name || "pelaksana"}`}
                   onClick={() => setActorToDelete(actor)}
                 >
                   Hapus
-                </button>
+                </Button>
               ) : null}
             </div>
           ))}

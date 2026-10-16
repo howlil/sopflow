@@ -1,3 +1,4 @@
+import { Button } from "./primitives/Button.js";
 import {
   applyOperation as applySopOperation,
   applyOperations as applySopOperations,
@@ -315,7 +316,7 @@ export function SopEditor({
         >
           <div className={styles.mainPane} data-sopflow-main-pane>
             {!inspectorOpen ? (
-              <button
+              <Button variant="ghost"
                 type="button"
                 className={styles.openInspector}
                 aria-label="Buka panel properti"
@@ -324,7 +325,7 @@ export function SopEditor({
                 onClick={() => setInspectorOpen(true)}
               >
                 <InspectorIcon />
-              </button>
+              </Button>
             ) : null}
             <SopDocumentCanvas
               document={value}
@@ -356,7 +357,7 @@ export function SopEditor({
             >
               <div className={styles.inspectorHeader}>
                 <h2 className={styles.inspectorTitle}>Properti</h2>
-                <button
+                <Button variant="ghost"
                   type="button"
                   className={styles.inspectorToggle}
                   aria-label="Tutup panel properti"
@@ -365,7 +366,7 @@ export function SopEditor({
                   onClick={() => setInspectorOpen(false)}
                 >
                   <InspectorIcon />
-                </button>
+                </Button>
               </div>
 
               <div className={styles.inspectorContent}>
