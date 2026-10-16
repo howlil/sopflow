@@ -322,7 +322,7 @@ export function SopEditor({
                 className={styles.openInspector}
                 aria-label="Buka panel properti"
                 title="Buka panel properti"
-                ref={openInspectorRef}
+                buttonRef={openInspectorRef}
                 onClick={() => setInspectorOpen(true)}
               >
                 <InspectorIcon />
@@ -364,7 +364,7 @@ export function SopEditor({
                   className={styles.inspectorToggle}
                   aria-label="Tutup panel properti"
                   title="Tutup panel properti"
-                  ref={closeInspectorRef}
+                  buttonRef={closeInspectorRef}
                   onClick={() => setInspectorOpen(false)}
                 >
                   <InspectorIcon />
