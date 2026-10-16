@@ -143,6 +143,7 @@ export function DialogContent({
           ) : null}
         </div>
         <DialogPrimitive.Close
+          tabIndex={-1}
           className={styles.close}
           aria-label="Close dialog"
         >

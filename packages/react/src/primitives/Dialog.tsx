@@ -41,7 +41,7 @@ export function Dialog({
         description={description}
         role={role}
         className={styles.dialog}
-        onOpenAutoFocus={() => {
+        onOpenAutoFocus={(event) => {
           const active =
             document.activeElement instanceof HTMLElement
               ? document.activeElement
@@ -55,6 +55,18 @@ export function Dialog({
             active.closest('[role="menu"]')
               ? (menuOrigin ?? active)
               : active;
+
+          const content = event.currentTarget;
+          const firstField =
+            content instanceof HTMLElement
+              ? content.querySelector<HTMLElement>(
+                  'select:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+                )
+              : null;
+          if (firstField) {
+            event.preventDefault();
+            firstField.focus();
+          }
         }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
