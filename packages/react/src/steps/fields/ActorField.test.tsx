@@ -34,8 +34,14 @@ describe("ActorField", () => {
 
     await user.click(trigger as HTMLElement);
 
-    expect(screen.getByRole("option", { name: "Staff" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("option", { name: "Manager" })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("option", { name: "Staff" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("option", { name: "Manager" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
 
     await user.click(screen.getByRole("option", { name: "Manager" }));
 
