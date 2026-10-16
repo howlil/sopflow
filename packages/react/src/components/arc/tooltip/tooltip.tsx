@@ -65,7 +65,9 @@ function TooltipText({ text }: { text: string }) {
   } | null>(null);
   useLayoutEffect(() => {
     const node = measure.current;
-    if (!node) return;
+    // ResizeObserver is unavailable in some supported Obsidian/webview contexts
+    // and jsdom. Keep the static tooltip text and skip width morphing.
+    if (!node || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
       const box = entry.borderBoxSize?.[0];
