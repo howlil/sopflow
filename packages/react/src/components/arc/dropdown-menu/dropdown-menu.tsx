@@ -202,7 +202,9 @@ export function DropdownMenu({
           onCloseAutoFocus={(event) => {
             // A menu action may open an SOP confirmation dialog in the same commit.
             // Radix's menu focus restoration must not steal the dialog's first focus.
-            if (document.querySelector('[role="dialog"],[role="alertdialog"]')) {
+            if (
+              document.querySelector('[role="dialog"],[role="alertdialog"]')
+            ) {
               event.preventDefault();
             }
           }}
