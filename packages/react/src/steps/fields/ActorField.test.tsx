@@ -46,7 +46,9 @@ describe("ActorField", () => {
     await user.click(screen.getByRole("option", { name: "Manager" }));
 
     expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
-    expect(trigger).toHaveTextContent("Staff +1");
+    expect(trigger?.querySelector('[aria-hidden="true"]')).toHaveTextContent(
+      "Staff+1",
+    );
 
     await user.click(screen.getByRole("option", { name: "Staff" }));
 
