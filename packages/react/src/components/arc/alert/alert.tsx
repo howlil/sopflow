@@ -34,6 +34,7 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
   open?: boolean;
   /** Shows a dismiss button. An uncontrolled alert collapses first, then calls this. */
   onDismiss?: (() => void) | undefined;
+  dismissLabel?: string;
 }
 type AlertBoxProps = Omit<AlertProps, "open"> & {
   reduce: boolean | null;
@@ -164,6 +165,7 @@ function AlertBox({
   className,
   reduce,
   onDismiss,
+  dismissLabel,
   animateIcon = false,
   ...props
 }: AlertBoxProps) {
@@ -250,7 +252,7 @@ function AlertBox({
         <button
           type="button"
           className={styles.dismiss}
-          aria-label={`Dismiss: ${title}`}
+          aria-label={dismissLabel ?? `Dismiss: ${title}`}
           onClick={onDismiss}
         >
           <X width={16} height={16} strokeWidth={1.75} aria-hidden="true" />

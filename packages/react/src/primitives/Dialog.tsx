@@ -60,7 +60,7 @@ export function Dialog({
           const firstField =
             content instanceof HTMLElement
               ? content.querySelector<HTMLElement>(
-                  'select:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+                  "select:not([disabled]), input:not([disabled]), textarea:not([disabled])",
                 )
               : null;
           if (firstField) {
