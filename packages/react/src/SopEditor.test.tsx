@@ -779,7 +779,9 @@ describe("SopEditor dialog accessibility", () => {
     render(<EditorHarness />);
 
     const row = getStepRow(getReviewField());
-    const menuTrigger = within(row).getByRole("button", { name: /aksi untuk/i });
+    const menuTrigger = within(row).getByRole("button", {
+      name: /aksi untuk/i,
+    });
     await user.click(menuTrigger);
 
     const deleteTrigger = screen.getByRole("menuitem", {

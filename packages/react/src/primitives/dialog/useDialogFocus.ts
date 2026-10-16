@@ -14,9 +14,10 @@ export function useDialogFocus({ open, onClose }: UseDialogFocusOptions) {
       return;
     }
 
-    const active = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    const active =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const menuOrigin = document.querySelector<HTMLElement>(
       '[data-sopflow-dialog-return-focus="true"]',
     );

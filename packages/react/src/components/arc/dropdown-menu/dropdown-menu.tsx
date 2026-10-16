@@ -167,8 +167,12 @@ export function DropdownMenu({
         className={styles.trigger}
         data-compact={compact || undefined}
         aria-label={label}
-        onPointerDown={(event) => { if (compact) markMenuTrigger(event.currentTarget); }}
-        onFocus={(event) => { if (compact) markMenuTrigger(event.currentTarget); }}
+        onPointerDown={(event) => {
+          if (compact) markMenuTrigger(event.currentTarget);
+        }}
+        onFocus={(event) => {
+          if (compact) markMenuTrigger(event.currentTarget);
+        }}
         type="button"
       >
         {icon && (
