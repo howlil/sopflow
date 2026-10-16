@@ -47,7 +47,7 @@ export const DialogClose = DialogPrimitive.Close;
 export interface DialogContentProps
   extends ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   title: string;
-  description?: string;
+  description?: ReactNode;
   children: ReactNode;
 }
 
@@ -134,7 +134,11 @@ export function DialogContent({
           </DialogPrimitive.Title>
           {description ? (
             <DialogPrimitive.Description className={styles.description}>
-              <SwapText text={description} />
+              {typeof description === "string" ? (
+                <SwapText text={description} />
+              ) : (
+                description
+              )}
             </DialogPrimitive.Description>
           ) : null}
         </div>
@@ -156,6 +160,7 @@ export function DialogContent({
           className={`${styles.overlay} ${styles.keyframes}`}
         />
         <DialogPrimitive.Content
+          data-sopflow-root
           {...props}
           onPointerDownOutside={pressOutside}
           className={`${classes} ${styles.keyframes}`}
@@ -171,6 +176,7 @@ export function DialogContent({
         <DialogPrimitive.Portal key="dialog" forceMount>
           <DialogPrimitive.Overlay asChild forceMount>
             <motion.div
+              data-sopflow-root
               className={styles.overlay}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -192,6 +198,7 @@ export function DialogContent({
             forceMount
           >
             <motion.div
+              data-sopflow-root
               className={classes}
               initial={
                 reduced ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }
