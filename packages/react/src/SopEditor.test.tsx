@@ -604,10 +604,11 @@ describe("SopEditor graph mutations", () => {
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(screen.getByRole("menuitem", { name: /atur cabang/i }));
 
+    screen.getByRole("combobox", { name: /Tahap jika Tidak/i }).focus();
+    await user.keyboard("{ArrowDown}");
     await user.click(
-      screen.getByRole("combobox", { name: /Tahap jika Tidak/i }),
+      await screen.findByRole("option", { name: /Selesai/i }),
     );
-    await user.click(screen.getByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /simpan/i }));
 
     const document = readDocument();
@@ -632,12 +633,13 @@ describe("SopEditor graph mutations", () => {
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
+    screen
+      .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
+      .focus();
+    await user.keyboard("{ArrowDown}");
     await user.click(
-      screen.getByRole("combobox", {
-        name: /sambungkan langkah sebelumnya ke/i,
-      }),
+      await screen.findByRole("option", { name: /Selesai/i }),
     );
-    await user.click(screen.getByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
@@ -662,12 +664,13 @@ describe("SopEditor graph mutations", () => {
 
     await user.click(within(row).getByRole("button", { name: /aksi untuk/i }));
     await user.click(screen.getByRole("menuitem", { name: /hapus langkah/i }));
+    screen
+      .getByRole("combobox", { name: /sambungkan langkah sebelumnya ke/i })
+      .focus();
+    await user.keyboard("{ArrowDown}");
     await user.click(
-      screen.getByRole("combobox", {
-        name: /sambungkan langkah sebelumnya ke/i,
-      }),
+      await screen.findByRole("option", { name: /Selesai/i }),
     );
-    await user.click(screen.getByRole("option", { name: /Selesai/i }));
     await user.click(screen.getByRole("button", { name: /^hapus$/i }));
 
     const document = readDocument();
