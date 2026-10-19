@@ -275,14 +275,36 @@ describe("SopProcedureView", () => {
         { id: "student", name: "Student" },
       ],
       steps: [
-        { id: "s1", type: "start", name: "Start", actorIds: ["admin"], next: "s2" },
-        { id: "s2", type: "task", name: "Admin work", actorIds: ["admin"], next: "s3" },
-        { id: "s3", type: "task", name: "Student work", actorIds: ["student"], next: "s4" },
+        {
+          id: "s1",
+          type: "start",
+          name: "Start",
+          actorIds: ["admin"],
+          next: "s2",
+        },
+        {
+          id: "s2",
+          type: "task",
+          name: "Admin work",
+          actorIds: ["admin"],
+          next: "s3",
+        },
+        {
+          id: "s3",
+          type: "task",
+          name: "Student work",
+          actorIds: ["student"],
+          next: "s4",
+        },
         { id: "s4", type: "end", name: "End", actorIds: ["student"] },
       ],
     };
     const { container } = render(
-      <SopProcedureView document={multiActorDocument} firstPageRows={2} nextPageRows={2} />,
+      <SopProcedureView
+        document={multiActorDocument}
+        firstPageRows={2}
+        nextPageRows={2}
+      />,
     );
     const first = container.querySelector('[data-sopflow-procedure-page="0"]');
     const second = container.querySelector('[data-sopflow-procedure-page="1"]');
@@ -304,5 +326,4 @@ describe("SopProcedureView", () => {
     expect(first?.querySelectorAll("tbody tr")).toHaveLength(2);
     expect(second?.querySelectorAll("tbody tr")).toHaveLength(2);
   });
-
 });
