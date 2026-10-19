@@ -5,7 +5,7 @@
 
 .loading,
 .error {
-  border-radius: var(--sopflow-control-radius);
+  border-radius: var(--sopflow-surface-radius);
 
   padding: 0.625rem 0.75rem;
 

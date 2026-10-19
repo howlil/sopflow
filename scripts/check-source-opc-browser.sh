@@ -55,3 +55,20 @@ test -s "${PDF_FILE}"
 
 grep -o 'data-source-opc-regression[^>]*>[^<]*' "${DOM_FILE}"
 echo "Source OPC browser alignment and A4 PDF smoke checks passed."
+
+# Run the same Vite source server against the actual CSS Modules and browser
+# cascade. Normal playground continues to resolve packages from npm.
+RADIUS_URL="http://127.0.0.1:${PORT}/radius-source-regression.html"
+RADIUS_DOM="${RUNNER_TEMP:-/tmp}/sopflow-react-radius.html"
+curl --silent --fail "${RADIUS_URL}" >/dev/null
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --user-data-dir="${PROFILE_DIR}" --virtual-time-budget=4000 --dump-dom \
+  "${RADIUS_URL}" >"${RADIUS_DOM}"
+if ! grep -q 'data-react-radius-regression="pass"' "${RADIUS_DOM}"; then
+  echo "::error::React UI computed-radius contract failed"
+  grep -o 'data-react-radius-regression[^>]*>[^<]*' "${RADIUS_DOM}" || true
+  cat "${LOG_FILE}"
+  exit 1
+fi
+grep -o 'data-react-radius-regression[^>]*>[^<]*' "${RADIUS_DOM}"
+echo "React control, portal, notice, and document geometry checks passed."

@@ -22,4 +22,4 @@
 @media (prefers-reduced-motion: reduce) { .input { transition-duration: .01ms; } }
 
 /* Dense SOP table/inspector variant; Arc remains the field renderer. */
-.field[data-compact] .input { min-height: 2.25rem; padding: .375rem .5rem; border-radius: var(--sopflow-control-radius); font-size: var(--sopflow-font-xs); }
+.field[data-compact] .input { min-height: 2.25rem; padding: .375rem .5rem; border-radius: var(--radius-control); font-size: var(--sopflow-font-xs); }

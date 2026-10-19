@@ -29,7 +29,7 @@
 .description { font-size: var(--text-xs); }
 .menu { position: absolute; z-index: 80; top: calc(100% + 8px); right: 0; left: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-panel); padding: 5px; background: var(--surface-raised); box-shadow: var(--shadow-floating); transform-origin: top center; will-change: transform, opacity; }
 /* Arrow keys move the highlight often, so it changes almost instantly. Selection is shown by the check, not by weight, so labels never reflow. */
-.option { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: calc(var(--radius-panel) - 5px); padding: 0 11px; background: transparent; color: var(--foreground); font: inherit; font-size: var(--text-sm); text-align: left; cursor: pointer; transition: background-color 80ms var(--ease-standard), color 80ms var(--ease-standard); }
+.option { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: var(--radius-pill); padding: 0 11px; background: transparent; color: var(--foreground); font: inherit; font-size: var(--text-sm); text-align: left; cursor: pointer; transition: background-color 80ms var(--ease-standard), color 80ms var(--ease-standard); }
 .option > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .option[data-active="true"] { background: var(--surface-muted); }
 .option:disabled { opacity: .42; cursor: not-allowed; }
@@ -39,6 +39,6 @@
 /* SOP step-cell variant: preserve table density and accessible label. */
 .field[data-compact] { gap: 0; }
 .field[data-compact] > .label { position: absolute; height: 1px; width: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.field[data-compact] .trigger { min-height: 2.25rem; border-radius: var(--sopflow-control-radius); padding: .25rem .5rem; font-size: var(--sopflow-font-xs); }
+.field[data-compact] .trigger { min-height: 2.25rem; border-radius: var(--radius-control); padding: .25rem .5rem; font-size: var(--sopflow-font-xs); }
 .field[data-compact] .value { min-height: 1.5rem; }
 .field[data-compact] .chip, .field[data-compact] .more { padding: 2px 6px; }
