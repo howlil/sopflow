@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -77,7 +77,9 @@ describe("ActorField", () => {
     expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
     expect(menu).toBeInTheDocument();
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
     expect(trigger).toHaveFocus();
   });
 
@@ -92,7 +94,9 @@ describe("ActorField", () => {
     await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
     expect(screen.getByRole("listbox")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Outside" }));
-    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
   });
 
   it("renders every selected actor in read-only mode", () => {
