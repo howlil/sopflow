@@ -85,4 +85,6 @@ jobs:
             ${{ runner.temp }}/sopflow-diagram-regression.pdf
             ${{ runner.temp }}/sopflow-source-opc.png
             ${{ runner.temp }}/sopflow-source-opc.pdf
+            ${{ runner.temp }}/sopflow-source-bpmn.png
+            ${{ runner.temp }}/sopflow-source-bpmn.pdf
           if-no-files-found: ignore
