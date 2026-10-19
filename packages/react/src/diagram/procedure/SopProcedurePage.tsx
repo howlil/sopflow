@@ -1,6 +1,10 @@
 import type { StepId, ValidationIssue } from "@sopflow/core";
 import {
   formalPathToSegments,
+  formalOpcStackTopPx,
+  layoutFormalOpcEndpoints,
+  FORMAL_OPC_CONNECTOR_HEIGHT_PX,
+  FORMAL_OPC_CONNECTOR_STACK_GAP_PX,
   planFormalProcedureEdges,
   pointsToPath,
   removeProcedurePageManualRoute,
@@ -59,6 +63,7 @@ export function SopProcedurePage({
 }: SopProcedurePageProps) {
   const rootRef = useRef<HTMLElement>(null);
   const shapeRefs = useRef(new Map<string, HTMLSpanElement>());
+  const [actorCenters, setActorCenters] = useState<Readonly<Record<string, number>>>({});
   const [geometry, setGeometry] = useState<FormalFlowchartGeometry | null>(
     null,
   );
@@ -106,6 +111,25 @@ export function SopProcedurePage({
     const columns = measureActorColumns(actorCells, rootRect);
     const gridLayout = measureGridLayout(root, rootRect);
 
+    // Table headers are the source of truth for actor-column X coordinates.
+    // The outside-table OPC strips share the page coordinate space, but cannot
+    // contribute fake <td> elements to those measurements.
+    const nextCenters: Record<string, number> = {};
+    for (const header of root.querySelectorAll<HTMLElement>(
+      "[data-sopflow-actor-header]",
+    )) {
+      const id = header.dataset.sopflowActorId;
+      if (!id) continue;
+      const bounds = header.getBoundingClientRect();
+      nextCenters[id] = Math.round((bounds.left + bounds.right) / 2 - rootRect.left);
+    }
+    setActorCenters((current) =>
+      Object.keys(nextCenters).length === Object.keys(current).length &&
+      Object.entries(nextCenters).every(([id, x]) => Math.abs((current[id] ?? -9999) - x) <= 1)
+        ? current
+        : nextCenters,
+    );
+
     if (
       !pelaksanaBounds ||
       pelaksanaBounds.right <= pelaksanaBounds.left ||
@@ -115,10 +139,22 @@ export function SopProcedurePage({
       return;
     }
 
+    const opcRects = [...shapes.values()]
+      .filter((shape) => shape.kind === "opc")
+      .map((shape) => shape.rect);
+    const routingBounds = {
+      ...pelaksanaBounds,
+      // Routing must reach OPC anchors OUTSIDE the table body.
+      top: Math.min(pelaksanaBounds.top, ...opcRects.map((rect) => rect.top)),
+      bottom: Math.max(
+        pelaksanaBounds.bottom,
+        ...opcRects.map((rect) => rect.top + rect.height),
+      ),
+    };
     setGeometry({
       width: root.scrollWidth,
       height: root.scrollHeight,
-      pelaksanaBounds,
+      pelaksanaBounds: routingBounds,
       columns,
       gridLayout,
       shapes,
@@ -236,6 +272,14 @@ export function SopProcedurePage({
       data-manual-editing={editingEnabled || undefined}
       aria-label={`Prosedur SOP halaman ${page.pageIndex + 1}`}
     >
+      <OpcStrip
+        endpoints={page.topOpc}
+        position="top"
+        model={model}
+        columnWidths={columnWidths}
+        actorCenters={actorCenters}
+        setShapeRef={setShapeRef}
+      />
       <table className={styles.table}>
         <colgroup>
           <col style={{ width: columnWidths.number }} />
@@ -278,14 +322,6 @@ export function SopProcedurePage({
         </thead>
 
         <tbody>
-          <OpcTableRow
-            endpoints={page.topOpc}
-            position="top"
-            model={model}
-            totalColumns={totalColumns}
-            setShapeRef={setShapeRef}
-          />
-
           {page.rows.length === 0 ? (
             <tr>
               <td colSpan={totalColumns} className={styles.empty}>
@@ -379,15 +415,16 @@ export function SopProcedurePage({
             })
           )}
 
-          <OpcTableRow
-            endpoints={page.bottomOpc}
-            position="bottom"
-            model={model}
-            totalColumns={totalColumns}
-            setShapeRef={setShapeRef}
-          />
         </tbody>
       </table>
+      <OpcStrip
+        endpoints={page.bottomOpc}
+        position="bottom"
+        model={model}
+        columnWidths={columnWidths}
+        actorCenters={actorCenters}
+        setShapeRef={setShapeRef}
+      />
 
       {geometry && routedEdges.length > 0 ? (
         <svg
@@ -488,78 +525,77 @@ export function SopProcedurePage({
   );
 }
 
-function OpcTableRow({
+/** OPCs are page-local routing anchors, never procedure-table rows. */
+function OpcStrip({
   endpoints,
   position,
   model,
-  totalColumns,
+  columnWidths,
+  actorCenters,
   setShapeRef,
 }: {
   endpoints: FormalProcedurePageModel["topOpc"];
   position: "top" | "bottom";
   model: ProcedureModel;
-  totalColumns: number;
+  columnWidths: ReturnType<typeof procedureColumnWidths>;
+  actorCenters: Readonly<Record<string, number>>;
   setShapeRef: (shapeId: string, element: HTMLSpanElement | null) => void;
 }) {
-  if (endpoints.length === 0) return null;
+  const placements = layoutFormalOpcEndpoints(endpoints, {
+    actors: model.actorColumns.map((actor) => ({ id: actor.actorId })),
+    tableColumns: {
+      // Use the exact normalized colgroup percentages, not the raw SOP
+      // template's 5/25/% values (which can shift with actor count).
+      noColPercent: Number.parseFloat(columnWidths.number),
+      kegiatanPercent: Number.parseFloat(columnWidths.activity),
+      pelaksanaColPercent: Number.parseFloat(columnWidths.actor),
+    },
+  });
+  if (placements.length === 0) return null;
 
-  const byActor = new Map<string | null, typeof endpoints>();
-  for (const endpoint of endpoints) {
-    const actorId =
-      endpoint.variant === "in"
-        ? endpoint.opc.toActorId
-        : endpoint.opc.fromActorId;
-    const group = byActor.get(actorId) ?? [];
-    byActor.set(actorId, [...group, endpoint]);
-  }
+  const maxStack = Math.max(...placements.map((placement) => placement.stackIndex));
+  const height =
+    (maxStack + 1) * FORMAL_OPC_CONNECTOR_HEIGHT_PX +
+    maxStack * FORMAL_OPC_CONNECTOR_STACK_GAP_PX + 16;
 
   return (
-    <tr className={styles.opcRow} data-sopflow-opc-row={position}>
-      <td colSpan={2} />
-      {model.actorColumns.map((actor, index) => {
-        const endpointsForActor = byActor.get(actor.actorId) ?? [];
+    <div
+      className={styles.opcStrip}
+      data-sopflow-opc-strip={position}
+      style={{ height }}
+    >
+      {placements.map((placement) => {
+        const actorKey = placement.actorId ?? "fallback";
+        // Prefer DOM-measured column center; percentage is first-render fallback.
+        const x = actorCenters[actorKey];
         return (
-          <td
-            key={actor.actorId ?? `fallback-${index}`}
-            className={styles.actorCell}
-            data-sopflow-actor-cell
-            data-sopflow-actor-id={actor.actorId ?? "fallback"}
+          <span
+            key={placement.elementId}
+            ref={(element) => setShapeRef(placement.elementId, element)}
+            className={styles.opcAnchor}
+            data-sopflow-opc={placement.elementId}
+            data-sopflow-opc-actor-id={actorKey}
+            data-variant={endpoints.find((candidate) =>
+              (candidate.variant === "in" ? candidate.opc.opcInId : candidate.opc.opcOutId) ===
+              placement.elementId)?.variant}
+            role="img"
+            aria-label={`Off-page connector ${placement.opc.letter}`}
+            style={{
+              position: "absolute",
+              left: x === undefined ? `${placement.centerPercent}%` : x,
+              top: formalOpcStackTopPx(placement.stackIndex) + 8,
+              transform: "translateX(-50%)",
+            }}
           >
-            <div className={styles.opcStack}>
-              {endpointsForActor.map((endpoint) => {
-                const id =
-                  endpoint.variant === "in"
-                    ? endpoint.opc.opcInId
-                    : endpoint.opc.opcOutId;
-                return (
-                  <span
-                    key={id}
-                    ref={(element) => setShapeRef(id, element)}
-                    className={styles.opcAnchor}
-                    data-sopflow-opc={id}
-                    data-variant={endpoint.variant}
-                    role="img"
-                    aria-label={`Off-page connector ${endpoint.opc.letter}`}
-                  >
-                    <svg
-                      width="50"
-                      height="40"
-                      viewBox="0 0 50 40"
-                      aria-hidden="true"
-                    >
-                      <polygon points="2,2 48,2 48,27 25,38 2,27" />
-                      <text x="25" y="20" textAnchor="middle">
-                        {endpoint.opc.letter}
-                      </text>
-                    </svg>
-                  </span>
-                );
-              })}
-            </div>
-          </td>
+            <svg width="50" height="40" viewBox="0 0 50 40" aria-hidden="true">
+              <polygon points="2,2 48,2 48,27 25,38 2,27" />
+              <text x="25" y="20" textAnchor="middle">
+                {placement.opc.letter}
+              </text>
+            </svg>
+          </span>
         );
       })}
-      <td colSpan={Math.max(0, totalColumns - model.actorColumns.length - 2)} />
-    </tr>
+    </div>
   );
 }
