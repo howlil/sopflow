@@ -476,112 +476,112 @@ export function MultiSelect({
       {typeof document !== "undefined"
         ? createPortal(
             <AnimatePresence initial={false}>
-                      {open && (
-                        <motion.div
-                          ref={menuRef}
-                          data-sopflow-root
-                          data-side={menuPosition?.side ?? "bottom"}
-                          id={`${id}-listbox`}
-                          className={styles.menu}
-                          role="listbox"
-                          aria-label={label}
-                          aria-multiselectable="true"
-                          style={{
-                            left: menuPosition?.left ?? -10000,
-                            top: menuPosition?.top ?? -10000,
-                            width: menuPosition?.width ?? 0,
-                            maxHeight: menuPosition?.maxHeight ?? 0,
-                            visibility: menuPosition ? "visible" : "hidden",
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              setOpen(false);
-                              triggerRef.current?.focus();
-                            } else if (event.key === "Tab") {
-                              setOpen(false);
-                            } else if (
-                              (event.key === "ArrowDown" || event.key === "ArrowUp") &&
-                              enabled.length
-                            ) {
-                              event.preventDefault();
-                              const current = enabled.indexOf(activeIndex);
-                              const next =
-                                current < 0
-                                  ? event.key === "ArrowDown"
-                                    ? 0
-                                    : enabled.length - 1
-                                  : event.key === "ArrowDown"
-                                    ? (current + 1) % enabled.length
-                                    : (current - 1 + enabled.length) % enabled.length;
-                              setActiveIndex(enabled[next]!);
-                              menuRef.current?.querySelectorAll<HTMLButtonElement>(
-                                '[role="option"]',
-                              )[enabled[next]!] // Ignore missing/unmounted options.
-                                ?.focus();
-                            }
-                          }
-                          initial={
-                            reduce
-                              ? { opacity: 0 }
-                              : {
-                                  opacity: 0,
-                                  y: menuPosition?.side === "top" ? 6 : -6,
-                                  scale: 0.97,
-                                }
-                          }
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                            scale: 1,
-                            transition: reduce
-                              ? { duration: motionTokens.duration.instant }
-                              : {
-                                  ...motionTokens.spring.snappy,
-                                  opacity: {
-                                    duration: motionTokens.duration.fast,
-                                    ease: enter,
-                                  },
-                                },
-                          }}
-                          exit={{
-                            opacity: 0,
-                            ...(reduce ? {} : { y: -4, scale: 0.98 }),
-                            transition: {
-                              duration: motionTokens.duration.instant,
-                              ease: standard,
-                            },
-                          }}
-                        >
-                          {options.map((option, index) => (
-                            <button
-                              type="button"
-                              role="option"
-                              id={`${id}-option-${index}`}
-                              aria-selected={selectedSet.has(option.value)}
-                              aria-disabled={option.disabled || undefined}
-                              key={option.value}
-                              className={styles.option}
-                              data-active={activeIndex === index}
-                              disabled={option.disabled}
-                              onPointerMove={() => {
-                                if (activeIndex !== index) setActiveIndex(index);
-                              }}
-                              onClick={() => toggle(option)}
-                            >
-                              <span>{option.label}</span>
-                              <AnimatePresence initial={false}>
-                                {selectedSet.has(option.value) && (
-                                  <CheckMark key="check" reduce={reduce} />
-                                )}
-                              </AnimatePresence>
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-            ,
+              {open && (
+                <motion.div
+                  ref={menuRef}
+                  data-sopflow-root
+                  data-side={menuPosition?.side ?? "bottom"}
+                  id={`${id}-listbox`}
+                  className={styles.menu}
+                  role="listbox"
+                  aria-label={label}
+                  aria-multiselectable="true"
+                  style={{
+                    left: menuPosition?.left ?? -10000,
+                    top: menuPosition?.top ?? -10000,
+                    width: menuPosition?.width ?? 0,
+                    maxHeight: menuPosition?.maxHeight ?? 0,
+                    visibility: menuPosition ? "visible" : "hidden",
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setOpen(false);
+                      triggerRef.current?.focus();
+                    } else if (event.key === "Tab") {
+                      setOpen(false);
+                    } else if (
+                      (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+                      enabled.length
+                    ) {
+                      event.preventDefault();
+                      const current = enabled.indexOf(activeIndex);
+                      const next =
+                        current < 0
+                          ? event.key === "ArrowDown"
+                            ? 0
+                            : enabled.length - 1
+                          : event.key === "ArrowDown"
+                            ? (current + 1) % enabled.length
+                            : (current - 1 + enabled.length) % enabled.length;
+                      setActiveIndex(enabled[next]!);
+                      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                        '[role="option"]',
+                      )[enabled[next]!] // Ignore missing/unmounted options.
+                        ?.focus();
+                    }
+                  }
+                  initial={
+                    reduce
+                      ? { opacity: 0 }
+                      : {
+                          opacity: 0,
+                          y: menuPosition?.side === "top" ? 6 : -6,
+                          scale: 0.97,
+                        }
+                  }
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: reduce
+                      ? { duration: motionTokens.duration.instant }
+                      : {
+                          ...motionTokens.spring.snappy,
+                          opacity: {
+                            duration: motionTokens.duration.fast,
+                            ease: enter,
+                          },
+                        },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    ...(reduce ? {} : { y: -4, scale: 0.98 }),
+                    transition: {
+                      duration: motionTokens.duration.instant,
+                      ease: standard,
+                    },
+                  }}
+                >
+                  {options.map((option, index) => (
+                    <button
+                      type="button"
+                      role="option"
+                      id={`${id}-option-${index}`}
+                      aria-selected={selectedSet.has(option.value)}
+                      aria-disabled={option.disabled || undefined}
+                      key={option.value}
+                      className={styles.option}
+                      data-active={activeIndex === index}
+                      disabled={option.disabled}
+                      onPointerMove={() => {
+                        if (activeIndex !== index) setActiveIndex(index);
+                      }}
+                      onClick={() => toggle(option)}
+                    >
+                      <span>{option.label}</span>
+                      <AnimatePresence initial={false}>
+                        {selectedSet.has(option.value) && (
+                          <CheckMark key="check" reduce={reduce} />
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            </AnimatePresence>,
             document.body,
           )
         : null}
