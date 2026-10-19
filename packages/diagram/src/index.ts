@@ -12,8 +12,6 @@ export { placeFormalEdgeLabel } from "./flowchart/formal/labels.js";
 export type { FormalEdgeLabelPlacementInput } from "./flowchart/formal/labels.js";
 
 export {
-  FORMAL_OPC_CONNECTOR_HEIGHT_PX,
-  FORMAL_OPC_CONNECTOR_STACK_GAP_PX,
   buildFormalTableColumnPercents,
   computeFormalActorColumnCenterPercent,
   formalOpcCenterXToLeftPx,
