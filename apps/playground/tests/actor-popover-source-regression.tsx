@@ -119,7 +119,7 @@ async function run() {
   );
   assert(
     Math.abs(after.left - desired) <= 3,
-    "Actor popover stopped tracking horizontal scroll",
+    `Actor popover stopped tracking horizontal scroll: menu=${after.left}, expected=${desired}, trigger=${anchor.left}, scrollLeft=${scrollport.scrollLeft}`,
   );
 
   const option = Array.from(
