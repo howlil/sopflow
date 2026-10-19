@@ -265,4 +265,44 @@ describe("SopProcedureView", () => {
       ),
     ).toHaveLength(3);
   });
+  it("aligns cross-page OPC-out with Admin and OPC-in with Student outside the table", () => {
+    const multiActorDocument: SOPDocument = {
+      schemaVersion: "1",
+      id: "admin-student",
+      title: "Admin to Student",
+      actors: [
+        { id: "admin", name: "Admin" },
+        { id: "student", name: "Student" },
+      ],
+      steps: [
+        { id: "s1", type: "start", name: "Start", actorIds: ["admin"], next: "s2" },
+        { id: "s2", type: "task", name: "Admin work", actorIds: ["admin"], next: "s3" },
+        { id: "s3", type: "task", name: "Student work", actorIds: ["student"], next: "s4" },
+        { id: "s4", type: "end", name: "End", actorIds: ["student"] },
+      ],
+    };
+    const { container } = render(
+      <SopProcedureView document={multiActorDocument} firstPageRows={2} nextPageRows={2} />,
+    );
+    const first = container.querySelector('[data-sopflow-procedure-page="0"]');
+    const second = container.querySelector('[data-sopflow-procedure-page="1"]');
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+
+    const outgoing = first?.querySelector(
+      '[data-sopflow-opc-strip="bottom"] [data-sopflow-opc-actor-id="admin"][data-variant="out"]',
+    );
+    const incoming = second?.querySelector(
+      '[data-sopflow-opc-strip="top"] [data-sopflow-opc-actor-id="student"][data-variant="in"]',
+    );
+    expect(outgoing).not.toBeNull();
+    expect(incoming).not.toBeNull();
+    expect(outgoing?.querySelector("text")?.textContent).toBe("A");
+    expect(incoming?.querySelector("text")?.textContent).toBe("A");
+    expect(first?.querySelector("table [data-sopflow-opc]")).toBeNull();
+    expect(second?.querySelector("table [data-sopflow-opc]")).toBeNull();
+    expect(first?.querySelectorAll("tbody tr")).toHaveLength(2);
+    expect(second?.querySelectorAll("tbody tr")).toHaveLength(2);
+  });
+
 });
