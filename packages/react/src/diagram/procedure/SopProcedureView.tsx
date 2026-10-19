@@ -43,6 +43,7 @@ export interface SopProcedureViewProps {
 
 export function SopProcedureView(props: SopProcedureViewProps) {
   const rootRef = useRef<HTMLElement>(null);
+  const [tableHeaderHeightPx, setTableHeaderHeightPx] = useState(0);
   const [measuredRowHeights, setMeasuredRowHeights] = useState<
     Readonly<Record<string, number>>
   >({});
@@ -60,7 +61,7 @@ export function SopProcedureView(props: SopProcedureViewProps) {
           ? { nextPageRows: props.nextPageRows }
           : {}),
         ...(props.pageHeightPx !== undefined
-          ? { pageHeightPx: props.pageHeightPx }
+          ? { pageHeightPx: props.pageHeightPx, tableHeaderHeightPx }
           : {}),
         ...(props.firstPageReservedHeightPx !== undefined
           ? { firstPageReservedHeightPx: props.firstPageReservedHeightPx }
@@ -79,6 +80,7 @@ export function SopProcedureView(props: SopProcedureViewProps) {
       props.nextPageReservedHeightPx,
       props.nextPageRows,
       props.pageHeightPx,
+      tableHeaderHeightPx,
       measuredRowHeights,
     ],
   );
@@ -93,6 +95,18 @@ export function SopProcedureView(props: SopProcedureViewProps) {
     const root = rootRef.current;
     if (!root) return;
 
+    const tableHeader = root.querySelector<HTMLElement>(
+      "[data-sopflow-procedure-page] thead",
+    );
+    if (tableHeader) {
+      const height = Math.round(tableHeader.getBoundingClientRect().height);
+      if (height > 0) {
+        setTableHeaderHeightPx((current) =>
+          Math.abs(current - height) <= 1 ? current : height,
+        );
+      }
+    }
+
     const next: Record<string, number> = {};
     for (const row of root.querySelectorAll<HTMLElement>(
       "[data-sopflow-procedure-step-id]",
@@ -104,10 +118,17 @@ export function SopProcedureView(props: SopProcedureViewProps) {
       }
     }
 
-    setMeasuredRowHeights((current) =>
-      measuredRowHeightMapsEqual(current, next) ? current : next,
-    );
-  }, [props.pageHeightPx]);
+    setMeasuredRowHeights((current) => {
+      // Preserve measurements for rows moved to an unseen page by reflow.
+      // Only current model rows may survive between measurements.
+      const active = new Set(model.rows.map((row) => row.stepId));
+      const combined = Object.fromEntries(
+        Object.entries(current).filter(([id]) => active.has(id)),
+      );
+      Object.assign(combined, next);
+      return measuredRowHeightMapsEqual(current, combined) ? current : combined;
+    });
+  }, [props.pageHeightPx, model.rows]);
 
   useLayoutEffect(() => {
     measureRenderedRows();
