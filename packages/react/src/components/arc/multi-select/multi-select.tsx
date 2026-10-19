@@ -3,7 +3,17 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Variants } from "motion/react";
 import { ChevronDown, X } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { positionFloatingMenu } from "./floating-menu-position.js";
+import type { FloatingMenuPosition } from "./floating-menu-position.js";
 import { motionTokens } from "../lib/motion-tokens.js";
 import styles from "./multi-select.module.css";
 
@@ -165,6 +175,11 @@ export function MultiSelect({
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<FloatingMenuPosition | null>(
+    null,
+  );
   const [internal, setInternal] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -189,13 +204,69 @@ export function MultiSelect({
     setCountDirection(remaining > previousRemaining ? 1 : -1);
   }
 
+  // The table and editor are both scroll containers. Render the listbox in a
+  // body portal and position from its trigger's viewport rect, not its <td>.
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPosition(null);
+      return;
+    }
+
+    const trigger = triggerRef.current;
+    const menu = menuRef.current;
+    if (!trigger || !menu) return;
+
+    const updatePosition = () => {
+      const rect = trigger.getBoundingClientRect();
+      const next = positionFloatingMenu(
+        rect,
+        menu.scrollHeight,
+        window.innerWidth,
+        window.innerHeight,
+      );
+      setMenuPosition((current) =>
+        current &&
+        current.top === next.top &&
+        current.left === next.left &&
+        current.width === next.width &&
+        current.maxHeight === next.maxHeight &&
+        current.side === next.side
+          ? current
+          : next,
+      );
+    };
+    updatePosition();
+    // Nested table scrolls must reposition synchronously; rAF throttling can
+    // leave an out-of-date floating menu while a scrollport is moving.
+    document.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updatePosition);
+    observer?.observe(trigger);
+    observer?.observe(menu);
+    return () => {
+      document.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+      observer?.disconnect();
+    };
+  }, [open, options.length]);
+
   useEffect(() => {
+    if (!open) return;
     const close = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target) &&
+        !menuRef.current?.contains(target)
+      ) {
+        setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
-  }, []);
+  }, [open]);
 
   const update = (next: string[]) => {
     if (value === undefined) setInternal(next);
@@ -218,6 +289,11 @@ export function MultiSelect({
     .filter((index) => index >= 0);
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
+    // A step table listens for Enter, Space, and arrows. Those keys belong to
+    // the open select and must not select/navigate the parent procedure row.
+    if (["Enter", " ", "Escape", "ArrowUp", "ArrowDown"].includes(event.key)) {
+      event.stopPropagation();
+    }
     if (event.key === "Enter" && open && activeIndex >= 0) {
       event.preventDefault();
       toggle(options[activeIndex]!);
@@ -263,6 +339,7 @@ export function MultiSelect({
       </span>
       <div className={styles.control}>
         <button
+          ref={triggerRef}
           type="button"
           className={`${styles.trigger} ${selected.length ? styles.hasClear : ""}`}
           data-sopflow-actor-trigger={compact || undefined}
@@ -270,7 +347,7 @@ export function MultiSelect({
           aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="listbox"
           aria-expanded={open}
-          aria-controls={`${id}-listbox`}
+          aria-controls={open ? `${id}-listbox` : undefined}
           onClick={() => setOpen((current) => !current)}
           onKeyDown={onKeyDown}
         >
@@ -399,16 +476,66 @@ export function MultiSelect({
             </motion.button>
           )}
         </AnimatePresence>
-        <AnimatePresence initial={false}>
-          {open && (
+      </div>
+      {description && <span className={styles.description}>{description}</span>}
+      {open && typeof document !== "undefined"
+        ? createPortal(
             <motion.div
+              ref={menuRef}
+              data-sopflow-root
+              data-side={menuPosition?.side ?? "bottom"}
               id={`${id}-listbox`}
               className={styles.menu}
               role="listbox"
               aria-label={label}
               aria-multiselectable="true"
+              onClick={(event) => event.stopPropagation()}
+              style={{
+                left: menuPosition?.left ?? -10000,
+                top: menuPosition?.top ?? -10000,
+                width: menuPosition?.width ?? 0,
+                maxHeight: menuPosition?.maxHeight ?? 0,
+                visibility: menuPosition ? "visible" : "hidden",
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Tab") event.stopPropagation();
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                } else if (event.key === "Tab") {
+                  setOpen(false);
+                } else if (
+                  (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+                  enabled.length
+                ) {
+                  event.preventDefault();
+                  const current = enabled.indexOf(activeIndex);
+                  const next =
+                    current < 0
+                      ? event.key === "ArrowDown"
+                        ? 0
+                        : enabled.length - 1
+                      : event.key === "ArrowDown"
+                        ? (current + 1) % enabled.length
+                        : (current - 1 + enabled.length) % enabled.length;
+                  setActiveIndex(enabled[next]!);
+                  const target =
+                    menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                      '[role="option"]',
+                    )[enabled[next]!];
+                  target?.focus();
+                }
+              }}
               initial={
-                reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }
+                reduce
+                  ? { opacity: 0 }
+                  : {
+                      opacity: 0,
+                      y: menuPosition?.side === "top" ? 6 : -6,
+                      scale: 0.97,
+                    }
               }
               animate={{
                 opacity: 1,
@@ -424,19 +551,12 @@ export function MultiSelect({
                       },
                     },
               }}
-              exit={{
-                opacity: 0,
-                ...(reduce ? {} : { y: -4, scale: 0.98 }),
-                transition: {
-                  duration: motionTokens.duration.instant,
-                  ease: standard,
-                },
-              }}
             >
               {options.map((option, index) => (
                 <button
                   type="button"
                   role="option"
+                  id={`${id}-option-${index}`}
                   aria-selected={selectedSet.has(option.value)}
                   aria-disabled={option.disabled || undefined}
                   key={option.value}
@@ -456,11 +576,10 @@ export function MultiSelect({
                   </AnimatePresence>
                 </button>
               ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      {description && <span className={styles.description}>{description}</span>}
+            </motion.div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

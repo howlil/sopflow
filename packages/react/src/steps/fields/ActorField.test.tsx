@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -54,6 +54,49 @@ describe("ActorField", () => {
 
     expect(screen.getByTestId("value")).toHaveTextContent("manager");
     expect(trigger).toHaveTextContent("Manager");
+  });
+
+  it("portals the listbox outside clipped procedure table containers", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <div style={{ overflow: "auto", height: 90 }}>
+        <Harness />
+      </div>,
+    );
+    const trigger = container.querySelector<HTMLElement>(
+      "[data-sopflow-actor-trigger]",
+    );
+    expect(trigger).not.toBeNull();
+    await user.click(trigger as HTMLElement);
+    const menu = screen.getByRole("listbox", { name: "Pelaksana" });
+    expect(menu.parentElement).toBe(document.body);
+    expect(container.contains(menu)).toBe(false);
+    expect(menu).toHaveAttribute("data-sopflow-root");
+
+    await user.click(screen.getByRole("option", { name: "Manager" }));
+    expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
+    expect(menu).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
+
+  it("dismisses the portal on outside pointer presses", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness />
+        <button type="button">Outside</button>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Outside" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
   });
 
   it("renders every selected actor in read-only mode", () => {
