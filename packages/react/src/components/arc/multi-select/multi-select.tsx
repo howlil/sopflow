@@ -3,7 +3,14 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Variants } from "motion/react";
 import { ChevronDown, X } from "lucide-react";
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { positionFloatingMenu } from "./floating-menu-position.js";
 import type { FloatingMenuPosition } from "./floating-menu-position.js";
@@ -523,9 +530,10 @@ export function MultiSelect({
                             ? (current + 1) % enabled.length
                             : (current - 1 + enabled.length) % enabled.length;
                       setActiveIndex(enabled[next]!);
-                      const target = menuRef.current?.querySelectorAll<HTMLButtonElement>(
-                        '[role="option"]',
-                      )[enabled[next]!];
+                      const target =
+                        menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                          '[role="option"]',
+                        )[enabled[next]!];
                       target?.focus();
                     }
                   }}
