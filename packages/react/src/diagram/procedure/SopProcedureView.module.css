@@ -244,6 +244,14 @@
 }
 
 @media print {
+  /* Keep the actor-aligned external anchors on the same physical A4 sheet as
+     their corresponding procedure table. Pagination reserves their height. */
+  .page,
+  .opcStrip,
+  .row {
+    break-inside: avoid;
+  }
+
   .row[data-selected="true"],
   .row[data-error="true"] {
     box-shadow: none;
