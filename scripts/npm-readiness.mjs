@@ -27,22 +27,20 @@ export async function main() {
   if (result.ready) {
     console.log("npm bootstrap ready: all five @sopflow packages exist in the public registry.");
   } else {
-    console.log("OIDC publish paused: the following packages do not yet exist on npm:");
+    console.log("First publication required for the following npm packages:");
     result.missing.forEach((name) => console.log("  - " + name));
-    console.log("Once-only action on your computer: npm login && pnpm release:bootstrap");
+    console.log("A granular NPM_KEY with package publish + Bypass 2FA can publish these from GitHub Actions; alternatively run npm login && pnpm release:bootstrap once.");
     console.log("No OTP or npm token is needed in GitHub Actions after Trusted Publishing is configured.");
   }
   if (process.env.GITHUB_OUTPUT) {
     appendFileSync(process.env.GITHUB_OUTPUT, "ready=" + result.ready + "\n");
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
-    appendFileSync(
-      process.env.GITHUB_STEP_SUMMARY,
-      result.ready
-        ? "### npm bootstrap ready\nAll five packages exist. Checking OIDC publication.\n"
-        : "### npm publication paused: first publish required\nMissing: " + result.missing.join(", ") +
-          "\n\nPublish these once as npm user `howlilabs`, then configure trusted publishing for `howlil/sopflow` workflow `publish.yml`.\n",
-    );
+    const message = result.ready
+      ? "### npm registry readiness\nAll five packages are present on npm.\n"
+      : "### First npm publication required\nMissing: " + result.missing.join(", ") +
+        "\n\nCI may publish these via a granular NPM_KEY with package publish permission and Bypass 2FA.\n";
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, message);
   }
 }
 

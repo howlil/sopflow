@@ -19,34 +19,87 @@ Feature PR + Changeset
   -> Version Packages PR (automatic, only when changesets exist)
   -> merge version PR
   -> successful CI on master
-  -> Publish npm (GitHub-hosted, OIDC)
+  -> Publish npm (GitHub-hosted, OIDC or temporary granular token)
   -> publish missing package versions in dependency order
   -> GitHub release per published package
 ```
 
-npm issues temporary credentials to GitHub Actions from OIDC: **no npm token and no
-OTP in CI**. The publisher grants the `npm publish` capability specifically to
+There are two supported publishing credential paths:
+- **Temporary bootstrap:** GitHub Actions uses the repository secret `NPM_KEY` as
+  a granular npm token. The token must have **Packages and scopes → Read and write
+  (publish and stage)** covering `@sopflow`, not merely organization Read/Write,
+  and **Bypass 2FA** selected when the token was created. It must belong to
+  npm user `howlilabs`. No OTP is required on the runner. This path can create
+  the three as-yet-unpublished packages and publish further versions.
+- **Long-term:** npm Trusted Publishing issues temporary credentials to GitHub
+  Actions using OIDC. No `NPM_KEY`, OTP, or bearer-token rotation is required. The publisher grants the `npm publish` capability specifically to
 `howlil/sopflow` / `publish.yml` without granting a reusable bearer token.
 Every publish is tied to the current `master` commit and requires successful CI.
 
 `Publish npm` also supports a manual **Run workflow** button on `master`.
 Manual runs verify successful CI for the exact commit. Published versions are skipped
-so rerunning is safe. The workflow checks the public npm registry first: if some
-of the five packages do not exist yet, it ends without trying OIDC publication and
-prints the missing names in the GitHub Actions summary. Registry errors other than
-404 are considered failures.
+so rerunning is safe. The workflow checks the public npm registry first. If some packages do not exist
+and no publish-capable `NPM_KEY` is configured, it **fails clearly** with an
+actionable error instead of silently skipping publication. If `NPM_KEY` exists,
+it validates the npm account and attempts to publish all five versions missing
+from the registry. Package-by-package versions are immutable and are never
+overwritten. Registry errors other than 404 are considered failures.
 
-**Automation is enabled by default** once the first publication and Trusted
-Publisher configuration exist on npm. You do not need to create a GitHub variable
+**Automation is enabled by default** when either a valid npm publish token
+or a working Trusted Publisher is configured. You do not need to create a GitHub variable
 to turn it on. To pause npm publishing, set the repository Actions variable
 `SOPFLOW_NPM_PUBLISH_ENABLED=false`. Delete that variable or set it to `true`
 to resume.
 
+## Use the existing `NPM_KEY` GitHub Actions secret now
+
+You already created a granular token on npm as `howlilabs` and placed it in
+**Settings → Secrets and variables → Actions → Repository secrets → NPM_KEY**.
+Do not commit this secret to the repo, put it into `.npmrc`, or paste it into
+GitHub issues/chat/logs.
+
+Check the token's **npm website** settings. It needs:
+- **Packages and scopes:** `Read and write (publish and stage)`, covering the
+  `@sopflow` scope or **all packages**, NOT only `Organizations: Read and write`.
+- **Bypass 2FA:** enabled at creation time. If off, generate a replacement token
+  with this checked. GitHub Actions cannot answer a 2FA challenge.
+- A token expiry date in the future, and npm user `howlilabs` must have publish
+  permission for the `sopflow` organization.
+- For a package configured to disallow tokens, the workflow cannot bypass this;
+  use OIDC Trusted Publishing for that package.
+
+On `master`, go to
+**GitHub → Actions → Publish npm → Run workflow**. This verifies that the
+current commit passed CI. The workflow automatically chooses token mode if
+`NPM_KEY` exists and is not empty, builds and verifies tarballs, and publishes
+versions that are not already on npm. It records each published package and
+creates GitHub releases. **No OTP prompt in GitHub Actions.**
+
+To force the mode temporarily, use repository Actions variable
+`SOPFLOW_NPM_AUTH=token`; this fails if the secret does not exist.
+Avoid broad org-wide tokens for long-lived release automation; scope to
+`@sopflow`, use short expiration and rotate/revoke after migration.
+
+**Important 2026 npm policy:** bypass-2FA granular tokens with direct publish
+permissions are scheduled to lose direct publishing in **January 2027**.
+This route solves initial publication but is not the durable solution.
+
+After the five packages exist, configure Trusted Publisher for each package:
+`howlil/sopflow`, workflow `publish.yml`, direct `npm publish` permission.
+Publish a genuinely **new version** via the CI workflow within two days of
+creating trust so npm validates the identity binding. Then set
+`SOPFLOW_NPM_AUTH=oidc` in repository Actions variables; OIDC is selected even
+if you have not yet deleted `NPM_KEY`. Once OIDC succeeds, delete and revoke
+the `NPM_KEY` secret/token.
+
 ## One-time bootstrap: npm account identity and OTP
 
-npm requires an initial interactive publication before registering an OIDC trusted
-publisher for a new package. 2FA is still mandatory for account administration and
-the initial setup; **do not disable 2FA**.
+npm requires initial package publication before registering an OIDC trusted
+publisher. The first package version can be published either through the
+`NPM_KEY` granular token in GitHub Actions (provided package publish +
+Bypass 2FA permissions are set) **or** with interactive `npm login` locally.
+Account administration and trusted-publisher setup can still require
+interactive 2FA; **do not disable 2FA**.
 
 1. Confirm npm user `howlilabs` has publishing rights in organization `sopflow`.
 2. On your computer with Node.js 24, pnpm 11.21.0, npm 11.15+:
@@ -117,11 +170,11 @@ version PR to retry OIDC publication on the verified master commit. No local
 | Symptom | What it means | Fix |
 | --- | --- | --- |
 | Publish workflow skipped | Publishing explicitly paused by Actions variable | Remove variable or set `SOPFLOW_NPM_PUBLISH_ENABLED=true` |
-| First-publish check reports missing packages | Some `@sopflow/*` packages do not yet exist on npm | Use `pnpm release:bootstrap` once as `howlilabs` |
+| First-publish reports missing packages | Missing package requires `NPM_KEY` or interactive bootstrap | Use the token-mode release, or `pnpm release:bootstrap` |
 | OIDC 401/404 or token exchange rejected | npm trusted publisher expired, mismatch, or missing direct-publish permission | Reconfigure trust for `howlil/sopflow`, `publish.yml`, allow `npm publish` |
 | npm 403 on local bootstrap | npm organization access/2FA approval is missing | Confirm `npm whoami`, org permissions and browser 2FA |
 | No new published package | Source versions already exist or version PR not merged | Merge a changeset version PR; npm will never overwrite an existing version |
-| CI cannot publish with npm token | Correct behavior: release job rejects `NODE_AUTH_TOKEN` | Remove token-based publisher config; use OIDC |
+| Token fails with EOTP/E403 | Missing Bypass 2FA, wrong package permissions, expired token, or disallow-tokens policy | Replace/repair granular token permissions, or switch to OIDC |
 
 Once OIDC is validated, in each npm package's Settings → Publishing access,
 consider **Require 2FA and disallow tokens**. Trusted Publishing continues to work;
