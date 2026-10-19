@@ -75,33 +75,85 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
-      - name: Check first-publish bootstrap status
+      - name: Select package publishing authentication
+        if: steps.current.outputs.valid == 'true'
+        id: auth
+        shell: bash
+        env:
+          NPM_KEY: ${{ secrets.NPM_KEY }}
+          PREFERRED_AUTH: ${{ vars.SOPFLOW_NPM_AUTH }}
+        run: |
+          if [[ "$PREFERRED_AUTH" == "oidc" ]]; then
+            mode="oidc"
+          elif [[ "$PREFERRED_AUTH" == "token" ]]; then
+            if [[ -z "$NPM_KEY" ]]; then
+              echo "::error::SOPFLOW_NPM_AUTH=token but GitHub Actions secret NPM_KEY is missing."
+              exit 1
+            fi
+            mode="token"
+          elif [[ -n "$NPM_KEY" ]]; then
+            mode="token"
+          else
+            mode="oidc"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Publishing authentication selected: $mode"
+          if [[ "$mode" == "token" ]]; then
+            echo "::notice::Using a short-lived npm granular token. Direct token publishing is being deprecated in January 2027; migrate to OIDC."
+          fi
+
+      - name: Check first-publish registry status
         if: steps.current.outputs.valid == 'true'
         id: bootstrap
         run: node scripts/npm-readiness.mjs
 
+      - name: Require a credential for initial package publishing
+        if: steps.current.outputs.valid == 'true'
+        shell: bash
+        env:
+          READY: ${{ steps.bootstrap.outputs.ready }}
+          AUTH_MODE: ${{ steps.auth.outputs.mode }}
+        run: |
+          if [[ "$READY" != "true" && "$AUTH_MODE" != "token" ]]; then
+            echo "::error::Some @sopflow packages do not exist. Configure NPM_KEY with package/scope Read and Write (publish and stage) + Bypass 2FA, or publish these packages once interactively."
+            exit 1
+          fi
+
       - uses: pnpm/action-setup@v4
-        if: steps.bootstrap.outputs.ready == 'true'
+        if: steps.current.outputs.valid == 'true'
         with:
           version: 11.21.0
 
-      - name: Install supported npm CLI for OIDC
-        if: steps.bootstrap.outputs.ready == 'true'
+      - name: Install npm CLI compatible with OIDC
+        if: steps.current.outputs.valid == 'true'
         run: |
           npm install -g npm@11.21.0
           node --version
           npm --version
 
+      - name: Validate npm token account without exposing the key
+        if: steps.current.outputs.valid == 'true' && steps.auth.outputs.mode == 'token'
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_KEY }}
+        run: |
+          account="$(npm whoami --registry=https://registry.npmjs.org/)"
+          if [[ "$account" != "howlilabs" ]]; then
+            echo "::error::NPM_KEY belongs to $account, expected howlilabs."
+            exit 1
+          fi
+          echo "npm token authenticated as howlilabs."
+
       - name: Install locked workspace dependencies
-        if: steps.bootstrap.outputs.ready == 'true'
+        if: steps.current.outputs.valid == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build all packages
-        if: steps.bootstrap.outputs.ready == 'true'
+        if: steps.current.outputs.valid == 'true'
         run: pnpm -r build
 
       - name: Create npm tarballs in dependency order
-        if: steps.bootstrap.outputs.ready == 'true'
+        if: steps.current.outputs.valid == 'true'
         run: |
           mkdir -p /tmp/sopflow-packs
           pnpm --filter @sopflow/core pack --pack-destination /tmp/sopflow-packs
@@ -110,21 +162,30 @@ jobs:
           pnpm --filter @sopflow/adapter-sop-ta pack --pack-destination /tmp/sopflow-packs
           pnpm --filter @sopflow/react pack --pack-destination /tmp/sopflow-packs
 
-      - name: Validate and publish through npm OIDC
-        if: steps.bootstrap.outputs.ready == 'true'
+      - name: Validate and publish missing package versions
+        if: steps.current.outputs.valid == 'true'
         id: publish
+        shell: bash
         env:
           SOPFLOW_NPM_PUBLISH_ENABLED: 'true'
           NPM_CONFIG_PROVENANCE: 'true'
+          PUBLISH_AUTH_MODE: ${{ steps.auth.outputs.mode }}
+          NPM_KEY: ${{ secrets.NPM_KEY }}
         run: |
-          if [[ -n "${NODE_AUTH_TOKEN:-}" ]]; then
-            echo "::error::Remove NODE_AUTH_TOKEN. SOPFlow releases must use npm OIDC, not long-lived tokens."
-            exit 1
+          if [[ "$PUBLISH_AUTH_MODE" == "token" ]]; then
+            if [[ -z "$NPM_KEY" ]]; then
+              echo "::error::NPM_KEY is missing."
+              exit 1
+            fi
+            export NODE_AUTH_TOKEN="$NPM_KEY"
+          else
+            unset NODE_AUTH_TOKEN
+            if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
+              echo "::error::GitHub OIDC is unavailable: id-token write permission is required."
+              exit 1
+            fi
           fi
-          if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
-            echo "::error::GitHub OIDC unavailable: id-token write permission is required."
-            exit 1
-          fi
+          unset NPM_KEY
           node scripts/npm-release.mjs publish
 
   github-release:
