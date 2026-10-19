@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: read
       id-token: write
     outputs:
       released: ${{ steps.publish.outputs.released }}
