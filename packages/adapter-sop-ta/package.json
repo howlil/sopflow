@@ -12,7 +12,9 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
@@ -30,6 +32,17 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["sop", "sop-ta", "adapter", "workflow", "typescript"],
-  "license": "MIT"
+  "keywords": [
+    "sop",
+    "sop-ta",
+    "adapter",
+    "workflow",
+    "typescript"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/adapter-sop-ta"
+  }
 }

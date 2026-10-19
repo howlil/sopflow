@@ -39,5 +39,10 @@
     "workflow",
     "typescript"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/sop-ap"
+  }
 }

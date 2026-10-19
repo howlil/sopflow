@@ -45,6 +45,12 @@ jobs:
           pnpm --filter @sopflow/react pack --pack-destination /tmp/sopflow-packs
           ls -lah /tmp/sopflow-packs
 
+      - name: Validate npm tarball exports and metadata
+        run: node scripts/npm-release.mjs verify
+
+      - name: Test release tooling
+        run: pnpm test:release
+
       - name: Browser diagram regression
         run: bash scripts/check-browser-diagrams.sh
 

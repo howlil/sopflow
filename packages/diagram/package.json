@@ -12,7 +12,9 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
@@ -31,6 +33,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["sop", "workflow", "diagram", "layout"],
-  "license": "MIT"
+  "keywords": [
+    "sop",
+    "workflow",
+    "diagram",
+    "layout"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/diagram"
+  }
 }
