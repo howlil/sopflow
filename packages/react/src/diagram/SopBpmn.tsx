@@ -99,6 +99,8 @@ export function SopBpmn({
     >
       <svg
         className={styles.svg}
+        width={model.width}
+        height={model.height}
         viewBox={`0 0 ${model.width} ${model.height}`}
         role="img"
         aria-label={`BPMN SOP ${document.title}`}
@@ -138,6 +140,8 @@ export function SopBpmn({
               y={lane.y + lane.height / 2}
               textAnchor="middle"
               dominantBaseline="middle"
+              transform={`rotate(-90 ${model.padding + model.headerWidth / 2} ${lane.y + lane.height / 2})`}
+              data-sopflow-actor-lane-label={lane.actorId ?? "unassigned"}
               className={styles.laneLabel}
             >
               {lane.label}
