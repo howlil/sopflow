@@ -1,5 +1,5 @@
 .presence { min-width: 0; }
-.alert { display: flex; align-items: start; gap: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-control); padding: var(--space-4); background: var(--surface); box-shadow: var(--shadow-resting); }
+.alert { display: flex; align-items: start; gap: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-surface); padding: var(--space-4); background: var(--surface); box-shadow: var(--shadow-resting); }
 .icon, .glyph { position: relative; display: grid; flex: 0 0 auto; place-items: center; }
 .icon { width: 18px; height: 18px; margin-top: 1px; }
 .icon svg { display: block; }
