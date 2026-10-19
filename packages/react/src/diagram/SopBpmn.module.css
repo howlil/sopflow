@@ -15,8 +15,10 @@
 
 .svg {
   display: block;
-  width: max(100%, 52rem);
-  min-height: 18rem;
+  /* Use the model's intrinsic dimensions; shrink to the available preview/print
+     width, but never invent blank space or upscale a small diagram. */
+  max-width: 100%;
+  height: auto;
 }
 
 .lane {
