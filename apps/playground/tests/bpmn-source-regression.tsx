@@ -3,7 +3,7 @@ import type { SOPDocument } from "@sopflow/core";
 import { buildBpmnModel } from "@sopflow/diagram";
 import { SopBpmn } from "../../../packages/react/src/diagram/SopBpmn.tsx";
 
-const document: SOPDocument = {
+const sopDocument: SOPDocument = {
   schemaVersion: "1",
   id: "compact-bpmn-acceptance",
   title: "Compact BPMN",
@@ -27,7 +27,7 @@ if (!rootElement) throw new Error("Compact BPMN test root missing");
 const stage = document.createElement("div");
 stage.id = "bpmn-stage";
 rootElement.appendChild(stage);
-createRoot(stage).render(<SopBpmn document={document} />);
+createRoot(stage).render(<SopBpmn document={sopDocument} />);
 
 function check(value: unknown, description: string): asserts value {
   if (!value) throw new Error(description);
@@ -38,7 +38,7 @@ function center(rect: DOMRect, axis: "x" | "y"): number {
 }
 
 function verify() {
-  const model = buildBpmnModel(document);
+  const model = buildBpmnModel(sopDocument);
   const svg = stage.querySelector<SVGSVGElement>("svg[role=img]");
   check(svg, "BPMN source SVG is absent");
   check(svg.getAttribute("width") === String(model.width), "SVG width is not intrinsic model width");
@@ -62,7 +62,7 @@ function verify() {
     check(labelRect.height <= headerRect.height + 2, "Long actor name escapes its lane");
   }
   const shapeCount = svg.querySelectorAll("[data-sopflow-step-id]").length;
-  check(shapeCount === document.steps.length, "BPMN lost one or more shapes");
+  check(shapeCount === sopDocument.steps.length, "BPMN lost one or more shapes");
   const routeCount = model.edges.length;
   check(routeCount >= 5, "BPMN routing lost semantic connections");
   check(model.edges.every((edge) => edge.points.length >= 2), "BPMN contains empty routes");
