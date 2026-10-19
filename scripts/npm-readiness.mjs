@@ -27,9 +27,9 @@ export async function main() {
   if (result.ready) {
     console.log("npm bootstrap ready: all five @sopflow packages exist in the public registry.");
   } else {
-    console.log("OIDC publish paused: the following packages do not yet exist on npm:");
+    console.log("First publication required for the following npm packages:");
     result.missing.forEach((name) => console.log("  - " + name));
-    console.log("Once-only action on your computer: npm login && pnpm release:bootstrap");
+    console.log("A granular NPM_KEY with package publish + Bypass 2FA can publish these from GitHub Actions; alternatively run npm login && pnpm release:bootstrap once.");
     console.log("No OTP or npm token is needed in GitHub Actions after Trusted Publishing is configured.");
   }
   if (process.env.GITHUB_OUTPUT) {
