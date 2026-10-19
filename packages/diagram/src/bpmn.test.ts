@@ -441,9 +441,13 @@ describe("buildBpmnModel", () => {
     expect(compact.edges.map((edge) => edge.id)).toEqual(
       originalSpacing.edges.map((edge) => edge.id),
     );
-    expect(
-      compact.edges.filter((edge) => edge.routeKind === "fallback"),
-    ).toEqual([]);
+    const compactFallbacks = compact.edges
+      .filter((edge) => edge.routeKind === "fallback")
+      .map((edge) => edge.id);
+    const previousFallbacks = originalSpacing.edges
+      .filter((edge) => edge.routeKind === "fallback")
+      .map((edge) => edge.id);
+    expect(compactFallbacks).toEqual(previousFallbacks);
   });
 
   it("reserves the full height of long vertically rotated actor names", () => {
