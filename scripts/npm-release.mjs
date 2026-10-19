@@ -140,7 +140,8 @@ export async function main(args = process.argv.slice(2)) {
   // existing tags, so rerunning after registry propagation is safe.
   const output = JSON.stringify(packages.map(({ name, version, directory }) => ({ name, version, directory })));
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, "released=" + output + "\n");
-  console.log("Published packages: " + output);
+  console.log("Newly accepted npm publications: " + JSON.stringify(published));
+  console.log("Versions reconciled with GitHub Releases: " + output);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
