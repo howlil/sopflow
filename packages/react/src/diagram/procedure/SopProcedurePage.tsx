@@ -420,7 +420,6 @@ export function SopProcedurePage({
               );
             })
           )}
-
         </tbody>
       </table>
       <OpcStrip
