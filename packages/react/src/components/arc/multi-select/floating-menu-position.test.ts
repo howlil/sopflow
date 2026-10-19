@@ -25,17 +25,17 @@ describe("positionFloatingMenu", () => {
       left: 120,
       top: 354,
       width: 200,
-      maxHeight: 496,
+      maxHeight: 320,
       side: "top",
     });
   });
 
   it("shifts horizontal menu bounds and caps the menu's scroll height", () => {
-    expect(positionFloatingMenu(anchor(690, 250, 190), 900, 800, 500)).toEqual({
+    expect(positionFloatingMenu(anchor(690, 190, 190), 900, 800, 500)).toEqual({
       left: 602,
-      top: 292,
+      top: 232,
       width: 190,
-      maxHeight: 200,
+      maxHeight: 260,
       side: "bottom",
     });
   });
