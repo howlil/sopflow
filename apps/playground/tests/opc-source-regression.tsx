@@ -6,7 +6,7 @@ import type { SOPDocument } from "@sopflow/core";
 // The normal apps/playground/index.html still imports published @sopflow/*.
 import { SopProcedureView } from "../../../packages/react/src/diagram/procedure/SopProcedureView.tsx";
 
-const document: SOPDocument = {
+const actorDocument: SOPDocument = {
   schemaVersion: "1",
   id: "opc-source-acceptance",
   title: "Actor-aware OPC source regression",
@@ -23,7 +23,7 @@ const document: SOPDocument = {
 };
 
 const budgetDocument: SOPDocument = {
-  ...document,
+  ...actorDocument,
   id: "opc-height-acceptance",
   steps: [
     { id: "t1", type: "start", name: "Start", actorIds: ["admin"], next: "t2" },
@@ -42,7 +42,7 @@ createRoot(rootElement).render(
   <>
     <article id="actor-case">
       <h1>OPC actor alignment — source build</h1>
-      <SopProcedureView document={document} firstPageRows={2} nextPageRows={2} />
+      <SopProcedureView document={actorDocument} firstPageRows={2} nextPageRows={2} />
     </article>
     <article id="budget-case">
       <h1>Height-aware page packing</h1>
