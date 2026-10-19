@@ -30,6 +30,8 @@ export interface FormalProcedurePaginationOptions {
   readonly pageHeightPx?: number;
   readonly firstPageReservedHeightPx?: number;
   readonly nextPageReservedHeightPx?: number;
+  /** Browser-measured height of the repeated procedure table header. */
+  readonly tableHeaderHeightPx?: number;
   readonly minimumRowHeightPx?: number;
   readonly lineHeightPx?: number;
   /**
@@ -194,7 +196,7 @@ export function buildFormalProcedurePages(
   const procedureRowById = new Map(
     model.rows.map((row) => [row.stepId, row] as const),
   );
-  const rowPages = buildProcedureRowPages(model.rows, paginationRows, options);
+  const rowPages = buildProcedureRowPages(model.rows, paginationRows, model.graph.edges, options);
 
   if (rowPages.length === 0) {
     return [
@@ -302,14 +304,17 @@ function buildProcedureRowPages(
     readonly number: number;
     readonly primaryActorId: string | null;
   }[],
+  edges: readonly WorkflowEdge[],
   options: FormalProcedurePaginationOptions,
 ): Array<readonly { readonly stepId: string }[]> {
   const pageHeightPx = positiveOptionalNumber(options.pageHeightPx);
 
   if (pageHeightPx !== null) {
-    return splitProcedureRowsByEstimatedHeight(rows, pageHeightPx, options);
+    return splitProcedureRowsByMeasuredPageBudget(rows, edges, pageHeightPx, options);
   }
 
+  // Keep explicit row-count pagination as a backwards-compatible API for
+  // standalone consumers that have not supplied physical page dimensions.
   const firstPageRows = positiveInteger(
     options.firstPageRows,
     DEFAULT_FIRST_PAGE_ROWS,
@@ -322,53 +327,97 @@ function buildProcedureRowPages(
   return splitFormalRowsIntoPages(paginationRows, firstPageRows, nextPageRows);
 }
 
-function splitProcedureRowsByEstimatedHeight(
+/**
+ * Reserve a connector strip only for edges actually crossing the candidate
+ * page's row boundaries. This solves the cyclic dependency of OPC height and
+ * page breaks without fixed-point oscillation: each candidate page segment is
+ * evaluated with its own exact set of external endpoints.
+ */
+function estimateCandidateOpcHeights(
   rows: readonly ProcedureRowModel[],
+  edges: readonly WorkflowEdge[],
+  indexByStep: ReadonlyMap<string, number>,
+  start: number,
+  endExclusive: number,
+): { top: number; bottom: number } {
+  const top = new Map<string, number>();
+  const bottom = new Map<string, number>();
+  const increment = (group: Map<string, number>, actor: string | null) => {
+    const id = actor ?? "__fallback__";
+    group.set(id, (group.get(id) ?? 0) + 1);
+  };
+
+  for (const edge of edges) {
+    const sourceIndex = indexByStep.get(edge.from);
+    const targetIndex = indexByStep.get(edge.to);
+    if (sourceIndex === undefined || targetIndex === undefined) continue;
+    const sourceInside = sourceIndex >= start && sourceIndex < endExclusive;
+    const targetInside = targetIndex >= start && targetIndex < endExclusive;
+    if (sourceInside === targetInside) continue;
+    if (sourceInside) {
+      increment(
+        targetIndex < start ? top : bottom,
+        rows[sourceIndex]?.primaryActorId ?? null,
+      );
+    } else {
+      increment(
+        sourceIndex < start ? top : bottom,
+        rows[targetIndex]?.primaryActorId ?? null,
+      );
+    }
+  }
+
+  const stripHeight = (byActor: Map<string, number>) => {
+    const maximumStack = Math.max(0, ...byActor.values());
+    return maximumStack === 0
+      ? 0
+      : maximumStack * 60 + (maximumStack - 1) * 8 + 16;
+  };
+  return { top: stripHeight(top), bottom: stripHeight(bottom) };
+}
+
+function splitProcedureRowsByMeasuredPageBudget(
+  rows: readonly ProcedureRowModel[],
+  edges: readonly WorkflowEdge[],
   pageHeightPx: number,
   options: FormalProcedurePaginationOptions,
 ): ProcedureRowModel[][] {
   if (rows.length === 0) return [];
 
+  const heights = rows.map((row) =>
+    positiveOptionalNumber(options.measuredRowHeights?.[row.stepId]) ??
+    estimateProcedureRowHeight(row, options),
+  );
+  const pageHeader = Math.max(0, options.tableHeaderHeightPx ?? 0);
+  const indexByStep = new Map(rows.map((row, index) => [row.stepId, index] as const));
   const pages: ProcedureRowModel[][] = [];
-  let current: ProcedureRowModel[] = [];
-  let usedHeight = 0;
+  let start = 0;
 
-  const pageBudget = (pageIndex: number) => {
+  while (start < rows.length) {
+    const pageIndex = pages.length;
     const reserved =
       positiveOptionalNumber(
         pageIndex === 0
           ? options.firstPageReservedHeightPx
           : options.nextPageReservedHeightPx,
       ) ?? 0;
-    return Math.max(1, pageHeightPx - Math.min(pageHeightPx - 1, reserved));
-  };
+    const available = Math.max(1, pageHeightPx - reserved - pageHeader);
+    let usedHeight = 0;
+    let bestEnd = start + 1; // Oversized rows must remain whole and visible.
 
-  for (const row of rows) {
-    const measuredHeight = positiveOptionalNumber(
-      options.measuredRowHeights?.[row.stepId],
-    );
-    const rowHeight =
-      measuredHeight ?? estimateProcedureRowHeight(row, options);
-    let budget = pageBudget(pages.length);
-
-    if (current.length > 0 && usedHeight + rowHeight > budget) {
-      pages.push(current);
-      current = [];
-      usedHeight = 0;
-      budget = pageBudget(pages.length);
+    for (let end = start + 1; end <= rows.length; end++) {
+      usedHeight += heights[end - 1] ?? 0;
+      if (usedHeight > available && end > start + 1) break;
+      const opc = estimateCandidateOpcHeights(rows, edges, indexByStep, start, end);
+      if (usedHeight + opc.top + opc.bottom <= available) {
+        bestEnd = end;
+      }
     }
 
-    current.push(row);
-    usedHeight += rowHeight;
-
-    if (rowHeight >= budget) {
-      pages.push(current);
-      current = [];
-      usedHeight = 0;
-    }
+    pages.push(rows.slice(start, bestEnd));
+    start = bestEnd;
   }
 
-  if (current.length > 0) pages.push(current);
   return pages;
 }
 
