@@ -29,6 +29,29 @@ pnpm --filter playground start
 
 `pnpm check` runs Biome, TypeScript checks, tests, and builds. CI also verifies package tarballs and headless-browser diagram regressions.
 
+### Repair legacy workspace package names
+
+All five publishable packages must be named under the `@sopflow/*` scope.
+`howlilabs` is the **npm publisher account**, not a package scope. Old local checkouts
+may still reference `@howlil/sopflow-react`, `@howlil/sopflow`, and related aliases,
+which causes `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` before installation.
+
+After updating `master`, run:
+
+```bash
+node scripts/repair-workspace-names.mjs
+pnpm install --no-frozen-lockfile
+pnpm check:package-names
+```
+
+The repair script modifies **only recognized package names and dependency keys** in
+the five package manifests and playground manifest. It refuses unknown aliases and
+conflicting dependency ranges; unrelated changes are left intact. If `git pull`
+is blocked by uncommitted local edits, back them up first with `git stash -u`
+and reapply only the needed work after pulling. `pnpm release:bootstrap` also
+runs the repair before its first install.
+
+
 ## Document and integration contract
 
 - `SOPDocument` stores semantic workflow steps and actors. `next`/`yes`/`no` define execution.

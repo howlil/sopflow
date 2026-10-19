@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { main, PACKAGES } from "./npm-release.mjs";
+import { repairWorkspaceNames } from "./repair-workspace-names.mjs";
 import { configureTrustedPublishing } from "./npm-trust.mjs";
 
 if (process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true") {
@@ -25,7 +26,13 @@ async function bootstrap() {
   console.log("Preparing all five scoped package tarballs...");
   const dir = mkdtempSync(join(tmpdir(), "sopflow-bootstrap-"));
   try {
-    run("pnpm", ["install", "--frozen-lockfile"]);
+    // Local clones may still contain historical @howlil workspace aliases.
+    // Repair only package manifests before pnpm attempts workspace resolution.
+    const renamed = repairWorkspaceNames();
+    if (renamed.length) {
+      for (const change of renamed) console.log("Canonicalized: " + change);
+    }
+    run("pnpm", ["install", renamed.length ? "--no-frozen-lockfile" : "--frozen-lockfile"]);
     run("pnpm", ["check"]);
     for (const [name] of PACKAGES) {
       run("pnpm", ["--filter", name, "pack", "--pack-destination", dir]);

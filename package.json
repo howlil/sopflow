@@ -15,7 +15,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "check": "pnpm lint && pnpm check:arch && pnpm typecheck && pnpm test && pnpm build",
+    "check": "pnpm check:package-names && pnpm lint && pnpm check:arch && pnpm typecheck && pnpm test && pnpm build",
     "pack:core": "pnpm --filter @sopflow/core pack",
     "pack:diagram": "pnpm --filter @sopflow/diagram pack",
     "pack:react": "pnpm --filter @sopflow/react pack",
@@ -25,7 +25,10 @@
     "release:version": "pnpm changeset version && pnpm install --lockfile-only --ignore-scripts",
     "test:release": "node --test scripts/npm-release.test.mjs",
     "release:bootstrap": "node scripts/npm-bootstrap.mjs",
-    "release:trust": "node scripts/npm-trust.mjs"
+    "release:trust": "node scripts/npm-trust.mjs",
+    "fix:package-names": "node scripts/repair-workspace-names.mjs",
+    "check:package-names": "node scripts/repair-workspace-names.mjs --check",
+    "test:package-names": "node --test scripts/repair-workspace-names.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13"
