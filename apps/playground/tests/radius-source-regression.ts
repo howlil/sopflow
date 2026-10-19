@@ -17,7 +17,8 @@ import paper from "../../../packages/react/src/diagram/procedure/SopProcedureVie
 const root = document.querySelector<HTMLElement>("#root");
 if (!root) throw new Error("Missing browser test root");
 root.setAttribute("data-sopflow-root", "");
-root.style.cssText = "padding:20px;background:white;display:grid;gap:12px;width:500px";
+root.style.cssText =
+  "padding:20px;background:white;display:grid;gap:12px;width:500px";
 
 function element(tag: string, className: string, parent = root) {
   const el = document.createElement(tag);
@@ -39,17 +40,29 @@ function radius(node: Element) {
 function check(label: string, node: Element, expected: string) {
   const actual = radius(node);
   if (actual !== expected) {
-    throw new Error(label + ": expected " + expected + ", received " + actual);
+    throw new Error(`${label}: expected ${expected}, received ${actual}`);
   }
-  return label + "=" + actual;
+  return `${label}=${actual}`;
 }
 
 const checks = [
   ["Arc button", element("button", button.button), "9999px"],
   ["Arc compact input", compact("input", input.field, input.input), "9999px"],
-  ["Arc compact select", compact("button", select.field, select.trigger), "9999px"],
-  ["Arc compact multi-select", compact("button", multi.field, multi.trigger), "9999px"],
-  ["Arc compact textarea", compact("textarea", textarea.field, textarea.control), "9999px"],
+  [
+    "Arc compact select",
+    compact("button", select.field, select.trigger),
+    "9999px",
+  ],
+  [
+    "Arc compact multi-select",
+    compact("button", multi.field, multi.trigger),
+    "9999px",
+  ],
+  [
+    "Arc compact textarea",
+    compact("textarea", textarea.field, textarea.control),
+    "9999px",
+  ],
   ["Arc multiline textarea", element("textarea", textarea.control), "16px"],
   ["Editor toolbar", element("div", toolbar.toolbar), "9999px"],
   ["Editor toolbar button", element("button", toolbar.button), "9999px"],
