@@ -129,12 +129,16 @@ export async function main(args = process.argv.slice(2)) {
       stdio: "inherit",
       env: { ...process.env, NPM_CONFIG_PROVENANCE: mode === "publish" ? "true" : "false" },
     });
-    if (!(await isPublished(pkg.name, pkg.version))) {
-      throw new Error("npm did not confirm " + pkg.name + "@" + pkg.version + " after publish");
-    }
+    // npm returns success after accepting a publication but its public registry
+    // metadata can lag. Do not fail (and accidentally retry an immutable version)
+    // just because the new version is not visible in the first registry GET.
+    console.log("npm accepted " + pkg.name + "@" + pkg.version + "; registry indexing may still be in progress.");
     published.push({ name: pkg.name, version: pkg.version, directory: pkg.directory });
   }
-  const output = JSON.stringify(published);
+  // Reconcile GitHub Releases for all published/accepted versions, including
+  // ones from an earlier partially successful run. github-releases.mjs skips
+  // existing tags, so rerunning after registry propagation is safe.
+  const output = JSON.stringify(packages.map(({ name, version, directory }) => ({ name, version, directory })));
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, "released=" + output + "\n");
   console.log("Published packages: " + output);
 }
