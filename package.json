@@ -22,7 +22,8 @@
     "pack:sop-ap": "pnpm --filter @sopflow/sop-ap pack",
     "pack:adapter-sop-ta": "pnpm --filter @sopflow/adapter-sop-ta pack",
     "changeset": "npm exec --yes --package=@changesets/cli@3.0.3 -- changeset",
-    "release:version": "pnpm changeset version && pnpm install --lockfile-only --ignore-scripts"
+    "release:version": "pnpm changeset version && pnpm install --lockfile-only --ignore-scripts",
+    "test:release": "node --test scripts/npm-release.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13"
