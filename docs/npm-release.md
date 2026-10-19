@@ -165,6 +165,16 @@ Alternatively, run **Actions → Publish npm → Run workflow** after merging th
 version PR to retry OIDC publication on the verified master commit. No local
 `npm publish` commands and no OTP prompts are necessary for future releases.
 
+## npm registry indexing delay
+
+An npm CLI `+ @sopflow/name@version` line means npm accepted the publication.
+The public metadata endpoint can still return HTTP 404 briefly while npm
+processes and indexes the package. **Do not re-publish the same immutable
+version on that signal.** The release script now trusts the successful
+`npm publish` exit status and continues publishing the remaining packages.
+Subsequent reruns reconcile missing GitHub release tags for already-published
+versions rather than re-publishing them.
+
 ## Common failures
 
 | Symptom | What it means | Fix |
