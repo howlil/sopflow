@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { main, PACKAGES } from "./npm-release.mjs";
+import { configureTrustedPublishing } from "./npm-trust.mjs";
 
 if (process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true") {
   throw new Error("Bootstrap cannot run in CI; authenticate locally with npm login");
@@ -33,7 +34,14 @@ async function bootstrap() {
     await main(["verify"]);
     console.log("Publishing only missing versions in dependency order. npm may request 2FA.");
     await main(["bootstrap"]);
-    console.log("npm bootstrap complete. Configure GitHub Actions Trusted Publisher for each package.");
+    console.log("Initial publication complete; configuring npm Trusted Publishers...");
+    try {
+      await configureTrustedPublishing();
+    } catch (error) {
+      console.error("Packages were published, but npm Trusted Publishing setup needs attention: " + error.message);
+      console.error("After resolving npm account/2FA permissions, rerun: pnpm release:trust");
+      process.exitCode = 1;
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
