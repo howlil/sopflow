@@ -27,8 +27,15 @@ jobs:
           node-version: 22.x
           cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Resolve published npm packages and regenerate lockfile
+        run: |
+          pnpm install --no-frozen-lockfile
+          echo '=== PNPM LOCK DIFF BEGIN ==='
+          git diff -- pnpm-lock.yaml
+          echo '=== PNPM LOCK DIFF END ==='
+
+      - name: Assert registry packages are installed, not workspace linked
+        run: node scripts/check-playground-npm.mjs
 
       - name: Regression test workspace package naming
         run: pnpm test:package-names
