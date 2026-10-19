@@ -270,7 +270,6 @@ describe("formal flowchart pagination parity", () => {
     );
     expect(out).toEqual([]);
   });
-
 });
 
 function row(stepId: StepId, number: number, actorId: ActorId): FormalPageRow {
