@@ -423,6 +423,58 @@ describe("buildBpmnModel", () => {
     );
   });
 
+  it("compacts the BPMN pool without shrinking node semantics or dropping routes", () => {
+    const compact = buildBpmnModel(document);
+    const originalSpacing = buildBpmnModel(document, {
+      laneHeight: 112,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+
+    expect(compact.headerWidth).toBe(36);
+    expect(compact.padding).toBe(8);
+    expect(compact.width).toBeLessThan(originalSpacing.width);
+    expect(compact.nodes.map((node) => node.id)).toEqual(
+      originalSpacing.nodes.map((node) => node.id),
+    );
+    expect(compact.edges.map((edge) => edge.id)).toEqual(
+      originalSpacing.edges.map((edge) => edge.id),
+    );
+    expect(
+      compact.edges.filter((edge) => edge.routeKind === "fallback"),
+    ).toEqual([]);
+  });
+
+  it("reserves the full height of long vertically rotated actor names", () => {
+    const longName = "Customer Support Representative";
+    const model = buildBpmnModel({
+      ...document,
+      actors: [
+        { id: "staff", name: longName },
+        { id: "manager", name: "Manager" },
+      ],
+    });
+
+    expect(model.lanes[0]?.height).toBeGreaterThanOrEqual(
+      Array.from(longName).length * 8 + 24,
+    );
+    expect(model.lanes[1]?.height).toBeGreaterThanOrEqual(112);
+    expect(model.edges).toHaveLength(4);
+  });
+
+  it("preserves an explicit spacious BPMN layout override for existing callers", () => {
+    const configured = buildBpmnModel(document, {
+      laneHeight: 152,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+    expect(configured.headerWidth).toBe(116);
+    expect(configured.padding).toBe(24);
+    expect(configured.laneHeight).toBe(152);
+  });
+
   it("keeps BPMN layout stable when step storage order changes", () => {
     const original = buildBpmnModel(document);
     const shuffled = buildBpmnModel({
