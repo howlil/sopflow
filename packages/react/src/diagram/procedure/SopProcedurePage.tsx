@@ -63,7 +63,9 @@ export function SopProcedurePage({
 }: SopProcedurePageProps) {
   const rootRef = useRef<HTMLElement>(null);
   const shapeRefs = useRef(new Map<string, HTMLSpanElement>());
-  const [actorCenters, setActorCenters] = useState<Readonly<Record<string, number>>>({});
+  const [actorCenters, setActorCenters] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const [geometry, setGeometry] = useState<FormalFlowchartGeometry | null>(
     null,
   );
@@ -121,11 +123,15 @@ export function SopProcedurePage({
       const id = header.dataset.sopflowActorId;
       if (!id) continue;
       const bounds = header.getBoundingClientRect();
-      nextCenters[id] = Math.round((bounds.left + bounds.right) / 2 - rootRect.left);
+      nextCenters[id] = Math.round(
+        (bounds.left + bounds.right) / 2 - rootRect.left,
+      );
     }
     setActorCenters((current) =>
       Object.keys(nextCenters).length === Object.keys(current).length &&
-      Object.entries(nextCenters).every(([id, x]) => Math.abs((current[id] ?? -9999) - x) <= 1)
+      Object.entries(nextCenters).every(
+        ([id, x]) => Math.abs((current[id] ?? -9999) - x) <= 1,
+      )
         ? current
         : nextCenters,
     );
@@ -553,10 +559,13 @@ function OpcStrip({
   });
   if (placements.length === 0) return null;
 
-  const maxStack = Math.max(...placements.map((placement) => placement.stackIndex));
+  const maxStack = Math.max(
+    ...placements.map((placement) => placement.stackIndex),
+  );
   const height =
     (maxStack + 1) * FORMAL_OPC_CONNECTOR_HEIGHT_PX +
-    maxStack * FORMAL_OPC_CONNECTOR_STACK_GAP_PX + 16;
+    maxStack * FORMAL_OPC_CONNECTOR_STACK_GAP_PX +
+    16;
 
   return (
     <div
@@ -575,9 +584,14 @@ function OpcStrip({
             className={styles.opcAnchor}
             data-sopflow-opc={placement.elementId}
             data-sopflow-opc-actor-id={actorKey}
-            data-variant={endpoints.find((candidate) =>
-              (candidate.variant === "in" ? candidate.opc.opcInId : candidate.opc.opcOutId) ===
-              placement.elementId)?.variant}
+            data-variant={
+              endpoints.find(
+                (candidate) =>
+                  (candidate.variant === "in"
+                    ? candidate.opc.opcInId
+                    : candidate.opc.opcOutId) === placement.elementId,
+              )?.variant
+            }
             role="img"
             aria-label={`Off-page connector ${placement.opc.letter}`}
             style={{
