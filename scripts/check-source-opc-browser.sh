@@ -9,7 +9,7 @@ PNG_FILE="${RUNNER_TEMP:-/tmp}/sopflow-source-opc.png"
 PDF_FILE="${RUNNER_TEMP:-/tmp}/sopflow-source-opc.pdf"
 PROFILE_DIR="${RUNNER_TEMP:-/tmp}/sopflow-source-opc-chrome"
 
-pnpm --filter playground dev --host 127.0.0.1 --port "${PORT}" >"${LOG_FILE}" 2>&1 &
+pnpm --filter playground exec vite --config vite.source-opc.config.ts --host 127.0.0.1 --port "${PORT}" >"${LOG_FILE}" 2>&1 &
 SERVER_PID=$!
 cleanup() {
   kill "${SERVER_PID}" >/dev/null 2>&1 || true
