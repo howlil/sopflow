@@ -28,7 +28,9 @@
       "import": "./dist/index.mjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
@@ -47,6 +49,12 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["sop", "workflow", "process", "procedure", "typescript"],
+  "keywords": [
+    "sop",
+    "workflow",
+    "process",
+    "procedure",
+    "typescript"
+  ],
   "license": "MIT"
 }

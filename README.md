@@ -33,7 +33,7 @@ pnpm --filter playground start
 
 All five publishable packages must be named under the `@sopflow/*` scope.
 `howlilabs` is the **npm publisher account**, not a package scope. Old local checkouts
-may still reference `@howlil/sopflow-react`, `@howlil/sopflow`, and related aliases,
+may still reference `@sopflow/react`, `@sopflow/core`, and related aliases,
 which causes `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` before installation.
 
 After updating `master`, run:

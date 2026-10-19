@@ -4,6 +4,22 @@
   "description": "SOP AP profile and readiness rules for Sopflow",
   "type": "module",
   "sideEffects": false,
+  "author": {
+    "name": "howlil",
+    "email": "mhdulilabshar27@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/sop-ap"
+  },
+  "homepage": "https://github.com/howlil/sopflow#readme",
+  "bugs": {
+    "url": "https://github.com/howlil/sopflow/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -39,10 +55,5 @@
     "workflow",
     "typescript"
   ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/howlil/sopflow.git",
-    "directory": "packages/sop-ap"
-  }
+  "license": "MIT"
 }

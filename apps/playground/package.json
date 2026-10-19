@@ -11,11 +11,11 @@
   },
   "type": "module",
   "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "@sopflow/core": "workspace:*",
     "@sopflow/diagram": "workspace:*",
-    "@sopflow/react": "workspace:*",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "@sopflow/react": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

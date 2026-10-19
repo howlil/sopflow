@@ -26,7 +26,7 @@ export function packedFileName(name, version) {
 }
 
 function getTarEntries(file) {
-  return new Set(execFileSync("tar", ["-tzf", file], { encoding: "utf8" }).trim().split("\n"));
+  return new Set(execFileSync("tar", ["-tzf", file], { encoding: "utf8" }).trim().split(/\r?\n/));
 }
 
 function validateManifest(manifest, source, tarEntries) {

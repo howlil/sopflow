@@ -52,14 +52,14 @@ for (const file of files) {
   }));
   const requests = [...new Map(imports.map((item) => [item.request, item])).values()];
   for (const {request, runtime} of requests) {
-    if (request.startsWith("@sopflow/")) {
-      if (/^@sopflow\/[^/]+\/src\//.test(request)) {
+    if (request.startsWith("@sopflow/core")) {
+      if (/^@howlil\/sopflow(?:-[^/]+)?\/src\//.test(request)) {
         errors.push(`Internal package deep import: ${slash(relative(root,file))} -> ${request}`);
       }
       if (isUnder(file, "packages/core/")) {
         errors.push(`Core imports another SOPFlow package: ${request}`);
       }
-      if (/^@sopflow\/react(?:\/|$)/.test(request) &&
+      if (/^@howlil\/sopflow-react(?:\/|$)/.test(request) &&
           !isUnder(file, "packages/react/")) {
         errors.push(`Pure package imports React package: ${slash(relative(root,file))}`);
       }
