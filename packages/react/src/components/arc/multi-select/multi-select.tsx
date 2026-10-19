@@ -216,7 +216,6 @@ export function MultiSelect({
     const menu = menuRef.current;
     if (!trigger || !menu) return;
 
-    let frame = 0;
     const updatePosition = () => {
       const rect = trigger.getBoundingClientRect();
       const next = positionFloatingMenu(
@@ -236,26 +235,20 @@ export function MultiSelect({
           : next,
       );
     };
-    const schedulePosition = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(updatePosition);
-    };
-
     updatePosition();
-    // Capture scroll events from nested scrollports, including horizontal
-    // scrolling in the editable procedure table.
-    document.addEventListener("scroll", schedulePosition, true);
-    window.addEventListener("resize", schedulePosition);
+    // Nested table scrolls must reposition synchronously; rAF throttling can
+    // leave an out-of-date floating menu while a scrollport is moving.
+    document.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
     const observer =
       typeof ResizeObserver === "undefined"
         ? null
-        : new ResizeObserver(schedulePosition);
+        : new ResizeObserver(updatePosition);
     observer?.observe(trigger);
     observer?.observe(menu);
     return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("scroll", schedulePosition, true);
-      window.removeEventListener("resize", schedulePosition);
+      document.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
       observer?.disconnect();
     };
   }, [open, options.length]);
