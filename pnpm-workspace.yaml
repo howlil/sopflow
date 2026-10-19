@@ -1,3 +1,10 @@
+linkWorkspacePackages: false
+
+# We publish @sopflow/* ourselves and need to smoke-test each release
+# immediately. Retain pnpm 11's 24-hour age protection for third-party deps.
+minimumReleaseAgeExclude:
+  - '@sopflow/*'
+
 packages:
   - packages/*
   - apps/*

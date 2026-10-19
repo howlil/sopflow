@@ -13,9 +13,9 @@
   "dependencies": {
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "@sopflow/core": "workspace:*",
-    "@sopflow/diagram": "workspace:*",
-    "@sopflow/react": "workspace:*"
+    "@sopflow/core": "npmjs:0.1.0",
+    "@sopflow/diagram": "npmjs:0.1.0",
+    "@sopflow/react": "npmjs:0.1.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

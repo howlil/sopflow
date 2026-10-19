@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Assert registry packages are installed, not workspace linked
+        run: node scripts/check-playground-npm.mjs
+
       - name: Regression test workspace package naming
         run: pnpm test:package-names
 

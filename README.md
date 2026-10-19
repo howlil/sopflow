@@ -29,6 +29,27 @@ pnpm --filter playground start
 
 `pnpm check` runs Biome, TypeScript checks, tests, and builds. CI also verifies package tarballs and headless-browser diagram regressions.
 
+### Playground runs the published npm release
+
+`apps/playground` now consumes the **published `@sopflow/core`, `@sopflow/diagram`
+and `@sopflow/react` packages from the public npm registry**, pinned to version
+`0.1.0` through pnpm's `npmjs:` registry source. React transitively installs
+`@sopflow/sop-ap` and other declared runtime dependencies. The playground no
+longer aliases Vite or TypeScript imports to local `packages/*/src`, including
+during Vite dev.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter playground dev
+```
+
+Changes made directly in `packages/*` will **not** appear in the playground
+until their next npm release and a deliberate update of the pinned playground
+versions and lockfile. Library packages continue to use `workspace:*` for
+local development. CI checks installed playground package paths and artifacts
+to prevent accidental workspace linking.
+
+
 ### Repair legacy workspace package names
 
 All five publishable packages must be named under the `@sopflow/*` scope.
