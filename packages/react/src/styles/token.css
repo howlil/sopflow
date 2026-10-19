@@ -21,8 +21,12 @@
   --sopflow-color-loading: #e5e5e5;
   --sopflow-color-empty: #a3a3a3;
 
-  --sopflow-radius-control: 10px;
-  --sopflow-radius-surface: 12px;
+  /* Canonical UI geometry: control = pill, surface = rounded, document = square. */
+  --sopflow-radius-control: 9999px;
+  --sopflow-radius-surface: 16px;
+  --sopflow-radius-popover: 14px;
+  --sopflow-radius-inline: 10px;
+  --sopflow-radius-document: 0px;
 
   /* Interaction tokens derive from Arc UI's MIT foundation/motion presets.
      Keep motion on UI controls; never animate measured SOP diagrams or A4 paper. */
@@ -78,7 +82,10 @@
   --border-strong: #bdbdbd;
   --danger: var(--sopflow-error-text);
   --focus-ring: transparent;
-  --radius-control: var(--sopflow-radius-pill);
+  --radius-control: var(--sopflow-radius-control);
+  --radius-panel: var(--sopflow-radius-popover);
+  --radius-surface: var(--sopflow-radius-surface);
+  --radius-pill: var(--sopflow-radius-pill);
   --control-height-sm: 2rem;
   --control-height-md: 2.25rem;
   --control-height-lg: 2.75rem;
