@@ -233,7 +233,9 @@ describe("buildFormalProcedurePages", () => {
       tableHeaderHeightPx: 50,
       minimumRowHeightPx: 100,
     });
-    const allStepIds = pages.flatMap((page) => page.rows.map((row) => row.stepId));
+    const allStepIds = pages.flatMap((page) =>
+      page.rows.map((row) => row.stepId),
+    );
     expect(allStepIds).toEqual(model.rows.map((row) => row.stepId));
     expect(allStepIds).toHaveLength(6);
   });
