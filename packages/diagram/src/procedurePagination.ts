@@ -196,7 +196,12 @@ export function buildFormalProcedurePages(
   const procedureRowById = new Map(
     model.rows.map((row) => [row.stepId, row] as const),
   );
-  const rowPages = buildProcedureRowPages(model.rows, paginationRows, model.graph.edges, options);
+  const rowPages = buildProcedureRowPages(
+    model.rows,
+    paginationRows,
+    model.graph.edges,
+    options,
+  );
 
   if (rowPages.length === 0) {
     return [
@@ -310,7 +315,12 @@ function buildProcedureRowPages(
   const pageHeightPx = positiveOptionalNumber(options.pageHeightPx);
 
   if (pageHeightPx !== null) {
-    return splitProcedureRowsByMeasuredPageBudget(rows, edges, pageHeightPx, options);
+    return splitProcedureRowsByMeasuredPageBudget(
+      rows,
+      edges,
+      pageHeightPx,
+      options,
+    );
   }
 
   // Keep explicit row-count pagination as a backwards-compatible API for
@@ -384,12 +394,15 @@ function splitProcedureRowsByMeasuredPageBudget(
 ): ProcedureRowModel[][] {
   if (rows.length === 0) return [];
 
-  const heights = rows.map((row) =>
-    positiveOptionalNumber(options.measuredRowHeights?.[row.stepId]) ??
-    estimateProcedureRowHeight(row, options),
+  const heights = rows.map(
+    (row) =>
+      positiveOptionalNumber(options.measuredRowHeights?.[row.stepId]) ??
+      estimateProcedureRowHeight(row, options),
   );
   const pageHeader = Math.max(0, options.tableHeaderHeightPx ?? 0);
-  const indexByStep = new Map(rows.map((row, index) => [row.stepId, index] as const));
+  const indexByStep = new Map(
+    rows.map((row, index) => [row.stepId, index] as const),
+  );
   const pages: ProcedureRowModel[][] = [];
   let start = 0;
 
@@ -408,7 +421,13 @@ function splitProcedureRowsByMeasuredPageBudget(
     for (let end = start + 1; end <= rows.length; end++) {
       usedHeight += heights[end - 1] ?? 0;
       if (usedHeight > available && end > start + 1) break;
-      const opc = estimateCandidateOpcHeights(rows, edges, indexByStep, start, end);
+      const opc = estimateCandidateOpcHeights(
+        rows,
+        edges,
+        indexByStep,
+        start,
+        end,
+      );
       if (usedHeight + opc.top + opc.bottom <= available) {
         bestEnd = end;
       }
