@@ -178,8 +178,14 @@ function verify() {
   );
   for (const page of budgetPages) {
     const height = page.getBoundingClientRect().height;
-    assert(height > 0 && height <= 542, `Procedure page physically exceeds 540px budget: ${height}px`);
-    assert(page.querySelector("table [data-sopflow-opc]") === null, "OPC entered table on height-aware page");
+    assert(
+      height > 0 && height <= 542,
+      `Procedure page physically exceeds 540px budget: ${height}px`,
+    );
+    assert(
+      page.querySelector("table [data-sopflow-opc]") === null,
+      "OPC entered table on height-aware page",
+    );
   }
   return {
     pages: pages.length,
