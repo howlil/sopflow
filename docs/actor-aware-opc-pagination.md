@@ -77,7 +77,7 @@ A row higher than the available budget is allocated its own page, without semant
 3. Forward, loopback, decision branches and duplicate same-actor OPCs still have valid semantic edge IDs, stable labels and route anchors.
 4. Overhead of OPC top/bottom and repeated table header changes page capacity. No phantom OPC activity rows are counted.
 5. A4 `@media print` keeps external OPC strips with the related table; long text or a physically oversized row must not silently clip content.
-6. All package CI checks pass. **Important:** `apps/playground` intentionally resolves the published npm `0.1.0` packages, so its current browser screenshot is **not** proof of the new source renderer. Run a separate source-level browser/print acceptance or publish a new version and upgrade playground before declaring full end-to-end print acceptance.
+6. All package CI checks pass. The separate `apps/playground/opc-source-regression.html` entry and `vite.source-opc.config.ts` deliberately alias **all three local source packages** exclusively for CI acceptance, while normal playground retains published npm `0.1.0` packages. Chrome tests source actor X alignment, SVG routes, outside-table DOM, page capacity, and creates PNG/PDF print evidence. This is automated structural/geometry smoke proof, **not** a golden-image or full multi-printer visual comparison.
 
 ## 6. Files changed
 
@@ -90,4 +90,4 @@ A row higher than the available budget is allocated its own page, without semant
 
 ## 7. Follow-up after code acceptance
 
-Publish a new semver version of `@sopflow/diagram` and `@sopflow/react` through Changesets; update `apps/playground` to the new release and rerun browser print/geometry tests on the published artifacts. Do not silently link `apps/playground` back to workspace packages.
+A minor Changeset for `@sopflow/diagram` and `@sopflow/react` is included. After merging the Version Packages PR, let CI publish the next npm version, update the normal `apps/playground` dependency pins, and run the default npm-consumer browser regression. Keep the isolated source gate as a separate test. Do not silently link the normal playground back to workspace packages.
