@@ -486,6 +486,7 @@ export function MultiSelect({
                   role="listbox"
                   aria-label={label}
                   aria-multiselectable="true"
+                  onClick={(event) => event.stopPropagation()}
                   style={{
                     left: menuPosition?.left ?? -10000,
                     top: menuPosition?.top ?? -10000,
@@ -516,10 +517,10 @@ export function MultiSelect({
                             ? (current + 1) % enabled.length
                             : (current - 1 + enabled.length) % enabled.length;
                       setActiveIndex(enabled[next]!);
-                      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                      const target = menuRef.current?.querySelectorAll<HTMLButtonElement>(
                         '[role="option"]',
-                      )[enabled[next]!] // Ignore missing/unmounted options.
-                        ?.focus();
+                      )[enabled[next]!];
+                      target?.focus();
                     }
                   }
                   initial={
@@ -580,7 +581,6 @@ export function MultiSelect({
                   ))}
                 </motion.div>
               )}
-            </AnimatePresence>
             </AnimatePresence>,
             document.body,
           )
