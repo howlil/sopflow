@@ -210,6 +210,34 @@ describe("buildFormalProcedurePages", () => {
     expect(pages.map((page) => page.rows.length)).toEqual([1, 2, 2]);
   });
 
+  it("includes outside-table OPC and measured table-header heights when packing rows", () => {
+    const model = buildProcedureModel(linearDocument(5));
+    const pages = buildFormalProcedurePages(model, {
+      pageHeightPx: 400,
+      firstPageReservedHeightPx: 10,
+      nextPageReservedHeightPx: 10,
+      tableHeaderHeightPx: 50,
+      minimumRowHeightPx: 100,
+    });
+    expect(pages.map((page) => page.rows.length)).toEqual([2, 1, 2]);
+    expect(pages[0]?.bottomOpc).toHaveLength(1);
+    expect(pages[1]?.topOpc).toHaveLength(1);
+    expect(pages[1]?.bottomOpc).toHaveLength(1);
+    expect(pages[2]?.topOpc).toHaveLength(1);
+  });
+
+  it("does not add visible rows when an OPC crosses a page boundary", () => {
+    const model = buildProcedureModel(linearDocument(6));
+    const pages = buildFormalProcedurePages(model, {
+      pageHeightPx: 400,
+      tableHeaderHeightPx: 50,
+      minimumRowHeightPx: 100,
+    });
+    const allStepIds = pages.flatMap((page) => page.rows.map((row) => row.stepId));
+    expect(allStepIds).toEqual(model.rows.map((row) => row.stepId));
+    expect(allStepIds).toHaveLength(6);
+  });
+
   it("uses page-local row numbers for routing while preserving displayed numbers", () => {
     const model = buildProcedureModel(linearDocument(9));
     const pages = buildFormalProcedurePages(model, {
