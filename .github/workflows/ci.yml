@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Regression test workspace package naming
+        run: pnpm test:package-names
+
       - name: Check workspace
         run: pnpm check
 
