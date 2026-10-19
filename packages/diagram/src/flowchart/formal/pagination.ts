@@ -282,7 +282,7 @@ export function computeFormalActorColumnCenterPercent(
 export function layoutFormalOpcEndpoints(
   endpoints: readonly FormalPositionedOpcEndpoint[],
   options: {
-    readonly actors: readonly { readonly id: ActorId }[];
+    readonly actors: readonly { readonly id: ActorId | null }[];
     readonly columnBounds?: FormalFlowchartColumnBounds | null;
     readonly tableColumns: FormalTableColumnPercents;
   },
@@ -305,6 +305,8 @@ export function layoutFormalOpcEndpoints(
   for (const [columnKey, group] of byColumn) {
     const actorId = columnKey === "__default__" ? null : (columnKey as ActorId);
     const actorIndex = resolveActorIndex(actorId, options.actors);
+    // A missing actor must never silently draw the OPC in the first actor lane.
+    if (actorIndex < 0) continue;
     const centerPercent = computeFormalActorColumnCenterPercent(
       actorIndex,
       options.tableColumns,
@@ -404,12 +406,10 @@ function toPagedConnection(
 
 function resolveActorIndex(
   actorId: ActorId | null,
-  actors: readonly { readonly id: ActorId }[],
+  actors: readonly { readonly id: ActorId | null }[],
 ): number {
-  if (!actorId) return 0;
-
-  const index = actors.findIndex((actor) => actor.id === actorId);
-  return index >= 0 ? index : 0;
+  // Null is a real fallback actor lane in the procedure model.
+  return actors.findIndex((actor) => actor.id === actorId);
 }
 
 function positiveInteger(value: number, fallback: number): number {

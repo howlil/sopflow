@@ -214,6 +214,62 @@ describe("formal flowchart pagination parity", () => {
     expect(placements[0]?.stackIndex).toBe(0);
     expect(placements[1]?.stackIndex).toBe(1);
   });
+  it("anchors one connector pair to distinct source and target actor columns", () => {
+    const actorRows: FormalPageRow[] = [
+      row("admin-step", 1, "admin"),
+      row("student-step", 2, "student"),
+    ];
+    const edge: WorkflowEdge = {
+      id: "admin-step:next:student-step",
+      from: "admin-step",
+      to: "student-step",
+      kind: "next",
+    };
+    const result = splitFormalCrossPageConnections([edge], actorRows, 1, 1);
+    const actors = [{ id: "admin" }, { id: "student" }];
+    const columnBounds = {
+      admin: { left: 200, top: 0, right: 300, bottom: 400 },
+      student: { left: 300, top: 0, right: 420, bottom: 400 },
+    };
+    const options = {
+      actors,
+      columnBounds,
+      tableColumns: buildFormalTableColumnPercents(25, 20),
+    };
+    const out = layoutFormalOpcEndpoints(
+      getFormalOpcEndpointsForPage(0, result.opcPairs).bottom,
+      options,
+    );
+    const incoming = layoutFormalOpcEndpoints(
+      getFormalOpcEndpointsForPage(1, result.opcPairs).top,
+      options,
+    );
+    expect(out).toMatchObject([{ actorId: "admin", centerXPx: 250 }]);
+    expect(incoming).toMatchObject([{ actorId: "student", centerXPx: 360 }]);
+    expect(out[0]?.opc.letter).toBe(incoming[0]?.opc.letter);
+  });
+
+  it("never silently assigns unknown OPC actor to the first actor column", () => {
+    const actorRows: FormalPageRow[] = [
+      row("first", 1, "missing"),
+      row("second", 2, "student"),
+    ];
+    const edge: WorkflowEdge = {
+      id: "first:next:second",
+      from: "first",
+      to: "second",
+      kind: "next",
+    };
+    const result = splitFormalCrossPageConnections([edge], actorRows, 1, 1);
+    const out = layoutFormalOpcEndpoints(
+      getFormalOpcEndpointsForPage(0, result.opcPairs).bottom,
+      {
+        actors: [{ id: "admin" }, { id: "student" }],
+        tableColumns: buildFormalTableColumnPercents(25, 20),
+      },
+    );
+    expect(out).toEqual([]);
+  });
 });
 
 function row(stepId: StepId, number: number, actorId: ActorId): FormalPageRow {

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SOPFlow source OPC acceptance</title>
+    <style>
+      :root {
+        --sopflow-color-document-border: #181818;
+        --sopflow-color-surface: #fff;
+        --sopflow-color-text: #171717;
+        --sopflow-color-text-muted: #606060;
+        --sopflow-font-document: 12px;
+        --sopflow-selected-border: #111;
+        --sopflow-error-border: #b00;
+        --sopflow-color-background: #fff;
+        --sopflow-surface: #fff;
+        --sopflow-text: #171717;
+      }
+      html, body { margin: 0; background: #fff; font: 12px Arial, sans-serif; }
+      #root { width: 1050px; padding: 10px 12px; box-sizing: border-box; }
+      @page { size: A4 landscape; margin: 12mm; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/tests/opc-source-regression.tsx"></script>
+  </body>
+</html>

@@ -72,6 +72,9 @@ jobs:
       - name: Browser diagram regression
         run: bash scripts/check-browser-diagrams.sh
 
+      - name: Browser acceptance of changed source OPC renderer
+        run: bash scripts/check-source-opc-browser.sh
+
       - name: Upload visual regression evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,4 +83,6 @@ jobs:
           path: |
             ${{ runner.temp }}/sopflow-diagram-regression.png
             ${{ runner.temp }}/sopflow-diagram-regression.pdf
+            ${{ runner.temp }}/sopflow-source-opc.png
+            ${{ runner.temp }}/sopflow-source-opc.pdf
           if-no-files-found: ignore

@@ -25,7 +25,9 @@ interface ProcedurePageBudget {
   readonly nextPageReservedHeightPx: number;
 }
 
-const PROCEDURE_TABLE_CHROME_RESERVE_PX = 120;
+// The paginated procedure view measures its own repeated table header and
+// the exact external OPC strips. Keep only page-bottom breathing room here.
+const PROCEDURE_PAGE_BOTTOM_RESERVE_PX = 28;
 
 export interface SopDocumentCanvasProps {
   document: SOPDocument;
@@ -105,11 +107,11 @@ export function SopDocumentCanvas({
     );
     const firstPageReservedHeightPx = Math.min(
       contentHeight - 1,
-      consumedBeforeDiagram + PROCEDURE_TABLE_CHROME_RESERVE_PX,
+      consumedBeforeDiagram + PROCEDURE_PAGE_BOTTOM_RESERVE_PX,
     );
     const nextPageReservedHeightPx = Math.min(
       contentHeight - 1,
-      PROCEDURE_TABLE_CHROME_RESERVE_PX,
+      PROCEDURE_PAGE_BOTTOM_RESERVE_PX,
     );
     const next: ProcedurePageBudget = {
       pageHeightPx: contentHeight,
