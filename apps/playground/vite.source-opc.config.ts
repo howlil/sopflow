@@ -10,15 +10,21 @@ export default defineConfig({
     alias: [
       {
         find: "@sopflow/core",
-        replacement: fileURLToPath(new URL("../../packages/core/src/index.ts", import.meta.url)),
+        replacement: fileURLToPath(
+          new URL("../../packages/core/src/index.ts", import.meta.url),
+        ),
       },
       {
         find: "@sopflow/diagram",
-        replacement: fileURLToPath(new URL("../../packages/diagram/src/index.ts", import.meta.url)),
+        replacement: fileURLToPath(
+          new URL("../../packages/diagram/src/index.ts", import.meta.url),
+        ),
       },
       {
         find: "@sopflow/react",
-        replacement: fileURLToPath(new URL("../../packages/react/src/index.ts", import.meta.url)),
+        replacement: fileURLToPath(
+          new URL("../../packages/react/src/index.ts", import.meta.url),
+        ),
       },
     ],
   },
