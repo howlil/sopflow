@@ -72,3 +72,21 @@ if ! grep -q 'data-react-radius-regression="pass"' "${RADIUS_DOM}"; then
 fi
 grep -o 'data-react-radius-regression[^>]*>[^<]*' "${RADIUS_DOM}"
 echo "React control, portal, notice, and document geometry checks passed."
+
+# ActorField uses a custom MultiSelect. Verify its last-row listbox can escape
+# the horizontal-scroll container, flip upward, follow scrolling and retain
+# multiple selections without closing unexpectedly.
+ACTOR_URL="http://127.0.0.1:${PORT}/actor-popover-source-regression.html"
+ACTOR_DOM="${RUNNER_TEMP:-/tmp}/sopflow-actor-popover.html"
+curl --silent --fail "${ACTOR_URL}" >/dev/null
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --window-size=800,600 --user-data-dir="${PROFILE_DIR}" \
+  --virtual-time-budget=8000 --dump-dom "${ACTOR_URL}" >"${ACTOR_DOM}"
+if ! grep -q 'data-actor-popover-regression="pass"' "${ACTOR_DOM}"; then
+  echo "::error::Actor dropdown clipped or lost input/scroll behavior"
+  grep -o 'data-actor-popover-regression[^>]*>[^<]*' "${ACTOR_DOM}" || true
+  cat "${LOG_FILE}"
+  exit 1
+fi
+grep -o 'data-actor-popover-regression[^>]*>[^<]*' "${ACTOR_DOM}"
+echo "Portaled ActorField popup regression passed."
