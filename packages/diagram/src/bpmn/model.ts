@@ -16,9 +16,9 @@ const DEFAULTS: Required<
   Pick<BpmnLayoutOptions, "laneHeight" | "headerWidth" | "stepGap" | "padding">
 > = {
   laneHeight: 112,
-  headerWidth: 116,
-  stepGap: 144,
-  padding: 24,
+  headerWidth: 36,
+  stepGap: 128,
+  padding: 8,
 };
 
 export function buildBpmnModel(
@@ -107,6 +107,17 @@ function buildBpmnModelPass(
     laneHeights[layout.laneIndex] = Math.max(
       laneHeights[layout.laneIndex] ?? config.laneHeight,
       metrics.footprintHeight + 24,
+    );
+  }
+  // Actor names are rotated inside narrow lane headers. The required height
+  // is the rendered vertical label extent, not the narrow header width.
+  // Budget conservatively for variable fonts and Unicode code points.
+  for (let index = 0; index < laneCount; index++) {
+    const label = document.actors[index]?.name ?? "Pelaksana";
+    const estimatedLabelExtent = Array.from(label).length * 8 + 24;
+    laneHeights[index] = Math.max(
+      laneHeights[index] ?? config.laneHeight,
+      estimatedLabelExtent,
     );
   }
   let laneCursor = config.padding + feedbackCorridorReserve;
