@@ -142,10 +142,14 @@ async function run() {
   trigger.dispatchEvent(
     new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
   );
-  await delay(250);
+  await delay(750);
+  assert(
+    trigger.getAttribute("aria-expanded") === "false",
+    "Escape did not close the actor trigger",
+  );
   assert(
     !document.querySelector('[role="listbox"]'),
-    "Escape did not dismiss actor popup",
+    "Escape did not remove the menu after its exit animation",
   );
   assert(
     document.activeElement === trigger,
