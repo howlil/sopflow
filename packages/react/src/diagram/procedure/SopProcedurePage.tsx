@@ -3,8 +3,6 @@ import {
   formalPathToSegments,
   formalOpcStackTopPx,
   layoutFormalOpcEndpoints,
-  FORMAL_OPC_CONNECTOR_HEIGHT_PX,
-  FORMAL_OPC_CONNECTOR_STACK_GAP_PX,
   planFormalProcedureEdges,
   pointsToPath,
   removeProcedurePageManualRoute,
@@ -561,10 +559,7 @@ function OpcStrip({
   const maxStack = Math.max(
     ...placements.map((placement) => placement.stackIndex),
   );
-  const height =
-    (maxStack + 1) * FORMAL_OPC_CONNECTOR_HEIGHT_PX +
-    maxStack * FORMAL_OPC_CONNECTOR_STACK_GAP_PX +
-    16;
+  const height = formalOpcStackTopPx(maxStack) + 60 + 16;
 
   return (
     <div
