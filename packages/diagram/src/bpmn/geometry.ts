@@ -21,7 +21,7 @@ export function measureBpmnNode(
     horizontalPadding: 16,
     verticalPadding: 10,
     minWidth: 48,
-    maxWidth: 200,
+    maxWidth: 168,
   });
   const labelLines = labelLayout.text.lines;
   const labelLineHeight = labelLayout.text.lineHeight;
@@ -29,7 +29,7 @@ export function measureBpmnNode(
   const estimatedLabelWidth = clamp(
     longestLine * 6.2 + 20,
     kind === "task" ? 96 : 48,
-    200,
+    168,
   );
 
   if (kind === "task") {
