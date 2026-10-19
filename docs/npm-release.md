@@ -36,7 +36,7 @@ These are not interchangeable: package names remain `@sopflow/core`, etc.
    pnpm release:bootstrap
    ```
 
-   The bootstrap command installs dependencies, runs all checks, builds and validates all five npm tarballs, and publishes any **missing** package versions in dependency order. It will prompt for npm two-factor authentication if required. This is an interactive local operation, **not an Actions job**, because npm requires an initial package publication before Trusted Publishing can be enabled. No `NPM_TOKEN` is required or should be shared.
+   The bootstrap command installs dependencies, runs all checks, builds and validates all five npm tarballs, publishes any **missing** package versions in dependency order, and uses `npm trust github` to configure trusted publishing automatically for all five packages. It will prompt for npm two-factor authentication and may open an npm browser approval screen. This is an interactive local operation, **not an Actions job**, because npm requires initial publication before Trusted Publishing can be enabled. No `NPM_TOKEN` is required or should be shared. It requires npm >=11.15.0 (`npm install -g npm@11.21.0`). If publisher configuration is interrupted after publication, rerun `pnpm release:trust`; published versions remain intact.
 
 3. Verify publication:
 
@@ -50,14 +50,7 @@ These are not interchangeable: package names remain `@sopflow/core`, etc.
 
    If an exact version was published previously, bootstrap skips it instead of overwriting. npm package versions cannot be republished.
 
-4. Open each package on npmjs.com and set **GitHub Actions Trusted Publisher**:
-   - GitHub user/organization: `howlil` (NOT `howlilabs` or `sopflow`)
-   - Repository: `sopflow`
-   - Workflow file: `publish.yml`
-   - Environment: leave blank
-   - Allowed actions: enable **npm publish** (not stage-only)
-
-   Repeat for all five packages. Complete the first trusted publication within npm's trust-validation window.
+4. The bootstrap script also configures and confirms npm's **GitHub Actions Trusted Publisher** for every package (GitHub user `howlil`, repository `sopflow`, file `publish.yml`, direct `npm publish` permission). If that step fails, diagnose npm's 2FA or write permission and rerun `pnpm release:trust`. To inspect manually run `npm trust list @sopflow/core --json` and repeat for the other four packages.
 
 5. In GitHub repository Settings → Actions → General, enable permission to create pull requests from Actions; without that, the version PR cannot be opened. A PR made using the default `GITHUB_TOKEN` may not trigger PR CI automatically; either manually trigger checks with a human commit or use an authorized GitHub App token.
 

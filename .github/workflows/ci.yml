@@ -48,6 +48,12 @@ jobs:
       - name: Validate npm tarball exports and metadata
         run: node scripts/npm-release.mjs verify
 
+      - name: Check bootstrap and OIDC CLI syntax
+        run: |
+          node --check scripts/npm-release.mjs
+          node --check scripts/npm-bootstrap.mjs
+          node --check scripts/npm-trust.mjs
+
       - name: Test release tooling
         run: pnpm test:release
 
