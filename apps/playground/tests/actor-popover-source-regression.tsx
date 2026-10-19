@@ -20,7 +20,12 @@ function Scenario() {
       <h1>Pelaksana popup inside horizontally scrollable steps table</h1>
       <section
         data-sopflow-steps-scroll
-        style={{ width: 440, height: 145, overflow: "auto", border: "1px solid #ddd" }}
+        style={{
+          width: 440,
+          height: 145,
+          overflow: "auto",
+          border: "1px solid #ddd",
+        }}
       >
         <table style={{ width: 930, borderCollapse: "collapse" }}>
           <tbody>
@@ -62,11 +67,14 @@ function result(status: "pass" | "fail", detail: string) {
   document.body.appendChild(node);
 }
 
-const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function run() {
   await delay(250);
-  const scrollport = document.querySelector<HTMLElement>("[data-sopflow-steps-scroll]");
+  const scrollport = document.querySelector<HTMLElement>(
+    "[data-sopflow-steps-scroll]",
+  );
   const trigger = document.querySelector<HTMLButtonElement>(
     "[data-sopflow-actor-trigger]",
   );
@@ -74,37 +82,75 @@ async function run() {
   trigger.click();
   await delay(650);
 
-  const menu = document.querySelector<HTMLElement>('[role="listbox"][aria-label="Pelaksana"]');
+  const menu = document.querySelector<HTMLElement>(
+    '[role="listbox"][aria-label="Pelaksana"]',
+  );
   assert(menu, "Actor menu did not open");
-  assert(menu.parentElement === document.body, "Actor menu was not portaled to body");
-  assert(!scrollport.contains(menu), "Actor menu is still clipped inside table viewport");
+  assert(
+    menu.parentElement === document.body,
+    "Actor menu was not portaled to body",
+  );
+  assert(
+    !scrollport.contains(menu),
+    "Actor menu is still clipped inside table viewport",
+  );
   const before = menu.getBoundingClientRect();
-  assert(before.top >= 0 && before.bottom <= window.innerHeight + 3, "Actor menu overflows screen vertically");
-  assert(before.left >= 0 && before.right <= window.innerWidth + 3, "Actor menu overflows screen horizontally");
-  assert(menu.dataset.side === "top", "Bottom row menu should flip above in narrow viewport");
+  assert(
+    before.top >= 0 && before.bottom <= window.innerHeight + 3,
+    "Actor menu overflows screen vertically",
+  );
+  assert(
+    before.left >= 0 && before.right <= window.innerWidth + 3,
+    "Actor menu overflows screen horizontally",
+  );
+  assert(
+    menu.dataset.side === "top",
+    "Bottom row menu should flip above in narrow viewport",
+  );
 
   scrollport.scrollLeft = 115;
   scrollport.dispatchEvent(new Event("scroll"));
   await delay(450);
   const after = menu.getBoundingClientRect();
   const anchor = trigger.getBoundingClientRect();
-  const desired = Math.max(8, Math.min(anchor.left, window.innerWidth - 8 - after.width));
-  assert(Math.abs(after.left - desired) <= 3, "Actor popover stopped tracking horizontal scroll");
-
-  const option = Array.from(menu.querySelectorAll<HTMLButtonElement>('[role="option"]')).find(
-    (node) => node.textContent?.includes("Staff"),
+  const desired = Math.max(
+    8,
+    Math.min(anchor.left, window.innerWidth - 8 - after.width),
   );
+  assert(
+    Math.abs(after.left - desired) <= 3,
+    "Actor popover stopped tracking horizontal scroll",
+  );
+
+  const option = Array.from(
+    menu.querySelectorAll<HTMLButtonElement>('[role="option"]'),
+  ).find((node) => node.textContent?.includes("Staff"));
   assert(option, "Option Staff missing");
   option.click();
   await delay(350);
-  assert(document.querySelector("[data-actor-state]")?.textContent === "staff,manager", "Portaled multi-selection lost state");
-  assert(menu.isConnected, "Selecting one actor closed multi-select prematurely");
+  assert(
+    document.querySelector("[data-actor-state]")?.textContent ===
+      "staff,manager",
+    "Portaled multi-selection lost state",
+  );
+  assert(
+    menu.isConnected,
+    "Selecting one actor closed multi-select prematurely",
+  );
 
   trigger.focus();
-  trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  trigger.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+  );
   await delay(250);
-  assert(!document.querySelector('[role="listbox"]'), "Escape did not dismiss actor popup");
-  assert(document.activeElement === trigger, "Escape did not preserve actor trigger focus");
+  assert(
+    !document.querySelector('[role="listbox"]'),
+    "Escape did not dismiss actor popup",
+  );
+  assert(
+    document.activeElement === trigger,
+    "Escape did not preserve actor trigger focus",
+  );
 
   result(
     "pass",
