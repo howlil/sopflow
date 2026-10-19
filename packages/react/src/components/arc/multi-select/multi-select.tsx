@@ -528,7 +528,7 @@ export function MultiSelect({
                       )[enabled[next]!];
                       target?.focus();
                     }
-                  }
+                  }}
                   initial={
                     reduce
                       ? { opacity: 0 }
