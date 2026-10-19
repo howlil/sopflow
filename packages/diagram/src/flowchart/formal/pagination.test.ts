@@ -237,10 +237,12 @@ describe("formal flowchart pagination parity", () => {
       tableColumns: buildFormalTableColumnPercents(25, 20),
     };
     const out = layoutFormalOpcEndpoints(
-      getFormalOpcEndpointsForPage(0, result.opcPairs).bottom, options,
+      getFormalOpcEndpointsForPage(0, result.opcPairs).bottom,
+      options,
     );
     const incoming = layoutFormalOpcEndpoints(
-      getFormalOpcEndpointsForPage(1, result.opcPairs).top, options,
+      getFormalOpcEndpointsForPage(1, result.opcPairs).top,
+      options,
     );
     expect(out).toMatchObject([{ actorId: "admin", centerXPx: 250 }]);
     expect(incoming).toMatchObject([{ actorId: "student", centerXPx: 360 }]);
@@ -248,12 +250,23 @@ describe("formal flowchart pagination parity", () => {
   });
 
   it("never silently assigns unknown OPC actor to the first actor column", () => {
-    const actorRows: FormalPageRow[] = [row("first", 1, "missing"), row("second", 2, "student")];
-    const edge: WorkflowEdge = { id: "first:next:second", from: "first", to: "second", kind: "next" };
+    const actorRows: FormalPageRow[] = [
+      row("first", 1, "missing"),
+      row("second", 2, "student"),
+    ];
+    const edge: WorkflowEdge = {
+      id: "first:next:second",
+      from: "first",
+      to: "second",
+      kind: "next",
+    };
     const result = splitFormalCrossPageConnections([edge], actorRows, 1, 1);
     const out = layoutFormalOpcEndpoints(
       getFormalOpcEndpointsForPage(0, result.opcPairs).bottom,
-      { actors: [{ id: "admin" }, { id: "student" }], tableColumns: buildFormalTableColumnPercents(25, 20) },
+      {
+        actors: [{ id: "admin" }, { id: "student" }],
+        tableColumns: buildFormalTableColumnPercents(25, 20),
+      },
     );
     expect(out).toEqual([]);
   });
