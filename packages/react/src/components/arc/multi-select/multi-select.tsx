@@ -3,7 +3,10 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Variants } from "motion/react";
 import { ChevronDown, X } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { positionFloatingMenu } from "./floating-menu-position.js";
+import type { FloatingMenuPosition } from "./floating-menu-position.js";
 import { motionTokens } from "../lib/motion-tokens.js";
 import styles from "./multi-select.module.css";
 
@@ -165,6 +168,11 @@ export function MultiSelect({
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<FloatingMenuPosition | null>(
+    null,
+  );
   const [internal, setInternal] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -189,13 +197,76 @@ export function MultiSelect({
     setCountDirection(remaining > previousRemaining ? 1 : -1);
   }
 
+  // The table and editor are both scroll containers. Render the listbox in a
+  // body portal and position from its trigger's viewport rect, not its <td>.
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPosition(null);
+      return;
+    }
+
+    const trigger = triggerRef.current;
+    const menu = menuRef.current;
+    if (!trigger || !menu) return;
+
+    let frame = 0;
+    const updatePosition = () => {
+      const rect = trigger.getBoundingClientRect();
+      const next = positionFloatingMenu(
+        rect,
+        menu.scrollHeight,
+        window.innerWidth,
+        window.innerHeight,
+      );
+      setMenuPosition((current) =>
+        current &&
+        current.top === next.top &&
+        current.left === next.left &&
+        current.width === next.width &&
+        current.maxHeight === next.maxHeight &&
+        current.side === next.side
+          ? current
+          : next,
+      );
+    };
+    const schedulePosition = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updatePosition);
+    };
+
+    updatePosition();
+    // Capture scroll events from nested scrollports, including horizontal
+    // scrolling in the editable procedure table.
+    document.addEventListener("scroll", schedulePosition, true);
+    window.addEventListener("resize", schedulePosition);
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(schedulePosition);
+    observer?.observe(trigger);
+    observer?.observe(menu);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("scroll", schedulePosition, true);
+      window.removeEventListener("resize", schedulePosition);
+      observer?.disconnect();
+    };
+  }, [open, options.length]);
+
   useEffect(() => {
+    if (!open) return;
     const close = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target) &&
+        !menuRef.current?.contains(target)
+      ) {
+        setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
-  }, []);
+  }, [open]);
 
   const update = (next: string[]) => {
     if (value === undefined) setInternal(next);
@@ -263,6 +334,7 @@ export function MultiSelect({
       </span>
       <div className={styles.control}>
         <button
+          ref={triggerRef}
           type="button"
           className={`${styles.trigger} ${selected.length ? styles.hasClear : ""}`}
           data-sopflow-actor-trigger={compact || undefined}
@@ -270,7 +342,7 @@ export function MultiSelect({
           aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="listbox"
           aria-expanded={open}
-          aria-controls={`${id}-listbox`}
+          aria-controls={open ? `${id}-listbox` : undefined}
           onClick={() => setOpen((current) => !current)}
           onKeyDown={onKeyDown}
         >
@@ -399,68 +471,120 @@ export function MultiSelect({
             </motion.button>
           )}
         </AnimatePresence>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              id={`${id}-listbox`}
-              className={styles.menu}
-              role="listbox"
-              aria-label={label}
-              aria-multiselectable="true"
-              initial={
-                reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }
-              }
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                transition: reduce
-                  ? { duration: motionTokens.duration.instant }
-                  : {
-                      ...motionTokens.spring.snappy,
-                      opacity: {
-                        duration: motionTokens.duration.fast,
-                        ease: enter,
-                      },
-                    },
-              }}
-              exit={{
-                opacity: 0,
-                ...(reduce ? {} : { y: -4, scale: 0.98 }),
-                transition: {
-                  duration: motionTokens.duration.instant,
-                  ease: standard,
-                },
-              }}
-            >
-              {options.map((option, index) => (
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={selectedSet.has(option.value)}
-                  aria-disabled={option.disabled || undefined}
-                  key={option.value}
-                  className={styles.option}
-                  data-active={activeIndex === index}
-                  disabled={option.disabled}
-                  onPointerMove={() => {
-                    if (activeIndex !== index) setActiveIndex(index);
-                  }}
-                  onClick={() => toggle(option)}
-                >
-                  <span>{option.label}</span>
-                  <AnimatePresence initial={false}>
-                    {selectedSet.has(option.value) && (
-                      <CheckMark key="check" reduce={reduce} />
-                    )}
-                  </AnimatePresence>
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       {description && <span className={styles.description}>{description}</span>}
+      {typeof document !== "undefined"
+        ? createPortal(
+            <AnimatePresence initial={false}>
+                      {open && (
+                        <motion.div
+                          ref={menuRef}
+                          data-sopflow-root
+                          data-side={menuPosition?.side ?? "bottom"}
+                          id={`${id}-listbox`}
+                          className={styles.menu}
+                          role="listbox"
+                          aria-label={label}
+                          aria-multiselectable="true"
+                          style={{
+                            left: menuPosition?.left ?? -10000,
+                            top: menuPosition?.top ?? -10000,
+                            width: menuPosition?.width ?? 0,
+                            maxHeight: menuPosition?.maxHeight ?? 0,
+                            visibility: menuPosition ? "visible" : "hidden",
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setOpen(false);
+                              triggerRef.current?.focus();
+                            } else if (event.key === "Tab") {
+                              setOpen(false);
+                            } else if (
+                              (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+                              enabled.length
+                            ) {
+                              event.preventDefault();
+                              const current = enabled.indexOf(activeIndex);
+                              const next =
+                                current < 0
+                                  ? event.key === "ArrowDown"
+                                    ? 0
+                                    : enabled.length - 1
+                                  : event.key === "ArrowDown"
+                                    ? (current + 1) % enabled.length
+                                    : (current - 1 + enabled.length) % enabled.length;
+                              setActiveIndex(enabled[next]!);
+                              menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                                '[role="option"]',
+                              )[enabled[next]!] // Ignore missing/unmounted options.
+                                ?.focus();
+                            }
+                          }
+                          initial={
+                            reduce
+                              ? { opacity: 0 }
+                              : {
+                                  opacity: 0,
+                                  y: menuPosition?.side === "top" ? 6 : -6,
+                                  scale: 0.97,
+                                }
+                          }
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: 1,
+                            transition: reduce
+                              ? { duration: motionTokens.duration.instant }
+                              : {
+                                  ...motionTokens.spring.snappy,
+                                  opacity: {
+                                    duration: motionTokens.duration.fast,
+                                    ease: enter,
+                                  },
+                                },
+                          }}
+                          exit={{
+                            opacity: 0,
+                            ...(reduce ? {} : { y: -4, scale: 0.98 }),
+                            transition: {
+                              duration: motionTokens.duration.instant,
+                              ease: standard,
+                            },
+                          }}
+                        >
+                          {options.map((option, index) => (
+                            <button
+                              type="button"
+                              role="option"
+                              id={`${id}-option-${index}`}
+                              aria-selected={selectedSet.has(option.value)}
+                              aria-disabled={option.disabled || undefined}
+                              key={option.value}
+                              className={styles.option}
+                              data-active={activeIndex === index}
+                              disabled={option.disabled}
+                              onPointerMove={() => {
+                                if (activeIndex !== index) setActiveIndex(index);
+                              }}
+                              onClick={() => toggle(option)}
+                            >
+                              <span>{option.label}</span>
+                              <AnimatePresence initial={false}>
+                                {selectedSet.has(option.value) && (
+                                  <CheckMark key="check" reduce={reduce} />
+                                )}
+                              </AnimatePresence>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+            ,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
