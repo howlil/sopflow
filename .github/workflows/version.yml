@@ -21,15 +21,29 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Check for pending Changesets
+        id: pending
+        shell: bash
+        run: |
+          if find .changeset -maxdepth 1 -type f -name '*.md' ! -iname 'README.md' | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No unreleased changesets; version PR not needed."
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: pnpm/action-setup@v4
+        if: steps.pending.outputs.has_changesets == 'true'
         with:
           version: 11.21.0
       - uses: actions/setup-node@v6
+        if: steps.pending.outputs.has_changesets == 'true'
         with:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        if: steps.pending.outputs.has_changesets == 'true'
       - name: Open or update Version Packages PR
+        if: steps.pending.outputs.has_changesets == 'true'
         uses: changesets/action/version@v2.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

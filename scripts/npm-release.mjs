@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, appendFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,6 +13,13 @@ export const PACKAGES = [
 ];
 
 const expectedRepo = "git+https://github.com/howlil/sopflow.git";
+
+function npmCLI(args, options = {}) {
+  const result = spawnSync("npm", args, { shell: process.platform === "win32", encoding: "utf8", ...options });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error("npm " + args[0] + " failed with exit code " + result.status);
+  return result.stdout ?? "";
+}
 
 export function packedFileName(name, version) {
   return name.replace(/^@/, "").replaceAll("/", "-") + "-" + version + ".tgz";
@@ -94,13 +101,20 @@ function assertNoPendingChangesets(rootDir) {
 
 export async function main(args = process.argv.slice(2)) {
   const mode = args[0] ?? "verify";
-  if (mode !== "verify" && mode !== "publish") throw new Error("Expected verify or publish, got " + mode);
+  if (!["verify", "publish", "bootstrap"].includes(mode)) throw new Error("Expected verify, bootstrap or publish, got " + mode);
+  if (mode === "bootstrap") {
+    if (process.env.CI === "true") throw new Error("Bootstrap requires an authenticated interactive local npm session");
+    const whoami = npmCLI(["whoami"]).trim();
+    if (whoami !== "howlilabs") {
+      throw new Error("Wrong npm account: expected howlilabs, got " + whoami + ". Run npm login as howlilabs.");
+    }
+  }
   const rootDir = process.cwd();
   const packDir = resolve(process.env.SOPFLOW_PACK_DIR || "/tmp/sopflow-packs");
   const packages = inspectPacks(packDir, rootDir);
   console.log("Verified " + packages.length + " SOPFlow package tarballs");
   if (mode === "verify") return;
-  if (process.env.SOPFLOW_NPM_PUBLISH_ENABLED !== "true") {
+  if (mode === "publish" && process.env.SOPFLOW_NPM_PUBLISH_ENABLED !== "true") {
     throw new Error("Publish disabled: set SOPFLOW_NPM_PUBLISH_ENABLED=true only after npm bootstrap and OIDC configuration");
   }
   assertNoPendingChangesets(rootDir);
@@ -111,9 +125,9 @@ export async function main(args = process.argv.slice(2)) {
       continue;
     }
     console.log("Publishing " + pkg.name + "@" + pkg.version);
-    execFileSync("npm", ["publish", pkg.tarball, "--access", "public", "--registry", "https://registry.npmjs.org/", "--ignore-scripts"], {
+    npmCLI(["publish", pkg.tarball, "--access", "public", "--registry", "https://registry.npmjs.org/", "--ignore-scripts"], {
       stdio: "inherit",
-      env: { ...process.env, NPM_CONFIG_PROVENANCE: "true" },
+      env: { ...process.env, NPM_CONFIG_PROVENANCE: mode === "publish" ? "true" : "false" },
     });
     if (!(await isPublished(pkg.name, pkg.version))) {
       throw new Error("npm did not confirm " + pkg.name + "@" + pkg.version + " after publish");

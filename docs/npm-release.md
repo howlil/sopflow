@@ -20,28 +20,50 @@ The workspace root and `apps/playground` are private and must never be published
 
 All workflows are idempotent by package name and version. The initial publication is manual.
 
-## Bootstrap: one-time prerequisites
+## Bootstrap: first publication to npm (one time)
 
-1. Create the **npm** organization `sopflow`, separate from the GitHub repository; verify your npm account has publishing rights to all five names and enable 2FA.
-2. From a clean checkout of `master`, build and verify (do not publish automatically):
+The npm user is **`howlilabs`**, and the npm organization/scope is **`@sopflow`**.
+These are not interchangeable: package names remain `@sopflow/core`, etc.
+
+1. Verify **howlilabs** owns or can publish under the npm organization **sopflow**, enable 2FA and install Node.js 24 with npm 11+, pnpm 11.21.0.
+2. Merge the release-fix PR and sync the latest `master`:
 
    ```bash
-   pnpm install --frozen-lockfile
-   pnpm check
-   mkdir -p /tmp/sopflow-packs
-   pnpm --filter @sopflow/core pack --pack-destination /tmp/sopflow-packs
-   pnpm --filter @sopflow/diagram pack --pack-destination /tmp/sopflow-packs
-   pnpm --filter @sopflow/sop-ap pack --pack-destination /tmp/sopflow-packs
-   pnpm --filter @sopflow/adapter-sop-ta pack --pack-destination /tmp/sopflow-packs
-   pnpm --filter @sopflow/react pack --pack-destination /tmp/sopflow-packs
-   node scripts/npm-release.mjs verify
+   git checkout master
+   git pull --ff-only
+   npm login
+   npm whoami           # must print: howlilabs
+   pnpm release:bootstrap
    ```
 
-3. Use `npm login` and publish each first version (currently 0.1.0) **from the inspected tarballs** with `npm publish /tmp/sopflow-packs/<filename>.tgz --access public` in this order: core, diagram, sop-ap, adapter-sop-ta, react. A package must already exist before it can have an OIDC trusted publisher.
-4. On npmjs.com, open each package's settings, add **GitHub Actions Trusted Publisher** with owner `howlil`, repo `sopflow`, workflow filename `publish.yml`, and no environment. Choose **Allow npm publish**, not stage-only. Repeat for all five packages.
-5. On GitHub, allow Actions to create PRs under Settings → Actions → General. Note: PRs created by the default `GITHUB_TOKEN` may not trigger PR CI checks automatically. If checks are required, use a GitHub App token for the version action or explicitly re-trigger checks with an authorized human commit.
-6. When npm bootstrap and trusted publishers have been verified, set the GitHub repository Actions **variable** `SOPFLOW_NPM_PUBLISH_ENABLED=true`. Until then it must be absent or `false`. Do **not** create an `NPM_TOKEN` secret.
-7. Merge a future Version Packages PR to test automated publishing. Check installed packages, npm provenance, and GitHub releases.
+   The bootstrap command installs dependencies, runs all checks, builds and validates all five npm tarballs, and publishes any **missing** package versions in dependency order. It will prompt for npm two-factor authentication if required. This is an interactive local operation, **not an Actions job**, because npm requires an initial package publication before Trusted Publishing can be enabled. No `NPM_TOKEN` is required or should be shared.
+
+3. Verify publication:
+
+   ```bash
+   npm view @sopflow/core@0.1.0 version
+   npm view @sopflow/diagram@0.1.0 version
+   npm view @sopflow/sop-ap@0.1.0 version
+   npm view @sopflow/adapter-sop-ta@0.1.0 version
+   npm view @sopflow/react@0.1.0 version
+   ```
+
+   If an exact version was published previously, bootstrap skips it instead of overwriting. npm package versions cannot be republished.
+
+4. Open each package on npmjs.com and set **GitHub Actions Trusted Publisher**:
+   - GitHub user/organization: `howlil` (NOT `howlilabs` or `sopflow`)
+   - Repository: `sopflow`
+   - Workflow file: `publish.yml`
+   - Environment: leave blank
+   - Allowed actions: enable **npm publish** (not stage-only)
+
+   Repeat for all five packages. Complete the first trusted publication within npm's trust-validation window.
+
+5. In GitHub repository Settings → Actions → General, enable permission to create pull requests from Actions; without that, the version PR cannot be opened. A PR made using the default `GITHUB_TOKEN` may not trigger PR CI automatically; either manually trigger checks with a human commit or use an authorized GitHub App token.
+
+6. Only once every package is published and all five trusted publishers are configured, set the GitHub Actions **variable** `SOPFLOW_NPM_PUBLISH_ENABLED=true`. Never add a persistent `NPM_TOKEN` for regular releases.
+
+7. For future changes, create `pnpm changeset` files in feature PRs and merge to `master`. Version Packages skips clean/no-changeset pushes rather than failing. Merge the generated version PR after review; successful CI then enables OIDC publication.
 
 ## Recovery & security
 
