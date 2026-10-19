@@ -57,6 +57,12 @@ jobs:
           node --check scripts/npm-bootstrap.mjs
           node --check scripts/npm-trust.mjs
 
+      - name: Test npm registry readiness gate
+        run: node --test scripts/npm-readiness.test.mjs
+
+      - name: Check npm readiness helper syntax
+        run: node --check scripts/npm-readiness.mjs
+
       - name: Test release tooling
         run: pnpm test:release
 
