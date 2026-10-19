@@ -289,6 +289,11 @@ export function MultiSelect({
     .filter((index) => index >= 0);
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
+    // A step table listens for Enter, Space, and arrows. Those keys belong to
+    // the open select and must not select/navigate the parent procedure row.
+    if (["Enter", " ", "Escape", "ArrowUp", "ArrowDown"].includes(event.key)) {
+      event.stopPropagation();
+    }
     if (event.key === "Enter" && open && activeIndex >= 0) {
       event.preventDefault();
       toggle(options[activeIndex]!);
@@ -495,6 +500,7 @@ export function MultiSelect({
                     visibility: menuPosition ? "visible" : "hidden",
                   }}
                   onKeyDown={(event) => {
+                    if (event.key !== "Tab") event.stopPropagation();
                     if (event.key === "Escape") {
                       event.preventDefault();
                       event.stopPropagation();
