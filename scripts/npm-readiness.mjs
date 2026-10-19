@@ -36,13 +36,11 @@ export async function main() {
     appendFileSync(process.env.GITHUB_OUTPUT, "ready=" + result.ready + "\n");
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
-    appendFileSync(
-      process.env.GITHUB_STEP_SUMMARY,
-      result.ready
-        ? "### npm bootstrap ready\nAll five packages exist. Checking OIDC publication.\n"
-        : "### npm publication paused: first publish required\nMissing: " + result.missing.join(", ") +
-          "\n\nPublish these once as npm user `howlilabs`, then configure trusted publishing for `howlil/sopflow` workflow `publish.yml`.\n",
-    );
+    const message = result.ready
+      ? "### npm registry readiness\nAll five packages are present on npm.\n"
+      : "### First npm publication required\nMissing: " + result.missing.join(", ") +
+        "\n\nCI may publish these via a granular NPM_KEY with package publish permission and Bypass 2FA.\n";
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, message);
   }
 }
 
