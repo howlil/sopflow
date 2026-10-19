@@ -19,7 +19,7 @@ Feature PR + Changeset
   -> Version Packages PR (automatic, only when changesets exist)
   -> merge version PR
   -> successful CI on master
-  -> Publish npm (GitHub-hosted, OIDC)
+  -> Publish npm (GitHub-hosted, OIDC or temporary granular token)
   -> publish missing package versions in dependency order
   -> GitHub release per published package
 ```
@@ -94,9 +94,12 @@ the `NPM_KEY` secret/token.
 
 ## One-time bootstrap: npm account identity and OTP
 
-npm requires an initial interactive publication before registering an OIDC trusted
-publisher for a new package. 2FA is still mandatory for account administration and
-the initial setup; **do not disable 2FA**.
+npm requires initial package publication before registering an OIDC trusted
+publisher. The first package version can be published either through the
+`NPM_KEY` granular token in GitHub Actions (provided package publish +
+Bypass 2FA permissions are set) **or** with interactive `npm login` locally.
+Account administration and trusted-publisher setup can still require
+interactive 2FA; **do not disable 2FA**.
 
 1. Confirm npm user `howlilabs` has publishing rights in organization `sopflow`.
 2. On your computer with Node.js 24, pnpm 11.21.0, npm 11.15+:
