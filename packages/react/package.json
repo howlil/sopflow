@@ -51,5 +51,27 @@
     "tsdown": "^0.23.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"
-  }
+  },
+  "description": "React SOP editor, diagram and workflow UI for SOPFlow",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/howlil/sopflow#readme",
+  "bugs": {
+    "url": "https://github.com/howlil/sopflow/issues"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "sop",
+    "workflow",
+    "diagram",
+    "editor",
+    "react",
+    "typescript"
+  ]
 }
