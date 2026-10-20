@@ -113,7 +113,10 @@ export function EditableFormalFlowchartPath({
   // Manual drag is a transaction: preview in React only, persist on pointerup.
   // Cancel pending paints on pointer cancel or unmount.
   const clearPendingPreview = () => {
-    if (previewFrameRef.current !== null && typeof cancelAnimationFrame === "function") {
+    if (
+      previewFrameRef.current !== null &&
+      typeof cancelAnimationFrame === "function"
+    ) {
       cancelAnimationFrame(previewFrameRef.current);
     }
     previewFrameRef.current = null;
@@ -122,7 +125,10 @@ export function EditableFormalFlowchartPath({
   useEffect(
     () => () => {
       dragSessionRef.current = null;
-      if (previewFrameRef.current !== null && typeof cancelAnimationFrame === "function") {
+      if (
+        previewFrameRef.current !== null &&
+        typeof cancelAnimationFrame === "function"
+      ) {
         cancelAnimationFrame(previewFrameRef.current);
       }
     },
@@ -179,9 +185,12 @@ export function EditableFormalFlowchartPath({
     // Pointer jitter must not turn selection into an edit transaction.
     if (
       !session.moved &&
-      Math.hypot(event.clientX - session.originClientX, event.clientY - session.originClientY) <
-        DRAG_START_THRESHOLD_PX
-    ) return;
+      Math.hypot(
+        event.clientX - session.originClientX,
+        event.clientY - session.originClientY,
+      ) < DRAG_START_THRESHOLD_PX
+    )
+      return;
 
     // Preserve the last snapped side for hysteresis instead of returning to
     // the original side on every pointer movement.
@@ -365,11 +374,12 @@ export function EditableFormalFlowchartPath({
   };
 
   const activeEndpoint = preview && dragSessionRef.current?.mode;
-  const highlightRect = activeEndpoint === "source-endpoint"
-    ? sourceRect
-    : activeEndpoint === "target-endpoint"
-      ? targetRect
-      : undefined;
+  const highlightRect =
+    activeEndpoint === "source-endpoint"
+      ? sourceRect
+      : activeEndpoint === "target-endpoint"
+        ? targetRect
+        : undefined;
   const highlightSide = preview
     ? activeEndpoint === "source-endpoint"
       ? preview.sourceSide
@@ -377,9 +387,10 @@ export function EditableFormalFlowchartPath({
         ? preview.targetSide
         : undefined
     : undefined;
-  const highlight = highlightRect && highlightSide
-    ? formalSideLine(highlightRect, highlightSide)
-    : null;
+  const highlight =
+    highlightRect && highlightSide
+      ? formalSideLine(highlightRect, highlightSide)
+      : null;
 
   return (
     <g data-sopflow-editable-route={connectionId}>
@@ -524,12 +535,32 @@ function formalSideLine(
 ): { x1: number; y1: number; x2: number; y2: number } {
   switch (side) {
     case "top":
-      return { x1: rect.left, y1: rect.top, x2: rect.left + rect.width, y2: rect.top };
+      return {
+        x1: rect.left,
+        y1: rect.top,
+        x2: rect.left + rect.width,
+        y2: rect.top,
+      };
     case "bottom":
-      return { x1: rect.left, y1: rect.top + rect.height, x2: rect.left + rect.width, y2: rect.top + rect.height };
+      return {
+        x1: rect.left,
+        y1: rect.top + rect.height,
+        x2: rect.left + rect.width,
+        y2: rect.top + rect.height,
+      };
     case "left":
-      return { x1: rect.left, y1: rect.top, x2: rect.left, y2: rect.top + rect.height };
+      return {
+        x1: rect.left,
+        y1: rect.top,
+        x2: rect.left,
+        y2: rect.top + rect.height,
+      };
     case "right":
-      return { x1: rect.left + rect.width, y1: rect.top, x2: rect.left + rect.width, y2: rect.top + rect.height };
+      return {
+        x1: rect.left + rect.width,
+        y1: rect.top,
+        x2: rect.left + rect.width,
+        y2: rect.top + rect.height,
+      };
   }
 }
