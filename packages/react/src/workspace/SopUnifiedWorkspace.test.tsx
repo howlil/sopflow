@@ -243,6 +243,7 @@ describe("SopUnifiedWorkspace", () => {
       <SopUnifiedWorkspace
         value={document}
         header={{ ...header, lawBasis: [""] }}
+        onHeaderChange={() => {}}
       />,
     );
     await user.click(screen.getByRole("button", { name: /Problems/ }));
