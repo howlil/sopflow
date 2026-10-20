@@ -284,10 +284,9 @@ describe("SopEditor default composition", () => {
     expect(
       container.querySelector("[data-sopflow-diagram-panel]"),
     ).toHaveAttribute("aria-label", "Flowchart SOP");
-    expect(container.querySelector("[data-sopflow-diagram-panel]")).toHaveAttribute(
-      "role",
-      "region",
-    );
+    expect(
+      container.querySelector("[data-sopflow-diagram-panel]"),
+    ).toHaveAttribute("role", "region");
     expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
   });
 
@@ -372,7 +371,9 @@ describe("SopEditor default composition", () => {
     }
 
     const { container } = render(<ExternalHost />);
-    const hostToggle = screen.getByRole("button", { name: "Toggle host inspector" });
+    const hostToggle = screen.getByRole("button", {
+      name: "Toggle host inspector",
+    });
     expect(
       screen.queryByRole("button", { name: "Tutup panel properti" }),
     ).toBeNull();
