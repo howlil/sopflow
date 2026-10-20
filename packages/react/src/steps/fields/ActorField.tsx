@@ -63,7 +63,8 @@ export function ActorField({
           : undefined
       }
       onValueChange={(next) => {
-        if (next.length !== 1 || !actors.some((actor) => actor.id === next[0])) return;
+        if (next.length !== 1 || !actors.some((actor) => actor.id === next[0]))
+          return;
         onChange(next);
       }}
     />
