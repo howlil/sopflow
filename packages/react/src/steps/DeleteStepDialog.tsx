@@ -100,6 +100,7 @@ export function DeleteStepDialog({
           >
             <Select
               compact
+              wideMenu
               label="Sambungkan langkah sebelumnya ke"
               value={replacementId}
               placeholder="Pilih langkah"

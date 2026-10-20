@@ -97,6 +97,7 @@ export function DecisionEditor({
         <Field label="Tahap jika Tidak">
           <Select
             compact
+            wideMenu
             label="Tahap jika Tidak"
             placeholder="Pilih tahap"
             value={noId}
@@ -113,6 +114,7 @@ export function DecisionEditor({
         <Field label="Tahap jika Ya">
           <Select
             compact
+            wideMenu
             label="Tahap jika Ya"
             placeholder="Pilih tahap"
             value={yesId}
