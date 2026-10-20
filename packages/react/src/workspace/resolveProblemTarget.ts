@@ -53,8 +53,27 @@ export function resolveProblemTarget(issue: SopReadinessIssue): ProblemTarget {
     if (issue.code === "MISSING_ACTOR") return { kind: "actors" };
     if (issue.code === "MISSING_STEP") return { kind: "steps" };
   }
-  if (issue.kind === "graph" && issue.stepId) {
-    return { kind: "step", stepId: issue.stepId };
+  if (issue.kind === "graph") {
+    if (issue.stepId) {
+      const field =
+        issue.code === "UNKNOWN_ACTOR_REFERENCE"
+          ? "actorIds"
+          : issue.code === "UNKNOWN_STEP_REFERENCE" ||
+              issue.code === "INVALID_DECISION_BRANCH"
+            ? "decisionRoutes"
+            : undefined;
+      return {
+        kind: "step",
+        stepId: issue.stepId,
+        ...(field ? { field } : {}),
+      };
+    }
+    if (issue.code === "DUPLICATE_ACTOR_ID") return { kind: "actors" };
+    if (
+      issue.code === "DUPLICATE_PRESENTATION_STEP" ||
+      issue.code === "MISSING_PRESENTATION_STEP" ||
+      issue.code === "UNKNOWN_PRESENTATION_STEP"
+    ) return { kind: "steps" };
   }
   if (issue.kind === "schema") {
     if (issue.stepId) {
