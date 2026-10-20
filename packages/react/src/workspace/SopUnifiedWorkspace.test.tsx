@@ -122,4 +122,136 @@ describe("SopUnifiedWorkspace", () => {
       ),
     ).toBeNull();
   });
+
+  it("shows real readiness issues in the persistent Problems footer", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    const toggle = screen.getByRole("button", { name: /Problems/ });
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle.textContent).toContain("Problems");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Close Problems" }));
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(container.querySelector("[data-sopflow-problems]")).not.toBeNull();
+  });
+
+  it("navigates to an empty required header list using its Add button", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    );
+
+    const target = container.querySelector(
+      '[data-sopflow-header-field="lawBasis"]',
+    );
+    expect(target).not.toBeNull();
+    expect(target).toHaveFocus();
+    expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+  });
+
+  it("navigates procedure issues to their selected step in Steps mode", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Langkah 1: kelengkapan wajib diisi/,
+      }),
+    );
+    expect(screen.getByRole("button", { name: "Steps" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      container.querySelector(
+        '[data-sopflow-step-id="start"][data-selected="true"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("keeps runtime errors visible in Problems when the footer is expanded", async () => {
+    const user = userEvent.setup();
+    render(
+      <SopUnifiedWorkspace
+        value={document}
+        header={header}
+        error="Failed to build diagram"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    expect(screen.getByText("Diagram error")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Failed to build diagram").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("updates the issue list when a missing header requirement is completed", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    expect(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Tambah dasar hukum" }),
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Dasar hukum 1" }),
+      "Regulation 1",
+    );
+    expect(
+      screen.queryByRole("button", { name: /Dasar hukum harus diisi/ }),
+    ).toBeNull();
+  });
+
+  it("provides distinct Problems targets when two workspaces are embedded", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <SopUnifiedWorkspace value={document} header={header} />
+        <SopUnifiedWorkspace value={document} header={header} />
+      </>,
+    );
+    const toggles = screen.getAllByRole("button", { name: /Problems/ });
+    const [firstToggle, secondToggle] = toggles;
+    if (!firstToggle || !secondToggle)
+      throw new Error("Missing Problems controls");
+    await user.click(firstToggle);
+    await user.click(secondToggle);
+    const first = firstToggle.getAttribute("aria-controls");
+    const second = secondToggle.getAttribute("aria-controls");
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+    expect(first).not.toBe(second);
+    if (!first || !second) throw new Error("Missing Problems list IDs");
+    expect(window.document.getElementById(first)).not.toBeNull();
+    expect(window.document.getElementById(second)).not.toBeNull();
+  });
+
+  it("focuses an existing blank header-list entry rather than the Add button", async () => {
+    const user = userEvent.setup();
+    render(
+      <SopUnifiedWorkspace
+        value={document}
+        header={{ ...header, lawBasis: [""] }}
+        onHeaderChange={() => {}}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Dasar hukum 1" }),
+    ).toHaveFocus();
+  });
 });
