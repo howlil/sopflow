@@ -63,9 +63,39 @@ const smokeHeader: SopHeaderValue = {
   },
 };
 
+const validDocument: SOPDocument = {
+  ...smokeDocument,
+  steps: smokeDocument.steps.map((step) => ({
+    ...step,
+    actorIds: step.id === "submit" ? ["staff"] : step.actorIds,
+    input: "Dokumen permohonan",
+    output: "Dokumen tercatat",
+    note: "-",
+  })),
+};
+
+const validHeader: SopHeaderValue = {
+  ...smokeHeader,
+  lawBasis: ["Peraturan instansi"],
+  qualifications: ["Petugas administrasi"],
+  relatedSops: ["-"],
+  equipment: ["Komputer"],
+  warnings: ["-"],
+  records: ["Arsip permohonan"],
+};
+
+// Keep the intentionally incomplete fixture for the Problems navigation regression.
+const isValidationRegression = new URLSearchParams(window.location.search).has(
+  "unified-regression",
+);
+
 export function ReactPackageSmoke() {
-  const [document, setDocument] = useState(smokeDocument);
-  const [header, setHeader] = useState(smokeHeader);
+  const [document, setDocument] = useState(
+    isValidationRegression ? smokeDocument : validDocument,
+  );
+  const [header, setHeader] = useState(
+    isValidationRegression ? smokeHeader : validHeader,
+  );
 
   const diagramError = useMemo(() => {
     try {
