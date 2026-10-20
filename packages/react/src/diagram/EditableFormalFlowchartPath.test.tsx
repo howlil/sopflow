@@ -102,6 +102,77 @@ describe("EditableFormalFlowchartPath", () => {
     ).toBeNull();
   });
 
+  it("ignores pointer jitter smaller than the drag threshold", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
+    const onChange = vi.fn();
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Route jitter test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          onSelect={() => undefined}
+          onChange={onChange}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const route = screen.getByRole("button", { name: "Edit route edge-1" });
+    if (!svg) throw new Error("Missing SVG");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 400, bottom: 300,
+      width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}),
+    });
+    fireEvent.pointerDown(route, { pointerId: 5, button: 0, clientX: 140, clientY: 140 });
+    fireEvent.pointerMove(route, { pointerId: 5, clientX: 141, clientY: 141 });
+    fireEvent.pointerUp(route, { pointerId: 5 });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(container.querySelector("[data-sopflow-manual-route-preview]")).toBeNull();
+  });
+
+  it("highlights the active endpoint side only during its drag", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Route anchor highlight</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          sourceRect={{ left: 80, top: 80, width: 20, height: 40 }}
+          targetRect={{ left: 200, top: 240, width: 40, height: 40 }}
+          onSelect={() => undefined}
+          onChange={() => undefined}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const source = container.querySelector('[data-sopflow-route-endpoint="source"]');
+    if (!svg || !source) throw new Error("Missing geometry");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 400, bottom: 300,
+      width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}),
+    });
+    fireEvent.pointerDown(source, { pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(source, { pointerId: 7, clientX: 120, clientY: 105 });
+    expect(container.querySelector("[data-sopflow-route-anchor-highlight]")).not.toBeNull();
+    fireEvent.pointerCancel(source, { pointerId: 7 });
+    expect(container.querySelector("[data-sopflow-route-anchor-highlight]")).toBeNull();
+  });
+
   it("discards canceled drags without changing persisted diagram config", () => {
     vi.stubGlobal("PointerEvent", MouseEvent);
     const onChange = vi.fn();
