@@ -58,10 +58,12 @@ describe("manual path manager", () => {
     expect(preview.path[1]?.x).toBe(160);
     expect(preview.path[2]?.x).toBe(160);
     expect(path[1]?.x).toBe(140);
-    expect(manualPathPreviewEquals(preview, {
-      ...preview,
-      sourceSide: "left",
-    })).toBe(false);
+    expect(
+      manualPathPreviewEquals(preview, {
+        ...preview,
+        sourceSide: "left",
+      }),
+    ).toBe(false);
   });
 
   it("snaps endpoint moves to allowed shape sides", () => {
@@ -69,7 +71,7 @@ describe("manual path manager", () => {
       mode: "source-endpoint",
       index: 0,
       originPath: path,
-      originPoint: path[0]!,
+      originPoint: { x: 100, y: 100 },
       point: { x: 180, y: 120 },
       context: {
         ...context,
