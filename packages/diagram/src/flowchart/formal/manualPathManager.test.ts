@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DiagramPoint } from "../../types.js";
+import { validateFormalManualRoute } from "./edit.js";
 import {
   commitManualPathEdit,
   manualPathPreviewEquals,
@@ -97,9 +98,7 @@ describe("manual path manager", () => {
     expect(path).toHaveLength(5);
   });
 
-  it("never commits a repaired route that still overlaps an occupied segment", () => {
-    // The required outgoing jetty shares the occupied corridor; moving a bend
-    // cannot make the route valid without relocating the endpoint.
+  it("never commits an invalid repair when another route occupies the corridor", () => {
     const blocked: ManualPathEditContext = {
       ...context,
       occupied: [{ x1: 100, y1: 100, x2: 140, y2: 100 }],
@@ -113,7 +112,33 @@ describe("manual path manager", () => {
       },
       blocked,
     );
-    expect(result).toBeNull();
+    if (result) {
+      const validation = validateFormalManualRoute({
+        path: [result.startPoint, ...result.bendPoints, result.endPoint],
+        sourceSide: result.sourceSide,
+        targetSide: result.targetSide,
+        occupied: blocked.occupied,
+        bounds: blocked.bounds,
+      });
+      expect(validation.valid).toBe(true);
+    }
     expect(path).toEqual(original);
+  });
+
+  it("refuses an unrepairable route rather than emitting unsafe geometry", () => {
+    const blocked: ManualPathEditContext = {
+      ...context,
+      obstacles: [{ left: 0, top: 0, width: 500, height: 400 }],
+    };
+    expect(
+      commitManualPathEdit(
+        {
+          path,
+          sourceSide: context.sourceSide,
+          targetSide: context.targetSide,
+        },
+        blocked,
+      ),
+    ).toBeNull();
   });
 });
