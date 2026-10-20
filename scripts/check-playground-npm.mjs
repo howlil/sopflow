@@ -10,9 +10,10 @@ const packages = ["@sopflow/core", "@sopflow/diagram", "@sopflow/react"];
 
 for (const name of packages) {
   const spec = manifest.dependencies?.[name];
-  if (spec !== "npmjs:0.1.0") {
-    throw new Error(`playground must pin ${name} to npmjs:0.1.0, got ${spec}`);
+  if (typeof spec !== "string" || !/^npmjs:\d+\.\d+\.\d+$/.test(spec)) {
+    throw new Error(`playground must pin ${name} to npmjs:semver, got ${spec}`);
   }
+  const version = spec.slice("npmjs:".length);
   const installed = join(appDir, "node_modules", ...name.split("/"));
   if (!existsSync(installed)) {
     throw new Error(`Published package not installed: ${name} (${installed})`);
@@ -26,7 +27,7 @@ for (const name of packages) {
     throw new Error(`${name} was not resolved through pnpm's registry store: ${actual}`);
   }
   const installedManifest = JSON.parse(readFileSync(join(actual, "package.json"), "utf8"));
-  if (installedManifest.name !== name || installedManifest.version !== "0.1.0") {
+  if (installedManifest.name !== name || installedManifest.version !== version) {
     throw new Error(`Unexpected registry package: ${installedManifest.name}@${installedManifest.version}`);
   }
   if (!existsSync(join(actual, "dist", "index.mjs")) ||
@@ -36,5 +37,5 @@ for (const name of packages) {
   if (name === "@sopflow/react" && !existsSync(join(actual, "dist", "styles.css"))) {
     throw new Error("Published @sopflow/react is missing dist/styles.css");
   }
-  console.log(`Published dependency verified: ${name}@0.1.0`);
+  console.log(`Published dependency verified: ${name}@${version}`);
 }
