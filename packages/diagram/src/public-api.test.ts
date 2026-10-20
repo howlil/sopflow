@@ -33,6 +33,7 @@ describe("diagram public API", () => {
         "buildFormalProcedurePages",
         "buildFormalTableColumnPercents",
         "classifyFormalFlowchartRouteComplexity",
+        "commitManualPathEdit",
         "computeFormalActorColumnCenterPercent",
         "diagramConfigEquals",
         "diagramConfigsEqual",
