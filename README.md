@@ -32,8 +32,8 @@ pnpm --filter playground start
 ### Playground runs the published npm release
 
 `apps/playground` now consumes the **published `@sopflow/core`, `@sopflow/diagram`
-and `@sopflow/react` packages from the public npm registry**, pinned to version
-`0.1.0` through pnpm's `npmjs:` registry source. React transitively installs
+and `@sopflow/react` packages from the public npm registry**, pinned to explicit registry versions (`core@0.1.0`, `diagram@0.2.0`,
+`react@0.3.0`) through pnpm's `npmjs:` registry source. React transitively installs
 `@sopflow/sop-ap` and other declared runtime dependencies. The playground no
 longer aliases Vite or TypeScript imports to local `packages/*/src`, including
 during Vite dev.
@@ -42,6 +42,11 @@ during Vite dev.
 pnpm install --frozen-lockfile
 pnpm --filter playground dev
 ```
+
+The default playground now uses `SopUnifiedWorkspace` from the published
+`@sopflow/react@0.3.0` release. It provides a unified top bar, responsive
+inspector, connected Problems panel, zoom and print-safe A4 document preview.
+See [Unified workspace](./docs/UNIFIED_WORKSPACE.md).
 
 Changes made directly in `packages/*` will **not** appear in the playground
 until their next npm release and a deliberate update of the pinned playground
