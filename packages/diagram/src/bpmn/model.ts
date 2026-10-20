@@ -165,7 +165,8 @@ function buildBpmnModelPass(
     const metrics = metricsById.get(node.id);
     if (!step || !layout || !metrics) return [];
 
-    const firstActorId = step.actorIds.length === 1 ? step.actorIds[0] : undefined;
+    const firstActorId =
+      step.actorIds.length === 1 ? step.actorIds[0] : undefined;
     const laneIndex = layout.laneIndex;
     if (step.actorIds.length > 1) {
       diagnostics.push({
