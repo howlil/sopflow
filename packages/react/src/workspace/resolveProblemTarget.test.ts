@@ -28,6 +28,26 @@ describe("resolveProblemTarget", () => {
     ).toEqual({ kind: "step", stepId: "start", field: "input" });
   });
 
+  it("maps specific SOP-AP fields without reading message text", () => {
+    for (const [code, field] of [
+      ["INVALID_ACTOR_COUNT", "actorIds"],
+      ["MISSING_ACTIVITY", "name"],
+      ["MISSING_INPUT", "input"],
+      ["MISSING_OUTPUT", "output"],
+      ["MISSING_NOTE", "note"],
+      ["IDENTICAL_DECISION_TARGETS", "decisionRoutes"],
+    ] as const) {
+      expect(
+        resolveProblemTarget({
+          kind: "procedure",
+          code,
+          stepId: "start",
+          message: "localized text can change",
+        }),
+      ).toEqual({ kind: "step", stepId: "start", field });
+    }
+  });
+
   it("prefers schema stepId and has a safe fallback for unknown schema paths", () => {
     const schema = {
       kind: "schema" as const,

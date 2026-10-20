@@ -63,6 +63,7 @@ export function ActorsEditor({
             variant="secondary"
             type="button"
             className={styles.addButton}
+            aria-label="Tambah pelaksana"
             onClick={handleAdd}
           >
             <Plus size={14} aria-hidden="true" />

@@ -255,6 +255,66 @@ describe("SopUnifiedWorkspace", () => {
     ).toHaveFocus();
   });
 
+  it("navigates a missing input issue to the specific input and clears red state after editing", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Langkah 1: kelengkapan wajib diisi/,
+      }),
+    );
+    const row = container.querySelector<HTMLElement>(
+      '[data-sopflow-step-id="start"][data-sopflow-highlight-field="input"]',
+    );
+    expect(row).not.toBeNull();
+    const input = row?.querySelector<HTMLTextAreaElement>(
+      '[data-sopflow-step-field="input"] textarea',
+    );
+    expect(input).not.toBeNull();
+    expect(input).toHaveFocus();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(input as HTMLTextAreaElement, "Berkas");
+    expect(input).not.toHaveAttribute("aria-invalid", "true");
+    expect(row).not.toHaveAttribute("data-sopflow-highlight-field");
+  });
+
+  it("highlights the required header list without changing unrelated fields", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    );
+    const inspector = container.querySelector<HTMLElement>(
+      "[data-sopflow-header-fields]",
+    );
+    expect(inspector).toHaveAttribute("data-sopflow-highlight-field", "lawBasis");
+    const add = screen.getByRole("button", { name: "Tambah dasar hukum" });
+    expect(add).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("textbox", { name: "Nomor SOP" })).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await user.click(add);
+    await user.type(
+      screen.getByRole("textbox", { name: "Dasar hukum 1" }),
+      "Regulation",
+    );
+    expect(inspector).not.toHaveAttribute("data-sopflow-highlight-field");
+  });
+
+  it("places the Add Step action alongside the Steps editor heading", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Steps" }));
+    const heading = screen.getByRole("heading", { name: "Edit langkah / prosedur" });
+    const action = screen.getByRole("button", { name: "Tambah langkah" });
+    expect(heading.parentElement?.parentElement).toContainElement(action);
+    expect(container.querySelectorAll("[data-sopflow-steps-scroll]")).toHaveLength(1);
+  });
+
   it("zooms canvas without changing the physical A4 document", async () => {
     const user = userEvent.setup();
     const { container } = render(<Harness />);
