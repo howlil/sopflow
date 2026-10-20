@@ -127,14 +127,28 @@ describe("EditableFormalFlowchartPath", () => {
       value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
     });
     vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
-      left: 0, top: 0, right: 400, bottom: 300,
-      width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}),
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
     });
-    fireEvent.pointerDown(route, { pointerId: 5, button: 0, clientX: 140, clientY: 140 });
+    fireEvent.pointerDown(route, {
+      pointerId: 5,
+      button: 0,
+      clientX: 140,
+      clientY: 140,
+    });
     fireEvent.pointerMove(route, { pointerId: 5, clientX: 141, clientY: 141 });
     fireEvent.pointerUp(route, { pointerId: 5 });
     expect(onChange).not.toHaveBeenCalled();
-    expect(container.querySelector("[data-sopflow-manual-route-preview]")).toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
+    ).toBeNull();
   });
 
   it("highlights the active endpoint side only during its drag", () => {
@@ -156,7 +170,9 @@ describe("EditableFormalFlowchartPath", () => {
       </svg>,
     );
     const svg = container.querySelector("svg");
-    const source = container.querySelector('[data-sopflow-route-endpoint="source"]');
+    const source = container.querySelector(
+      '[data-sopflow-route-endpoint="source"]',
+    );
     if (!svg || !source) throw new Error("Missing geometry");
     Object.defineProperty(svg, "viewBox", {
       configurable: true,
