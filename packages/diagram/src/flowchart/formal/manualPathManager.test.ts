@@ -105,11 +105,14 @@ describe("manual path manager", () => {
       occupied: [{ x1: 100, y1: 100, x2: 140, y2: 100 }],
     };
     const original = path.map((point) => ({ ...point }));
-    const result = commitManualPathEdit({
-      path,
-      sourceSide: context.sourceSide,
-      targetSide: context.targetSide,
-    }, blocked);
+    const result = commitManualPathEdit(
+      {
+        path,
+        sourceSide: context.sourceSide,
+        targetSide: context.targetSide,
+      },
+      blocked,
+    );
     expect(result).toBeNull();
     expect(path).toEqual(original);
   });
