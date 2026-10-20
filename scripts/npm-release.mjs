@@ -7,8 +7,6 @@ import { pathToFileURL } from "node:url";
 export const PACKAGES = [
   ["@sopflow/core", "packages/core"],
   ["@sopflow/diagram", "packages/diagram"],
-  ["@sopflow/sop-ap", "packages/sop-ap"],
-  ["@sopflow/adapter-sop-ta", "packages/adapter-sop-ta"],
   ["@sopflow/react", "packages/react"],
 ];
 

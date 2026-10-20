@@ -7,8 +7,7 @@
 - **GitHub repository:** `howlil/sopflow`
 - **Authorized workflow file:** `.github/workflows/publish.yml`
 
-Only five public packages are released: `@sopflow/core`, `@sopflow/diagram`,
-`@sopflow/sop-ap`, `@sopflow/adapter-sop-ta`, and `@sopflow/react`.
+Only three public packages are released: `@sopflow/core`, `@sopflow/diagram`, and `@sopflow/react`. SOP-AP validation ships as `@sopflow/core/sop-ap`; legacy SOP-TA conversion lives in the private `integrations/sop-ta` workspace. Previously published SOP-AP/adapter packages remain available but are no longer updated.
 Neither `apps/playground` nor the monorepo root is publishable.
 
 ## What happens after the one-time npm bootstrap
@@ -41,7 +40,7 @@ Manual runs verify successful CI for the exact commit. Published versions are sk
 so rerunning is safe. The workflow checks the public npm registry first. If some packages do not exist
 and no publish-capable `NPM_KEY` is configured, it **fails clearly** with an
 actionable error instead of silently skipping publication. If `NPM_KEY` exists,
-it validates the npm account and attempts to publish all five versions missing
+it validates the npm account and attempts to publish all three versions missing
 from the registry. Package-by-package versions are immutable and are never
 overwritten. Registry errors other than 404 are considered failures.
 
@@ -84,7 +83,7 @@ Avoid broad org-wide tokens for long-lived release automation; scope to
 permissions are scheduled to lose direct publishing in **January 2027**.
 This route solves initial publication but is not the durable solution.
 
-After the five packages exist, configure Trusted Publisher for each package:
+After the three public packages exist, configure Trusted Publisher for each package:
 `howlil/sopflow`, workflow `publish.yml`, direct `npm publish` permission.
 Publish a genuinely **new version** via the CI workflow within two days of
 creating trust so npm validates the identity binding. Then set
@@ -117,10 +116,10 @@ interactive 2FA; **do not disable 2FA**.
    workspace names, run the existing tests/builds, produce all five inspected
    tarballs, then publish only versions missing on npm in dependency order.
 
-3. Bootstrap then configures npm Trusted Publishing for all five packages via
+3. Bootstrap then configures npm Trusted Publishing for all three public packages via
    `npm trust github ... --allow-publish`. The **first** trust command requires
    interactive 2FA. In npm's browser prompt select the option to *skip 2FA for
-   the next five minutes*; this avoids five successive trust approvals. The tool
+   the next five minutes*; this avoids three successive trust approvals. The tool
    automatically spaces requests to avoid npm rate limits.
 
 4. If first versions are already on npm (e.g. you published each package manually),

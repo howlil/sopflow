@@ -7,9 +7,9 @@ compatibility is defined by `packages/*/src/index.ts` and package export maps.
 
 | Capability | Owner | Must not own |
 | --- | --- | --- |
-| Graph, schema, operations | `@sopflow/core` | DOM, renderers, SOP-AP policy |
-| SOP-AP publication profile | `@sopflow/sop-ap` | Mutations, UI |
-| Legacy SOP-TA format | `@sopflow/adapter-sop-ta` | Canonical graph policy |
+| Graph, schema, operations | `@sopflow/core` root | DOM, renderers, automatic SOP-AP policy for generic workflows |
+| SOP-AP publication profile | `@sopflow/core/sop-ap` | Mutations, UI |
+| Legacy SOP-TA format | private `integrations/sop-ta` | Canonical graph policy, npm publishing |
 | Workflow projection, route geometry | `@sopflow/diagram` | React or document persistence |
 | Controlled editor, DOM measurement | `@sopflow/react` | Domain graph semantics |
 | Integration/browser proof | `apps/playground` | Domain ownership |

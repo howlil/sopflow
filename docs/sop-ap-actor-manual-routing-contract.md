@@ -58,7 +58,7 @@ edit emits no change. Application-specific network/revision failures remain
 with the consumer, not the library.
 
 R (capabilities): `@sopflow/core` provides model and mutations;
-`@sopflow/sop-ap` validates SOP-AP readiness;
+`@sopflow/core/sop-ap` validates SOP-AP readiness;
 `@sopflow/diagram` owns geometry and semantic overrides;
 `@sopflow/react` owns pointer lifetimes, visual feedback and callback;
 the consuming application owns persistent storage and concurrency.

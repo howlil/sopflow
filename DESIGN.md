@@ -24,7 +24,7 @@ The primary UI is an A4-like SOP document workspace with a properties inspector,
 
 ## Implementation boundaries
 
-- Domain rules: `@sopflow/core`; SOP-AP readiness: `@sopflow/sop-ap`.
+- Domain rules: `@sopflow/core`; opt-in SOP-AP readiness: `@sopflow/core/sop-ap`.
 - Geometry, routing, diagram configuration: `@sopflow/diagram`.
 - DOM measurement and React/SVG presentation: `@sopflow/react`.
 - Shared procedure shape, measurement, and formatting helpers: `packages/react/src/diagram/procedureShared.tsx`. Avoid duplicating between single-page/paginated rendering.

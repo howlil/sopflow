@@ -8,8 +8,6 @@ import { pathToFileURL } from "node:url";
 export const PACKAGES = [
   ["packages/core", "@sopflow/core"],
   ["packages/diagram", "@sopflow/diagram"],
-  ["packages/sop-ap", "@sopflow/sop-ap"],
-  ["packages/adapter-sop-ta", "@sopflow/adapter-sop-ta"],
   ["packages/react", "@sopflow/react"],
   ["apps/playground", "playground"],
 ];
@@ -18,8 +16,6 @@ const ALIASES = new Map([
   ["@howlil/sopflow", "@sopflow/core"],
   ["@howlil/sopflow-core", "@sopflow/core"],
   ["@howlil/sopflow-diagram", "@sopflow/diagram"],
-  ["@howlil/sopflow-sop-ap", "@sopflow/sop-ap"],
-  ["@howlil/sopflow-adapter-sop-ta", "@sopflow/adapter-sop-ta"],
   ["@howlil/sopflow-react", "@sopflow/react"],
 ]);
 const DEPENDENCY_FIELDS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
