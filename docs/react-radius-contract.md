@@ -1,39 +1,63 @@
-# SOPFlow React corner-radius contract
+# SOPFlow React compact UI contract
 
-## Implementation graph (Design Thinking A/E/R)
+## Scope
+
+This contract governs interactive editor surfaces only. It does not change the
+`@sopflow/core` document, diagram geometry, A4 paper, or printed SOP tables.
+Import the React package stylesheet when consuming `@sopflow/react`.
+
+## Shape and density
+
+| Surface | Token / target | Behavior |
+| --- | --- | --- |
+| Actions and standalone buttons | `--sopflow-radius-action: 9999px` | Capsule action |
+| Icon actions | circular | 28–32px icon affordance |
+| Dense form input/select trigger | `--sopflow-radius-field: 10px` | 36px control |
+| Floating menu container | `--sopflow-radius-popover: 14px` | Bounded by available viewport |
+| Individual menu item | `--sopflow-radius-menu-item: 8px` | 32–36px min-height, never vertical pill |
+| Modal / dialog surface | `--sopflow-radius-dialog: 16px` | Fit-content with viewport scroll |
+| Inline info and warning panel | `--sopflow-radius-inline: 10px` | No giant rounded alert |
+| A4 and SOP tables | `--sopflow-radius-document: 0px` | Keep formal document layout |
+
+A compact menu must never force its popup width to a narrow table column when
+the option labels are longer. Constrain popup width to viewport; keep disabled
+option text legible, allowing limited wrapping only when a reasonable minimum
+width cannot be accommodated. The trigger retains its actual column width.
+
+## Token ownership
+
+- `uiarc-scoped.css` initializes the upstream Arc variables under `[data-sopflow-root]`.
+- `token.css` is the **final SOPFlow bridge/override**, including portal roots.
+- Domain components consume the semantic SOPFlow tokens; do not override portal
+  positioning, z-index, or menu geometry with ad hoc per-dialog selectors.
+- The public `primitives/Select` native select remains a compatibility export.
+  Internal step/decision fields use the Arc Select adapter.
+
+## Surface<C, V, N> interface graph
 
 ```text
-SOPFlow scoped tokens
-  -> --sopflow-radius-control = 9999px  -> --radius-control (Arc)
-  -> --sopflow-radius-surface = 16px    -> --radius-surface (Arc)
-  -> --sopflow-radius-popover = 14px    -> --radius-panel (Arc)
-  -> --sopflow-radius-inline = 10px     -> metadata/inline notices
-  -> --sopflow-radius-document = 0px   -> printed SOP tables
-  -> CSS Modules (including Radix portals with data-sopflow-root)
-  -> computed border-radius in Chromium
+Steps table/card
+  ├─ Type/Duration Select
+  │    ├─ Closed → Open → Selected → Closed
+  │    └─ Disabled option → cannot commit
+  ├─ Decision Editor Dialog
+  │    ├─ Edit targets → Save valid decision
+  │    └─ Cancel/Escape → return to invoker
+  └─ Delete Step Dialog
+       ├─ Replacement required → select valid successor
+       └─ Cancel/Escape → return to invoker
+Inspector
+  ├─ Actor row → change label
+  └─ Delete Actor Dialog → show references → confirm/cancel
 ```
 
-**A — Successful result:** identical interactive controls have the same pill shape in compact/normal states. Density changes padding, font size or height, not geometric identity. Round icon controls remain round. Menus and dialogs use compact, flat rounded surfaces; data cards and status panels use the same surface radius. Printed procedure tables, grid lines and flowchart shapes are **not affected** by UI tokens.
+C: form values and actions; V: idle/open/selected/disabled/error;
+N: a valid step/actor/document and target candidates, where relevant.
 
-**E — Expected failures:** A CSS module overrides its semantic token, a Radix portal renders outside the scoped root, or a host application's styles override SOPFlow styles. The Chrome source gate fails with the offending component's computed value. Styles remain scoped to `[data-sopflow-root]`.
+## Proof
 
-**R — Runtime capability:** CSS custom properties, CSS Modules, DOM `getComputedStyle`, and isolated Chromium smoke test. No backend, persistence, network request or user-facing schema changes.
-
-## Design Graph (C/V/N)
-
-| Surface | C: content | V: variants | N: needs |
-| --- | --- | --- | --- |
-| Inputs, selects, compact textarea, buttons | Interactive label/value | Focus, disabled, compact, invalid | 9999px pill tokens and keyboard focus indicator |
-| Small icon actions | Single action | Normal/pressed/disabled | Full circular shape |
-| Menu, tooltip | Floating choices/details | Open/closed | 14px popover token, own portal root |
-| Dialog, card, status or validation panel | Grouped information | Loading/error/normal | 16px surface token |
-| Decision metadata | Inline information and errors | Info/error | 10px inline token |
-| SOP procedure, A4 print | Formal document geometry | Preview/print | No rounded document cells |
-
-**Scope limitation:** Multi-line text areas use surface rounding when not in compact single-line editing mode, since a giant pill on a tall textarea distorts its silhouette. Deliberately square checkboxes and printed SOP shapes retain their original geometry.
-
-## Verification
-
-The existing `scripts/check-source-opc-browser.sh` now also loads the isolated `apps/playground/radius-source-regression.html` entry. The test uses the actual CSS Modules on source, asserts computed radii on controls, compact fields, portal surfaces, metadata and SOP table, then fails CI if a control regresses. The normal playground still consumes the published `@sopflow/react` npm version, rather than linking the development workspace.
-
-The added Changeset releases these styles as a patch version after the Version Packages PR is merged.
+Run `pnpm check`, source-browser regression scripts, and a consumer playground
+smoke run with published package. Check 360/768/1024/1440px viewport and narrow
+embedded containers; test keyboard, pointer, reduced motion, portal clipping,
+dialog focus, and SOP print output. Never conflate a source test with the pinned
+published `@sopflow/react` package.
