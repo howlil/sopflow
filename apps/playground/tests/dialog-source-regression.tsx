@@ -20,7 +20,11 @@ function App() {
           description="Uji posisi modal di atas blur."
           onClose={() => setOpen(false)}
           footer={
-            <button type="button" id="close-modal" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              id="close-modal"
+              onClick={() => setOpen(false)}
+            >
               Batal
             </button>
           }
@@ -75,7 +79,9 @@ async function run() {
     document.querySelectorAll<HTMLElement>("[data-sopflow-root]"),
   ).find((node) => {
     const computed = getComputedStyle(node);
-    return computed.backdropFilter.includes("blur") && computed.position === "fixed";
+    return (
+      computed.backdropFilter.includes("blur") && computed.position === "fixed"
+    );
   });
   assert(overlay, "Blur backdrop is not present");
   const overlayZ = Number(getComputedStyle(overlay).zIndex);
@@ -110,9 +116,11 @@ async function run() {
   await delay(400);
   const menu = document.querySelector<HTMLElement>('[role="listbox"]');
   assert(menu, "Nested Arc Select menu did not open");
+  const popupParent = menu.parentElement;
+  assert(popupParent, "Nested Select has no portal parent");
   assert(
     Number(getComputedStyle(menu).zIndex) > contentZ ||
-      Number(getComputedStyle(menu.parentElement!).zIndex) > contentZ,
+      Number(getComputedStyle(popupParent).zIndex) > contentZ,
     "Nested Select menu cannot escape dialog layer",
   );
 
@@ -125,7 +133,10 @@ async function run() {
   cancel.click();
   await delay(550);
   assert(!document.querySelector('[role="dialog"]'), "Dialog did not close");
-  report("pass", JSON.stringify({ contentZ, overlayZ, position: style.position }));
+  report(
+    "pass",
+    JSON.stringify({ contentZ, overlayZ, position: style.position }),
+  );
 }
 
 run().catch((error: unknown) => {
