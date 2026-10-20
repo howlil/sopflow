@@ -14,7 +14,7 @@ import {
   type SopDiagramConfig,
   type SopDiagramConfigs,
 } from "@sopflow/diagram";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import "./styles/uiarc-scoped.css";
 import "./styles/token.css";
@@ -32,6 +32,7 @@ import type { SopHeaderValue } from "./header/types.js";
 import { getSopReadinessIssues } from "./validation/readiness.js";
 import type { SopReadinessIssue } from "./validation/readiness.js";
 import { ValidationPanel } from "./validation/ValidationPanel.js";
+import { focusProblemTarget, problemKey, resolveProblemTarget, type ProblemTarget } from "./workspace/resolveProblemTarget.js";
 
 export interface SopEditorProps {
   value: SOPDocument;
@@ -57,6 +58,8 @@ export interface SopEditorProps {
   error?: string | null;
   onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
   showValidationPanel?: boolean;
+  /** Set by an external workspace when it owns the Problems panel. */
+  activeProblemTarget?: ProblemTarget | null;
   /** Keep the legacy in-document controls unless the host provides its own toolbar. */
   toolbarPlacement?: "document" | "external";
   /** Optional externally controlled inspector visibility. */
@@ -91,6 +94,7 @@ export function SopEditor({
   error = null,
   onReadinessChange,
   showValidationPanel = true,
+  activeProblemTarget,
   toolbarPlacement = "document",
   inspectorOpen: controlledInspectorOpen,
   onInspectorOpenChange,
@@ -126,6 +130,9 @@ export function SopEditor({
     [handleChange, value],
   );
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [internalActiveIssue, setInternalActiveIssue] = useState<{ key: string; target: ProblemTarget } | null>(null);
+  const [pendingProblemTarget, setPendingProblemTarget] = useState<ProblemTarget | null>(null);
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
   const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
@@ -318,8 +325,39 @@ export function SopEditor({
     [controlledDiagramKind, onDiagramKindChange],
   );
 
+  const highlightedTarget = activeProblemTarget !== undefined
+    ? activeProblemTarget
+    : internalActiveIssue?.target ?? null;
+
+  useEffect(() => {
+    if (internalActiveIssue && !readinessIssues.some((issue) => problemKey(issue) === internalActiveIssue.key)) {
+      setInternalActiveIssue(null);
+    }
+  }, [internalActiveIssue, readinessIssues]);
+
+  function navigateValidationIssue(issue: SopReadinessIssue) {
+    const target = resolveProblemTarget(issue);
+    setInternalActiveIssue({ key: problemKey(issue), target });
+    if (target.kind === "step") {
+      handleModeChange("steps");
+      handleSelectedStepChange(target.stepId);
+    } else if (target.kind === "steps") {
+      handleModeChange("steps");
+    } else if (target.kind === "header" || target.kind === "actors") {
+      handleInspectorOpenChange(true);
+    }
+    setPendingProblemTarget(target);
+  }
+
+  useLayoutEffect(() => {
+    if (!pendingProblemTarget || !rootRef.current) return;
+    focusProblemTarget(rootRef.current, pendingProblemTarget);
+    setPendingProblemTarget(null);
+  }, [pendingProblemTarget, mode, inspectorOpen]);
+
   return (
     <div
+      ref={rootRef}
       data-sopflow-root
       data-disabled={mutationDisabled || undefined}
       data-readonly={readOnly || undefined}
@@ -331,7 +369,7 @@ export function SopEditor({
     >
       <EditorStatus loading={loading} error={error} />
       {showValidationPanel ? (
-        <ValidationPanel issues={readinessIssues} />
+        <ValidationPanel issues={readinessIssues} onNavigate={navigateValidationIssue} />
       ) : null}
 
       <div className={styles.workspaceScroll}>
@@ -361,6 +399,7 @@ export function SopEditor({
               document={value}
               header={header}
               issues={issues}
+              activeProblemTarget={highlightedTarget}
               selectedStepId={selectedStepId}
               onSelectedStepChange={handleSelectedStepChange}
               onOperation={applyOperation}
@@ -404,6 +443,7 @@ export function SopEditor({
 
               <div className={styles.inspectorContent}>
                 <SopHeaderFields
+                  highlightedField={highlightedTarget?.kind === "header" ? highlightedTarget.field : undefined}
                   document={value}
                   header={header}
                   disabled={readOnly || loading}
@@ -414,6 +454,7 @@ export function SopEditor({
                 />
 
                 <ActorsEditor
+                  issueActive={highlightedTarget?.kind === "actors"}
                   document={value}
                   onOperation={applyOperation}
                   onOperations={applyOperations}
