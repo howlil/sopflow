@@ -45,7 +45,9 @@ describe("ActorField", () => {
   it("does not emit a duplicate change when reselecting the current actor", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<ActorField value={["staff"]} actors={actors} onChange={onChange} />);
+    render(
+      <ActorField value={["staff"]} actors={actors} onChange={onChange} />,
+    );
 
     await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
     await user.click(screen.getByRole("option", { name: "Staff" }));
