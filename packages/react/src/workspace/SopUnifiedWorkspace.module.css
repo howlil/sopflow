@@ -38,6 +38,57 @@
   justify-content: flex-end;
 }
 
+.zoomControls {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e8e8e8;
+  border-radius: 9999px;
+  padding: 2px;
+  gap: 1px;
+}
+
+.zoomButton,
+.zoomLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  font: inherit;
+}
+
+.zoomButton {
+  width: 25px;
+}
+
+.zoomLabel {
+  min-width: 38px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoomButton:hover:not(:disabled),
+.zoomLabel:hover {
+  background: #f5f5f5;
+}
+
+.zoomButton:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.zoomButton:focus-visible,
+.zoomLabel:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 2px;
+}
+
 .logo {
   flex: 0 0 27px;
   display: grid;
@@ -140,6 +191,7 @@
 }
 
 .workspaceStage {
+  position: relative;
   flex: 1;
   min-height: 0;
   min-width: 0;
@@ -151,7 +203,7 @@
   height: 100%;
   min-height: 0;
   gap: 0;
-  --sopflow-inspector-width: 258px;
+  --sopflow-inspector-width: var(--sopflow-unified-inspector-width, 258px);
 }
 
 .workspaceStage :global([data-sopflow-editor-layout]) {
@@ -167,6 +219,46 @@
   border: 0;
   border-left: 1px solid #e8e8e8;
   border-radius: 0;
+}
+
+.inspectorResize {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: calc(var(--sopflow-unified-inspector-width, 258px) - 3px);
+  bottom: 0;
+  width: 6px;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.inspectorResize:hover,
+.inspectorResize:focus-visible {
+  background: #c9c9c970;
+}
+
+.inspectorResize:focus-visible {
+  outline: 2px solid #777;
+  outline-offset: -2px;
+}
+
+.root[data-compact="true"] .workspaceStage :global([data-sopflow-editor-layout]) {
+  display: block;
+}
+
+.root[data-compact="true"] .workspaceStage :global([data-sopflow-inspector]) {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(280px, 82%);
+  min-width: 0;
+  max-height: 100%;
+  border-left: 1px solid #e8e8e8;
+  background: white;
 }
 
 @media (max-width: 760px) {
@@ -188,9 +280,6 @@
     padding: 0 8px;
   }
 
-  .workspaceStage :global([data-sopflow-root]) {
-    --sopflow-inspector-width: 232px;
-  }
 }
 
 @media (max-width: 520px) {
@@ -233,6 +322,10 @@
   .workspaceStage {
     flex: none;
     min-height: 0;
+  }
+
+  .inspectorResize {
+    display: none;
   }
 
   .workspaceStage,

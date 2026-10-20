@@ -34,6 +34,7 @@ export interface SopWorkspaceProps {
   inspectorOpen?: boolean;
   onInspectorOpenChange?: (open: boolean) => void;
   inspectorTogglePlacement?: "internal" | "external";
+  previewScale?: number;
   manualEditing?: boolean;
   onManualEditingChange?: (editing: boolean) => void;
   className?: string;
@@ -61,6 +62,7 @@ export function SopWorkspace({
   inspectorOpen,
   onInspectorOpenChange,
   inspectorTogglePlacement,
+  previewScale,
   manualEditing,
   onManualEditingChange,
   className,
@@ -92,6 +94,7 @@ export function SopWorkspace({
       {...(inspectorOpen !== undefined ? { inspectorOpen } : {})}
       {...(onInspectorOpenChange ? { onInspectorOpenChange } : {})}
       {...(inspectorTogglePlacement ? { inspectorTogglePlacement } : {})}
+      {...(previewScale !== undefined ? { previewScale } : {})}
       {...(manualEditing !== undefined ? { manualEditing } : {})}
       {...(onManualEditingChange ? { onManualEditingChange } : {})}
       {...(onReadinessChange ? { onReadinessChange } : {})}
