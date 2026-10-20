@@ -128,7 +128,8 @@ export function commitManualPathEdit(
       ...(context.occupied ? { occupied: context.occupied } : {}),
       ...(context.bounds !== undefined ? { bounds: context.bounds } : {}),
     }).valid
-  ) return null;
+  )
+    return null;
 
   const start = effectivePath[0];
   const end = effectivePath.at(-1);
