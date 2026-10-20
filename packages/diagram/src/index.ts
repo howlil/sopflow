@@ -55,6 +55,18 @@ export {
   type FormalRouteEndpoint,
 } from "./flowchart/formal/edit.js";
 
+export {
+  commitManualPathEdit,
+  manualPathPreviewEquals,
+  previewManualPathDrag,
+} from "./flowchart/formal/manualPathManager.js";
+export type {
+  ManualPathDragMode,
+  ManualPathDragInput,
+  ManualPathEditContext,
+  ManualPathPreview,
+} from "./flowchart/formal/manualPathManager.js";
+
 export { formalPathToSegments } from "./flowchart/formal/orthogonal.js";
 
 export { planFormalProcedureEdges } from "./flowchart/formal/planner.js";
