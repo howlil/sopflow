@@ -37,8 +37,12 @@ export function SopHeaderFields({
   // Measure the actual wrapped content after controlled updates, including
   // externally loaded documents. A one-row field stays compact until needed.
   useLayoutEffect(() => {
-    for (const field of [institutionTextareaRef.current, titleTextareaRef.current]) {
-      if (!field) continue;
+    const fields = [
+      [institutionTextareaRef.current, header.institutionName],
+      [titleTextareaRef.current, document.title],
+    ] as const;
+    for (const [field, controlledValue] of fields) {
+      if (!field || field.value !== controlledValue) continue;
       field.style.height = "auto";
       const measured = field.scrollHeight;
       const height = Math.max(36, Math.min(144, measured));

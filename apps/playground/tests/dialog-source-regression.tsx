@@ -10,17 +10,35 @@ import { DeleteActorDialog } from "../../../packages/react/src/actors/DeleteActo
 import { DecisionEditor } from "../../../packages/react/src/steps/DecisionEditor.tsx";
 import type { SOPDocument, TaskStep, DecisionStep } from "@sopflow/core";
 
+const staffFixture = { id: "staff", name: "Staff" };
+
 const documentFixture: SOPDocument = {
   schemaVersion: "1",
   id: "browser-modal-fixture",
   title: "Modal regression",
-  actors: [{ id: "staff", name: "Staff" }],
+  actors: [staffFixture],
   steps: [
-    { id: "start", type: "start", name: "Mulai", actorIds: ["staff"], next: "task" },
-    { id: "task", type: "task", name: "Tinjau", actorIds: ["staff"], next: "decision" },
     {
-      id: "decision", type: "decision", name: "Valid?",
-      actorIds: ["staff"], yes: "end", no: "task",
+      id: "start",
+      type: "start",
+      name: "Mulai",
+      actorIds: ["staff"],
+      next: "task",
+    },
+    {
+      id: "task",
+      type: "task",
+      name: "Tinjau",
+      actorIds: ["staff"],
+      next: "decision",
+    },
+    {
+      id: "decision",
+      type: "decision",
+      name: "Valid?",
+      actorIds: ["staff"],
+      yes: "end",
+      no: "task",
     },
     { id: "end", type: "end", name: "Selesai", actorIds: ["staff"] },
   ],
@@ -32,7 +50,9 @@ function App() {
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState("a");
   const [date, setDate] = useState("2026-10-20");
-  const [workflow, setWorkflow] = useState<"step" | "actor" | "decision" | null>(null);
+  const [workflow, setWorkflow] = useState<
+    "step" | "actor" | "decision" | null
+  >(null);
   const [saved, setSaved] = useState(0);
   return (
     <div data-sopflow-root>
@@ -47,13 +67,25 @@ function App() {
         />
       </div>
       <output id="date-result">{date}</output>
-      <button type="button" id="workflow-step" onClick={() => setWorkflow("step")}>
+      <button
+        type="button"
+        id="workflow-step"
+        onClick={() => setWorkflow("step")}
+      >
         Delete Step
       </button>
-      <button type="button" id="workflow-actor" onClick={() => setWorkflow("actor")}>
+      <button
+        type="button"
+        id="workflow-actor"
+        onClick={() => setWorkflow("actor")}
+      >
         Delete Actor
       </button>
-      <button type="button" id="workflow-decision" onClick={() => setWorkflow("decision")}>
+      <button
+        type="button"
+        id="workflow-decision"
+        onClick={() => setWorkflow("decision")}
+      >
         Edit Decision
       </button>
       <output id="workflow-count">{saved}</output>
@@ -70,7 +102,7 @@ function App() {
         <DeleteActorDialog
           open
           document={documentFixture}
-          actor={documentFixture.actors[0]!}
+          actor={staffFixture}
           onOperations={() => setSaved((n) => n + 1)}
           onClose={() => setWorkflow(null)}
         />
@@ -245,9 +277,24 @@ async function run() {
 
   // Exercise the three actual SOP dialogs rather than only the generic fixture.
   const workflows = [
-    { trigger: "workflow-step", title: "Hapus langkah", action: "Batal", save: false },
-    { trigger: "workflow-actor", title: "Hapus pelaksana", action: "Hapus", save: true },
-    { trigger: "workflow-decision", title: "Atur cabang keputusan", action: "Simpan", save: true },
+    {
+      trigger: "workflow-step",
+      title: "Hapus langkah",
+      action: "Batal",
+      save: false,
+    },
+    {
+      trigger: "workflow-actor",
+      title: "Hapus pelaksana",
+      action: "Hapus",
+      save: true,
+    },
+    {
+      trigger: "workflow-decision",
+      title: "Atur cabang keputusan",
+      action: "Simpan",
+      save: true,
+    },
   ];
   let saves = 0;
   for (const workflow of workflows) {
@@ -256,26 +303,39 @@ async function run() {
     opener.click();
     await delay(450);
     const dialog = Array.from(
-      document.querySelectorAll<HTMLElement>('[role="dialog"],[role="alertdialog"]'),
+      document.querySelectorAll<HTMLElement>(
+        '[role="dialog"],[role="alertdialog"]',
+      ),
     ).find((node) => node.textContent?.includes(workflow.title));
     assert(dialog, `Real ${workflow.title} dialog did not open`);
     const style = getComputedStyle(dialog);
-    assert(style.position === "fixed" && Number(style.zIndex) > overlayZ,
-      `Real ${workflow.title} is behind the blur`);
+    assert(
+      style.position === "fixed" && Number(style.zIndex) > overlayZ,
+      `Real ${workflow.title} is behind the blur`,
+    );
     const box = dialog.getBoundingClientRect();
-    assert(box.width > 180 && box.height > 50, `Real ${workflow.title} is not visible`);
-    const action = Array.from(dialog.querySelectorAll<HTMLButtonElement>("button"))
-      .find((button) => button.textContent?.trim() === workflow.action);
+    assert(
+      box.width > 180 && box.height > 50,
+      `Real ${workflow.title} is not visible`,
+    );
+    const action = Array.from(
+      dialog.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((button) => button.textContent?.trim() === workflow.action);
     assert(action, `Real ${workflow.title} is missing ${workflow.action}`);
     assert(!action.disabled, `Real ${workflow.title} action is disabled`);
     action.click();
     await delay(460);
-    assert(!Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"]'))
-      .some((node) => node.textContent?.includes(workflow.title)),
-      `Real ${workflow.title} did not close`);
+    assert(
+      !Array.from(
+        document.querySelectorAll('[role="dialog"],[role="alertdialog"]'),
+      ).some((node) => node.textContent?.includes(workflow.title)),
+      `Real ${workflow.title} did not close`,
+    );
     if (workflow.save) saves++;
-    assert(document.getElementById("workflow-count")?.textContent === String(saves),
-      `Real ${workflow.title} did not preserve the intended SOP action`);
+    assert(
+      document.getElementById("workflow-count")?.textContent === String(saves),
+      `Real ${workflow.title} did not preserve the intended SOP action`,
+    );
   }
 
   report(
