@@ -138,9 +138,11 @@ describe("sop-ta compatibility adapter", () => {
       id: "legacy",
       title: "Legacy SOP",
       actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
-      rows: rows.map((row) => row.id === "fix"
-        ? { ...row, pelaksana: undefined, pelaksanaIds: ["staff", "manager"] }
-        : row),
+      rows: rows.map((row) => {
+        if (row.id !== "fix") return row;
+        const { pelaksana: _pelaksana, ...rest } = row;
+        return { ...rest, pelaksanaIds: ["staff", "manager"] };
+      }),
     };
     const strict = tryImportSopTaDocument(input);
     expect(strict.success).toBe(false);
