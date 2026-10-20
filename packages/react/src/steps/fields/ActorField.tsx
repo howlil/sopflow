@@ -19,8 +19,14 @@ export function ActorField({
   readOnly = false,
   error = false,
 }: ActorFieldProps) {
+  const actorLabels = new Map(
+    actors.map((actor, index) => [
+      actor.id,
+      actor.name.trim() || `Pelaksana belum diberi nama ${index + 1}`,
+    ]),
+  );
   const names = value
-    .map((actorId) => actors.find((actor) => actor.id === actorId)?.name)
+    .map((actorId) => actorLabels.get(actorId))
     .filter((name): name is string => Boolean(name));
 
   if (readOnly) {
@@ -44,7 +50,10 @@ export function ActorField({
       compact
       label="Pelaksana"
       placeholder="Pilih pelaksana"
-      options={actors.map((actor) => ({ value: actor.id, label: actor.name }))}
+      options={actors.map((actor) => ({
+        value: actor.id,
+        label: actorLabels.get(actor.id) ?? "Pelaksana tidak tersedia",
+      }))}
       value={[...value]}
       maxVisible={1}
       onValueChange={(next) => {

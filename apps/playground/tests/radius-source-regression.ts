@@ -47,21 +47,21 @@ function check(label: string, node: Element, expected: string) {
 
 const checks = [
   ["Arc button", element("button", button.button), "9999px"],
-  ["Arc compact input", compact("input", input.field, input.input), "9999px"],
+  ["Arc compact input", compact("input", input.field, input.input), "10px"],
   [
     "Arc compact select",
     compact("button", select.field, select.trigger),
-    "9999px",
+    "10px",
   ],
   [
     "Arc compact multi-select",
     compact("button", multi.field, multi.trigger),
-    "9999px",
+    "10px",
   ],
   [
     "Arc compact textarea",
     compact("textarea", textarea.field, textarea.control),
-    "9999px",
+    "10px",
   ],
   ["Arc multiline textarea", element("textarea", textarea.control), "16px"],
   ["Editor toolbar", element("div", toolbar.toolbar), "9999px"],

@@ -66,4 +66,20 @@ describe("DeleteStepDialog", () => {
     expect(options.queryByRole("option", { name: /Start/i })).toBeNull();
     expect(options.queryByRole("option", { name: /^2\. A$/i })).toBeNull();
   });
+
+  it("renders its confirmation dialog in the document portal", () => {
+    render(
+      <DeleteStepDialog
+        open
+        step={task}
+        document={document}
+        onClose={vi.fn()}
+        onOperations={vi.fn()}
+      />,
+    );
+    const dialog = screen.getByRole("alertdialog", { name: "Hapus langkah" });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("data-sopflow-root");
+    expect(window.document.body.contains(dialog)).toBe(true);
+  });
 });

@@ -22,5 +22,5 @@
 @media (prefers-reduced-motion: reduce) { .control { transition: none; } }
 
 /* SOP dense row: keep one-row auto height and hide only duplicate outer label. */
-.field[data-compact] .control { min-height: 2.25rem; resize: none; padding: .375rem .5rem; border-radius: var(--radius-control); font-size: var(--sopflow-font-xs); line-height: 1.25rem; box-shadow: none; }
+.field[data-compact] .control { min-height: 2.25rem; resize: none; padding: .375rem var(--sopflow-field-padding-x, 10px); border-radius: var(--sopflow-radius-field, 10px); font-size: var(--sopflow-font-xs); line-height: 1.25rem; box-shadow: none; }
 .field[data-compact] .control:focus-visible { box-shadow: none; }

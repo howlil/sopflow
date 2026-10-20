@@ -1,4 +1,5 @@
 import { Button } from "../primitives/Button.js";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
@@ -62,12 +63,13 @@ export function ActorsEditor({
 
         {!disabled ? (
           <Button
-            variant="ghost"
+            variant="secondary"
             type="button"
             className={styles.addButton}
             onClick={handleAdd}
           >
-            + Tambah pelaksana
+            <Plus size={14} aria-hidden="true" />
+            Tambah pelaksana
           </Button>
         ) : null}
       </header>

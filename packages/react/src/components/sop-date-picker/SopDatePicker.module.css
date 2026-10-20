@@ -1,0 +1,157 @@
+.root {
+  min-width: 0;
+}
+
+.trigger {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--sopflow-field-height, 36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--sopflow-border);
+  border-radius: var(--sopflow-radius-field, 10px);
+  padding: 0 var(--sopflow-field-padding-x, 10px);
+  background: var(--sopflow-surface-muted);
+  color: var(--sopflow-text);
+  font: inherit;
+  font-size: var(--sopflow-font-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: var(--sopflow-text-muted);
+}
+
+.trigger:focus-visible,
+.popup button:focus-visible {
+  outline: 2px solid var(--sopflow-selected-border);
+  outline-offset: 2px;
+}
+
+.trigger:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.trigger [data-placeholder] {
+  color: var(--sopflow-text-muted);
+}
+
+.trigger svg {
+  flex: none;
+  color: var(--sopflow-text-muted);
+}
+
+.popup {
+  position: fixed;
+  box-sizing: border-box;
+  z-index: 1200;
+  width: min(280px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--sopflow-radius-popover, 14px);
+  padding: 9px;
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--shadow-floating);
+  font-family: var(--sopflow-font-interface);
+  font-size: 12px;
+}
+
+.month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding-bottom: 8px;
+}
+
+.month strong {
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+.month button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.month button:hover,
+.bottom button:hover {
+  background: var(--surface-muted);
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.weekday {
+  padding: 7px 0;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 10px;
+}
+
+.day {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.day:hover,
+.day[data-focused="true"] {
+  background: var(--surface-muted);
+}
+
+.day[aria-pressed="true"] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border);
+}
+
+.bottom button {
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 7px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup, .day { transition: none; }
+}

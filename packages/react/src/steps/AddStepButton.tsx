@@ -4,6 +4,7 @@ import {
   type SopOperation,
 } from "@sopflow/core";
 import { Button } from "../primitives/Button.js";
+import { Plus } from "lucide-react";
 import { createStepId } from "./createStepId.js";
 import styles from "./AddStepButton.module.css";
 
@@ -38,7 +39,8 @@ export function AddStepButton({
         disabled={disabled || !canAdd}
         onClick={handleAdd}
       >
-        + Tambah langkah
+        <Plus size={14} aria-hidden="true" />
+        Tambah langkah
       </Button>
 
       {hasMultipleEnds ? (
