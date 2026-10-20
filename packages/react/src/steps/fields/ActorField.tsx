@@ -48,6 +48,7 @@ export function ActorField({
   return (
     <MultiSelect
       compact
+      selectionMode="single"
       label="Pelaksana"
       placeholder="Pilih pelaksana"
       options={actors.map((actor) => ({
@@ -56,11 +57,14 @@ export function ActorField({
       }))}
       value={[...value]}
       maxVisible={1}
+      description={
+        value.length > 1
+          ? "Beberapa pelaksana terdeteksi. Pilih satu pelaksana untuk memperbaiki langkah ini."
+          : undefined
+      }
       onValueChange={(next) => {
-        const selected = new Set(next);
-        onChange(
-          actors.map((actor) => actor.id).filter((id) => selected.has(id)),
-        );
+        if (next.length !== 1 || !actors.some((actor) => actor.id === next[0])) return;
+        onChange(next);
       }}
     />
   );
