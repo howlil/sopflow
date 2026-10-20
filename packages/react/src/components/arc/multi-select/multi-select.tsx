@@ -277,7 +277,12 @@ export function MultiSelect({
   const toggle = (option: MultiSelectOption) => {
     if (disabled || option.disabled) return;
     if (selectionMode === "single") {
-      update([option.value]);
+      // Selecting the current value dismisses the menu without generating a
+      // duplicate document revision. A legacy multi-value selection must
+      // still be replaced, even if the chosen option was already included.
+      if (selected.length !== 1 || selected[0] !== option.value) {
+        update([option.value]);
+      }
       setOpen(false);
       return;
     }
