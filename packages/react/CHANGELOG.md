@@ -1,5 +1,11 @@
 # @sopflow/react
 
+## 0.3.0
+
+### Minor Changes
+
+- 30ab21f: Add the optional unified SOP workspace with a compact top bar, connected Problems panel, issue navigation, responsive inspector, screen-only zoom and print-safe A4 rendering. Existing `SopWorkspace` embeds keep the legacy layout and default behavior.
+
 ## 0.2.0
 
 ### Minor Changes
