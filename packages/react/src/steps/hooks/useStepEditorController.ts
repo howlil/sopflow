@@ -28,10 +28,11 @@ export function useStepEditorController({
   });
 
   const stepIssues = getStepIssues(issues, step.id);
-  const hasActorError = hasStepIssue(issues, step.id, [
-    "UNKNOWN_ACTOR_REFERENCE",
-    "INVALID_ACTOR_COUNT",
-  ]) || step.actorIds.length !== 1;
+  const hasActorError =
+    hasStepIssue(issues, step.id, [
+      "UNKNOWN_ACTOR_REFERENCE",
+      "INVALID_ACTOR_COUNT",
+    ]) || step.actorIds.length !== 1;
   const hasWorkflowError = hasStepIssue(issues, step.id, [
     "UNKNOWN_STEP_REFERENCE",
     "CANNOT_REACH_END",
