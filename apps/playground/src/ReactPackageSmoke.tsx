@@ -1,100 +1,27 @@
 import { useMemo, useState } from "react";
-import type { SOPDocument } from "@sopflow/core";
 import { buildDiagram } from "@sopflow/diagram";
-import { SopUnifiedWorkspace, type SopHeaderValue } from "@sopflow/react";
+import { SopUnifiedWorkspace } from "@sopflow/react";
 import "@sopflow/react/styles.css";
+import {
+  demoDocument,
+  demoHeader,
+  isValidationScenario,
+  validationDocument,
+  validationHeader,
+} from "./demoFixtures.js";
 
-const smokeDocument: SOPDocument = {
-  schemaVersion: "1",
-  id: "demo",
-  title: "Pengajuan Dokumen",
-  actors: [
-    { id: "staff", name: "Staff" },
-    { id: "manager", name: "Manager" },
-    { id: "admin", name: "Admin" },
-  ],
-  steps: [
-    {
-      id: "start",
-      type: "start",
-      name: "Mulai",
-      actorIds: ["staff"],
-      next: "submit",
-    },
-    {
-      id: "submit",
-      type: "task",
-      name: "Ajukan dokumen",
-      actorIds: ["staff", "admin"],
-      next: "review",
-    },
-    {
-      id: "review",
-      type: "decision",
-      name: "Dokumen valid?",
-      actorIds: ["manager"],
-      yes: "end",
-      no: "submit",
-    },
-    {
-      id: "end",
-      type: "end",
-      name: "Selesai",
-      actorIds: ["manager"],
-    },
-  ],
-};
-
-const smokeHeader: SopHeaderValue = {
-  number: "SOP/DEMO/001",
-  institutionName: "Sopflow Demo",
-  createdDate: "2026-09-20",
-  revisionDate: "2026-09-20",
-  effectiveDate: "2026-09-20",
-  lawBasis: [],
-  qualifications: [],
-  relatedSops: [],
-  equipment: [],
-  warnings: [],
-  records: [],
-  signatory: {
-    name: "Pemilik SOP",
-    role: "Manajer",
-  },
-};
-
-const validDocument: SOPDocument = {
-  ...smokeDocument,
-  steps: smokeDocument.steps.map((step) => ({
-    ...step,
-    actorIds: step.id === "submit" ? ["staff"] : step.actorIds,
-    input: "Dokumen permohonan",
-    output: "Dokumen tercatat",
-    note: "-",
-  })),
-};
-
-const validHeader: SopHeaderValue = {
-  ...smokeHeader,
-  lawBasis: ["Peraturan instansi"],
-  qualifications: ["Petugas administrasi"],
-  relatedSops: ["-"],
-  equipment: ["Komputer"],
-  warnings: ["-"],
-  records: ["Arsip permohonan"],
-};
-
-// Keep the intentionally incomplete fixture for the Problems navigation regression.
-const isValidationRegression = new URLSearchParams(window.location.search).has(
-  "unified-regression",
-);
-
+/**
+ * Default playground is ready-to-use. Visit ?scenario=issues to exercise
+ * Problems → exact field navigation with a missing input and header list.
+ */
 export function ReactPackageSmoke() {
-  const [document, setDocument] = useState(
-    isValidationRegression ? smokeDocument : validDocument,
+  const [document, setDocument] = useState(() =>
+    isValidationScenario(window.location.search)
+      ? validationDocument
+      : demoDocument,
   );
-  const [header, setHeader] = useState(
-    isValidationRegression ? smokeHeader : validHeader,
+  const [header, setHeader] = useState(() =>
+    isValidationScenario(window.location.search) ? validationHeader : demoHeader,
   );
 
   const diagramError = useMemo(() => {
