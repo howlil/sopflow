@@ -423,6 +423,41 @@ describe("buildBpmnModel", () => {
     );
   });
 
+  it("preserves a route persisted before compact geometry was introduced", () => {
+    const legacy = buildBpmnModel(document, {
+      laneHeight: 112,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+    const route = legacy.edges.find(
+      (edge) => edge.id === "start:next:review",
+    );
+    if (!route?.sourceSide || !route.targetSide) {
+      throw new Error("Legacy BPMN route is missing endpoint sides");
+    }
+    const startPoint = route.points[0];
+    const endPoint = route.points.at(-1);
+    if (!startPoint || !endPoint) throw new Error("Legacy route endpoints missing");
+
+    const compact = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          [route.id]: {
+            kind: "orthogonal",
+            bendPoints: route.points.slice(1, -1),
+            sSide: route.sourceSide,
+            eSide: route.targetSide,
+            startPoint,
+            endPoint,
+          },
+        },
+      },
+    });
+    const restored = compact.edges.find((edge) => edge.id === route.id);
+    expect(restored?.routeKind).toBe("manual");
+  });
+
   it("compacts the BPMN pool without shrinking node semantics or dropping routes", () => {
     const compact = buildBpmnModel(document);
     const originalSpacing = buildBpmnModel(document, {
