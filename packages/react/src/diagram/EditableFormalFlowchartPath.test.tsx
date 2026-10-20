@@ -41,6 +41,120 @@ describe("EditableFormalFlowchartPath", () => {
     ).toHaveLength(2);
   });
 
+  it("previews a segment drag locally and persists exactly once on pointerup", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Manual route transaction test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          onSelect={() => undefined}
+          onChange={onChange}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const hitPath = screen.getByRole("button", { name: "Edit route edge-1" });
+    expect(svg).not.toBeNull();
+    if (!svg) throw new Error("Missing SVG");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(hitPath, {
+      pointerId: 1,
+      button: 0,
+      clientX: 140,
+      clientY: 140,
+    });
+    fireEvent.pointerMove(hitPath, {
+      pointerId: 1,
+      clientX: 160,
+      clientY: 140,
+    });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
+    ).not.toBeNull();
+
+    fireEvent.pointerUp(hitPath, { pointerId: 1 });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
+    ).toBeNull();
+  });
+
+  it("discards canceled drags without changing persisted diagram config", () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Manual route cancel test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          onSelect={() => undefined}
+          onChange={onChange}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const hitPath = screen.getByRole("button", { name: "Edit route edge-1" });
+    if (!svg) throw new Error("Missing SVG");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(hitPath, {
+      pointerId: 1,
+      button: 0,
+      clientX: 140,
+      clientY: 140,
+    });
+    fireEvent.pointerMove(hitPath, {
+      pointerId: 1,
+      clientX: 160,
+      clientY: 140,
+    });
+    fireEvent.pointerCancel(hitPath, { pointerId: 1 });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
+    ).toBeNull();
+  });
+
   it("does not show waypoint handles for an unselected route", () => {
     const { container } = render(
       <svg>
