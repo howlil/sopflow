@@ -126,7 +126,11 @@ export function SopDatePicker({
       if (popupRef.current?.contains(element)) return false;
       // Hidden accordion panels can contain tabbable DOM nodes. Native
       // keyboard Tab skips them, so our portal exit must skip them as well.
-      for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+      for (
+        let node: HTMLElement | null = element;
+        node;
+        node = node.parentElement
+      ) {
         if (node.hidden || node.hasAttribute("inert")) return false;
         const style = getComputedStyle(node);
         if (style.display === "none" || style.visibility === "hidden") {

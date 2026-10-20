@@ -90,7 +90,9 @@ describe("SopDatePicker", () => {
           onValueChange={() => {}}
           label="Tanggal revisi"
         />
-        <button type="button" hidden>Jangan difokuskan</button>
+        <button type="button" hidden>
+          Jangan difokuskan
+        </button>
         <button type="button">Sesudah</button>
       </>,
     );
