@@ -106,9 +106,12 @@ export function EditableFormalFlowchartPath({
 
   // Manual drag is a transaction: preview in React only, persist on pointerup.
   // Clean up a canceled drag without accidentally committing it.
-  useEffect(() => () => {
-    dragSessionRef.current = null;
-  }, []);
+  useEffect(
+    () => () => {
+      dragSessionRef.current = null;
+    },
+    [],
+  );
 
   const startDrag = (
     event: ReactPointerEvent<SVGElement>,
