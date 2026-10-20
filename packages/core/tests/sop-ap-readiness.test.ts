@@ -120,11 +120,17 @@ describe("SOP AP readiness", () => {
   });
 
   it("keeps a decision draft editable but blocks publication until branches differ", () => {
+    const start = document.steps[0];
+    const end = document.steps[1];
+    if (!start || !end) throw new Error("Test document requires start and end");
     const decisionDraft: SOPDocument = {
       ...document,
       presentationOrder: ["start", "decision", "end"],
       steps: [
-        { ...document.steps[0]!, next: "decision" } as SOPDocument["steps"][number],
+        {
+          ...start,
+          next: "decision",
+        } as SOPDocument["steps"][number],
         {
           id: "decision",
           type: "decision",
@@ -134,7 +140,7 @@ describe("SOP AP readiness", () => {
           no: "end",
           ...quality,
         },
-        document.steps[1]!,
+        end,
       ],
     };
     expect(getSopApReadinessIssues(decisionDraft, header)).toContainEqual(
@@ -151,12 +157,17 @@ describe("SOP AP readiness", () => {
     const invalid: SOPDocument = {
       ...document,
       steps: document.steps.map((step) =>
-        step.id === "start" ? { ...step, duration: { value: -5, unit: "minute" } } : step,
+        step.id === "start"
+          ? { ...step, duration: { value: -5, unit: "minute" } }
+          : step,
       ),
     };
     expect(isSopApReady(invalid, header)).toBe(false);
     expect(getSopApReadinessIssues(invalid, header)).toContainEqual(
-      expect.objectContaining({ kind: "schema", path: ["steps", 0, "duration", "value"] }),
+      expect.objectContaining({
+        kind: "schema",
+        path: ["steps", 0, "duration", "value"],
+      }),
     );
   });
 });

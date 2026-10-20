@@ -1,5 +1,8 @@
 import { validateSop, type ValidationIssue } from "../../validate.js";
-import { getSopSchemaIssues, type SopSchemaIssue } from "../../schemaValidation.js";
+import {
+  getSopSchemaIssues,
+  type SopSchemaIssue,
+} from "../../schemaValidation.js";
 import type { SOPDocument } from "../../types.js";
 import type { SopApHeader } from "./types.js";
 import {
