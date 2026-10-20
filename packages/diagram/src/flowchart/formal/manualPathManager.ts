@@ -102,9 +102,9 @@ export function commitManualPathEdit(
     path,
     sourceSide,
     targetSide,
-    obstacles: context.obstacles,
-    occupied: context.occupied,
-    bounds: context.bounds,
+    ...(context.obstacles ? { obstacles: context.obstacles } : {}),
+    ...(context.occupied ? { occupied: context.occupied } : {}),
+    ...(context.bounds !== undefined ? { bounds: context.bounds } : {}),
   });
   const effectivePath = validation.valid
     ? path
@@ -112,8 +112,8 @@ export function commitManualPathEdit(
         path,
         sourceSide,
         targetSide,
-        obstacles: context.obstacles,
-        bounds: context.bounds,
+        ...(context.obstacles ? { obstacles: context.obstacles } : {}),
+        ...(context.bounds !== undefined ? { bounds: context.bounds } : {}),
       });
   if (!effectivePath) return null;
 
