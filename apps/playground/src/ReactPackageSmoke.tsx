@@ -80,7 +80,7 @@ export function ReactPackageSmoke() {
 
   return (
     <section
-      className="h-full min-h-0 w-full overflow-hidden"
+      className="h-full min-h-0 w-full overflow-hidden print:h-auto print:overflow-visible"
       aria-label="Playground SOP"
     >
       <SopUnifiedWorkspace

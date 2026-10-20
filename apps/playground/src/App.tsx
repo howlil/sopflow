@@ -16,7 +16,7 @@ function App() {
   }
 
   return (
-    <main className="h-[100dvh] overflow-hidden bg-surface">
+    <main className="h-[100dvh] overflow-hidden bg-surface print:h-auto print:overflow-visible print:bg-white">
       <ReactPackageSmoke />
     </main>
   );
