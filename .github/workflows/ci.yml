@@ -75,6 +75,9 @@ jobs:
       - name: Browser acceptance of changed source OPC renderer
         run: bash scripts/check-source-opc-browser.sh
 
+      - name: Browser published unified workspace consumer
+        run: bash scripts/check-playground-unified.sh
+
       - name: Upload visual regression evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,4 +90,6 @@ jobs:
             ${{ runner.temp }}/sopflow-source-opc.pdf
             ${{ runner.temp }}/sopflow-source-bpmn.png
             ${{ runner.temp }}/sopflow-source-bpmn.pdf
+            ${{ runner.temp }}/sopflow-unified-desktop.png
+            ${{ runner.temp }}/sopflow-unified-desktop.pdf
           if-no-files-found: ignore
