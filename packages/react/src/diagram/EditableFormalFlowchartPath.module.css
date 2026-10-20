@@ -13,6 +13,15 @@
   cursor: grab;
 }
 
+.previewPath {
+  fill: none;
+  stroke: var(--sopflow-selected-border);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
 .waypoint {
   fill: var(--sopflow-color-surface);
   stroke: var(--sopflow-selected-border);

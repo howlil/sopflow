@@ -1,24 +1,25 @@
 import {
-  distanceOnFormalShapeSide,
-  dragFormalRouteSegmentFromOrigin,
+  commitManualPathEdit,
   dragFormalRouteWaypointFromOrigin,
   findNearestFormalRouteSegmentIndex,
-  formalRouteChangeFromPath,
   insertFormalRouteWaypointAtSegmentMidpoint,
+  manualPathPreviewEquals,
   pointsToPath,
-  rebuildFormalPathForEndpoint,
-  repairFormalManualRoute,
+  previewManualPathDrag,
   removeFormalRouteWaypoint,
-  snapFormalEndpoint,
-  validateFormalManualRoute,
   type DiagramPoint,
   type FormalFlowchartOccupiedSegment,
   type FormalFlowchartRect,
   type FormalFlowchartSide,
   type FormalRouteChange,
+  type ManualPathDragMode,
+  type ManualPathEditContext,
+  type ManualPathPreview,
 } from "@sopflow/diagram";
 import {
+  useEffect,
   useRef,
+  useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -44,14 +45,14 @@ export interface EditableFormalFlowchartPathProps {
   onReset?: () => void;
 }
 
-type DragMode = "segment" | "waypoint" | "source-endpoint" | "target-endpoint";
-
 interface DragSession {
   readonly pointerId: number;
-  readonly mode: DragMode;
+  readonly mode: ManualPathDragMode;
   readonly index: number;
   readonly originPath: readonly DiagramPoint[];
   readonly originPoint: DiagramPoint;
+  latestPreview: ManualPathPreview | null;
+  moved: boolean;
 }
 
 export function EditableFormalFlowchartPath({
@@ -73,79 +74,48 @@ export function EditableFormalFlowchartPath({
 }: EditableFormalFlowchartPathProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
 
+  const [preview, setPreview] = useState<ManualPathPreview | null>(null);
+  const displayPath = preview?.path ?? path;
+  const editContext: ManualPathEditContext = {
+    sourceSide,
+    targetSide,
+    ...(sourceRect ? { sourceRect } : {}),
+    ...(targetRect ? { targetRect } : {}),
+    sourceIsDiamond,
+    targetIsDiamond,
+    obstacles,
+    occupied: occupiedSegments,
+    bounds: routingBounds,
+  };
+
   const emitPath = (
     nextPath: readonly DiagramPoint[],
     nextSourceSide = sourceSide,
     nextTargetSide = targetSide,
   ) => {
-    const validation = validateFormalManualRoute({
-      path: nextPath,
-      sourceSide: nextSourceSide,
-      targetSide: nextTargetSide,
-      obstacles,
-      occupied: occupiedSegments,
-      bounds: routingBounds,
-    });
-    const effectivePath = validation.valid
-      ? nextPath
-      : repairFormalManualRoute({
-          path: nextPath,
-          sourceSide: nextSourceSide,
-          targetSide: nextTargetSide,
-          obstacles,
-          bounds: routingBounds,
-        });
-    if (!effectivePath) return;
-
-    const effectiveStart = effectivePath[0];
-    const effectiveEnd = effectivePath.at(-1);
-    const sourceDistance =
-      sourceRect && effectiveStart
-        ? sourceIsDiamond
-          ? 0.5
-          : Math.max(
-              0.08,
-              Math.min(
-                0.92,
-                distanceOnFormalShapeSide(
-                  sourceRect,
-                  nextSourceSide,
-                  effectiveStart,
-                ),
-              ),
-            )
-        : undefined;
-    const targetDistance =
-      targetRect && effectiveEnd
-        ? targetIsDiamond
-          ? 0.5
-          : Math.max(
-              0.08,
-              Math.min(
-                0.92,
-                distanceOnFormalShapeSide(
-                  targetRect,
-                  nextTargetSide,
-                  effectiveEnd,
-                ),
-              ),
-            )
-        : undefined;
-    const change = formalRouteChangeFromPath(
-      effectivePath,
-      nextSourceSide,
-      nextTargetSide,
+    const change = commitManualPathEdit(
       {
-        ...(sourceDistance !== undefined ? { sourceDistance } : {}),
-        ...(targetDistance !== undefined ? { targetDistance } : {}),
+        path: nextPath,
+        sourceSide: nextSourceSide,
+        targetSide: nextTargetSide,
       },
+      editContext,
     );
     if (change) onChange(change);
   };
 
+  // Manual drag is a transaction: preview in React only, persist on pointerup.
+  // Clean up a canceled drag without accidentally committing it.
+  useEffect(
+    () => () => {
+      dragSessionRef.current = null;
+    },
+    [],
+  );
+
   const startDrag = (
     event: ReactPointerEvent<SVGElement>,
-    mode: DragMode,
+    mode: ManualPathDragMode,
     index: number,
   ) => {
     if (event.button !== 0) return;
@@ -172,6 +142,8 @@ export function EditableFormalFlowchartPath({
       index,
       originPath: path.map((candidate) => ({ ...candidate })),
       originPoint: point,
+      latestPreview: null,
+      moved: false,
     };
   };
 
@@ -187,63 +159,51 @@ export function EditableFormalFlowchartPath({
 
     event.preventDefault();
 
-    if (session.mode === "source-endpoint" && sourceRect) {
-      const endpoint = snapFormalEndpoint(sourceRect, point, {
-        diamond: sourceIsDiamond,
-        preferredSide: sourceSide,
-      });
-      emitPath(
-        rebuildFormalPathForEndpoint(session.originPath, "start", endpoint),
-        endpoint.side,
-        targetSide,
-      );
-      return;
-    }
-
-    if (session.mode === "target-endpoint" && targetRect) {
-      const endpoint = snapFormalEndpoint(targetRect, point, {
-        diamond: targetIsDiamond,
-        preferredSide: targetSide,
-      });
-      emitPath(
-        rebuildFormalPathForEndpoint(session.originPath, "end", endpoint),
+    const nextPreview = previewManualPathDrag({
+      mode: session.mode,
+      index: session.index,
+      originPath: session.originPath,
+      originPoint: session.originPoint,
+      point,
+      context: editContext,
+    });
+    session.latestPreview = nextPreview;
+    session.moved ||= !manualPathPreviewEquals(
+      {
+        path: session.originPath,
         sourceSide,
-        endpoint.side,
-      );
-      return;
-    }
-
-    const dx = point.x - session.originPoint.x;
-    const dy = point.y - session.originPoint.y;
-    const next =
-      session.mode === "segment"
-        ? dragFormalRouteSegmentFromOrigin(
-            session.originPath,
-            session.index,
-            dx,
-            dy,
-          )
-        : dragFormalRouteWaypointFromOrigin(
-            session.originPath,
-            session.index,
-            dx,
-            dy,
-          );
-
-    emitPath(next);
+        targetSide,
+      },
+      nextPreview,
+    );
+    setPreview(nextPreview);
   };
 
-  const finishDrag = (event: ReactPointerEvent<SVGElement>) => {
+  const finishDrag = (
+    event: ReactPointerEvent<SVGElement>,
+    cancelled = false,
+  ) => {
     const session = dragSessionRef.current;
     if (!session || session.pointerId !== event.pointerId) return;
 
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {
-      // Pointer capture is best-effort.
+      // Pointer capture is optional in test DOMs.
     }
-
     dragSessionRef.current = null;
+    setPreview(null);
+    if (cancelled || !session.moved || !session.latestPreview) return;
+    const next = session.latestPreview;
+    if (
+      manualPathPreviewEquals(
+        { path: session.originPath, sourceSide, targetSide },
+        next,
+      )
+    ) {
+      return;
+    }
+    emitPath(next.path, next.sourceSide, next.targetSide);
   };
 
   const handlePathClick = (event: ReactMouseEvent<SVGPathElement>) => {
@@ -364,9 +324,10 @@ export function EditableFormalFlowchartPath({
     <g data-sopflow-editable-route={connectionId}>
       {/* biome-ignore lint/a11y/useSemanticElements: SVG geometry is the interactive route hit target. */}
       <path
-        d={pointsToPath(path)}
+        d={pointsToPath(displayPath)}
         className={styles.hitPath}
         data-selected={selected || undefined}
+        data-dragging={preview ? "true" : undefined}
         role="button"
         tabIndex={0}
         aria-label={`Edit route ${connectionId}`}
@@ -375,14 +336,22 @@ export function EditableFormalFlowchartPath({
         onPointerDown={handlePathPointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
+        onPointerCancel={(event) => finishDrag(event, true)}
       />
 
-      {selected && sourceRect && path[0] ? (
+      {preview ? (
+        <path
+          d={pointsToPath(displayPath)}
+          data-sopflow-manual-route-preview
+          className={styles.previewPath}
+        />
+      ) : null}
+
+      {selected && sourceRect && displayPath[0] ? (
         // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
         <circle
-          cx={path[0].x}
-          cy={path[0].y}
+          cx={displayPath[0].x}
+          cy={displayPath[0].y}
           r={7}
           className={styles.endpoint}
           data-sopflow-route-endpoint="source"
@@ -393,15 +362,15 @@ export function EditableFormalFlowchartPath({
           onPointerDown={(event) => startDrag(event, "source-endpoint", 0)}
           onPointerMove={handlePointerMove}
           onPointerUp={finishDrag}
-          onPointerCancel={finishDrag}
+          onPointerCancel={(event) => finishDrag(event, true)}
         />
       ) : null}
 
-      {selected && targetRect && path.at(-1) ? (
+      {selected && targetRect && displayPath.at(-1) ? (
         // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
         <circle
-          cx={path.at(-1)?.x}
-          cy={path.at(-1)?.y}
+          cx={displayPath.at(-1)?.x}
+          cy={displayPath.at(-1)?.y}
           r={7}
           className={styles.endpoint}
           data-sopflow-route-endpoint="target"
@@ -410,16 +379,16 @@ export function EditableFormalFlowchartPath({
           aria-label={`Target endpoint route ${connectionId}`}
           onKeyDown={handleEndpointKeyDown}
           onPointerDown={(event) =>
-            startDrag(event, "target-endpoint", path.length - 1)
+            startDrag(event, "target-endpoint", displayPath.length - 1)
           }
           onPointerMove={handlePointerMove}
           onPointerUp={finishDrag}
-          onPointerCancel={finishDrag}
+          onPointerCancel={(event) => finishDrag(event, true)}
         />
       ) : null}
 
       {selected
-        ? path.slice(1, -1).map((point, offset) => {
+        ? displayPath.slice(1, -1).map((point, offset) => {
             const index = offset + 1;
 
             return (
@@ -438,7 +407,7 @@ export function EditableFormalFlowchartPath({
                   onPointerDown={(event) => startDrag(event, "waypoint", index)}
                   onPointerMove={handlePointerMove}
                   onPointerUp={finishDrag}
-                  onPointerCancel={finishDrag}
+                  onPointerCancel={(event) => finishDrag(event, true)}
                   onContextMenu={(event) =>
                     handleWaypointContextMenu(index, event)
                   }
