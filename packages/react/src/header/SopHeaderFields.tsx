@@ -41,14 +41,26 @@ export function SopHeaderFields({
       [institutionTextareaRef.current, header.institutionName],
       [titleTextareaRef.current, document.title],
     ] as const;
-    for (const [field, controlledValue] of fields) {
-      if (!field || field.value !== controlledValue) continue;
-      field.style.height = "auto";
-      const measured = field.scrollHeight;
-      const height = Math.max(36, Math.min(144, measured));
-      field.style.height = `${height}px`;
-      field.style.overflowY = measured > 144 ? "auto" : "hidden";
+    const measure = () => {
+      for (const [field, controlledValue] of fields) {
+        if (!field || field.value !== controlledValue) continue;
+        field.style.height = "auto";
+        const measured = field.scrollHeight;
+        const height = Math.max(36, Math.min(144, measured));
+        field.style.height = `${height}px`;
+        field.style.overflowY = measured > 144 ? "auto" : "hidden";
+      }
+    };
+    measure();
+
+    // A resizable Properties inspector changes line wrapping without changing
+    // the controlled value. Observe the field containers, not the document.
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    for (const [field] of fields) {
+      if (field?.parentElement) observer.observe(field.parentElement);
     }
+    return () => observer.disconnect();
   }, [header.institutionName, document.title]);
 
   function updateHeader<K extends keyof SopHeaderValue>(

@@ -338,6 +338,42 @@ async function run() {
     );
   }
 
+  // Tab from a portaled calendar must follow inspector DOM order, not the
+  // portal's physical position at the end of document.body.
+  for (const [backward, expected] of [
+    [false, "workflow-step"],
+    [true, "open-modal"],
+  ] as const) {
+    dateTrigger.click();
+    await delay(120);
+    const popup = document.querySelector<HTMLElement>(
+      '[role="dialog"][aria-label="Tanggal pembuatan"]',
+    );
+    assert(popup, "Calendar did not reopen for keyboard regression");
+    const activeDay = popup.querySelector<HTMLButtonElement>(
+      '[data-focused="true"]',
+    );
+    assert(activeDay, "Calendar has no focusable date");
+    activeDay.focus();
+    activeDay.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Tab",
+        shiftKey: backward,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await delay(80);
+    assert(
+      document.activeElement?.id === expected,
+      `Calendar tab order skipped ${expected}`,
+    );
+    assert(
+      !document.querySelector('[role="dialog"]'),
+      "Calendar remained open after keyboard Tab",
+    );
+  }
+
   report(
     "pass",
     JSON.stringify({ contentZ, overlayZ, position: style.position }),
