@@ -161,6 +161,26 @@ describe("sop-ta compatibility adapter", () => {
     expect(() => exportSopTaPatchItems(legacy)).toThrow(/not losslessly compatible/i);
   });
 
+  it("rejects duplicate explicit pelaksanaIds before legacy normalization", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [
+        { id: "staff", name: "Staff" },
+        { id: "manager", name: "Manager" },
+      ],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, pelaksanaIds: ["staff", "staff"] } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "INVALID_ACTOR_COUNT", rowId: "fix" }),
+      );
+    }
+  });
+
   it("rejects silently ignored branch fields in strict import", () => {
     const result = tryImportSopTaDocument({
       id: "legacy",
