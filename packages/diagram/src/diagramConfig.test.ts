@@ -153,18 +153,40 @@ describe("diagram config", () => {
   it("preserves semantic manual route identity across actor changes and authored row reorder", () => {
     const assigned: SOPDocument = {
       ...document,
-      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      actors: [
+        { id: "staff", name: "Staff" },
+        { id: "manager", name: "Manager" },
+      ],
       steps: [
-        { id: "start", type: "start", name: "Start", actorIds: ["staff"], next: "task" },
-        { id: "task", type: "task", name: "Check", actorIds: ["staff"], next: "end" },
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: ["staff"],
+          next: "task",
+        },
+        {
+          id: "task",
+          type: "task",
+          name: "Check",
+          actorIds: ["staff"],
+          next: "end",
+        },
         { id: "end", type: "end", name: "End", actorIds: ["manager"] },
       ],
       presentationOrder: ["start", "task", "end"],
     };
     const overridden = {
-      flowchart: { routes: { "start:next:task": { kind: "trunk" as const, x: 210 } } },
+      flowchart: {
+        routes: { "start:next:task": { kind: "trunk" as const, x: 210 } },
+      },
       bpmn: {
-        routes: { "task:next:end": { kind: "orthogonal" as const, bendPoints: [{ x: 150, y: 80 }] } },
+        routes: {
+          "task:next:end": {
+            kind: "orthogonal" as const,
+            bendPoints: [{ x: 150, y: 80 }],
+          },
+        },
       },
     };
     const moved: SOPDocument = {
@@ -174,7 +196,9 @@ describe("diagram config", () => {
         step.id === "task" ? { ...step, actorIds: ["manager"] } : step,
       ),
     };
-    expect(pruneSopDiagramConfigs(projectWorkflow(moved), overridden)).toEqual(overridden);
+    expect(pruneSopDiagramConfigs(projectWorkflow(moved), overridden)).toEqual(
+      overridden,
+    );
   });
 
   it("resets routes while preserving the layout seed", () => {
