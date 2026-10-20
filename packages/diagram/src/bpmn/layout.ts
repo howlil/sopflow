@@ -31,7 +31,7 @@ export function layoutBpmnGraph(
   const laneById = new Map<StepId, number>();
   for (const node of graph.nodes) {
     const step = stepById.get(node.id);
-    const actorId = step?.actorIds[0];
+    const actorId = step?.actorIds.length === 1 ? step.actorIds[0] : undefined;
     laneById.set(
       node.id,
       actorId
