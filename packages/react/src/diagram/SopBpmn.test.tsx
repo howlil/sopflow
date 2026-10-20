@@ -84,6 +84,49 @@ describe("SopBpmn", () => {
     }
   });
 
+  it("fills the document width without scaling BPMN nodes or route coordinates", () => {
+    const clientWidth = vi
+      .spyOn(Element.prototype, "clientWidth", "get")
+      .mockImplementation(function (this: Element) {
+        return this.hasAttribute("data-sopflow-bpmn") ? 1100 : 0;
+      });
+
+    try {
+      const model = buildBpmnModel(document);
+      const { container } = render(
+        <SopBpmn document={document} presentation="document" />,
+      );
+      const svg = container.querySelector('svg[role="img"]');
+      const frame = container.querySelector("[data-sopflow-bpmn-lane-frame]");
+
+      expect(container.querySelector("[data-sopflow-bpmn]")).toHaveAttribute(
+        "data-presentation",
+        "document",
+      );
+      expect(svg).toHaveAttribute("width", "1100");
+      expect(svg).toHaveAttribute("height", String(model.height));
+      expect(svg).toHaveAttribute("viewBox", `0 0 1100 ${model.height}`);
+      expect(frame).toHaveAttribute("x", "1");
+      expect(frame).toHaveAttribute("width", "1098");
+
+      // A widened grid must not transform the model-derived step coordinates.
+      const start = model.nodes.find((node) => node.id === "start");
+      if (!start) throw new Error("Missing start step");
+      const renderedStart = container.querySelector(
+        '[data-sopflow-step-id="start"] circle',
+      );
+      expect(renderedStart).toHaveAttribute("cx", String(start.x));
+      expect(renderedStart).toHaveAttribute("cy", String(start.y));
+
+      // Separators are single lines rather than overlapping lane rect strokes.
+      expect(container.querySelectorAll("line")).toHaveLength(
+        model.lanes.length,
+      );
+    } finally {
+      clientWidth.mockRestore();
+    }
+  });
+
   it("renders long BPMN labels across multiple lines without truncating content", () => {
     const longLabel =
       "Verifikasi dokumen pengajuan pembayaran dan kelengkapan administrasi";
