@@ -21,6 +21,7 @@ describe("@sopflow/react public API", () => {
         "SopProcedureView",
         "SopStepFields",
         "SopWorkspace",
+        "SopUnifiedWorkspace",
         "ValidationPanel",
         "getSopReadinessIssues",
         "isSopReady",
@@ -42,6 +43,7 @@ describe("@sopflow/react public API", () => {
     expect(publicApi.SopProcedureView).toBeTypeOf("function");
     expect(publicApi.SopStepFields).toBeTypeOf("function");
     expect(publicApi.SopWorkspace).toBeTypeOf("function");
+    expect(publicApi.SopUnifiedWorkspace).toBeTypeOf("function");
     expect(publicApi.ValidationPanel).toBeTypeOf("function");
     expect(publicApi.getSopReadinessIssues).toBeTypeOf("function");
     expect(publicApi.isSopReady).toBeTypeOf("function");
