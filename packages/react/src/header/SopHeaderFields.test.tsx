@@ -104,7 +104,7 @@ describe("SopHeaderFields", () => {
     Object.defineProperty(HTMLTextAreaElement.prototype, "scrollHeight", {
       configurable: true,
       get() {
-        return (this as HTMLTextAreaElement).value.includes("\\n") ? 168 : 36;
+        return (this as HTMLTextAreaElement).value.includes("\n") ? 168 : 36;
       },
     });
     try {
@@ -131,7 +131,9 @@ describe("SopHeaderFields", () => {
           "scrollHeight",
           original,
         );
-      else delete (HTMLTextAreaElement.prototype as unknown as Record<string, unknown>).scrollHeight;
+      else {
+        Reflect.deleteProperty(HTMLTextAreaElement.prototype, "scrollHeight");
+      }
     }
   });
 });
