@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SopDatePicker } from "./SopDatePicker.js";
 import { formatISODate, parseISODate } from "./date-utils.js";
 
@@ -60,5 +60,50 @@ describe("SopDatePicker", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(trigger).toHaveFocus();
+  });
+
+  it("commits the local calendar date when choosing Hari ini", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <SopDatePicker
+        value="2026-10-20"
+        onValueChange={onValueChange}
+        label="Tanggal revisi"
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Tanggal revisi" });
+    await user.click(trigger);
+    await user.click(screen.getByRole("button", { name: "Hari ini" }));
+    expect(onValueChange).toHaveBeenCalledWith(formatISODate(new Date()));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("restores logical focus order for Tab and Shift+Tab from the portal", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">Sebelum</button>
+        <SopDatePicker
+          value="2026-10-20"
+          onValueChange={() => {}}
+          label="Tanggal revisi"
+        />
+        <button type="button" hidden>
+          Jangan difokuskan
+        </button>
+        <button type="button">Sesudah</button>
+      </>,
+    );
+    const trigger = screen.getByRole("button", { name: "Tanggal revisi" });
+    await user.click(trigger);
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Sesudah" })).toHaveFocus();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await user.click(trigger);
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: "Sebelum" })).toHaveFocus();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

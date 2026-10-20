@@ -57,7 +57,7 @@ fi
 # Verify real source UIArc dialogs appear above their blur overlays and remain operable.
 DIALOG_DOM="${RUNNER_TEMP:-/tmp}/sopflow-dialog-source-regression.html"
 "${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
-  --user-data-dir="${PROFILE_DIR}-modal" --virtual-time-budget=5500 \
+  --user-data-dir="${PROFILE_DIR}-modal" --virtual-time-budget=11500 \
   --dump-dom "http://127.0.0.1:${PORT}/dialog-source-regression.html" >"${DIALOG_DOM}"
 if ! grep -q 'data-dialog-source-regression="pass"' "${DIALOG_DOM}"; then
   echo "::error::Source Dialog visibility regression failed"

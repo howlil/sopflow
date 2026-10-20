@@ -5,11 +5,55 @@ import "../../../packages/react/src/styles/token.css";
 import { Dialog } from "../../../packages/react/src/primitives/Dialog.tsx";
 import { Select } from "../../../packages/react/src/components/arc/select/select.tsx";
 import { SopDatePicker } from "../../../packages/react/src/components/sop-date-picker/SopDatePicker.tsx";
+import { DeleteStepDialog } from "../../../packages/react/src/steps/DeleteStepDialog.tsx";
+import { DeleteActorDialog } from "../../../packages/react/src/actors/DeleteActorDialog.tsx";
+import { DecisionEditor } from "../../../packages/react/src/steps/DecisionEditor.tsx";
+import type { SOPDocument, TaskStep, DecisionStep } from "@sopflow/core";
+
+const staffFixture = { id: "staff", name: "Staff" };
+
+const documentFixture: SOPDocument = {
+  schemaVersion: "1",
+  id: "browser-modal-fixture",
+  title: "Modal regression",
+  actors: [staffFixture],
+  steps: [
+    {
+      id: "start",
+      type: "start",
+      name: "Mulai",
+      actorIds: ["staff"],
+      next: "task",
+    },
+    {
+      id: "task",
+      type: "task",
+      name: "Tinjau",
+      actorIds: ["staff"],
+      next: "decision",
+    },
+    {
+      id: "decision",
+      type: "decision",
+      name: "Valid?",
+      actorIds: ["staff"],
+      yes: "end",
+      no: "task",
+    },
+    { id: "end", type: "end", name: "Selesai", actorIds: ["staff"] },
+  ],
+};
+const taskFixture = documentFixture.steps[1] as TaskStep;
+const decisionFixture = documentFixture.steps[2] as DecisionStep;
 
 function App() {
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState("a");
   const [date, setDate] = useState("2026-10-20");
+  const [workflow, setWorkflow] = useState<
+    "step" | "actor" | "decision" | null
+  >(null);
+  const [saved, setSaved] = useState(0);
   return (
     <div data-sopflow-root>
       <button type="button" id="open-modal" onClick={() => setOpen(true)}>
@@ -23,6 +67,55 @@ function App() {
         />
       </div>
       <output id="date-result">{date}</output>
+      <button
+        type="button"
+        id="workflow-step"
+        onClick={() => setWorkflow("step")}
+      >
+        Delete Step
+      </button>
+      <button
+        type="button"
+        id="workflow-actor"
+        onClick={() => setWorkflow("actor")}
+      >
+        Delete Actor
+      </button>
+      <button
+        type="button"
+        id="workflow-decision"
+        onClick={() => setWorkflow("decision")}
+      >
+        Edit Decision
+      </button>
+      <output id="workflow-count">{saved}</output>
+      {workflow === "step" ? (
+        <DeleteStepDialog
+          open
+          document={documentFixture}
+          step={taskFixture}
+          onOperations={() => setSaved((n) => n + 1)}
+          onClose={() => setWorkflow(null)}
+        />
+      ) : null}
+      {workflow === "actor" ? (
+        <DeleteActorDialog
+          open
+          document={documentFixture}
+          actor={staffFixture}
+          onOperations={() => setSaved((n) => n + 1)}
+          onClose={() => setWorkflow(null)}
+        />
+      ) : null}
+      {workflow === "decision" ? (
+        <DecisionEditor
+          open
+          document={documentFixture}
+          step={decisionFixture}
+          onOperations={() => setSaved((n) => n + 1)}
+          onClose={() => setWorkflow(null)}
+        />
+      ) : null}
       {open ? (
         <Dialog
           open
@@ -181,6 +274,105 @@ async function run() {
     !document.querySelector('[role="dialog"]'),
     "Calendar remained open after selecting a date",
   );
+
+  // Exercise the three actual SOP dialogs rather than only the generic fixture.
+  const workflows = [
+    {
+      trigger: "workflow-step",
+      title: "Hapus langkah",
+      action: "Batal",
+      save: false,
+    },
+    {
+      trigger: "workflow-actor",
+      title: "Hapus pelaksana",
+      action: "Hapus",
+      save: true,
+    },
+    {
+      trigger: "workflow-decision",
+      title: "Atur cabang keputusan",
+      action: "Simpan",
+      save: true,
+    },
+  ];
+  let saves = 0;
+  for (const workflow of workflows) {
+    const opener = document.getElementById(workflow.trigger);
+    assert(opener, `Missing ${workflow.trigger} trigger`);
+    opener.click();
+    await delay(450);
+    const dialog = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[role="dialog"],[role="alertdialog"]',
+      ),
+    ).find((node) => node.textContent?.includes(workflow.title));
+    assert(dialog, `Real ${workflow.title} dialog did not open`);
+    const style = getComputedStyle(dialog);
+    assert(
+      style.position === "fixed" && Number(style.zIndex) > overlayZ,
+      `Real ${workflow.title} is behind the blur`,
+    );
+    const box = dialog.getBoundingClientRect();
+    assert(
+      box.width > 180 && box.height > 50,
+      `Real ${workflow.title} is not visible`,
+    );
+    const action = Array.from(
+      dialog.querySelectorAll<HTMLButtonElement>("button"),
+    ).find((button) => button.textContent?.trim() === workflow.action);
+    assert(action, `Real ${workflow.title} is missing ${workflow.action}`);
+    assert(!action.disabled, `Real ${workflow.title} action is disabled`);
+    action.click();
+    await delay(460);
+    assert(
+      !Array.from(
+        document.querySelectorAll('[role="dialog"],[role="alertdialog"]'),
+      ).some((node) => node.textContent?.includes(workflow.title)),
+      `Real ${workflow.title} did not close`,
+    );
+    if (workflow.save) saves++;
+    assert(
+      document.getElementById("workflow-count")?.textContent === String(saves),
+      `Real ${workflow.title} did not preserve the intended SOP action`,
+    );
+  }
+
+  // Tab from a portaled calendar must follow inspector DOM order, not the
+  // portal's physical position at the end of document.body.
+  for (const [backward, expected] of [
+    [false, "workflow-step"],
+    [true, "open-modal"],
+  ] as const) {
+    dateTrigger.click();
+    await delay(120);
+    const popup = document.querySelector<HTMLElement>(
+      '[role="dialog"][aria-label="Tanggal pembuatan"]',
+    );
+    assert(popup, "Calendar did not reopen for keyboard regression");
+    const activeDay = popup.querySelector<HTMLButtonElement>(
+      '[data-focused="true"]',
+    );
+    assert(activeDay, "Calendar has no focusable date");
+    activeDay.focus();
+    activeDay.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Tab",
+        shiftKey: backward,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await delay(80);
+    assert(
+      document.activeElement?.id === expected,
+      `Calendar tab order skipped ${expected}`,
+    );
+    assert(
+      !document.querySelector('[role="dialog"]'),
+      "Calendar remained open after keyboard Tab",
+    );
+  }
 
   report(
     "pass",

@@ -113,6 +113,38 @@ export function SopDatePicker({
     });
   }
 
+  function focusAroundTrigger(backward: boolean) {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    // The popup is portaled to body. Tab would otherwise resume from the
+    // detached calendar day near the end of the DOM, skipping inspector fields.
+    const selector =
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      trigger.ownerDocument.querySelectorAll<HTMLElement>(selector),
+    ).filter((element) => {
+      if (popupRef.current?.contains(element)) return false;
+      // Hidden accordion panels can contain tabbable DOM nodes. Native
+      // keyboard Tab skips them, so our portal exit must skip them as well.
+      for (
+        let node: HTMLElement | null = element;
+        node;
+        node = node.parentElement
+      ) {
+        if (node.hidden || node.hasAttribute("inert")) return false;
+        const style = getComputedStyle(node);
+        if (style.display === "none" || style.visibility === "hidden") {
+          return false;
+        }
+      }
+      return true;
+    });
+    const index = focusables.indexOf(trigger);
+    const next = focusables[index + (backward ? -1 : 1)];
+    close();
+    (next ?? trigger).focus();
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const movement: Record<string, number> = {
       ArrowLeft: -1,
@@ -126,7 +158,8 @@ export function SopDatePicker({
       return;
     }
     if (event.key === "Tab") {
-      close();
+      event.preventDefault();
+      focusAroundTrigger(event.shiftKey);
       return;
     }
     if (event.key === "PageUp" || event.key === "PageDown") {
@@ -258,7 +291,13 @@ export function SopDatePicker({
                 >
                   Kosongkan
                 </button>
-                <button type="button" onClick={() => setFocused(new Date())}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onValueChange(formatISODate(new Date()));
+                    close(true);
+                  }}
+                >
                   Hari ini
                 </button>
               </div>
