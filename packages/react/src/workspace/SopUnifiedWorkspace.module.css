@@ -45,6 +45,8 @@
   border-radius: 9999px;
   padding: 2px;
   gap: 1px;
+  margin: 0;
+  min-width: 0;
 }
 
 .zoomButton,

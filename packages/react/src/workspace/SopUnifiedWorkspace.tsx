@@ -392,7 +392,7 @@ export function SopUnifiedWorkspace({
         </nav>
 
         <div className={styles.actions}>
-          <div className={styles.zoomControls} role="group" aria-label="Canvas zoom">
+          <fieldset className={styles.zoomControls} aria-label="Canvas zoom">
             <button
               type="button"
               className={styles.zoomButton}
@@ -422,7 +422,7 @@ export function SopUnifiedWorkspace({
             >
               <Plus size={14} aria-hidden="true" />
             </button>
-          </div>
+          </fieldset>
           <button
             type="button"
             className={styles.iconButton}
