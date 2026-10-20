@@ -40,7 +40,7 @@ export function SopStepsEditor({
     () => new Map(steps.map((step, index) => [step.id, index + 1] as const)),
     [steps],
   );
-  const isCompact = useCompactStepsLayout();
+  const isCompact = useCompactStepsLayout(editorRef);
   const issuesByStepId = useMemo(() => {
     const grouped = new Map<string, StepDiagnostic[]>();
     for (const issue of [...issues, ...getSopSchemaIssues(document)]) {
@@ -100,6 +100,7 @@ export function SopStepsEditor({
     <section
       ref={editorRef}
       className={styles.editor}
+      data-layout={isCompact ? "compact" : "table"}
       aria-label="Navigasi langkah SOP"
       data-empty={steps.length === 0 || undefined}
       data-disabled={disabled || undefined}

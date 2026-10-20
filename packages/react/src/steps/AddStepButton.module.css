@@ -8,6 +8,7 @@
   width: fit-content;
   white-space: nowrap;
   min-height: 2rem;
+  line-height: 1.2;
   border-radius: var(--sopflow-radius-action);
   padding-inline: 0.75rem;
   font-size: var(--sopflow-font-xs);

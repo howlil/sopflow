@@ -53,13 +53,7 @@ export function ActorsEditor({
       tabIndex={-1}
     >
       <header className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Pelaksana</h2>
-
-          <p className={styles.description}>
-            Daftar aktor yang dapat menjalankan langkah SOP.
-          </p>
-        </div>
+        <h2 className={styles.title}>Pelaksana</h2>
 
         {!disabled ? (
           <Button
@@ -72,6 +66,9 @@ export function ActorsEditor({
             Tambah pelaksana
           </Button>
         ) : null}
+        <p className={styles.description}>
+          Daftar aktor yang dapat menjalankan langkah SOP.
+        </p>
       </header>
 
       {document.actors.length > 0 ? (
