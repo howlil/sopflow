@@ -62,7 +62,7 @@ async function configureTrustedPublishing() {
     if (!confirmed) throw new Error("npm did not confirm GitHub publisher for " + name);
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  console.log("Trusted publishing configured for all five @sopflow/* packages.");
+  console.log("Trusted publishing configured for all three public @sopflow/* packages.");
   console.log("Next: set GitHub Actions repository variable SOPFLOW_NPM_PUBLISH_ENABLED=true.");
 }
 

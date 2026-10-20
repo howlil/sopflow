@@ -26,6 +26,10 @@
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
+    },
+    "./sop-ap": {
+      "types": "./dist/sop-ap.d.mts",
+      "import": "./dist/sop-ap.mjs"
     }
   },
   "files": [

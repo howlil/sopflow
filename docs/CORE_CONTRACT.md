@@ -40,11 +40,11 @@ Diagram edge IDs escape `%` and `:` within step IDs. `pruneSopDiagramConfigs()` 
 ## Strict publication validation and legacy import
 
 A document may remain incomplete while a user is editing a draft. Publication
-readiness is stricter: `getSopApReadinessIssues` checks the canonical Zod
+readiness is stricter: `getSopApReadinessIssues` from `@sopflow/core/sop-ap` checks the canonical Zod
 schema, semantic workflow graph, and SOP-AP profile requirements. Applications
 must not equate a zero-issue semantic graph with a publishable document.
 
-The compatibility adapter keeps `importSopTaDocument` for older consumers.
+The private `integrations/sop-ta` workspace retains `importSopTaDocument` for repository integration and regression tests. The last published `@sopflow/adapter-sop-ta` version remains available for existing external consumers.
 Use `tryImportSopTaDocument` for lossless imports at new integration
 boundaries. It returns `{ success: false, issues }` for unknown actors,
 ambiguous legacy actor mappings, invalid or unrecognized durations, and

@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@sopflow/core": ["../core/src/index.ts"]
+      "@sopflow/core": ["../../packages/core/src/index.ts"]
     }
   }
 }

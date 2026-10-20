@@ -1,4 +1,4 @@
-import type { SOPDocument } from "@sopflow/core";
+import type { SOPDocument } from "../../types.js";
 import type { SopApHeader } from "./types.js";
 
 export type SopApHeaderField =

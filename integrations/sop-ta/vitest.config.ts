@@ -5,7 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@sopflow/core": fileURLToPath(
-        new URL("../core/src/index.ts", import.meta.url),
+        new URL("../../packages/core/src/index.ts", import.meta.url),
       ),
     },
   },

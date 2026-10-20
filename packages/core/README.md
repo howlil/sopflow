@@ -106,3 +106,7 @@ pnpm --filter playground start
 ## Lisensi
 
 MIT
+
+## Optional SOP-AP validation profile
+
+Import `getSopApReadinessIssues`, `isSopApReady`, `validateSopApHeader`, and `validateSopApProcedure` from `@sopflow/core/sop-ap`. The ordinary `validateSop` remains generic and does not impose SOP-AP metadata requirements.

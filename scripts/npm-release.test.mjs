@@ -62,3 +62,11 @@ test("rejects invalid repository identity", () => {
     assert.throws(() => inspectPacks(tmp.packs, tmp.root), /repository metadata/);
   } finally { tmp.cleanup(); }
 });
+
+test("only three public packages remain in the release inventory", () => {
+  assert.deepEqual(PACKAGES.map(([name]) => name), [
+    "@sopflow/core",
+    "@sopflow/diagram",
+    "@sopflow/react",
+  ]);
+});

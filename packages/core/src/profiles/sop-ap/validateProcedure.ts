@@ -1,8 +1,5 @@
-import {
-  getPresentationSteps,
-  type SOPDocument,
-  type StepId,
-} from "@sopflow/core";
+import { getPresentationSteps } from "../../graph.js";
+import type { SOPDocument, StepId } from "../../types.js";
 
 export type SopApProcedureValidationCode =
   | "MISSING_ACTOR"

@@ -4,14 +4,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      "@sopflow/core/sop-ap": fileURLToPath(
+        new URL("../core/src/sop-ap.ts", import.meta.url),
+      ),
       "@sopflow/core": fileURLToPath(
         new URL("../core/src/index.ts", import.meta.url),
       ),
       "@sopflow/diagram": fileURLToPath(
         new URL("../diagram/src/index.ts", import.meta.url),
-      ),
-      "@sopflow/sop-ap": fileURLToPath(
-        new URL("../sop-ap/src/index.ts", import.meta.url),
       ),
     },
   },

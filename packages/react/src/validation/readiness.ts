@@ -3,7 +3,7 @@ import {
   getSopApReadinessIssues,
   isSopApReady,
   type SopApReadinessIssue,
-} from "@sopflow/sop-ap";
+} from "@sopflow/core/sop-ap";
 import type { SopHeaderValue } from "../header/types.js";
 
 export type SopReadinessIssue = SopApReadinessIssue;

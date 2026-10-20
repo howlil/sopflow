@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packagesDir = join(root, "packages");
-const publishOrder = ["core", "sop-ap", "adapter-sop-ta", "diagram", "react"];
+const publishOrder = ["core", "diagram", "react"];
 const packageDirs = publishOrder.map((name) => join(packagesDir, name));
 
 const errors = [];

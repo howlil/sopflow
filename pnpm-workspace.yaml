@@ -8,6 +8,7 @@ minimumReleaseAgeExclude:
 packages:
   - packages/*
   - apps/*
+  - integrations/*
 
 onlyBuiltDependencies:
   - esbuild
