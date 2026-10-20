@@ -129,14 +129,10 @@ async function run() {
   option.click();
   await delay(350);
   assert(
-    document.querySelector("[data-actor-state]")?.textContent ===
-      "staff",
+    document.querySelector("[data-actor-state]")?.textContent === "staff",
     "Portaled exclusive selection did not replace the actor",
   );
-  assert(
-    !menu.isConnected,
-    "Selecting one actor should dismiss the listbox",
-  );
+  assert(!menu.isConnected, "Selecting one actor should dismiss the listbox");
 
   trigger.click();
   await delay(350);
