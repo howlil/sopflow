@@ -49,23 +49,29 @@ describe("resolveProblemTarget", () => {
   });
 
   it("sends graph actor and route problems to the editable control", () => {
-    expect(resolveProblemTarget({
-      kind: "graph",
-      code: "UNKNOWN_ACTOR_REFERENCE",
-      stepId: "start",
-      message: "Actor missing",
-    })).toEqual({ kind: "step", stepId: "start", field: "actorIds" });
-    expect(resolveProblemTarget({
-      kind: "graph",
-      code: "INVALID_DECISION_BRANCH",
-      stepId: "review",
-      message: "Branch missing",
-    })).toEqual({ kind: "step", stepId: "review", field: "decisionRoutes" });
-    expect(resolveProblemTarget({
-      kind: "graph",
-      code: "DUPLICATE_ACTOR_ID",
-      message: "Duplicate actor",
-    })).toEqual({ kind: "actors" });
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "UNKNOWN_ACTOR_REFERENCE",
+        stepId: "start",
+        message: "Actor missing",
+      }),
+    ).toEqual({ kind: "step", stepId: "start", field: "actorIds" });
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "INVALID_DECISION_BRANCH",
+        stepId: "review",
+        message: "Branch missing",
+      }),
+    ).toEqual({ kind: "step", stepId: "review", field: "decisionRoutes" });
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "DUPLICATE_ACTOR_ID",
+        message: "Duplicate actor",
+      }),
+    ).toEqual({ kind: "actors" });
   });
 
   it("prefers schema stepId and has a safe fallback for unknown schema paths", () => {

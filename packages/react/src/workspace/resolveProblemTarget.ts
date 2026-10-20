@@ -73,7 +73,8 @@ export function resolveProblemTarget(issue: SopReadinessIssue): ProblemTarget {
       issue.code === "DUPLICATE_PRESENTATION_STEP" ||
       issue.code === "MISSING_PRESENTATION_STEP" ||
       issue.code === "UNKNOWN_PRESENTATION_STEP"
-    ) return { kind: "steps" };
+    )
+      return { kind: "steps" };
   }
   if (issue.kind === "schema") {
     if (issue.stepId) {
