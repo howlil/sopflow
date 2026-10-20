@@ -437,7 +437,7 @@ export function SopUnifiedWorkspace({
         </div>
       </header>
 
-      <div className={styles.workspaceStage} ref={stageRef}>
+      <div className={styles.workspaceStage} ref={stageRef} data-sopflow-unified-stage>
         <SopWorkspace
           {...workspaceProps}
           value={value}
@@ -451,6 +451,7 @@ export function SopUnifiedWorkspace({
           onInspectorOpenChange={setInspectorOpen}
           toolbarPlacement="external"
           inspectorTogglePlacement="external"
+          showValidationPanel={workspaceProps.showValidationPanel ?? false}
           previewScale={effectiveScale}
           selectedStepId={
             workspaceProps.selectedStepId !== undefined

@@ -1,7 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { SOPDocument } from "@sopflow/core";
 import type { SopHeaderValue } from "../header/types.js";
@@ -313,5 +313,70 @@ describe("SopUnifiedWorkspace", () => {
     await user.keyboard("{ArrowRight}");
     expect(resize).toHaveAttribute("aria-valuenow", "258");
     expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
+  });
+
+  it("shows Problems as the default unified validation surface", () => {
+    const { container } = render(
+      <SopUnifiedWorkspace value={document} header={header} />,
+    );
+    expect(container.querySelector("[data-sopflow-problems]")).not.toBeNull();
+    expect(container.querySelector("[data-sopflow-validation-panel]")).toBeNull();
+  });
+
+  it("recalculates Fit and switches inspector into overlay mode on a narrow stage", () => {
+    const observed: Array<{
+      callback: ResizeObserverCallback;
+      targets: Set<Element>;
+    }> = [];
+    class FakeResizeObserver {
+      readonly targets = new Set<Element>();
+      constructor(readonly callback: ResizeObserverCallback) {
+        observed.push(this);
+      }
+      observe(target: Element) {
+        this.targets.add(target);
+      }
+      disconnect() {
+        this.targets.clear();
+      }
+      unobserve(target: Element) {
+        this.targets.delete(target);
+      }
+    }
+
+    vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+    try {
+      const { container } = render(<Harness />);
+      const stage = container.querySelector("[data-sopflow-unified-stage]");
+      const pane = container.querySelector("[data-sopflow-main-pane]");
+      const root = container.querySelector("[data-sopflow-unified-workspace]");
+      const canvas = container.querySelector("[data-sopflow-canvas-stage]");
+      if (!stage || !pane) throw new Error("Workspace measurement nodes missing");
+      Object.defineProperty(stage, "clientWidth", {
+        configurable: true,
+        value: 540,
+      });
+      Object.defineProperty(pane, "clientWidth", {
+        configurable: true,
+        value: 540,
+      });
+      const resizeObserver = observed.find((entry) => entry.targets.has(pane));
+      if (!resizeObserver) throw new Error("ResizeObserver for pane missing");
+      act(() => {
+        resizeObserver.callback(
+          [],
+          resizeObserver as unknown as ResizeObserver,
+        );
+      });
+      expect(root).toHaveAttribute("data-compact", "true");
+      expect(canvas).toHaveAttribute(
+        "data-preview-scale",
+        String(Math.max(0.25, Math.min(1, 532 / ((297 * 96) / 25.4)))),
+      );
+      expect(container.querySelector("[data-sopflow-inspector-resize]")).toBeNull();
+      expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
