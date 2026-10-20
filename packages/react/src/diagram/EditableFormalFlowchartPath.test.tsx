@@ -179,14 +179,30 @@ describe("EditableFormalFlowchartPath", () => {
       value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
     });
     vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
-      left: 0, top: 0, right: 400, bottom: 300,
-      width: 400, height: 300, x: 0, y: 0, toJSON: () => ({}),
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
     });
-    fireEvent.pointerDown(source, { pointerId: 7, button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(source, {
+      pointerId: 7,
+      button: 0,
+      clientX: 100,
+      clientY: 100,
+    });
     fireEvent.pointerMove(source, { pointerId: 7, clientX: 120, clientY: 105 });
-    expect(container.querySelector("[data-sopflow-route-anchor-highlight]")).not.toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-route-anchor-highlight]"),
+    ).not.toBeNull();
     fireEvent.pointerCancel(source, { pointerId: 7 });
-    expect(container.querySelector("[data-sopflow-route-anchor-highlight]")).toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-route-anchor-highlight]"),
+    ).toBeNull();
   });
 
   it("discards canceled drags without changing persisted diagram config", () => {
