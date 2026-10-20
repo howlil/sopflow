@@ -188,8 +188,13 @@ export function SopDocumentCanvas({
                 className={styles.diagramPanel}
                 role="tabpanel"
                 {...(toolbarPlacement === "document"
-                  ? { "aria-labelledby": `${diagramPanelId}-tab-${diagramKind}` }
-                  : { "aria-label": diagramKind === "bpmn" ? "BPMN SOP" : "Flowchart SOP" })}
+                  ? {
+                      "aria-labelledby": `${diagramPanelId}-tab-${diagramKind}`,
+                    }
+                  : {
+                      "aria-label":
+                        diagramKind === "bpmn" ? "BPMN SOP" : "Flowchart SOP",
+                    })}
                 data-sopflow-diagram-panel
                 data-diagram-kind={diagramKind}
               >
