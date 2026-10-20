@@ -220,8 +220,19 @@
 }
 
 @media print {
+  .root {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
   .topBar {
     display: none;
+  }
+
+  .workspaceStage {
+    flex: none;
+    min-height: 0;
   }
 
   .workspaceStage,
