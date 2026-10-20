@@ -81,6 +81,7 @@ export function AutoResizeTextarea({
       className={[styles.textarea, className].filter(Boolean).join(" ")}
       data-empty={!value || undefined}
       data-error={error || undefined}
+      aria-invalid={error || undefined}
       data-readonly={readOnly || undefined}
       onChange={handleChange}
     />

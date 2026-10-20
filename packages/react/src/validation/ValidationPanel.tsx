@@ -6,9 +6,15 @@ import styles from "./ValidationPanel.module.css";
 
 export interface ValidationPanelProps {
   issues: readonly SopReadinessIssue[];
+  onNavigate?: (issue: SopReadinessIssue) => void;
+  navigationFeedback?: string | null;
 }
 
-export function ValidationPanel({ issues }: ValidationPanelProps) {
+export function ValidationPanel({
+  issues,
+  onNavigate,
+  navigationFeedback,
+}: ValidationPanelProps) {
   const ready = issues.length === 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -50,12 +56,29 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
             <li
               key={`${issue.kind}:${issue.code}:${issueDetail(issue)}:${issue.message}`}
             >
-              {issue.kind === "schema" && issue.path.length > 0
-                ? `${issue.path.join(".")}: ${issue.message}`
-                : issue.message}
+              {onNavigate ? (
+                <button
+                  type="button"
+                  className={styles.issueAction}
+                  onClick={() => onNavigate(issue)}
+                >
+                  {issue.kind === "schema" && issue.path.length > 0
+                    ? `${issue.path.join(".")}: ${issue.message}`
+                    : issue.message}
+                </button>
+              ) : issue.kind === "schema" && issue.path.length > 0 ? (
+                `${issue.path.join(".")}: ${issue.message}`
+              ) : (
+                issue.message
+              )}
             </li>
           ))}
         </ul>
+      ) : null}
+      {navigationFeedback ? (
+        <p className={styles.feedback} role="status">
+          {navigationFeedback}
+        </p>
       ) : null}
     </section>
   );

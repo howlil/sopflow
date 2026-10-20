@@ -48,6 +48,7 @@ export function ActorField({
   return (
     <MultiSelect
       compact
+      error={error}
       selectionMode="single"
       label="Pelaksana"
       placeholder="Pilih pelaksana"

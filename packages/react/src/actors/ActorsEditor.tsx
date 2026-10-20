@@ -1,5 +1,5 @@
 import { Button } from "../primitives/Button.js";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
@@ -12,6 +12,7 @@ export interface ActorsEditorProps {
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
   disabled?: boolean;
+  issueActive?: boolean;
 }
 
 export function ActorsEditor({
@@ -19,6 +20,7 @@ export function ActorsEditor({
   onOperation,
   onOperations,
   disabled = false,
+  issueActive = false,
 }: ActorsEditorProps) {
   const [actorToDelete, setActorToDelete] = useState<Actor | null>(null);
 
@@ -50,6 +52,7 @@ export function ActorsEditor({
       data-empty={document.actors.length === 0 || undefined}
       data-disabled={disabled || undefined}
       data-sopflow-actors
+      data-sopflow-issue-active={issueActive || undefined}
       tabIndex={-1}
     >
       <header className={styles.header}>
@@ -60,10 +63,11 @@ export function ActorsEditor({
             variant="secondary"
             type="button"
             className={styles.addButton}
+            aria-label="Tambah pelaksana"
             onClick={handleAdd}
           >
             <Plus size={14} aria-hidden="true" />
-            Tambah pelaksana
+            Tambah
           </Button>
         ) : null}
         <p className={styles.description}>
@@ -106,7 +110,7 @@ export function ActorsEditor({
                   aria-label={`Hapus ${actor.name || "pelaksana"}`}
                   onClick={() => setActorToDelete(actor)}
                 >
-                  Hapus
+                  <Trash2 size={14} aria-hidden="true" />
                 </Button>
               ) : null}
             </div>

@@ -26,7 +26,12 @@ import type { SopDiagramKind } from "../SopEditor.js";
 import type { SopReadinessIssue } from "../validation/readiness.js";
 import { getSopReadinessIssues } from "../validation/readiness.js";
 import { ProblemsPanel } from "./ProblemsPanel.js";
-import { resolveProblemTarget } from "./resolveProblemTarget.js";
+import {
+  focusProblemTarget,
+  problemKey,
+  resolveProblemTarget,
+  type ProblemTarget,
+} from "./resolveProblemTarget.js";
 import styles from "./SopUnifiedWorkspace.module.css";
 
 type UnifiedView = "flowchart" | "bpmn" | "steps";
@@ -85,13 +90,12 @@ export function SopUnifiedWorkspace({
     getSopReadinessIssues(value, workspaceProps.header),
   );
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
-  const [pendingNavigation, setPendingNavigation] = useState<
-    | { kind: "header"; field: string }
-    | { kind: "step"; stepId: string }
-    | { kind: "actors" }
-    | { kind: "steps" }
-    | null
-  >(null);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<ProblemTarget | null>(null);
+  const [activeIssue, setActiveIssue] = useState<{
+    key: string;
+    target: ProblemTarget;
+  } | null>(null);
   const [navigationFeedback, setNavigationFeedback] = useState<string | null>(
     null,
   );
@@ -237,6 +241,7 @@ export function SopUnifiedWorkspace({
     setNavigationFeedback(null);
     setPendingNavigation(null);
     const target = resolveProblemTarget(issue);
+    setActiveIssue({ key: problemKey(issue), target });
     if (target.kind === "header") {
       setInspectorOpen(true);
       setPendingNavigation(target);
@@ -268,48 +273,23 @@ export function SopUnifiedWorkspace({
   }
 
   useLayoutEffect(() => {
-    if (!pendingNavigation) return;
-    const shell = shellRef.current;
-    if (!shell) return;
-    let target: HTMLElement | undefined;
-    if (pendingNavigation.kind === "actors") {
-      target =
-        shell.querySelector<HTMLElement>("[data-sopflow-actors]") ?? undefined;
-    } else if (pendingNavigation.kind === "steps") {
-      target =
-        shell.querySelector<HTMLElement>(
-          '[aria-label="Navigasi langkah SOP"]',
-        ) ?? undefined;
-    } else {
-      const attr =
-        pendingNavigation.kind === "header"
-          ? "data-sopflow-header-field"
-          : "data-sopflow-step-id";
-      const expected =
-        pendingNavigation.kind === "header"
-          ? pendingNavigation.field
-          : pendingNavigation.stepId;
-      target = Array.from(
-        shell.querySelectorAll<HTMLElement>(`[${attr}]`),
-      ).find(
-        (node) =>
-          (pendingNavigation.kind === "header"
-            ? node.dataset.sopflowHeaderField
-            : node.dataset.sopflowStepId) === expected,
-      );
-    }
-    if (target) {
-      if (typeof target.scrollIntoView === "function") {
-        target.scrollIntoView({ block: "nearest" });
-      }
-      target.focus({ preventScroll: true });
-    } else {
+    if (!pendingNavigation || !shellRef.current) return;
+    if (!focusProblemTarget(shellRef.current, pendingNavigation)) {
       setNavigationFeedback(
         "The target is not available. Review the relevant section manually.",
       );
     }
     setPendingNavigation(null);
   }, [pendingNavigation]);
+
+  useLayoutEffect(() => {
+    if (
+      activeIssue &&
+      !issues.some((issue) => problemKey(issue) === activeIssue.key)
+    ) {
+      setActiveIssue(null);
+    }
+  }, [activeIssue, issues]);
 
   return (
     <section
@@ -457,6 +437,7 @@ export function SopUnifiedWorkspace({
           inspectorTogglePlacement="external"
           showValidationPanel={workspaceProps.showValidationPanel ?? false}
           previewScale={effectiveScale}
+          activeProblemTarget={activeIssue?.target ?? null}
           selectedStepId={
             workspaceProps.selectedStepId !== undefined
               ? workspaceProps.selectedStepId

@@ -25,7 +25,53 @@ describe("resolveProblemTarget", () => {
         stepId: "start",
         message: "Missing input",
       }),
-    ).toEqual({ kind: "step", stepId: "start" });
+    ).toEqual({ kind: "step", stepId: "start", field: "input" });
+  });
+
+  it("maps specific SOP-AP fields without reading message text", () => {
+    for (const [code, field] of [
+      ["INVALID_ACTOR_COUNT", "actorIds"],
+      ["MISSING_ACTIVITY", "name"],
+      ["MISSING_INPUT", "input"],
+      ["MISSING_OUTPUT", "output"],
+      ["MISSING_NOTE", "note"],
+      ["IDENTICAL_DECISION_TARGETS", "decisionRoutes"],
+    ] as const) {
+      expect(
+        resolveProblemTarget({
+          kind: "procedure",
+          code,
+          stepId: "start",
+          message: "localized text can change",
+        }),
+      ).toEqual({ kind: "step", stepId: "start", field });
+    }
+  });
+
+  it("sends graph actor and route problems to the editable control", () => {
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "UNKNOWN_ACTOR_REFERENCE",
+        stepId: "start",
+        message: "Actor missing",
+      }),
+    ).toEqual({ kind: "step", stepId: "start", field: "actorIds" });
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "INVALID_DECISION_BRANCH",
+        stepId: "review",
+        message: "Branch missing",
+      }),
+    ).toEqual({ kind: "step", stepId: "review", field: "decisionRoutes" });
+    expect(
+      resolveProblemTarget({
+        kind: "graph",
+        code: "DUPLICATE_ACTOR_ID",
+        message: "Duplicate actor",
+      }),
+    ).toEqual({ kind: "actors" });
   });
 
   it("prefers schema stepId and has a safe fallback for unknown schema paths", () => {
@@ -39,6 +85,7 @@ describe("resolveProblemTarget", () => {
     expect(resolveProblemTarget(schema)).toEqual({
       kind: "step",
       stepId: "start",
+      field: "name",
     });
     const unknown = {
       kind: "schema" as const,

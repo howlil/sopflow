@@ -244,3 +244,22 @@
   color: var(--sopflow-empty-text);
   font-size: var(--sopflow-font-xs);
 }
+
+/* Active validation target only; field errors clear when the issue disappears. */
+.inspector[data-sopflow-highlight-field="institutionName"] [data-sopflow-header-field="institutionName"],
+.inspector[data-sopflow-highlight-field="title"] [data-sopflow-header-field="title"],
+.inspector[data-sopflow-highlight-field="number"] [data-sopflow-header-field="number"],
+.inspector[data-sopflow-highlight-field="createdDate"] [data-sopflow-header-field="createdDate"],
+.inspector[data-sopflow-highlight-field="revisionDate"] [data-sopflow-header-field="revisionDate"],
+.inspector[data-sopflow-highlight-field="effectiveDate"] [data-sopflow-header-field="effectiveDate"],
+.inspector[data-sopflow-highlight-field="lawBasis"] [data-sopflow-header-field="lawBasis"],
+.inspector[data-sopflow-highlight-field="qualifications"] [data-sopflow-header-field="qualifications"],
+.inspector[data-sopflow-highlight-field="relatedSops"] [data-sopflow-header-field="relatedSops"],
+.inspector[data-sopflow-highlight-field="equipment"] [data-sopflow-header-field="equipment"],
+.inspector[data-sopflow-highlight-field="warnings"] [data-sopflow-header-field="warnings"],
+.inspector[data-sopflow-highlight-field="records"] [data-sopflow-header-field="records"] {
+  border-color: var(--sopflow-error-border);
+  background: var(--sopflow-error-surface);
+  box-shadow: inset 0 0 0 1px var(--sopflow-error-border);
+  scroll-margin: 2.5rem;
+}

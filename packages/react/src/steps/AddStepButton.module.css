@@ -7,7 +7,7 @@
   justify-self: start;
   width: fit-content;
   white-space: nowrap;
-  min-height: 2rem;
+  min-height: 1.875rem;
   line-height: 1.2;
   border-radius: var(--sopflow-radius-action);
   padding-inline: 0.75rem;

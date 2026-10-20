@@ -14,6 +14,7 @@ import type {
   ValidationIssue,
 } from "@sopflow/core";
 import type { SopDiagramConfig } from "@sopflow/diagram";
+import type { ProblemTarget } from "../workspace/resolveProblemTarget.js";
 import { SopBpmn } from "../diagram/SopBpmn.js";
 import { SopHeaderView } from "../header/SopHeaderView.js";
 import { SopProcedureView } from "../diagram/SopProcedureView.js";
@@ -41,6 +42,7 @@ export interface SopDocumentCanvasProps {
   header: SopHeaderValue;
   issues: readonly ValidationIssue[];
   selectedStepId: StepId | null;
+  activeProblemTarget?: ProblemTarget | null | undefined;
   onSelectedStepChange: (stepId: StepId | null) => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
@@ -65,6 +67,7 @@ export function SopDocumentCanvas({
   header,
   issues,
   selectedStepId,
+  activeProblemTarget,
   onSelectedStepChange,
   onOperation,
   onOperations,
@@ -196,6 +199,7 @@ export function SopDocumentCanvas({
                 document={document}
                 issues={[...issues]}
                 selectedStepId={selectedStepId}
+                activeProblemTarget={activeProblemTarget}
                 onSelectedStepChange={onSelectedStepChange}
                 onOperation={onOperation}
                 onOperations={onOperations}

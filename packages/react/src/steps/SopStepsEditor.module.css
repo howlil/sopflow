@@ -15,8 +15,9 @@
 
 .header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 0.75rem;
 
   margin-bottom: 0.5rem;
 }
@@ -191,3 +192,7 @@
 
 .editor[data-layout="compact"] .desktop { display: none; }
 .editor[data-layout="compact"] .mobile { display: grid; gap: 0.75rem; }
+
+.header > :first-child { min-width: 0; }
+.header > :last-child { flex: 0 0 auto; }
+@media (max-width: 500px) { .header { flex-wrap: wrap; } }

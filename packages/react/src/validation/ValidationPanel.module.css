@@ -75,3 +75,9 @@
   margin: 0;
   padding-inline-start: 1.125rem;
 }
+
+.issueAction { border: 0; padding: 0.25rem 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.issueAction:hover { text-decoration: underline; }
+.issueAction:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 3px; }
+
+.feedback { margin: 0; font-size: var(--sopflow-font-xs); line-height: 1.35; color: var(--sopflow-error-text); }
