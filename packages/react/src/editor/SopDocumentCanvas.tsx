@@ -221,6 +221,7 @@ export function SopDocumentCanvas({
                 {diagramKind === "bpmn" ? (
                   <SopBpmn
                     document={document}
+                    presentation="document"
                     selectedStepId={selectedStepId}
                     onSelectedStepChange={onSelectedStepChange}
                     manualEditing={manualEditing}
