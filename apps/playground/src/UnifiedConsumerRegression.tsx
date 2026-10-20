@@ -8,7 +8,7 @@ function button(root: ParentNode, label: string): HTMLButtonElement {
       item.textContent?.trim() === label ||
       (label === "Problems" && item.textContent?.trim().startsWith(label)),
   );
-  if (!result) throw new Error("Missing button: " + label);
+  if (!result) throw new Error(`Missing button: ${label}`);
   return result;
 }
 
@@ -34,7 +34,10 @@ async function exercise(): Promise<void> {
     !root.querySelector("[data-sopflow-document-toolbar]"),
     "The legacy in-document toolbar is still present",
   );
-  requireState(root.querySelector("[data-sopflow-problems]"), "Missing Problems");
+  requireState(
+    root.querySelector("[data-sopflow-problems]"),
+    "Missing Problems",
+  );
   requireState(
     !root.querySelector("[data-sopflow-validation-panel]"),
     "The old validation panel duplicates Problems",
@@ -104,9 +107,7 @@ async function exercise(): Promise<void> {
   button(root, "Problems").click();
   await tick();
   const problemIssue = Array.from(
-    root.querySelectorAll<HTMLButtonElement>(
-      "[data-sopflow-problems] button",
-    ),
+    root.querySelectorAll<HTMLButtonElement>("[data-sopflow-problems] button"),
   ).find((item) => item.textContent?.includes("Dasar hukum harus diisi"));
   requireState(problemIssue, "The readiness issue was not reported");
   problemIssue.click();
@@ -140,7 +141,9 @@ async function exercise(): Promise<void> {
 
 export function UnifiedConsumerRegression() {
   useEffect(() => {
-    const output = document.getElementById("unified-consumer-regression-status");
+    const output = document.getElementById(
+      "unified-consumer-regression-status",
+    );
     if (!output) return;
     void exercise()
       .then(() => {
