@@ -42,6 +42,7 @@ describe("EditableFormalFlowchartPath", () => {
   });
 
   it("previews a segment drag locally and persists exactly once on pointerup", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
     const onChange = vi.fn();
     const { container } = render(
       <svg viewBox="0 0 400 300">
@@ -102,6 +103,7 @@ describe("EditableFormalFlowchartPath", () => {
   });
 
   it("discards canceled drags without changing persisted diagram config", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
     const onChange = vi.fn();
     const { container } = render(
       <svg viewBox="0 0 400 300">
