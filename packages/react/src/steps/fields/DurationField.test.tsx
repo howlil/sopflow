@@ -11,7 +11,7 @@ function Harness() {
     <>
       <DurationField value={value} onChange={setValue} />
       <output data-testid="duration">
-        {value ? String(value.value) + " " + value.unit : "empty"}
+        {value ? [value.value, value.unit].join(" ") : "empty"}
       </output>
     </>
   );
@@ -21,7 +21,8 @@ describe("DurationField", () => {
   it("keeps the current unit across empty transitions without generating a zero value", async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    await user.click(screen.getByRole("combobox", { name: "Satuan waktu" }));
+    screen.getByRole("combobox", { name: "Satuan waktu" }).focus();
+    await user.keyboard("{ArrowDown}");
     await user.click(screen.getByRole("option", { name: "Jam" }));
     expect(screen.getByTestId("duration")).toHaveTextContent("empty");
     const amount = screen.getByRole("spinbutton", { name: "Jumlah waktu" });
