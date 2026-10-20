@@ -397,7 +397,7 @@ function ListSection({
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
             data-sopflow-header-field={value.length === 0 ? field : undefined}
-            aria-invalid={highlighted && value.length === 0 || undefined}
+            aria-invalid={(highlighted && value.length === 0) || undefined}
             onClick={() => onChange([...value, ""])}
           >
             +
@@ -422,7 +422,7 @@ function ListSection({
                   value={item}
                   aria-label={`${title} ${index + 1}`}
                   data-sopflow-header-field={index === 0 ? field : undefined}
-                  aria-invalid={highlighted && index === 0 || undefined}
+                  aria-invalid={(highlighted && index === 0) || undefined}
                   placeholder={title}
                   onChange={(event) => updateItem(index, event.target.value)}
                 />

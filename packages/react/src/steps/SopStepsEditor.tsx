@@ -165,7 +165,8 @@ export function SopStepsEditor({
                         stepOrder={stepOrder}
                         selected={selectedStepId === step.id}
                         highlightedField={
-                          activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id
+                          activeProblemTarget?.kind === "step" &&
+                          activeProblemTarget.stepId === step.id
                             ? activeProblemTarget.field
                             : undefined
                         }
@@ -192,7 +193,8 @@ export function SopStepsEditor({
                   stepOrder={stepOrder}
                   selected={selectedStepId === step.id}
                   highlightedField={
-                    activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id
+                    activeProblemTarget?.kind === "step" &&
+                    activeProblemTarget.stepId === step.id
                       ? activeProblemTarget.field
                       : undefined
                   }

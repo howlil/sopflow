@@ -14,7 +14,14 @@ import {
   type SopDiagramConfig,
   type SopDiagramConfigs,
 } from "@sopflow/diagram";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import "./styles/uiarc-scoped.css";
 import "./styles/token.css";
@@ -32,7 +39,12 @@ import type { SopHeaderValue } from "./header/types.js";
 import { getSopReadinessIssues } from "./validation/readiness.js";
 import type { SopReadinessIssue } from "./validation/readiness.js";
 import { ValidationPanel } from "./validation/ValidationPanel.js";
-import { focusProblemTarget, problemKey, resolveProblemTarget, type ProblemTarget } from "./workspace/resolveProblemTarget.js";
+import {
+  focusProblemTarget,
+  problemKey,
+  resolveProblemTarget,
+  type ProblemTarget,
+} from "./workspace/resolveProblemTarget.js";
 
 export interface SopEditorProps {
   value: SOPDocument;
@@ -131,8 +143,12 @@ export function SopEditor({
   );
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const [internalActiveIssue, setInternalActiveIssue] = useState<{ key: string; target: ProblemTarget } | null>(null);
-  const [pendingProblemTarget, setPendingProblemTarget] = useState<ProblemTarget | null>(null);
+  const [internalActiveIssue, setInternalActiveIssue] = useState<{
+    key: string;
+    target: ProblemTarget;
+  } | null>(null);
+  const [pendingProblemTarget, setPendingProblemTarget] =
+    useState<ProblemTarget | null>(null);
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
   const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
@@ -325,12 +341,18 @@ export function SopEditor({
     [controlledDiagramKind, onDiagramKindChange],
   );
 
-  const highlightedTarget = activeProblemTarget !== undefined
-    ? activeProblemTarget
-    : internalActiveIssue?.target ?? null;
+  const highlightedTarget =
+    activeProblemTarget !== undefined
+      ? activeProblemTarget
+      : (internalActiveIssue?.target ?? null);
 
   useEffect(() => {
-    if (internalActiveIssue && !readinessIssues.some((issue) => problemKey(issue) === internalActiveIssue.key)) {
+    if (
+      internalActiveIssue &&
+      !readinessIssues.some(
+        (issue) => problemKey(issue) === internalActiveIssue.key,
+      )
+    ) {
       setInternalActiveIssue(null);
     }
   }, [internalActiveIssue, readinessIssues]);
@@ -353,7 +375,12 @@ export function SopEditor({
     if (!pendingProblemTarget || !rootRef.current) return;
     if (pendingProblemTarget.kind === "step" && mode !== "steps") return;
     if (pendingProblemTarget.kind === "steps" && mode !== "steps") return;
-    if ((pendingProblemTarget.kind === "header" || pendingProblemTarget.kind === "actors") && !inspectorOpen) return;
+    if (
+      (pendingProblemTarget.kind === "header" ||
+        pendingProblemTarget.kind === "actors") &&
+      !inspectorOpen
+    )
+      return;
     focusProblemTarget(rootRef.current, pendingProblemTarget);
     setPendingProblemTarget(null);
   }, [pendingProblemTarget, mode, inspectorOpen]);
@@ -372,7 +399,10 @@ export function SopEditor({
     >
       <EditorStatus loading={loading} error={error} />
       {showValidationPanel ? (
-        <ValidationPanel issues={readinessIssues} onNavigate={navigateValidationIssue} />
+        <ValidationPanel
+          issues={readinessIssues}
+          onNavigate={navigateValidationIssue}
+        />
       ) : null}
 
       <div className={styles.workspaceScroll}>
@@ -446,7 +476,11 @@ export function SopEditor({
 
               <div className={styles.inspectorContent}>
                 <SopHeaderFields
-                  highlightedField={highlightedTarget?.kind === "header" ? highlightedTarget.field : undefined}
+                  highlightedField={
+                    highlightedTarget?.kind === "header"
+                      ? highlightedTarget.field
+                      : undefined
+                  }
                   document={value}
                   header={header}
                   disabled={readOnly || loading}

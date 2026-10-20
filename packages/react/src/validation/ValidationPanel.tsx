@@ -52,14 +52,20 @@ export function ValidationPanel({ issues, onNavigate }: ValidationPanelProps) {
               key={`${issue.kind}:${issue.code}:${issueDetail(issue)}:${issue.message}`}
             >
               {onNavigate ? (
-                <button type="button" className={styles.issueAction} onClick={() => onNavigate(issue)}>
+                <button
+                  type="button"
+                  className={styles.issueAction}
+                  onClick={() => onNavigate(issue)}
+                >
                   {issue.kind === "schema" && issue.path.length > 0
                     ? `${issue.path.join(".")}: ${issue.message}`
                     : issue.message}
                 </button>
-              ) : issue.kind === "schema" && issue.path.length > 0
-                ? `${issue.path.join(".")}: ${issue.message}`
-                : issue.message}
+              ) : issue.kind === "schema" && issue.path.length > 0 ? (
+                `${issue.path.join(".")}: ${issue.message}`
+              ) : (
+                issue.message
+              )}
             </li>
           ))}
         </ul>

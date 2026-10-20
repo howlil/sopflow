@@ -26,7 +26,12 @@ import type { SopDiagramKind } from "../SopEditor.js";
 import type { SopReadinessIssue } from "../validation/readiness.js";
 import { getSopReadinessIssues } from "../validation/readiness.js";
 import { ProblemsPanel } from "./ProblemsPanel.js";
-import { focusProblemTarget, problemKey, resolveProblemTarget, type ProblemTarget } from "./resolveProblemTarget.js";
+import {
+  focusProblemTarget,
+  problemKey,
+  resolveProblemTarget,
+  type ProblemTarget,
+} from "./resolveProblemTarget.js";
 import styles from "./SopUnifiedWorkspace.module.css";
 
 type UnifiedView = "flowchart" | "bpmn" | "steps";
@@ -85,8 +90,12 @@ export function SopUnifiedWorkspace({
     getSopReadinessIssues(value, workspaceProps.header),
   );
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
-  const [pendingNavigation, setPendingNavigation] = useState<ProblemTarget | null>(null);
-  const [activeIssue, setActiveIssue] = useState<{ key: string; target: ProblemTarget } | null>(null);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<ProblemTarget | null>(null);
+  const [activeIssue, setActiveIssue] = useState<{
+    key: string;
+    target: ProblemTarget;
+  } | null>(null);
   const [navigationFeedback, setNavigationFeedback] = useState<string | null>(
     null,
   );
@@ -266,13 +275,18 @@ export function SopUnifiedWorkspace({
   useLayoutEffect(() => {
     if (!pendingNavigation || !shellRef.current) return;
     if (!focusProblemTarget(shellRef.current, pendingNavigation)) {
-      setNavigationFeedback("The target is not available. Review the relevant section manually.");
+      setNavigationFeedback(
+        "The target is not available. Review the relevant section manually.",
+      );
     }
     setPendingNavigation(null);
   }, [pendingNavigation]);
 
   useLayoutEffect(() => {
-    if (activeIssue && !issues.some((issue) => problemKey(issue) === activeIssue.key)) {
+    if (
+      activeIssue &&
+      !issues.some((issue) => problemKey(issue) === activeIssue.key)
+    ) {
       setActiveIssue(null);
     }
   }, [activeIssue, issues]);
