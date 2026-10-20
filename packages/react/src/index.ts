@@ -48,6 +48,8 @@ export { SopProcedureView } from "./diagram/SopProcedureView.js";
 export type { SopProcedureViewProps } from "./diagram/SopProcedureView.js";
 export { SopStepFields } from "./steps/SopStepFields.js";
 export type { SopStepFieldsProps } from "./steps/SopStepFields.js";
+export { SopUnifiedWorkspace } from "./workspace/SopUnifiedWorkspace.js";
+export type { SopUnifiedWorkspaceProps } from "./workspace/SopUnifiedWorkspace.js";
 export { SopWorkspace } from "./workspace/SopWorkspace.js";
 export type {
   SopWorkspaceProps,
