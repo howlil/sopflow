@@ -26,6 +26,12 @@
   --sopflow-radius-surface: 16px;
   --sopflow-radius-popover: 14px;
   --sopflow-radius-inline: 10px;
+  --sopflow-radius-field: 10px;
+  --sopflow-radius-action: 9999px;
+  --sopflow-radius-chip: 9999px;
+  --sopflow-radius-dialog: 16px;
+  --sopflow-field-height: 36px;
+  --sopflow-field-padding-x: 10px;
   --sopflow-radius-document: 0px;
 
   /* Interaction tokens derive from Arc UI's MIT foundation/motion presets.

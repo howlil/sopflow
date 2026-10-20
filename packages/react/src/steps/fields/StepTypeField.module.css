@@ -10,7 +10,7 @@
   box-sizing: border-box;
 
   border: 1px solid var(--sopflow-border);
-  border-radius: var(--sopflow-control-radius);
+  border-radius: var(--sopflow-radius-field);
 
   padding: 0.375rem 0.5rem;
 

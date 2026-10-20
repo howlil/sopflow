@@ -7,7 +7,7 @@
   overflow: hidden;
 
   border: 1px solid var(--sopflow-border);
-  border-radius: var(--sopflow-control-radius);
+  border-radius: var(--sopflow-radius-field);
 
   background: var(--sopflow-surface);
 }

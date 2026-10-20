@@ -71,7 +71,8 @@ export function SopHeaderFields({
             compact
             label="Field SOP"
             className={styles.textarea}
-            rows={3}
+            rows={1}
+            style={{ resize: "vertical", maxHeight: 144 }}
             value={header.institutionName}
             disabled={headerDisabled}
             aria-label="Nama lembaga"
@@ -164,7 +165,8 @@ export function SopHeaderFields({
             compact
             label="Field SOP"
             className={styles.textarea}
-            rows={2}
+            rows={1}
+            style={{ resize: "vertical", maxHeight: 144 }}
             value={document.title}
             disabled={documentDisabled}
             aria-label="Nama SOP"
