@@ -165,8 +165,11 @@ async function run() {
       popupBounds.bottom <= window.innerHeight + 2,
     "Calendar popover overflowed viewport",
   );
-  const day21 = Array.from(calendar.querySelectorAll<HTMLButtonElement>("button"))
-    .find((button) => button.getAttribute("aria-label")?.includes("21 Oktober 2026"));
+  const day21 = Array.from(
+    calendar.querySelectorAll<HTMLButtonElement>("button"),
+  ).find((button) =>
+    button.getAttribute("aria-label")?.includes("21 Oktober 2026"),
+  );
   assert(day21, "Calendar day 21 is missing");
   day21.click();
   await delay(120);
