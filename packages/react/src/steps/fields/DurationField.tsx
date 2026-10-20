@@ -90,7 +90,6 @@ export function DurationField({
         <ArcSelect
           compact
           label="Satuan waktu"
-          className={styles.unit}
           value={unit}
           disabled={disabled}
           options={UNITS}
@@ -98,7 +97,7 @@ export function DurationField({
             handleUnitChange(next as Duration["unit"])
           }
         />
-      </div>elect>
+      </div>
     </div>
   );
 }

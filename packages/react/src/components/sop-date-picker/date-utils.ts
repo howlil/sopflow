@@ -13,7 +13,9 @@ export function parseISODate(value: string): Date | null {
     result.getFullYear() !== year ||
     result.getMonth() !== month - 1 ||
     result.getDate() !== day
-  ) return null;
+  ) {
+    return null;
+  }
   return result;
 }
 

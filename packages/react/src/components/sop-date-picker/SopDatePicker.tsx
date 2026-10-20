@@ -1,5 +1,6 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -35,10 +36,10 @@ export function SopDatePicker({
   const [focused, setFocused] = useState(() => selected ?? new Date());
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
-  function close(restoreFocus = false) {
+  const close = useCallback((restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) triggerRef.current?.focus();
-  }
+  }, []);
 
   function openCalendar() {
     if (disabled) return;
@@ -53,11 +54,15 @@ export function SopDatePicker({
       if (!trigger) return;
       const bounds = trigger.getBoundingClientRect();
       const width = Math.min(280, window.innerWidth - 16);
-      const left = Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8));
+      const left = Math.max(
+        8,
+        Math.min(bounds.left, window.innerWidth - width - 8),
+      );
       const spaceBelow = window.innerHeight - bounds.bottom;
-      const top = spaceBelow >= 322 || bounds.top < 322
-        ? Math.min(bounds.bottom + 5, window.innerHeight - 322)
-        : bounds.top - 327;
+      const top =
+        spaceBelow >= 322 || bounds.top < 322
+          ? Math.min(bounds.bottom + 5, window.innerHeight - 322)
+          : bounds.top - 327;
       setPosition({ left, top: Math.max(8, top) });
     }
     measure();
@@ -75,26 +80,35 @@ export function SopDatePicker({
       if (
         !triggerRef.current?.contains(event.target as Node) &&
         !popupRef.current?.contains(event.target as Node)
-      ) close();
+      )
+        close();
     }
     window.addEventListener("pointerdown", outside);
     return () => window.removeEventListener("pointerdown", outside);
-  }, [open]);
+  }, [open, close]);
 
+  const focusedKey = formatISODate(focused);
   useLayoutEffect(() => {
     if (!open) return;
     const target = popupRef.current?.querySelector<HTMLButtonElement>(
-      '[data-focused="true"]',
+      `[data-iso="${focusedKey}"]`,
     );
     target?.focus({ preventScroll: true });
-  }, [open, focused]);
+  }, [open, focusedKey]);
 
   function shiftMonth(amount: number) {
     setFocused((previous) => {
-      const date = new Date(previous.getFullYear(), previous.getMonth() + amount, 1);
-      date.setDate(Math.min(previous.getDate(), new Date(
-        date.getFullYear(), date.getMonth() + 1, 0,
-      ).getDate()));
+      const date = new Date(
+        previous.getFullYear(),
+        previous.getMonth() + amount,
+        1,
+      );
+      date.setDate(
+        Math.min(
+          previous.getDate(),
+          new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(),
+        ),
+      );
       return date;
     });
   }
@@ -136,7 +150,9 @@ export function SopDatePicker({
   }).format(focused);
   const dateText = selected
     ? new Intl.DateTimeFormat("id-ID", {
-        day: "numeric", month: "short", year: "numeric",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
       }).format(selected)
     : "Pilih tanggal";
 
@@ -186,13 +202,23 @@ export function SopDatePicker({
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </div>
-              <div className={styles.calendar} role="grid" aria-label={monthName}>
-                {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((day) => (
-                  <span className={styles.weekday} key={day} aria-hidden="true">{day}</span>
-                ))}
-                {Array.from({ length: weekdayOffset }, (_, index) => (
-                  <span key={"empty-" + index} aria-hidden="true" />
-                ))}
+              <div className={styles.calendar} aria-label={monthName}>
+                {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map(
+                  (day) => (
+                    <span
+                      className={styles.weekday}
+                      key={day}
+                      aria-hidden="true"
+                    >
+                      {day}
+                    </span>
+                  ),
+                )}
+                {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
+                  .slice(0, weekdayOffset)
+                  .map((day) => (
+                    <span key={`blank-${day}`} aria-hidden="true" />
+                  ))}
                 {Array.from({ length: dayCount }, (_, index) => {
                   const date = new Date(year, month, index + 1);
                   const iso = formatISODate(date);
@@ -204,8 +230,12 @@ export function SopDatePicker({
                       type="button"
                       className={styles.day}
                       data-focused={isFocused}
+                      data-iso={iso}
                       aria-label={new Intl.DateTimeFormat("id-ID", {
-                        weekday: "long", day: "numeric", month: "long", year: "numeric",
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
                       }).format(date)}
                       aria-pressed={isSelected}
                       onClick={() => {
