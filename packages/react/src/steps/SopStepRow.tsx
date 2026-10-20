@@ -16,6 +16,7 @@ import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
 import { useStepEditorController } from "./hooks/useStepEditorController.js";
 import type { StepDiagnostic } from "../validation/getStepIssues.js";
+import type { StepProblemField } from "../workspace/resolveProblemTarget.js";
 import styles from "./SopStepRow.module.css";
 
 export interface SopStepRowProps {
@@ -26,6 +27,7 @@ export interface SopStepRowProps {
   orderedSteps?: readonly Step[];
   stepOrder?: ReadonlyMap<string, number>;
   selected?: boolean;
+  highlightedField?: StepProblemField;
   onSelect: () => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
@@ -40,6 +42,7 @@ export function SopStepRow({
   orderedSteps,
   stepOrder,
   selected = false,
+  highlightedField,
   onSelect,
   onOperation,
   onOperations,
@@ -80,6 +83,7 @@ export function SopStepRow({
         aria-selected={selected}
         data-error={hasError || undefined}
         data-selected={selected || undefined}
+        data-sopflow-highlight-field={highlightedField}
         data-disabled={disabled || undefined}
         onClick={onSelect}
         onKeyDown={(event) => {
@@ -91,8 +95,9 @@ export function SopStepRow({
       >
         <td className={styles.number}>{index + 1}</td>
 
-        <td>
+        <td data-sopflow-step-field="name">
           <StepNameField
+            error={highlightedField === "name"}
             value={step.name}
             readOnly={disabled}
             onChange={updateName}
@@ -112,7 +117,7 @@ export function SopStepRow({
           ) : null}
         </td>
 
-        <td>
+        <td data-sopflow-step-field="type">
           <StepTypeField
             step={step}
             steps={orderedSteps ?? getPresentationSteps(document)}
@@ -122,25 +127,26 @@ export function SopStepRow({
           />
         </td>
 
-        <td>
+        <td data-sopflow-step-field="actorIds">
           <ActorField
             value={step.actorIds}
             actors={document.actors}
             readOnly={disabled}
-            error={hasActorError}
+            error={hasActorError || highlightedField === "actorIds"}
             onChange={updateActorIds}
           />
         </td>
 
-        <td>
+        <td data-sopflow-step-field="input">
           <InputField
+            error={highlightedField === "input"}
             value={step.input}
             readOnly={disabled}
             onChange={updateInput}
           />
         </td>
 
-        <td>
+        <td data-sopflow-step-field="duration">
           <DurationField
             value={step.duration}
             readOnly={disabled}
@@ -148,23 +154,25 @@ export function SopStepRow({
           />
         </td>
 
-        <td>
+        <td data-sopflow-step-field="output">
           <OutputField
+            error={highlightedField === "output"}
             value={step.output}
             readOnly={disabled}
             onChange={updateOutput}
           />
         </td>
 
-        <td>
+        <td data-sopflow-step-field="note">
           <NoteField
+            error={highlightedField === "note"}
             value={step.note}
             readOnly={disabled}
             onChange={updateNote}
           />
         </td>
 
-        <td className={styles.actions}>
+        <td className={styles.actions} data-sopflow-step-field="decisionRoutes">
           <StepActions
             step={step}
             disabled={disabled}

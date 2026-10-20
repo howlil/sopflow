@@ -18,6 +18,7 @@ import { DecisionEditor } from "./DecisionEditor.js";
 import { DeleteStepDialog } from "./DeleteStepDialog.js";
 import { useStepEditorController } from "./hooks/useStepEditorController.js";
 import type { StepDiagnostic } from "../validation/getStepIssues.js";
+import type { StepProblemField } from "../workspace/resolveProblemTarget.js";
 import styles from "./SopStepCard.module.css";
 
 export interface SopStepCardProps {
@@ -28,6 +29,7 @@ export interface SopStepCardProps {
   orderedSteps?: readonly Step[];
   stepOrder?: ReadonlyMap<string, number>;
   selected?: boolean;
+  highlightedField?: StepProblemField;
   onSelect: () => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
@@ -42,6 +44,7 @@ export function SopStepCard({
   orderedSteps,
   stepOrder,
   selected = false,
+  highlightedField,
   onSelect,
   onOperation,
   onOperations,
@@ -78,6 +81,7 @@ export function SopStepCard({
       className={styles.card}
       data-sopflow-step-id={step.id}
       data-selected={selected || undefined}
+      data-sopflow-highlight-field={highlightedField}
       data-error={hasError || undefined}
       data-disabled={disabled || undefined}
     >
@@ -92,17 +96,20 @@ export function SopStepCard({
           <strong className={styles.title}>Langkah {index + 1}</strong>
         </Button>
 
-        <StepActions
+        <div data-sopflow-step-field="decisionRoutes">
+          <StepActions
           step={step}
           disabled={disabled}
           onAddAfter={addAfter}
           onDelete={openDeleteDialog}
           onConfigureDecision={openDecisionEditor}
-        />
+          />
+        </div>
       </header>
 
-      <Field label="Kegiatan">
+      <Field label="Kegiatan" field="name">
         <StepNameField
+          error={highlightedField === "name"}
           value={step.name}
           readOnly={disabled}
           onChange={updateName}
@@ -120,7 +127,7 @@ export function SopStepCard({
       ) : null}
 
       <div className={styles.twoColumns}>
-        <Field label="Tipe">
+        <Field label="Tipe" field="type">
           <StepTypeField
             step={step}
             steps={orderedSteps ?? getPresentationSteps(document)}
@@ -130,26 +137,27 @@ export function SopStepCard({
           />
         </Field>
 
-        <Field label="Pelaksana">
+        <Field label="Pelaksana" field="actorIds">
           <ActorField
             value={step.actorIds}
             actors={document.actors}
             readOnly={disabled}
-            error={hasActorError}
+            error={hasActorError || highlightedField === "actorIds"}
             onChange={updateActorIds}
           />
         </Field>
       </div>
 
-      <Field label="Kelengkapan">
+      <Field label="Kelengkapan" field="input">
         <InputField
+          error={highlightedField === "input"}
           value={step.input}
           readOnly={disabled}
           onChange={updateInput}
         />
       </Field>
 
-      <Field label="Waktu">
+      <Field label="Waktu" field="duration">
         <DurationField
           value={step.duration}
           readOnly={disabled}
@@ -157,16 +165,18 @@ export function SopStepCard({
         />
       </Field>
 
-      <Field label="Output">
+      <Field label="Output" field="output">
         <OutputField
+          error={highlightedField === "output"}
           value={step.output}
           readOnly={disabled}
           onChange={updateOutput}
         />
       </Field>
 
-      <Field label="Keterangan">
+      <Field label="Keterangan" field="note">
         <NoteField
+          error={highlightedField === "note"}
           value={step.note}
           readOnly={disabled}
           onChange={updateNote}
@@ -198,9 +208,9 @@ export function SopStepCard({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, field }: { label: string; children: ReactNode; field: string }) {
   return (
-    <div className={styles.field}>
+    <div className={styles.field} data-sopflow-step-field={field}>
       <span className={styles.label}>{label}</span>
 
       {children}

@@ -97,3 +97,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Only the activated issue target receives error treatment, not the whole row. */
+[data-sopflow-highlight-field] [data-sopflow-step-field] { scroll-margin: 2.5rem; }
+[data-sopflow-highlight-field="actorIds"] [data-sopflow-step-field="actorIds"] button,
+[data-sopflow-highlight-field="decisionRoutes"] [data-sopflow-step-field="decisionRoutes"] button {
+  border-color: var(--sopflow-error-border);
+  background: var(--sopflow-error-surface);
+  box-shadow: inset 0 0 0 1px var(--sopflow-error-border);
+}
+[data-sopflow-highlight-field="actorIds"] [data-sopflow-step-field="actorIds"],
+[data-sopflow-highlight-field="decisionRoutes"] [data-sopflow-step-field="decisionRoutes"] {
+  color: var(--sopflow-error-text);
+}

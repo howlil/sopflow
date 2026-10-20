@@ -15,11 +15,13 @@ import { SopStepRow } from "./SopStepRow.js";
 import { useStepKeyboardNavigation } from "./hooks/useStepKeyboardNavigation.js";
 import { useCompactStepsLayout } from "./hooks/useCompactStepsLayout.js";
 import type { StepDiagnostic } from "../validation/getStepIssues.js";
+import type { ProblemTarget } from "../workspace/resolveProblemTarget.js";
 
 export interface SopStepsEditorProps {
   document: SOPDocument;
   issues: ValidationIssue[];
   selectedStepId: StepId | null;
+  activeProblemTarget?: ProblemTarget | null;
   onSelectedStepChange: (stepId: StepId | null) => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
@@ -29,6 +31,7 @@ export function SopStepsEditor({
   document,
   issues,
   selectedStepId,
+  activeProblemTarget,
   onSelectedStepChange,
   onOperation,
   onOperations,
@@ -161,6 +164,8 @@ export function SopStepsEditor({
                         orderedSteps={steps}
                         stepOrder={stepOrder}
                         selected={selectedStepId === step.id}
+                  highlightedField={activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id ? activeProblemTarget.field : undefined}
+                        highlightedField={activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id ? activeProblemTarget.field : undefined}
                         onSelect={() => onSelectedStepChange(step.id)}
                         onOperation={onOperation}
                         onOperations={onOperations}
