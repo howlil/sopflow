@@ -28,7 +28,7 @@
 .trigger[aria-expanded="true"] .chevron { transform: rotate(180deg); }
 .description { font-size: var(--text-xs); }
 /* Rendered under document.body: fixed coordinates stay outside horizontal table scroll clipping. */
-.menu { position: fixed; z-index: 1000; box-sizing: border-box; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-panel); padding: 5px; background: var(--surface-raised); box-shadow: var(--shadow-floating); transform-origin: top center; will-change: transform, opacity; }
+.menu { position: fixed; z-index: 1200; box-sizing: border-box; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-panel); padding: 5px; background: var(--surface-raised); box-shadow: var(--shadow-floating); transform-origin: top center; will-change: transform, opacity; }
 .menu[data-side="top"] { transform-origin: bottom center; }
 /* Arrow keys move the highlight often, so it changes almost instantly. Selection is shown by the check, not by weight, so labels never reflow. */
 .option { display: flex; width: 100%; min-height: 38px; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: var(--radius-pill); padding: 0 11px; background: transparent; color: var(--foreground); font: inherit; font-size: var(--text-sm); text-align: left; cursor: pointer; transition: background-color 80ms var(--ease-standard), color 80ms var(--ease-standard); }
