@@ -1,5 +1,5 @@
 import { Button } from "../primitives/Button.js";
-import { useId, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
 import { SopInput } from "../primitives/Input.js";
@@ -28,9 +28,24 @@ export function SopHeaderFields({
 }: SopHeaderFieldsProps) {
   const headerDisabled = disabled || !onHeaderChange;
   const documentDisabled = disabled || !onDocumentChange;
+  const institutionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const logoInputId = useId();
   const [logoError, setLogoError] = useState<string | null>(null);
+
+  // Measure the actual wrapped content after controlled updates, including
+  // externally loaded documents. A one-row field stays compact until needed.
+  useLayoutEffect(() => {
+    for (const field of [institutionTextareaRef.current, titleTextareaRef.current]) {
+      if (!field) continue;
+      field.style.height = "auto";
+      const measured = field.scrollHeight;
+      const height = Math.max(36, Math.min(144, measured));
+      field.style.height = `${height}px`;
+      field.style.overflowY = measured > 144 ? "auto" : "hidden";
+    }
+  }, [header.institutionName, document.title]);
 
   function updateHeader<K extends keyof SopHeaderValue>(
     key: K,
@@ -69,11 +84,11 @@ export function SopHeaderFields({
         <Field label="Nama lembaga">
           <ArcTextarea
             data-sopflow-header-field="institutionName"
+            ref={institutionTextareaRef}
             compact
             label="Field SOP"
             className={styles.textarea}
             rows={1}
-            style={{ resize: "vertical", maxHeight: 144 }}
             value={header.institutionName}
             disabled={headerDisabled}
             aria-label="Nama lembaga"
@@ -163,11 +178,11 @@ export function SopHeaderFields({
         <Field label="Nama SOP">
           <ArcTextarea
             data-sopflow-header-field="title"
+            ref={titleTextareaRef}
             compact
             label="Field SOP"
             className={styles.textarea}
             rows={1}
-            style={{ resize: "vertical", maxHeight: 144 }}
             value={document.title}
             disabled={documentDisabled}
             aria-label="Nama SOP"

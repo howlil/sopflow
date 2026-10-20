@@ -113,6 +113,22 @@ export function SopDatePicker({
     });
   }
 
+  function focusAroundTrigger(backward: boolean) {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    // The popup is portaled to body. Tab would otherwise resume from the
+    // detached calendar day near the end of the DOM, skipping inspector fields.
+    const selector =
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      trigger.ownerDocument.querySelectorAll<HTMLElement>(selector),
+    ).filter((element) => !popupRef.current?.contains(element));
+    const index = focusables.indexOf(trigger);
+    const next = focusables[index + (backward ? -1 : 1)];
+    close();
+    (next ?? trigger).focus();
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const movement: Record<string, number> = {
       ArrowLeft: -1,
@@ -126,7 +142,8 @@ export function SopDatePicker({
       return;
     }
     if (event.key === "Tab") {
-      close();
+      event.preventDefault();
+      focusAroundTrigger(event.shiftKey);
       return;
     }
     if (event.key === "PageUp" || event.key === "PageDown") {
@@ -258,7 +275,13 @@ export function SopDatePicker({
                 >
                   Kosongkan
                 </button>
-                <button type="button" onClick={() => setFocused(new Date())}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onValueChange(formatISODate(new Date()));
+                    close(true);
+                  }}
+                >
                   Hari ini
                 </button>
               </div>

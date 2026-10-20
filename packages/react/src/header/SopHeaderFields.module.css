@@ -155,6 +155,11 @@
   resize: vertical;
 }
 
+.textarea {
+  max-height: 144px;
+  resize: none;
+}
+
 .input:focus-visible,
 .textarea:focus-visible,
 .listInput:focus-visible {

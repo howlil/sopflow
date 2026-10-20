@@ -95,4 +95,43 @@ describe("SopHeaderFields", () => {
       screen.queryByRole("button", { name: "Tambah dasar hukum" }),
     ).not.toBeInTheDocument();
   });
+
+  it("resizes institution and SOP title fields when controlled content expands or shrinks", async () => {
+    const original = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "scrollHeight",
+    );
+    Object.defineProperty(HTMLTextAreaElement.prototype, "scrollHeight", {
+      configurable: true,
+      get() {
+        return (this as HTMLTextAreaElement).value.includes("\\n") ? 168 : 36;
+      },
+    });
+    try {
+      const user = userEvent.setup();
+      render(<Harness />);
+      const institution = screen.getByRole("textbox", { name: "Nama lembaga" });
+      const title = screen.getByRole("textbox", { name: "Nama SOP" });
+      expect(institution).toHaveStyle({ height: "36px", overflowY: "hidden" });
+      expect(title).toHaveStyle({ height: "36px" });
+
+      await user.type(institution, "{end}{enter}Alamat panjang");
+      expect(institution).toHaveStyle({ height: "144px", overflowY: "auto" });
+      await user.clear(institution);
+      expect(institution).toHaveStyle({ height: "36px", overflowY: "hidden" });
+
+      await user.type(title, "{end}{enter}Deskripsi");
+      expect(title).toHaveStyle({ height: "144px" });
+      await user.clear(title);
+      expect(title).toHaveStyle({ height: "36px" });
+    } finally {
+      if (original)
+        Object.defineProperty(
+          HTMLTextAreaElement.prototype,
+          "scrollHeight",
+          original,
+        );
+      else delete (HTMLTextAreaElement.prototype as unknown as Record<string, unknown>).scrollHeight;
+    }
+  });
 });
