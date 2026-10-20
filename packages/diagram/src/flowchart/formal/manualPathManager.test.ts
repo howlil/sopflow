@@ -72,7 +72,7 @@ describe("manual path manager", () => {
       index: 0,
       originPath: path,
       originPoint: { x: 100, y: 100 },
-      point: { x: 180, y: 120 },
+      point: { x: 119, y: 100 },
       context: {
         ...context,
         sourceRect: { left: 80, top: 80, width: 40, height: 40 },
