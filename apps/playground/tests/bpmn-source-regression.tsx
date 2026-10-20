@@ -167,13 +167,16 @@ function verify() {
     '[data-sopflow-bpmn][data-presentation="document"]',
   );
   check(documentRoot, "Document BPMN root missing");
-  const documentSvg = documentRoot.querySelector<SVGSVGElement>('svg[role="img"]');
+  const documentSvg =
+    documentRoot.querySelector<SVGSVGElement>('svg[role="img"]');
   const laneFrame = documentRoot.querySelector<SVGRectElement>(
     "[data-sopflow-bpmn-lane-frame]",
   );
   check(documentSvg && laneFrame, "Full-width BPMN grid missing");
   check(
-    Math.abs(documentSvg.getBoundingClientRect().width - documentRoot.clientWidth) <= 1,
+    Math.abs(
+      documentSvg.getBoundingClientRect().width - documentRoot.clientWidth,
+    ) <= 1,
     "Document BPMN does not match its available width",
   );
   check(
