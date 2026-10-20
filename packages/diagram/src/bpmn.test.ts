@@ -47,7 +47,9 @@ describe("buildBpmnModel", () => {
     const invalid: SOPDocument = {
       ...document,
       steps: document.steps.map((step) =>
-        step.id === "review" ? { ...step, actorIds: ["staff", "manager"] } : step,
+        step.id === "review"
+          ? { ...step, actorIds: ["staff", "manager"] }
+          : step,
       ),
     };
     const model = buildBpmnModel(invalid);
