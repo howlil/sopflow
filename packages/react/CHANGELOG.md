@@ -1,5 +1,11 @@
 # @sopflow/react
 
+## 0.3.1
+
+### Patch Changes
+
+- 3d78310: Fix the UIArc dialog overlay so confirmation modals remain visible, standardize compact SOP form controls and Steps actions, replace native date/time inputs with styled calendar and duration selectors, provide stable actor labels, and repair inspector textarea autosizing and keyboard focus behavior with browser regression coverage.
+
 ## 0.3.0
 
 ### Minor Changes
