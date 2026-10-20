@@ -202,7 +202,7 @@ export function SopDatePicker({
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </div>
-              <div className={styles.calendar} aria-label={monthName}>
+              <div className={styles.calendar}>
                 {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map(
                   (day) => (
                     <span

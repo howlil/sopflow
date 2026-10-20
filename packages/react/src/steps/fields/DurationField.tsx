@@ -93,9 +93,7 @@ export function DurationField({
           value={unit}
           disabled={disabled}
           options={UNITS}
-          onValueChange={(next) =>
-            handleUnitChange(next as Duration["unit"])
-          }
+          onValueChange={(next) => handleUnitChange(next as Duration["unit"])}
         />
       </div>
     </div>
