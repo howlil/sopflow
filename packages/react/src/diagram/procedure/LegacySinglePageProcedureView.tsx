@@ -488,11 +488,9 @@ export function LegacySinglePageSopProcedureView({
                   </td>
 
                   {model.actorColumns.map((actor, actorIndex) => {
-                    const primary =
-                      actor.actorId === row.primaryActorId ||
-                      (actor.actorId === null &&
-                        row.primaryActorId === null &&
-                        model.actorColumns.length === 1);
+                    // Render invalid/unassigned steps in the fallback lane
+                    // alongside the normal actor columns, not only when alone.
+                    const primary = actor.actorId === row.primaryActorId;
 
                     return (
                       <td

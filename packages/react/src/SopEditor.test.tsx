@@ -715,7 +715,7 @@ describe("SopEditor actor mutations", () => {
     );
   });
 
-  it("removes one actor assignment without dropping the others", async () => {
+  it("replaces all legacy actor assignments with the selected SOP-AP actor", async () => {
     const user = userEvent.setup();
 
     render(<EditorHarness initial={actorDocument} />);
@@ -733,7 +733,7 @@ describe("SopEditor actor mutations", () => {
     const document = readDocument();
     const review = document.steps.find((step) => step.id === "review");
 
-    expect(review?.actorIds).toEqual(["staff"]);
+    expect(review?.actorIds).toEqual(["manager"]);
   });
 
   it("removes actor references from steps without exposing undo", async () => {

@@ -12,7 +12,6 @@ const actors: Actor[] = [
 
 function Harness() {
   const [value, setValue] = useState<string[]>(["staff"]);
-
   return (
     <>
       <ActorField value={value} actors={actors} onChange={setValue} />
@@ -22,41 +21,44 @@ function Harness() {
 }
 
 describe("ActorField", () => {
-  it("keeps multi-actor assignment compact until opened", async () => {
+  it("replaces the existing actor and dismisses the picker", async () => {
     const user = userEvent.setup();
     const { container } = render(<Harness />);
     const trigger = container.querySelector<HTMLElement>(
       "[data-sopflow-actor-trigger]",
     );
-
     expect(trigger).not.toBeNull();
     expect(trigger).toHaveTextContent("Staff");
 
     await user.click(trigger as HTMLElement);
-
-    expect(screen.getByRole("option", { name: "Staff" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(screen.getByRole("option", { name: "Manager" })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
-
+    expect(
+      screen.getByRole("listbox", { name: "Pelaksana" }),
+    ).not.toHaveAttribute("aria-multiselectable", "true");
     await user.click(screen.getByRole("option", { name: "Manager" }));
-
-    expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
-    expect(trigger?.querySelector('[aria-hidden="true"]')).toHaveTextContent(
-      "Staff+1",
-    );
-
-    await user.click(screen.getByRole("option", { name: "Staff" }));
-
     expect(screen.getByTestId("value")).toHaveTextContent("manager");
     expect(trigger).toHaveTextContent("Manager");
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
   });
 
-  it("portals the listbox outside clipped procedure table containers", async () => {
+  it("does not emit a duplicate change when reselecting the current actor", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ActorField value={["staff"]} actors={actors} onChange={onChange} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
+    await user.click(screen.getByRole("option", { name: "Staff" }));
+
+    expect(onChange).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the listbox outside the clipped procedure table", async () => {
     const user = userEvent.setup();
     const { container } = render(
       <div style={{ overflow: "auto", height: 90 }}>
@@ -71,11 +73,6 @@ describe("ActorField", () => {
     const menu = screen.getByRole("listbox", { name: "Pelaksana" });
     expect(menu.parentElement).toBe(document.body);
     expect(container.contains(menu)).toBe(false);
-    expect(menu).toHaveAttribute("data-sopflow-root");
-
-    await user.click(screen.getByRole("option", { name: "Manager" }));
-    expect(screen.getByTestId("value")).toHaveTextContent("staff,manager");
-    expect(menu).toBeInTheDocument();
     await user.keyboard("{Escape}");
     await waitFor(() =>
       expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
@@ -83,7 +80,7 @@ describe("ActorField", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("dismisses the portal on outside pointer presses", async () => {
+  it("dismisses the picker on an outside pointer press", async () => {
     const user = userEvent.setup();
     render(
       <>
@@ -99,7 +96,26 @@ describe("ActorField", () => {
     );
   });
 
-  it("renders every selected actor in read-only mode", () => {
+  it("does not silently discard a legacy multi-actor assignment", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ActorField
+        value={["staff", "manager"]}
+        actors={actors}
+        onChange={onChange}
+      />,
+    );
+    expect(
+      screen.getByText(/Beberapa pelaksana terdeteksi/),
+    ).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
+    await user.click(screen.getByRole("option", { name: "Manager" }));
+    expect(onChange).toHaveBeenCalledWith(["manager"]);
+  });
+
+  it("preserves all legacy actor labels in read-only mode", () => {
     render(
       <ActorField
         value={["staff", "manager"]}
@@ -108,12 +124,11 @@ describe("ActorField", () => {
         readOnly
       />,
     );
-
     expect(screen.getByText("Staff, Manager")).toBeInTheDocument();
   });
 
-  it("renders a non-interactive compact value when disabled", () => {
-    const { container } = render(
+  it("keeps disabled legacy labels visible without enabling edits", () => {
+    render(
       <ActorField
         value={["staff", "manager"]}
         actors={actors}
@@ -121,12 +136,10 @@ describe("ActorField", () => {
         disabled
       />,
     );
-
-    expect(container.querySelector("details")).toBeNull();
     expect(screen.getByText("Staff +1")).toBeInTheDocument();
   });
 
-  it("labels unnamed actors without dropping their stable IDs", async () => {
+  it("uses stable IDs for unnamed actors", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
@@ -140,14 +153,9 @@ describe("ActorField", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
-    const first = screen.getByRole("option", {
-      name: "Pelaksana belum diberi nama 1",
-    });
-    const second = screen.getByRole("option", {
-      name: "Pelaksana belum diberi nama 2",
-    });
-    expect(second).toBeInTheDocument();
-    await user.click(first);
+    await user.click(
+      screen.getByRole("option", { name: "Pelaksana belum diberi nama 1" }),
+    );
     expect(onChange).toHaveBeenCalledWith(["unnamed-1"]);
   });
 });

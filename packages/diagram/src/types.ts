@@ -72,6 +72,7 @@ export interface DiagramDiagnostic {
     | "PATH_OUT_OF_BOUNDS"
     | "ROUTE_FALLBACK_USED"
     | "UNASSIGNED_ACTOR"
+    | "MULTIPLE_ACTOR_ASSIGNMENT"
     | "UNKNOWN_ACTOR_LANE"
     | "STALE_ROUTE_OVERRIDE"
     | "ROUTE_RECONCILED";

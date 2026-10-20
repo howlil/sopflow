@@ -129,15 +129,13 @@ async function run() {
   option.click();
   await delay(350);
   assert(
-    document.querySelector("[data-actor-state]")?.textContent ===
-      "staff,manager",
-    "Portaled multi-selection lost state",
+    document.querySelector("[data-actor-state]")?.textContent === "staff",
+    "Portaled exclusive selection did not replace the actor",
   );
-  assert(
-    menu.isConnected,
-    "Selecting one actor closed multi-select prematurely",
-  );
+  assert(!menu.isConnected, "Selecting one actor should dismiss the listbox");
 
+  trigger.click();
+  await delay(350);
   trigger.focus();
   trigger.dispatchEvent(
     new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
@@ -164,7 +162,7 @@ async function run() {
       before: { top: before.top, bottom: before.bottom },
       afterX: after.left,
       anchorX: anchor.left,
-      selected: "staff,manager",
+      selected: "staff",
     }),
   );
 }

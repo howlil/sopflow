@@ -23,7 +23,7 @@ const document: SOPDocument = {
       id: "review",
       type: "decision",
       name: "Valid?",
-      actorIds: ["front-office", "manager"],
+      actorIds: ["front-office"],
       yes: "end",
       no: "start",
       input: "Dokumen",
@@ -150,6 +150,37 @@ describe("SopProcedureView", () => {
     expect(
       container.querySelector("[data-sopflow-procedure-page='0']"),
     ).not.toBeNull();
+  });
+
+  it("renders legacy multi-actor steps only in the fallback column", () => {
+    const conflicting: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "review"
+          ? { ...step, actorIds: ["front-office", "manager"] }
+          : step,
+      ),
+    };
+    const { container } = render(
+      <SopProcedureView document={conflicting} manualEditing />,
+    );
+    const reviewRow = container.querySelector(
+      '[data-sopflow-procedure-step-id="review"]',
+    );
+    expect(reviewRow).not.toBeNull();
+    expect(
+      reviewRow?.querySelectorAll('[data-sopflow-primary-shape="review"]'),
+    ).toHaveLength(1);
+    expect(
+      reviewRow?.querySelector(
+        '[data-sopflow-actor-id="fallback"] svg[data-kind="decision"]',
+      ),
+    ).not.toBeNull();
+    expect(
+      reviewRow?.querySelector(
+        '[data-sopflow-actor-id="front-office"] svg[data-kind="decision"]',
+      ),
+    ).toBeNull();
   });
 
   it("renders long procedures as pages with off-page connectors", () => {

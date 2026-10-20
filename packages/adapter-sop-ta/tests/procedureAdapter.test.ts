@@ -133,6 +133,54 @@ describe("sop-ta compatibility adapter", () => {
     }
   });
 
+  it("rejects multi-actor legacy rows in strict SOP-AP import without discarding IDs", () => {
+    const input = {
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [{ id: "staff", name: "Staff" }, { id: "manager", name: "Manager" }],
+      rows: rows.map((row) => {
+        if (row.id !== "fix") return row;
+        const { pelaksana: _pelaksana, ...rest } = row;
+        return { ...rest, pelaksanaIds: ["staff", "manager"] };
+      }),
+    };
+    const strict = tryImportSopTaDocument(input);
+    expect(strict.success).toBe(false);
+    if (!strict.success) {
+      expect(strict.issues).toContainEqual(
+        expect.objectContaining({ code: "INVALID_ACTOR_COUNT", rowId: "fix" }),
+      );
+    }
+
+    // The legacy API remains lossless for existing consumers and can be
+    // repaired explicitly instead of dropping the second actor.
+    const legacy = importSopTaDocument(input);
+    expect(legacy.steps.find((step) => step.id === "fix")?.actorIds).toEqual([
+      "staff", "manager",
+    ]);
+    expect(() => exportSopTaPatchItems(legacy)).toThrow(/not losslessly compatible/i);
+  });
+
+  it("rejects duplicate explicit pelaksanaIds before legacy normalization", () => {
+    const result = tryImportSopTaDocument({
+      id: "legacy",
+      title: "Legacy SOP",
+      actors: [
+        { id: "staff", name: "Staff" },
+        { id: "manager", name: "Manager" },
+      ],
+      rows: rows.map((row) =>
+        row.id === "fix" ? { ...row, pelaksanaIds: ["staff", "staff"] } : row,
+      ),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ code: "INVALID_ACTOR_COUNT", rowId: "fix" }),
+      );
+    }
+  });
+
   it("rejects silently ignored branch fields in strict import", () => {
     const result = tryImportSopTaDocument({
       id: "legacy",

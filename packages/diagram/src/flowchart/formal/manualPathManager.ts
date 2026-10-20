@@ -113,9 +113,23 @@ export function commitManualPathEdit(
         sourceSide,
         targetSide,
         ...(context.obstacles ? { obstacles: context.obstacles } : {}),
+        ...(context.occupied ? { occupied: context.occupied } : {}),
         ...(context.bounds !== undefined ? { bounds: context.bounds } : {}),
       });
-  if (!effectivePath) return null;
+  // Repair is not an authority bypass. Validate the repaired geometry against
+  // the same occupied edges, shapes, bounds and endpoint directions.
+  if (
+    !effectivePath ||
+    !validateFormalManualRoute({
+      path: effectivePath,
+      sourceSide,
+      targetSide,
+      ...(context.obstacles ? { obstacles: context.obstacles } : {}),
+      ...(context.occupied ? { occupied: context.occupied } : {}),
+      ...(context.bounds !== undefined ? { bounds: context.bounds } : {}),
+    }).valid
+  )
+    return null;
 
   const start = effectivePath[0];
   const end = effectivePath.at(-1);
