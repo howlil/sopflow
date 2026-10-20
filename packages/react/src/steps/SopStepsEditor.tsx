@@ -129,85 +129,80 @@ export function SopStepsEditor({
         ) : (
           <EmptyStepsState document={document} onOperations={onOperations} />
         )
+      ) : !isCompact ? (
+        <div className={styles.desktop}>
+          <section
+            className={styles.tableViewport}
+            aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
+            data-sopflow-steps-scroll
+          >
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.numberColumn}>No</th>
+                  <th className={styles.activityColumn}>Kegiatan</th>
+                  <th className={styles.typeColumn}>Tipe</th>
+                  <th className={styles.actorColumn}>Pelaksana</th>
+                  <th className={styles.inputColumn}>Kelengkapan</th>
+                  <th className={styles.durationColumn}>Waktu</th>
+                  <th className={styles.outputColumn}>Output</th>
+                  <th className={styles.noteColumn}>Keterangan</th>
+                  <th className={styles.actionColumn}>Aksi</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {steps.map((step, index) => (
+                  <SopStepRow
+                    key={step.id}
+                    step={step}
+                    index={index}
+                    document={document}
+                    issues={issuesByStepId.get(step.id) ?? []}
+                    orderedSteps={steps}
+                    stepOrder={stepOrder}
+                    selected={selectedStepId === step.id}
+                    highlightedField={
+                      activeProblemTarget?.kind === "step" &&
+                      activeProblemTarget.stepId === step.id
+                        ? activeProblemTarget.field
+                        : undefined
+                    }
+                    onSelect={() => onSelectedStepChange(step.id)}
+                    onOperation={onOperation}
+                    onOperations={onOperations}
+                    disabled={disabled}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </div>
       ) : (
-        <>
-          {!isCompact ? (
-            <div className={styles.desktop}>
-              <section
-                className={styles.tableViewport}
-                aria-label="Editor langkah SOP; gulir horizontal untuk melihat kolom lainnya"
-                data-sopflow-steps-scroll
-              >
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th className={styles.numberColumn}>No</th>
-                      <th className={styles.activityColumn}>Kegiatan</th>
-                      <th className={styles.typeColumn}>Tipe</th>
-                      <th className={styles.actorColumn}>Pelaksana</th>
-                      <th className={styles.inputColumn}>Kelengkapan</th>
-                      <th className={styles.durationColumn}>Waktu</th>
-                      <th className={styles.outputColumn}>Output</th>
-                      <th className={styles.noteColumn}>Keterangan</th>
-                      <th className={styles.actionColumn}>Aksi</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {steps.map((step, index) => (
-                      <SopStepRow
-                        key={step.id}
-                        step={step}
-                        index={index}
-                        document={document}
-                        issues={issuesByStepId.get(step.id) ?? []}
-                        orderedSteps={steps}
-                        stepOrder={stepOrder}
-                        selected={selectedStepId === step.id}
-                        highlightedField={
-                          activeProblemTarget?.kind === "step" &&
-                          activeProblemTarget.stepId === step.id
-                            ? activeProblemTarget.field
-                            : undefined
-                        }
-                        onSelect={() => onSelectedStepChange(step.id)}
-                        onOperation={onOperation}
-                        onOperations={onOperations}
-                        disabled={disabled}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-            </div>
-          ) : (
-            <div className={styles.mobile}>
-              {steps.map((step, index) => (
-                <SopStepCard
-                  key={step.id}
-                  step={step}
-                  index={index}
-                  document={document}
-                  issues={issuesByStepId.get(step.id) ?? []}
-                  orderedSteps={steps}
-                  stepOrder={stepOrder}
-                  selected={selectedStepId === step.id}
-                  highlightedField={
-                    activeProblemTarget?.kind === "step" &&
-                    activeProblemTarget.stepId === step.id
-                      ? activeProblemTarget.field
-                      : undefined
-                  }
-                  onSelect={() => onSelectedStepChange(step.id)}
-                  onOperation={onOperation}
-                  onOperations={onOperations}
-                  disabled={disabled}
-                />
-              ))}
-            </div>
-          )}
-
-        </>
+        <div className={styles.mobile}>
+          {steps.map((step, index) => (
+            <SopStepCard
+              key={step.id}
+              step={step}
+              index={index}
+              document={document}
+              issues={issuesByStepId.get(step.id) ?? []}
+              orderedSteps={steps}
+              stepOrder={stepOrder}
+              selected={selectedStepId === step.id}
+              highlightedField={
+                activeProblemTarget?.kind === "step" &&
+                activeProblemTarget.stepId === step.id
+                  ? activeProblemTarget.field
+                  : undefined
+              }
+              onSelect={() => onSelectedStepChange(step.id)}
+              onOperation={onOperation}
+              onOperations={onOperations}
+              disabled={disabled}
+            />
+          ))}
+        </div>
       )}
     </section>
   );
