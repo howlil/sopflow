@@ -23,7 +23,7 @@ const document: SOPDocument = {
       id: "review",
       type: "decision",
       name: "Valid?",
-      actorIds: ["front-office", "manager"],
+      actorIds: ["front-office"],
       yes: "end",
       no: "start",
       input: "Dokumen",
