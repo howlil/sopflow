@@ -27,6 +27,14 @@ jobs:
           node-version: 22.x
           cache: pnpm
 
+      - name: Temporary regeneration proof for Playground pinned registry packages
+        if: github.head_ref == 'test/playground-three-packages-20261021'
+        run: |
+          pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile
+          echo 'SOPFLOW_LOCK_DIFF_BEGIN'
+          git diff -- pnpm-lock.yaml
+          echo 'SOPFLOW_LOCK_DIFF_END'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
