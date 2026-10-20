@@ -98,11 +98,11 @@ export function SopStepCard({
 
         <div data-sopflow-step-field="decisionRoutes">
           <StepActions
-          step={step}
-          disabled={disabled}
-          onAddAfter={addAfter}
-          onDelete={openDeleteDialog}
-          onConfigureDecision={openDecisionEditor}
+            step={step}
+            disabled={disabled}
+            onAddAfter={addAfter}
+            onDelete={openDeleteDialog}
+            onConfigureDecision={openDecisionEditor}
           />
         </div>
       </header>
@@ -208,7 +208,15 @@ export function SopStepCard({
   );
 }
 
-function Field({ label, children, field }: { label: string; children: ReactNode; field: string }) {
+function Field({
+  label,
+  children,
+  field,
+}: {
+  label: string;
+  children: ReactNode;
+  field: string;
+}) {
   return (
     <div className={styles.field} data-sopflow-step-field={field}>
       <span className={styles.label}>{label}</span>

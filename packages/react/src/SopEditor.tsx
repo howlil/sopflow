@@ -351,6 +351,9 @@ export function SopEditor({
 
   useLayoutEffect(() => {
     if (!pendingProblemTarget || !rootRef.current) return;
+    if (pendingProblemTarget.kind === "step" && mode !== "steps") return;
+    if (pendingProblemTarget.kind === "steps" && mode !== "steps") return;
+    if ((pendingProblemTarget.kind === "header" || pendingProblemTarget.kind === "actors") && !inspectorOpen) return;
     focusProblemTarget(rootRef.current, pendingProblemTarget);
     setPendingProblemTarget(null);
   }, [pendingProblemTarget, mode, inspectorOpen]);

@@ -164,8 +164,11 @@ export function SopStepsEditor({
                         orderedSteps={steps}
                         stepOrder={stepOrder}
                         selected={selectedStepId === step.id}
-                  highlightedField={activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id ? activeProblemTarget.field : undefined}
-                        highlightedField={activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id ? activeProblemTarget.field : undefined}
+                        highlightedField={
+                          activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id
+                            ? activeProblemTarget.field
+                            : undefined
+                        }
                         onSelect={() => onSelectedStepChange(step.id)}
                         onOperation={onOperation}
                         onOperations={onOperations}
@@ -188,6 +191,11 @@ export function SopStepsEditor({
                   orderedSteps={steps}
                   stepOrder={stepOrder}
                   selected={selectedStepId === step.id}
+                  highlightedField={
+                    activeProblemTarget?.kind === "step" && activeProblemTarget.stepId === step.id
+                      ? activeProblemTarget.field
+                      : undefined
+                  }
                   onSelect={() => onSelectedStepChange(step.id)}
                   onOperation={onOperation}
                   onOperations={onOperations}

@@ -25,7 +25,7 @@ describe("resolveProblemTarget", () => {
         stepId: "start",
         message: "Missing input",
       }),
-    ).toEqual({ kind: "step", stepId: "start" });
+    ).toEqual({ kind: "step", stepId: "start", field: "input" });
   });
 
   it("prefers schema stepId and has a safe fallback for unknown schema paths", () => {
@@ -39,6 +39,7 @@ describe("resolveProblemTarget", () => {
     expect(resolveProblemTarget(schema)).toEqual({
       kind: "step",
       stepId: "start",
+      field: "name",
     });
     const unknown = {
       kind: "schema" as const,
