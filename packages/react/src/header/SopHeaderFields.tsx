@@ -4,6 +4,7 @@ import type { SOPDocument } from "@sopflow/core";
 import { FormField as Field } from "../primitives/FormField.js";
 import { SopInput } from "../primitives/Input.js";
 import { Textarea as ArcTextarea } from "../components/arc/textarea/textarea.js";
+import { SopDatePicker } from "../components/sop-date-picker/SopDatePicker.js";
 import { InspectorSection } from "../primitives/InspectorSection.js";
 import type { SopHeaderValue, SopSignatory } from "./types.js";
 import styles from "./SopHeaderFields.module.css";
@@ -196,44 +197,32 @@ export function SopHeaderFields({
 
       <InspectorSection title="Tanggal">
         <Field label="Tanggal pembuatan">
-          <SopInput
+          <SopDatePicker
             data-sopflow-header-field="createdDate"
-            className={styles.input}
-            type="date"
+            label="Tanggal pembuatan"
             value={header.createdDate}
             disabled={headerDisabled}
-            aria-label="Tanggal pembuatan"
-            onChange={(event) =>
-              updateHeader("createdDate", event.target.value)
-            }
+            onValueChange={(value) => updateHeader("createdDate", value)}
           />
         </Field>
 
         <Field label="Tanggal revisi">
-          <SopInput
+          <SopDatePicker
             data-sopflow-header-field="revisionDate"
-            className={styles.input}
-            type="date"
+            label="Tanggal revisi"
             value={header.revisionDate}
             disabled={headerDisabled}
-            aria-label="Tanggal revisi"
-            onChange={(event) =>
-              updateHeader("revisionDate", event.target.value)
-            }
+            onValueChange={(value) => updateHeader("revisionDate", value)}
           />
         </Field>
 
         <Field label="Tanggal efektif">
-          <SopInput
+          <SopDatePicker
             data-sopflow-header-field="effectiveDate"
-            className={styles.input}
-            type="date"
+            label="Tanggal efektif"
             value={header.effectiveDate}
             disabled={headerDisabled}
-            aria-label="Tanggal efektif"
-            onChange={(event) =>
-              updateHeader("effectiveDate", event.target.value)
-            }
+            onValueChange={(value) => updateHeader("effectiveDate", value)}
           />
         </Field>
       </InspectorSection>
