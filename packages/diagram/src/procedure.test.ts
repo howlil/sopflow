@@ -106,10 +106,14 @@ describe("procedure model", () => {
       ),
     };
     const model = buildProcedureModel(legacy);
-    expect(model.rows.find((row) => row.stepId === "review")?.primaryActorId).toBeNull();
+    expect(
+      model.rows.find((row) => row.stepId === "review")?.primaryActorId,
+    ).toBeNull();
     expect(model.actorColumns.at(-1)?.actorId).toBeNull();
     expect(model.graph.edges.map((edge) => edge.id)).toEqual([
-      "start:next:review", "review:yes:end", "review:no:start",
+      "start:next:review",
+      "review:yes:end",
+      "review:no:start",
     ]);
   });
 
