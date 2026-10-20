@@ -83,7 +83,9 @@ export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResu
       });
     }
     const rowActorIds = resolveActorIds(row);
-    if (rowActorIds.length !== 1) {
+    // resolveActorIds normalizes legacy arrays using a Set. Reject duplicate
+    // explicit assignments *before* that normalization can conceal them.
+    if (rowActorIds.length !== 1 || (row.pelaksanaIds?.length ?? 0) > 1) {
       issues.push({
         code: "INVALID_ACTOR_COUNT",
         rowId: row.id,
