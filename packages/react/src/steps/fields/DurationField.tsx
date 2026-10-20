@@ -1,4 +1,6 @@
 import type { Duration } from "@sopflow/core";
+import { useState } from "react";
+import { Select as ArcSelect } from "../../components/arc/select/select.js";
 
 import styles from "./DurationField.module.css";
 
@@ -29,8 +31,9 @@ export function DurationField({
   readOnly = false,
   error = false,
 }: DurationFieldProps) {
+  const [emptyUnit, setEmptyUnit] = useState<Duration["unit"]>("minute");
   const amount = value === undefined ? "" : String(value.value);
-  const unit = value?.unit ?? "minute";
+  const unit = value?.unit ?? emptyUnit;
 
   if (readOnly) {
     return (
@@ -59,10 +62,9 @@ export function DurationField({
   }
 
   function handleUnitChange(nextUnit: Duration["unit"]) {
-    onChange({
-      value: value?.value ?? 0,
-      unit: nextUnit,
-    });
+    setEmptyUnit(nextUnit);
+    // A unit choice alone must not synthesize a zero-duration domain value.
+    if (value !== undefined) onChange({ ...value, unit: nextUnit });
   }
 
   return (
@@ -84,21 +86,19 @@ export function DurationField({
         onChange={(event) => handleAmountChange(event.target.value)}
       />
 
-      <select
-        className={styles.unit}
-        value={unit}
-        disabled={disabled}
-        aria-label="Satuan waktu"
-        onChange={(event) =>
-          handleUnitChange(event.target.value as Duration["unit"])
-        }
-      >
-        {UNITS.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </select>
+      <div className={styles.picker}>
+        <ArcSelect
+          compact
+          label="Satuan waktu"
+          className={styles.unit}
+          value={unit}
+          disabled={disabled}
+          options={UNITS}
+          onValueChange={(next) =>
+            handleUnitChange(next as Duration["unit"])
+          }
+        />
+      </div>elect>
     </div>
   );
 }

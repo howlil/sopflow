@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Actor } from "@sopflow/core";
 import { ActorField } from "./ActorField.js";
 
@@ -124,5 +124,30 @@ describe("ActorField", () => {
 
     expect(container.querySelector("details")).toBeNull();
     expect(screen.getByText("Staff +1")).toBeInTheDocument();
+  });
+
+  it("labels unnamed actors without dropping their stable IDs", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ActorField
+        value={[]}
+        actors={[
+          { id: "unnamed-1", name: "" },
+          { id: "unnamed-2", name: "   " },
+        ]}
+        onChange={onChange}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
+    const first = screen.getByRole("option", {
+      name: "Pelaksana belum diberi nama 1",
+    });
+    const second = screen.getByRole("option", {
+      name: "Pelaksana belum diberi nama 2",
+    });
+    expect(second).toBeInTheDocument();
+    await user.click(first);
+    expect(onChange).toHaveBeenCalledWith(["unnamed-1"]);
   });
 });

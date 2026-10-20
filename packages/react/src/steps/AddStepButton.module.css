@@ -7,6 +7,10 @@
   justify-self: start;
   width: fit-content;
   white-space: nowrap;
+  min-height: 2rem;
+  border-radius: var(--sopflow-radius-action);
+  padding-inline: 0.75rem;
+  font-size: var(--sopflow-font-xs);
 }
 
 .hint {
