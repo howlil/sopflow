@@ -389,4 +389,16 @@ describe("SopEditor default composition", () => {
     expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
     expect(hostToggle).toHaveFocus();
   });
+
+  it("accepts opt-in previewScale while keeping legacy toolbar and A4 geometry", () => {
+    const { container } = render(
+      <SopWorkspace value={document} header={header} previewScale={0.75} />,
+    );
+    const canvas = container.querySelector("[data-sopflow-canvas-stage]");
+    expect(canvas).toHaveAttribute("data-preview-scale", "0.75");
+    expect(
+      container.querySelector("[data-sopflow-document-toolbar]"),
+    ).not.toBeNull();
+    expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
+  });
 });

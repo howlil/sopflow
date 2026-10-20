@@ -1,5 +1,21 @@
-import { GitFork, List, PanelRight, PenLine, Workflow } from "lucide-react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  GitFork,
+  List,
+  Minus,
+  PanelRight,
+  PenLine,
+  Plus,
+  Workflow,
+} from "lucide-react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 
 import {
   SopWorkspace,
@@ -14,6 +30,17 @@ import { resolveProblemTarget } from "./resolveProblemTarget.js";
 import styles from "./SopUnifiedWorkspace.module.css";
 
 type UnifiedView = "flowchart" | "bpmn" | "steps";
+
+const A4_LANDSCAPE_WIDTH_PX = (297 * 96) / 25.4;
+const MIN_ZOOM_PERCENT = 25;
+const MAX_ZOOM_PERCENT = 200;
+const MIN_INSPECTOR_WIDTH = 220;
+const MAX_INSPECTOR_WIDTH = 370;
+const MIN_CANVAS_WIDTH = 320;
+
+function clamp(value: number, low: number, high: number): number {
+  return Math.max(low, Math.min(high, value));
+}
 type ManagedProps =
   | "view"
   | "onViewChange"
@@ -47,6 +74,12 @@ export function SopUnifiedWorkspace({
     useState<SopDiagramKind>("flowchart");
   const [manualEditing, setManualEditing] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [inspectorWidth, setInspectorWidth] = useState(258);
+  const [isCompact, setIsCompact] = useState(false);
+  const [zoomMode, setZoomMode] = useState<"fit" | "manual">("fit");
+  const [zoomPercent, setZoomPercent] = useState(100);
+  const [fitScale, setFitScale] = useState(1);
+  const dragPointerId = useRef<number | null>(null);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const [issues, setIssues] = useState<readonly SopReadinessIssue[]>(() =>
     getSopReadinessIssues(value, workspaceProps.header),
@@ -63,6 +96,91 @@ export function SopUnifiedWorkspace({
     null,
   );
   const shellRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const effectiveScale = zoomMode === "fit" ? fitScale : zoomPercent / 100;
+
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const pane = shellRef.current?.querySelector<HTMLElement>(
+      "[data-sopflow-main-pane]",
+    );
+    if (!stage || !pane) return;
+    const measure = () => {
+      const stageWidth = stage.clientWidth;
+      if (stageWidth <= 0) return;
+      setIsCompact(stageWidth <= 620);
+      const content = getComputedStyle(pane);
+      const horizontalPadding =
+        (Number.parseFloat(content.paddingLeft) || 0) +
+        (Number.parseFloat(content.paddingRight) || 0);
+      const freeWidth = Math.max(0, pane.clientWidth - horizontalPadding - 8);
+      if (freeWidth > 0) {
+        setFitScale(clamp(freeWidth / A4_LANDSCAPE_WIDTH_PX, 0.25, 1));
+      }
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    observer.observe(pane);
+    return () => observer.disconnect();
+  }, []);
+
+  function changeZoom(delta: number) {
+    const current = zoomMode === "fit" ? fitScale * 100 : zoomPercent;
+    const next = clamp(
+      Math.round((current + delta) / 10) * 10,
+      MIN_ZOOM_PERCENT,
+      MAX_ZOOM_PERCENT,
+    );
+    setZoomPercent(next);
+    setZoomMode("manual");
+  }
+
+  function resizeInspector(nextWidth: number) {
+    const available = stageRef.current?.clientWidth ?? 0;
+    if (!available) return;
+    const maximum = Math.max(
+      MIN_INSPECTOR_WIDTH,
+      Math.min(MAX_INSPECTOR_WIDTH, available - MIN_CANVAS_WIDTH),
+    );
+    setInspectorWidth(clamp(nextWidth, MIN_INSPECTOR_WIDTH, maximum));
+  }
+
+  function onInspectorPointerDown(event: PointerEvent<HTMLHRElement>) {
+    if (isCompact || !inspectorOpen || event.button !== 0) return;
+    dragPointerId.current = event.pointerId;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  function onInspectorPointerMove(event: PointerEvent<HTMLHRElement>) {
+    if (dragPointerId.current !== event.pointerId) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+    resizeInspector(stage.getBoundingClientRect().right - event.clientX);
+  }
+
+  function onInspectorPointerEnd(event: PointerEvent<HTMLHRElement>) {
+    if (dragPointerId.current !== event.pointerId) return;
+    dragPointerId.current = null;
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+  }
+
+  function onInspectorResizeKeyDown(event: KeyboardEvent<HTMLHRElement>) {
+    if (isCompact || !inspectorOpen) return;
+    const step = event.shiftKey ? 25 : 10;
+    let delta = 0;
+    if (event.key === "ArrowLeft") delta = step;
+    if (event.key === "ArrowRight") delta = -step;
+    if (event.key === "Home") delta = MIN_INSPECTOR_WIDTH - inspectorWidth;
+    if (event.key === "End") delta = MAX_INSPECTOR_WIDTH - inspectorWidth;
+    if (!delta) return;
+    event.preventDefault();
+    resizeInspector(inspectorWidth + delta);
+  }
 
   const workspaceView: SopWorkspaceView =
     view === "steps" ? "editor" : "diagram";
@@ -198,6 +316,13 @@ export function SopUnifiedWorkspace({
       ref={shellRef}
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-sopflow-unified-workspace
+      data-compact={isCompact || undefined}
+      data-zoom-mode={zoomMode}
+      style={
+        {
+          "--sopflow-unified-inspector-width": `${inspectorWidth}px`,
+        } as CSSProperties
+      }
     >
       <header className={styles.topBar}>
         <div className={styles.identity}>
@@ -267,6 +392,37 @@ export function SopUnifiedWorkspace({
         </nav>
 
         <div className={styles.actions}>
+          <fieldset className={styles.zoomControls} aria-label="Canvas zoom">
+            <button
+              type="button"
+              className={styles.zoomButton}
+              aria-label="Zoom out"
+              title="Zoom out"
+              disabled={effectiveScale <= MIN_ZOOM_PERCENT / 100}
+              onClick={() => changeZoom(-10)}
+            >
+              <Minus size={14} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={styles.zoomLabel}
+              aria-label="Fit to viewport"
+              title="Fit to viewport"
+              onClick={() => setZoomMode("fit")}
+            >
+              {zoomMode === "fit" ? "Fit" : `${zoomPercent}%`}
+            </button>
+            <button
+              type="button"
+              className={styles.zoomButton}
+              aria-label="Zoom in"
+              title="Zoom in"
+              disabled={effectiveScale >= MAX_ZOOM_PERCENT / 100}
+              onClick={() => changeZoom(10)}
+            >
+              <Plus size={14} aria-hidden="true" />
+            </button>
+          </fieldset>
           <button
             type="button"
             className={styles.iconButton}
@@ -281,7 +437,11 @@ export function SopUnifiedWorkspace({
         </div>
       </header>
 
-      <div className={styles.workspaceStage}>
+      <div
+        className={styles.workspaceStage}
+        ref={stageRef}
+        data-sopflow-unified-stage
+      >
         <SopWorkspace
           {...workspaceProps}
           value={value}
@@ -295,6 +455,8 @@ export function SopUnifiedWorkspace({
           onInspectorOpenChange={setInspectorOpen}
           toolbarPlacement="external"
           inspectorTogglePlacement="external"
+          showValidationPanel={workspaceProps.showValidationPanel ?? false}
+          previewScale={effectiveScale}
           selectedStepId={
             workspaceProps.selectedStepId !== undefined
               ? workspaceProps.selectedStepId
@@ -303,6 +465,29 @@ export function SopUnifiedWorkspace({
           onSelectedStepChange={handleSelectedStepChange}
           onReadinessChange={handleReadinessChange}
         />
+        {inspectorOpen && !isCompact ? (
+          <hr
+            className={styles.inspectorResize}
+            data-sopflow-inspector-resize
+            aria-label="Resize Properties"
+            aria-orientation="vertical"
+            aria-valuemin={MIN_INSPECTOR_WIDTH}
+            aria-valuemax={Math.max(
+              MIN_INSPECTOR_WIDTH,
+              Math.min(
+                MAX_INSPECTOR_WIDTH,
+                (stageRef.current?.clientWidth ?? 900) - MIN_CANVAS_WIDTH,
+              ),
+            )}
+            aria-valuenow={inspectorWidth}
+            tabIndex={0}
+            onPointerDown={onInspectorPointerDown}
+            onPointerMove={onInspectorPointerMove}
+            onPointerUp={onInspectorPointerEnd}
+            onPointerCancel={onInspectorPointerEnd}
+            onKeyDown={onInspectorResizeKeyDown}
+          />
+        ) : null}
       </div>
       <ProblemsPanel
         issues={issues}

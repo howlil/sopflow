@@ -64,6 +64,8 @@ export interface SopEditorProps {
   onInspectorOpenChange?: (open: boolean) => void;
   /** Leave focus and visibility controls to the host shell when external. */
   inspectorTogglePlacement?: "internal" | "external";
+  /** Optional preview-only scale, defaults to 100%. */
+  previewScale?: number;
   className?: string;
 }
 
@@ -93,6 +95,7 @@ export function SopEditor({
   inspectorOpen: controlledInspectorOpen,
   onInspectorOpenChange,
   inspectorTogglePlacement = "internal",
+  previewScale = 1,
   className,
 }: SopEditorProps) {
   const handleChange = useCallback(
@@ -353,6 +356,7 @@ export function SopEditor({
               </Button>
             ) : null}
             <SopDocumentCanvas
+              previewScale={previewScale}
               toolbarPlacement={toolbarPlacement}
               document={value}
               header={header}

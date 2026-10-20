@@ -1,4 +1,11 @@
-import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import type {
   SOPDocument,
@@ -47,6 +54,8 @@ export interface SopDocumentCanvasProps {
   onDiagramConfigChange: (config: SopDiagramConfig) => void;
   manualEditingSupported?: boolean;
   toolbarPlacement?: "document" | "external";
+  /** Screen-only scaling; page width and print layout remain A4. */
+  previewScale?: number;
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -69,9 +78,13 @@ export function SopDocumentCanvas({
   onDiagramConfigChange,
   manualEditingSupported = true,
   toolbarPlacement = "document",
+  previewScale = 1,
   disabled = false,
   readOnly = false,
 }: SopDocumentCanvasProps) {
+  const effectiveScale = Number.isFinite(previewScale)
+    ? Math.max(0.25, Math.min(2, previewScale))
+    : 1;
   const diagramPanelId = useId();
   const documentRef = useRef<HTMLDivElement>(null);
   const diagramPanelRef = useRef<HTMLElement>(null);
@@ -103,9 +116,11 @@ export function SopDocumentCanvas({
     const contentHeight = Math.max(1, pageHeight - paddingTop - paddingBottom);
     const pageRect = page.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
+    // getBoundingClientRect includes CSS zoom; computed padding uses
+    // unscaled CSS pixels. Normalize before calculating A4 page budget.
     const consumedBeforeDiagram = Math.max(
       0,
-      panelRect.top - (pageRect.top + paddingTop),
+      (panelRect.top - pageRect.top) / effectiveScale - paddingTop,
     );
     const firstPageReservedHeightPx = Math.min(
       contentHeight - 1,
@@ -129,7 +144,7 @@ export function SopDocumentCanvas({
         ? current
         : next,
     );
-  }, [diagramKind, mode]);
+  }, [diagramKind, effectiveScale, mode]);
 
   useLayoutEffect(() => {
     measureProcedurePageBudget();
@@ -145,7 +160,12 @@ export function SopDocumentCanvas({
   }, [measureProcedurePageBudget]);
 
   return (
-    <div className={styles.canvasStage} data-sopflow-canvas-stage>
+    <div
+      className={styles.canvasStage}
+      data-sopflow-canvas-stage
+      data-preview-scale={effectiveScale}
+      style={{ "--sopflow-preview-scale": effectiveScale } as CSSProperties}
+    >
       <main className={styles.canvas}>
         <div
           ref={documentRef}
