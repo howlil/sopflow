@@ -9,6 +9,7 @@ export interface SopTaImportIssue {
     | "UNSUPPORTED_BRANCH_METADATA"
     | "UNPAIRED_DURATION_UNIT"
     | "AMBIGUOUS_ACTOR_MAPPING"
+    | "INVALID_ACTOR_COUNT"
     | "INVALID_DURATION"
     | "UNKNOWN_DURATION_UNIT"
     | "IMPORT_FAILED";
@@ -81,7 +82,15 @@ export function tryImportSopTaDocument(input: SopTaImportInput): SopTaImportResu
         message: `Row "${row.id}" contains branch metadata the adapter cannot preserve`,
       });
     }
-    for (const actorId of resolveActorIds(row)) {
+    const rowActorIds = resolveActorIds(row);
+    if (rowActorIds.length !== 1) {
+      issues.push({
+        code: "INVALID_ACTOR_COUNT",
+        rowId: row.id,
+        message: `Row "${row.id}" requires exactly one SOP-AP implementer`,
+      });
+    }
+    for (const actorId of rowActorIds) {
       if (!knownActorIds.has(actorId)) {
         issues.push({
           code: "UNKNOWN_ACTOR",
