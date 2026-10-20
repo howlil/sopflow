@@ -81,6 +81,9 @@ const portalChecks = [
   ["Arc dialog portal", element("div", dialog.content, portal), "16px"],
   ["Arc select popover", element("div", select.content, portal), "14px"],
   ["Arc select option", element("div", select.item, portal), "8px"],
+  ["Arc multi-select option", element("div", multi.option, portal), "8px"],
+  ["Arc action menu option", element("div", dropdown.item, portal), "8px"],
+  ["Arc action highlight", element("div", dropdown.highlight, portal), "8px"],
   ["Arc dropdown portal", element("div", dropdown.menu, portal), "14px"],
 ] as const;
 
