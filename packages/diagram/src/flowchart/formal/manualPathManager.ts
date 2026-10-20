@@ -127,11 +127,7 @@ export function commitManualPathEdit(
             0.08,
             Math.min(
               0.92,
-              distanceOnFormalShapeSide(
-                context.sourceRect,
-                sourceSide,
-                start,
-              ),
+              distanceOnFormalShapeSide(context.sourceRect, sourceSide, start),
             ),
           )
       : undefined;
@@ -143,24 +139,15 @@ export function commitManualPathEdit(
             0.08,
             Math.min(
               0.92,
-              distanceOnFormalShapeSide(
-                context.targetRect,
-                targetSide,
-                end,
-              ),
+              distanceOnFormalShapeSide(context.targetRect, targetSide, end),
             ),
           )
       : undefined;
 
-  return formalRouteChangeFromPath(
-    effectivePath,
-    sourceSide,
-    targetSide,
-    {
-      ...(sourceDistance !== undefined ? { sourceDistance } : {}),
-      ...(targetDistance !== undefined ? { targetDistance } : {}),
-    },
-  );
+  return formalRouteChangeFromPath(effectivePath, sourceSide, targetSide, {
+    ...(sourceDistance !== undefined ? { sourceDistance } : {}),
+    ...(targetDistance !== undefined ? { targetDistance } : {}),
+  });
 }
 
 export function manualPathPreviewEquals(
