@@ -320,7 +320,9 @@ describe("SopUnifiedWorkspace", () => {
       <SopUnifiedWorkspace value={document} header={header} />,
     );
     expect(container.querySelector("[data-sopflow-problems]")).not.toBeNull();
-    expect(container.querySelector("[data-sopflow-validation-panel]")).toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-validation-panel]"),
+    ).toBeNull();
   });
 
   it("recalculates Fit and switches inspector into overlay mode on a narrow stage", () => {
@@ -351,7 +353,8 @@ describe("SopUnifiedWorkspace", () => {
       const pane = container.querySelector("[data-sopflow-main-pane]");
       const root = container.querySelector("[data-sopflow-unified-workspace]");
       const canvas = container.querySelector("[data-sopflow-canvas-stage]");
-      if (!stage || !pane) throw new Error("Workspace measurement nodes missing");
+      if (!stage || !pane)
+        throw new Error("Workspace measurement nodes missing");
       Object.defineProperty(stage, "clientWidth", {
         configurable: true,
         value: 540,
@@ -373,8 +376,12 @@ describe("SopUnifiedWorkspace", () => {
         "data-preview-scale",
         String(Math.max(0.25, Math.min(1, 532 / ((297 * 96) / 25.4)))),
       );
-      expect(container.querySelector("[data-sopflow-inspector-resize]")).toBeNull();
-      expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+      expect(
+        container.querySelector("[data-sopflow-inspector-resize]"),
+      ).toBeNull();
+      expect(
+        container.querySelector("[data-sopflow-inspector]"),
+      ).not.toBeNull();
     } finally {
       vi.unstubAllGlobals();
     }

@@ -437,7 +437,11 @@ export function SopUnifiedWorkspace({
         </div>
       </header>
 
-      <div className={styles.workspaceStage} ref={stageRef} data-sopflow-unified-stage>
+      <div
+        className={styles.workspaceStage}
+        ref={stageRef}
+        data-sopflow-unified-stage
+      >
         <SopWorkspace
           {...workspaceProps}
           value={value}
