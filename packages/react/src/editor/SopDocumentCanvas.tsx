@@ -46,6 +46,7 @@ export interface SopDocumentCanvasProps {
   diagramConfig: SopDiagramConfig;
   onDiagramConfigChange: (config: SopDiagramConfig) => void;
   manualEditingSupported?: boolean;
+  toolbarPlacement?: "document" | "external";
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -67,6 +68,7 @@ export function SopDocumentCanvas({
   diagramConfig,
   onDiagramConfigChange,
   manualEditingSupported = true,
+  toolbarPlacement = "document",
   disabled = false,
   readOnly = false,
 }: SopDocumentCanvasProps) {
@@ -153,19 +155,21 @@ export function SopDocumentCanvas({
           <SopHeaderView document={document} header={header} />
 
           <section className={styles.content}>
-            <div className={styles.toolbarRow}>
-              <SopDocumentToolbar
-                mode={mode}
-                onModeChange={onModeChange}
-                diagramKind={diagramKind}
-                onDiagramKindChange={onDiagramKindChange}
-                manualEditing={manualEditing}
-                onManualEditingChange={onManualEditingChange}
-                diagramPanelId={diagramPanelId}
-                readOnly={readOnly}
-                manualEditingSupported={manualEditingSupported}
-              />
-            </div>
+            {toolbarPlacement === "document" ? (
+              <div className={styles.toolbarRow}>
+                <SopDocumentToolbar
+                  mode={mode}
+                  onModeChange={onModeChange}
+                  diagramKind={diagramKind}
+                  onDiagramKindChange={onDiagramKindChange}
+                  manualEditing={manualEditing}
+                  onManualEditingChange={onManualEditingChange}
+                  diagramPanelId={diagramPanelId}
+                  readOnly={readOnly}
+                  manualEditingSupported={manualEditingSupported}
+                />
+              </div>
+            ) : null}
 
             {mode === "steps" ? (
               <SopStepsEditor
@@ -182,8 +186,15 @@ export function SopDocumentCanvas({
                 ref={diagramPanelRef}
                 id={diagramPanelId}
                 className={styles.diagramPanel}
-                role="tabpanel"
-                aria-labelledby={`${diagramPanelId}-tab-${diagramKind}`}
+                role={toolbarPlacement === "document" ? "tabpanel" : "region"}
+                {...(toolbarPlacement === "document"
+                  ? {
+                      "aria-labelledby": `${diagramPanelId}-tab-${diagramKind}`,
+                    }
+                  : {
+                      "aria-label":
+                        diagramKind === "bpmn" ? "BPMN SOP" : "Flowchart SOP",
+                    })}
                 data-sopflow-diagram-panel
                 data-diagram-kind={diagramKind}
               >
