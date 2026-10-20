@@ -50,7 +50,7 @@ async function exercise(): Promise<void> {
   button(root, "Steps").click();
   await tick();
   requireState(
-    root.querySelector("[data-sopflow-steps-scroll]"),
+    root.querySelector('[aria-label="Navigasi langkah SOP"]'),
     "Steps mode failed",
   );
   button(root, "Flowchart").click();
