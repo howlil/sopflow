@@ -11,7 +11,9 @@ SOPDocument
  → measureBpmnNode (max task width 168 px)
  → calculate compact lane/column bounds
     • header 36 px, canvas padding 8 px
-    • step advance 128 px; column gap derived from stepGap
+    • initial step advance 128 px, retry 144/160 px only for unsafe routing
+    • explicit caller-specified stepGap bypasses automatic retry
+    • column gap derived from stepGap
     • lane height ≥ 112 px and ≥ rotated actor label length
  → reconcileBpmnRoutes (unchanged manual/feedback semantics)
  → BpmnModel { width, height, lanes, nodes, edges }
@@ -21,7 +23,7 @@ SOPDocument
  → preview/print
 ```
 
-The renderer never creates empty padding in order to fill a fixed 52rem × 18rem canvas. Smaller intrinsic SVGs are not upscaled, and larger SVGs shrink proportionally to fit their available width. A4 landscape remains controlled by the existing document print CSS.
+The renderer never creates empty padding in order to fill a fixed 52rem × 18rem canvas. Smaller intrinsic SVGs are not upscaled, and larger SVGs shrink proportionally to fit their available width. Routing-aware spacing retries are deterministic and bounded; the model keeps the highest-scoring safe candidate or the best available diagnostic fallback. A4 landscape remains controlled by the existing document print CSS.
 
 ## E — expected failures and invariants
 
