@@ -6,9 +6,10 @@ import styles from "./ValidationPanel.module.css";
 
 export interface ValidationPanelProps {
   issues: readonly SopReadinessIssue[];
+  onNavigate?: (issue: SopReadinessIssue) => void;
 }
 
-export function ValidationPanel({ issues }: ValidationPanelProps) {
+export function ValidationPanel({ issues, onNavigate }: ValidationPanelProps) {
   const ready = issues.length === 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -50,7 +51,13 @@ export function ValidationPanel({ issues }: ValidationPanelProps) {
             <li
               key={`${issue.kind}:${issue.code}:${issueDetail(issue)}:${issue.message}`}
             >
-              {issue.kind === "schema" && issue.path.length > 0
+              {onNavigate ? (
+                <button type="button" className={styles.issueAction} onClick={() => onNavigate(issue)}>
+                  {issue.kind === "schema" && issue.path.length > 0
+                    ? `${issue.path.join(".")}: ${issue.message}`
+                    : issue.message}
+                </button>
+              ) : issue.kind === "schema" && issue.path.length > 0
                 ? `${issue.path.join(".")}: ${issue.message}`
                 : issue.message}
             </li>

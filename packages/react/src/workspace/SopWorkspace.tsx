@@ -8,6 +8,7 @@ import {
 } from "../SopEditor.js";
 import type { SopHeaderValue } from "../header/types.js";
 import type { SopReadinessIssue } from "../validation/readiness.js";
+import type { ProblemTarget } from "./resolveProblemTarget.js";
 
 export type SopWorkspaceView = "editor" | "diagram";
 
@@ -29,6 +30,7 @@ export interface SopWorkspaceProps {
   error?: string | null;
   onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
   showValidationPanel?: boolean;
+  activeProblemTarget?: ProblemTarget | null;
   /** Defaults to the original toolbar rendered inside the A4 document. */
   toolbarPlacement?: "document" | "external";
   inspectorOpen?: boolean;
@@ -58,6 +60,7 @@ export function SopWorkspace({
   error = null,
   onReadinessChange,
   showValidationPanel = true,
+  activeProblemTarget,
   toolbarPlacement = "document",
   inspectorOpen,
   onInspectorOpenChange,
@@ -99,6 +102,7 @@ export function SopWorkspace({
       {...(onManualEditingChange ? { onManualEditingChange } : {})}
       {...(onReadinessChange ? { onReadinessChange } : {})}
       {...(showValidationPanel !== undefined ? { showValidationPanel } : {})}
+      {...(activeProblemTarget !== undefined ? { activeProblemTarget } : {})}
       {...(onChange ? { onChange } : {})}
       {...(onHeaderChange ? { onHeaderChange } : {})}
       {...(diagramKind ? { diagramKind } : {})}
