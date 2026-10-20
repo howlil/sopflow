@@ -430,9 +430,7 @@ describe("buildBpmnModel", () => {
       stepGap: 144,
       padding: 24,
     });
-    const route = legacy.edges.find(
-      (edge) => edge.id === "start:next:review",
-    );
+    const route = legacy.edges.find((edge) => edge.id === "start:next:review");
     if (!route?.sourceSide || !route.targetSide) {
       throw new Error("Legacy BPMN route is missing endpoint sides");
     }
