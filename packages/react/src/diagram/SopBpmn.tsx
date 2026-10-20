@@ -23,6 +23,8 @@ export interface SopBpmnProps {
   diagramConfig?: SopDiagramConfig;
   onDiagramConfigChange?: (config: SopDiagramConfig) => void;
   manualEditing?: boolean;
+  /** Intrinsic standalone diagram or full-width SOP document presentation. */
+  presentation?: "intrinsic" | "document";
   className?: string;
 }
 
@@ -33,6 +35,7 @@ export function SopBpmn({
   diagramConfig = {},
   onDiagramConfigChange,
   manualEditing = false,
+  presentation = "intrinsic",
   className,
 }: SopBpmnProps) {
   const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
@@ -95,6 +98,7 @@ export function SopBpmn({
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-sopflow-root
       data-sopflow-bpmn
+      data-presentation={presentation}
       aria-label="BPMN SOP"
     >
       <svg
