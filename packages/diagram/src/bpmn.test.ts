@@ -436,7 +436,8 @@ describe("buildBpmnModel", () => {
     }
     const startPoint = route.points[0];
     const endPoint = route.points.at(-1);
-    if (!startPoint || !endPoint) throw new Error("Legacy route endpoints missing");
+    if (!startPoint || !endPoint)
+      throw new Error("Legacy route endpoints missing");
 
     const compact = buildBpmnModel(document, {
       diagramConfig: {
