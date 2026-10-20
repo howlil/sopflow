@@ -360,7 +360,7 @@ function ListSection({
             type="button"
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
-            data-sopflow-header-field={field}
+            data-sopflow-header-field={value.length === 0 ? field : undefined}
             onClick={() => onChange([...value, ""])}
           >
             +

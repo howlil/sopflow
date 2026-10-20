@@ -236,4 +236,19 @@ describe("SopUnifiedWorkspace", () => {
     expect(window.document.getElementById(first)).not.toBeNull();
     expect(window.document.getElementById(second)).not.toBeNull();
   });
+
+  it("focuses an existing blank header-list entry rather than the Add button", async () => {
+    const user = userEvent.setup();
+    render(
+      <SopUnifiedWorkspace
+        value={document}
+        header={{ ...header, lawBasis: [""] }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    );
+    expect(screen.getByRole("textbox", { name: "Dasar hukum 1" })).toHaveFocus();
+  });
 });
