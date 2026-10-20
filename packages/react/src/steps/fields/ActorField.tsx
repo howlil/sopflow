@@ -57,11 +57,12 @@ export function ActorField({
       }))}
       value={[...value]}
       maxVisible={1}
-      description={
-        value.length > 1
-          ? "Beberapa pelaksana terdeteksi. Pilih satu pelaksana untuk memperbaiki langkah ini."
-          : undefined
-      }
+      {...(value.length > 1
+        ? {
+            description:
+              "Beberapa pelaksana terdeteksi. Pilih satu pelaksana untuk memperbaiki langkah ini.",
+          }
+        : {})}
       onValueChange={(next) => {
         if (next.length !== 1 || !actors.some((actor) => actor.id === next[0]))
           return;
