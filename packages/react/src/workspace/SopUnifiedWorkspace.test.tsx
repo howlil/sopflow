@@ -290,13 +290,15 @@ describe("SopUnifiedWorkspace", () => {
     const inspector = container.querySelector<HTMLElement>(
       "[data-sopflow-header-fields]",
     );
-    expect(inspector).toHaveAttribute("data-sopflow-highlight-field", "lawBasis");
+    expect(inspector).toHaveAttribute(
+      "data-sopflow-highlight-field",
+      "lawBasis",
+    );
     const add = screen.getByRole("button", { name: "Tambah dasar hukum" });
     expect(add).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByRole("textbox", { name: "Nomor SOP" })).not.toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
+    expect(
+      screen.getByRole("textbox", { name: "Nomor SOP" }),
+    ).not.toHaveAttribute("aria-invalid", "true");
     await user.click(add);
     await user.type(
       screen.getByRole("textbox", { name: "Dasar hukum 1" }),
@@ -309,10 +311,14 @@ describe("SopUnifiedWorkspace", () => {
     const user = userEvent.setup();
     const { container } = render(<Harness />);
     await user.click(screen.getByRole("button", { name: "Steps" }));
-    const heading = screen.getByRole("heading", { name: "Edit langkah / prosedur" });
+    const heading = screen.getByRole("heading", {
+      name: "Edit langkah / prosedur",
+    });
     const action = screen.getByRole("button", { name: "Tambah langkah" });
     expect(heading.parentElement?.parentElement).toContainElement(action);
-    expect(container.querySelectorAll("[data-sopflow-steps-scroll]")).toHaveLength(1);
+    expect(
+      container.querySelectorAll("[data-sopflow-steps-scroll]"),
+    ).toHaveLength(1);
   });
 
   it("zooms canvas without changing the physical A4 document", async () => {
