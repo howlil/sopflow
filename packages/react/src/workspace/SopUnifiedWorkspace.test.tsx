@@ -249,6 +249,8 @@ describe("SopUnifiedWorkspace", () => {
     await user.click(
       screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
     );
-    expect(screen.getByRole("textbox", { name: "Dasar hukum 1" })).toHaveFocus();
+    expect(
+      screen.getByRole("textbox", { name: "Dasar hukum 1" }),
+    ).toHaveFocus();
   });
 });
