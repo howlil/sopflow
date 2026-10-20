@@ -96,4 +96,21 @@ describe("manual path manager", () => {
     expect(result?.bendPoints.length).toBeGreaterThan(0);
     expect(path).toHaveLength(5);
   });
+
+  it("never commits a repaired route that still overlaps an occupied segment", () => {
+    // The required outgoing jetty shares the occupied corridor; moving a bend
+    // cannot make the route valid without relocating the endpoint.
+    const blocked: ManualPathEditContext = {
+      ...context,
+      occupied: [{ x1: 100, y1: 100, x2: 140, y2: 100 }],
+    };
+    const original = path.map((point) => ({ ...point }));
+    const result = commitManualPathEdit({
+      path,
+      sourceSide: context.sourceSide,
+      targetSide: context.targetSide,
+    }, blocked);
+    expect(result).toBeNull();
+    expect(path).toEqual(original);
+  });
 });
