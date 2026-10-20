@@ -41,7 +41,11 @@ export function resolveProblemTarget(issue: SopReadinessIssue): ProblemTarget {
   if (issue.kind === "schema") {
     if (issue.stepId) return { kind: "step", stepId: issue.stepId };
     const [section, field] = issue.path;
-    if (section === "header" && typeof field === "string" && headerFields.has(field)) {
+    if (
+      section === "header" &&
+      typeof field === "string" &&
+      headerFields.has(field)
+    ) {
       return { kind: "header", field };
     }
     if (section === "steps") return { kind: "steps" };

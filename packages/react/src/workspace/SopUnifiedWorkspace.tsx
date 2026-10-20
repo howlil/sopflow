@@ -155,7 +155,8 @@ export function SopUnifiedWorkspace({
     if (!shell) return;
     let target: HTMLElement | undefined;
     if (pendingNavigation.kind === "actors") {
-      target = shell.querySelector<HTMLElement>("[data-sopflow-actors]") ?? undefined;
+      target =
+        shell.querySelector<HTMLElement>("[data-sopflow-actors]") ?? undefined;
     } else if (pendingNavigation.kind === "steps") {
       target =
         shell.querySelector<HTMLElement>(
@@ -170,7 +171,9 @@ export function SopUnifiedWorkspace({
         pendingNavigation.kind === "header"
           ? pendingNavigation.field
           : pendingNavigation.stepId;
-      target = Array.from(shell.querySelectorAll<HTMLElement>(`[${attr}]`)).find(
+      target = Array.from(
+        shell.querySelectorAll<HTMLElement>(`[${attr}]`),
+      ).find(
         (node) =>
           (pendingNavigation.kind === "header"
             ? node.dataset.sopflowHeaderField
