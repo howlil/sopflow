@@ -45,6 +45,7 @@ export function DurationField({
 
   function handleAmountChange(rawValue: string) {
     if (rawValue === "") {
+      setEmptyUnit(unit);
       onChange(undefined);
       return;
     }
