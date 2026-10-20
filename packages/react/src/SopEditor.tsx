@@ -149,7 +149,9 @@ export function SopEditor({
   } | null>(null);
   const [pendingProblemTarget, setPendingProblemTarget] =
     useState<ProblemTarget | null>(null);
-  const [navigationFeedback, setNavigationFeedback] = useState<string | null>(null);
+  const [navigationFeedback, setNavigationFeedback] = useState<string | null>(
+    null,
+  );
   const [internalSelectedStepId, setInternalSelectedStepId] =
     useState<StepId | null>(null);
   const [internalMode, setInternalMode] = useState<SopDocumentMode>("preview");
@@ -363,7 +365,9 @@ export function SopEditor({
     setNavigationFeedback(null);
     setInternalActiveIssue({ key: problemKey(issue), target });
     if (target.kind === "summary") {
-      setNavigationFeedback("Masalah ini tidak memiliki field langsung. Periksa struktur SOP.");
+      setNavigationFeedback(
+        "Masalah ini tidak memiliki field langsung. Periksa struktur SOP.",
+      );
       setPendingProblemTarget(null);
       return;
     }
@@ -389,7 +393,9 @@ export function SopEditor({
     )
       return;
     if (!focusProblemTarget(rootRef.current, pendingProblemTarget)) {
-      setNavigationFeedback("Field tidak tersedia. Periksa bagian terkait secara manual.");
+      setNavigationFeedback(
+        "Field tidak tersedia. Periksa bagian terkait secara manual.",
+      );
     }
     setPendingProblemTarget(null);
   }, [pendingProblemTarget, mode, inspectorOpen]);

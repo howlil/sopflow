@@ -76,7 +76,9 @@ export function ValidationPanel({
         </ul>
       ) : null}
       {navigationFeedback ? (
-        <p className={styles.feedback} role="status">{navigationFeedback}</p>
+        <p className={styles.feedback} role="status">
+          {navigationFeedback}
+        </p>
       ) : null}
     </section>
   );
