@@ -1,5 +1,11 @@
 # @sopflow/react
 
+## 0.3.2
+
+### Patch Changes
+
+- e4bbe8c: Render BPMN swimlanes at full SOP document content width without extra outer borders, while preserving intrinsic standalone diagrams and existing node/route positions.
+
 ## 0.3.1
 
 ### Patch Changes
