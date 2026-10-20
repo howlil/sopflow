@@ -69,7 +69,7 @@ function buildBpmnModelPass(
     document.actors.map((actor, index) => [actor.id, index] as const),
   );
   const needsFallbackLane = document.steps.some((step) => {
-    const actorId = step.actorIds[0];
+    const actorId = step.actorIds.length === 1 ? step.actorIds[0] : undefined;
     return !actorId || !actorIndex.has(actorId);
   });
   const hasExplicitActors = document.actors.length > 0;
@@ -165,9 +165,16 @@ function buildBpmnModelPass(
     const metrics = metricsById.get(node.id);
     if (!step || !layout || !metrics) return [];
 
-    const firstActorId = step.actorIds[0];
+    const firstActorId = step.actorIds.length === 1 ? step.actorIds[0] : undefined;
     const laneIndex = layout.laneIndex;
-    if (!firstActorId && hasExplicitActors) {
+    if (step.actorIds.length > 1) {
+      diagnostics.push({
+        code: "MULTIPLE_ACTOR_ASSIGNMENT",
+        edgeId: `node:${node.id}`,
+        from: node.id,
+        to: node.id,
+      });
+    } else if (!firstActorId && hasExplicitActors) {
       diagnostics.push({
         code: "UNASSIGNED_ACTOR",
         edgeId: `node:${node.id}`,
