@@ -42,6 +42,20 @@ describe("ActorField", () => {
     );
   });
 
+  it("does not emit a duplicate change when reselecting the current actor", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ActorField value={["staff"]} actors={actors} onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", { name: /Pelaksana/ }));
+    await user.click(screen.getByRole("option", { name: "Staff" }));
+
+    expect(onChange).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
+  });
+
   it("keeps the listbox outside the clipped procedure table", async () => {
     const user = userEvent.setup();
     const { container } = render(
