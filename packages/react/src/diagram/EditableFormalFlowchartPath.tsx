@@ -399,7 +399,6 @@ export function EditableFormalFlowchartPath({
           {...highlight}
           className={styles.anchorHighlight}
           data-sopflow-route-anchor-highlight={highlightSide}
-          aria-hidden="true"
         />
       ) : null}
       {/* biome-ignore lint/a11y/useSemanticElements: SVG geometry is the interactive route hit target. */}
