@@ -1,6 +1,6 @@
 {
   "name": "@sopflow/adapter-sop-ta",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compatibility adapter between legacy sop-ta procedure rows and Sopflow",
   "type": "module",
   "sideEffects": false,
