@@ -30,16 +30,23 @@
 
 .lane {
   fill: var(--sopflow-surface);
+}
+
+.laneHeader {
+  fill: var(--sopflow-surface-muted);
+}
+
+.laneFrame,
+.laneDivider {
+  fill: none;
   stroke: var(--sopflow-document-border);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
-.laneHeader {
-  fill: var(--sopflow-surface-muted);
-  stroke: var(--sopflow-document-border);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+.root[data-presentation="document"] .laneFrame,
+.root[data-presentation="document"] .laneDivider {
+  stroke-width: 2;
 }
 
 .laneLabel {
