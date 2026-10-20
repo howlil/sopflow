@@ -380,11 +380,9 @@ export function SopProcedurePage({
                   </td>
 
                   {model.actorColumns.map((actor, actorIndex) => {
-                    const primary =
-                      actor.actorId === row.primaryActorId ||
-                      (actor.actorId === null &&
-                        row.primaryActorId === null &&
-                        model.actorColumns.length === 1);
+                    // The null actor is the explicit fallback column, even
+                    // when other valid actor columns are also present.
+                    const primary = actor.actorId === row.primaryActorId;
 
                     return (
                       <td
