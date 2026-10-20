@@ -60,6 +60,30 @@ describe("SopBpmn", () => {
     expect(container.querySelector("rect")).not.toBeNull();
   });
 
+  it("renders a compact intrinsic SVG and centered vertical actor labels", () => {
+    const model = buildBpmnModel(document);
+    const { container } = render(<SopBpmn document={document} />);
+    const svg = container.querySelector('svg[role="img"]');
+    expect(svg).toHaveAttribute("width", String(model.width));
+    expect(svg).toHaveAttribute("height", String(model.height));
+    expect(svg).toHaveAttribute(
+      "viewBox",
+      `0 0 ${model.width} ${model.height}`,
+    );
+    const actorLabels = container.querySelectorAll(
+      "[data-sopflow-actor-lane-label]",
+    );
+    expect(actorLabels).toHaveLength(2);
+    for (const [index, label] of Array.from(actorLabels).entries()) {
+      const lane = model.lanes[index];
+      if (!lane) throw new Error("Missing model lane");
+      expect(label).toHaveAttribute(
+        "transform",
+        `rotate(-90 ${model.padding + model.headerWidth / 2} ${lane.y + lane.height / 2})`,
+      );
+    }
+  });
+
   it("renders long BPMN labels across multiple lines without truncating content", () => {
     const longLabel =
       "Verifikasi dokumen pengajuan pembayaran dan kelengkapan administrasi";

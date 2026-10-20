@@ -423,6 +423,96 @@ describe("buildBpmnModel", () => {
     );
   });
 
+  it("preserves a route persisted before compact geometry was introduced", () => {
+    const legacy = buildBpmnModel(document, {
+      laneHeight: 112,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+    const route = legacy.edges.find((edge) => edge.id === "start:next:review");
+    if (!route?.sourceSide || !route.targetSide) {
+      throw new Error("Legacy BPMN route is missing endpoint sides");
+    }
+    const startPoint = route.points[0];
+    const endPoint = route.points.at(-1);
+    if (!startPoint || !endPoint)
+      throw new Error("Legacy route endpoints missing");
+
+    const compact = buildBpmnModel(document, {
+      diagramConfig: {
+        routes: {
+          [route.id]: {
+            kind: "orthogonal",
+            bendPoints: route.points.slice(1, -1),
+            sSide: route.sourceSide,
+            eSide: route.targetSide,
+            startPoint,
+            endPoint,
+          },
+        },
+      },
+    });
+    const restored = compact.edges.find((edge) => edge.id === route.id);
+    expect(restored?.routeKind).toBe("manual");
+  });
+
+  it("compacts the BPMN pool without shrinking node semantics or dropping routes", () => {
+    const compact = buildBpmnModel(document);
+    const originalSpacing = buildBpmnModel(document, {
+      laneHeight: 112,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+
+    expect(compact.headerWidth).toBe(36);
+    expect(compact.padding).toBe(8);
+    expect(compact.width).toBeLessThan(originalSpacing.width);
+    expect(compact.nodes.map((node) => node.id)).toEqual(
+      originalSpacing.nodes.map((node) => node.id),
+    );
+    expect(compact.edges.map((edge) => edge.id)).toEqual(
+      originalSpacing.edges.map((edge) => edge.id),
+    );
+    const compactFallbacks = compact.edges
+      .filter((edge) => edge.routeKind === "fallback")
+      .map((edge) => edge.id);
+    const previousFallbacks = originalSpacing.edges
+      .filter((edge) => edge.routeKind === "fallback")
+      .map((edge) => edge.id);
+    expect(compactFallbacks).toEqual(previousFallbacks);
+  });
+
+  it("reserves the full height of long vertically rotated actor names", () => {
+    const longName = "Customer Support Representative";
+    const model = buildBpmnModel({
+      ...document,
+      actors: [
+        { id: "staff", name: longName },
+        { id: "manager", name: "Manager" },
+      ],
+    });
+
+    expect(model.lanes[0]?.height).toBeGreaterThanOrEqual(
+      Array.from(longName).length * 8 + 24,
+    );
+    expect(model.lanes[1]?.height).toBeGreaterThanOrEqual(112);
+    expect(model.edges).toHaveLength(4);
+  });
+
+  it("preserves an explicit spacious BPMN layout override for existing callers", () => {
+    const configured = buildBpmnModel(document, {
+      laneHeight: 152,
+      headerWidth: 116,
+      stepGap: 144,
+      padding: 24,
+    });
+    expect(configured.headerWidth).toBe(116);
+    expect(configured.padding).toBe(24);
+    expect(configured.laneHeight).toBe(152);
+  });
+
   it("keeps BPMN layout stable when step storage order changes", () => {
     const original = buildBpmnModel(document);
     const shuffled = buildBpmnModel({

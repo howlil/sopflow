@@ -90,3 +90,30 @@ if ! grep -q 'data-actor-popover-regression="pass"' "${ACTOR_DOM}"; then
 fi
 grep -o 'data-actor-popover-regression[^>]*>[^<]*' "${ACTOR_DOM}"
 echo "Portaled ActorField popup regression passed."
+
+# Use the same source-only Vite config for the compact BPMN pool. The normal
+# playground still imports released npm packages, never workspace symlinks.
+BPMN_URL="http://127.0.0.1:${PORT}/bpmn-source-regression.html"
+BPMN_DOM="${RUNNER_TEMP:-/tmp}/sopflow-source-bpmn.html"
+BPMN_PNG="${RUNNER_TEMP:-/tmp}/sopflow-source-bpmn.png"
+BPMN_PDF="${RUNNER_TEMP:-/tmp}/sopflow-source-bpmn.pdf"
+curl --silent --fail "${BPMN_URL}" >/dev/null
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --window-size=1280,900 --user-data-dir="${PROFILE_DIR}" \
+  --virtual-time-budget=7000 --dump-dom "${BPMN_URL}" >"${BPMN_DOM}"
+if ! grep -q 'data-bpmn-source-regression="pass"' "${BPMN_DOM}"; then
+  echo "::error::Source compact BPMN geometry, label centering or responsiveness failed"
+  grep -o 'data-bpmn-source-regression[^>]*>[^<]*' "${BPMN_DOM}" || true
+  cat "${LOG_FILE}"
+  exit 1
+fi
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --window-size=1280,900 --user-data-dir="${PROFILE_DIR}" \
+  --virtual-time-budget=7000 --screenshot="${BPMN_PNG}" "${BPMN_URL}" >/dev/null 2>&1
+test -s "${BPMN_PNG}"
+"${CHROME_BIN}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --user-data-dir="${PROFILE_DIR}" --virtual-time-budget=7000 \
+  --print-to-pdf="${BPMN_PDF}" "${BPMN_URL}" >/dev/null 2>&1
+test -s "${BPMN_PDF}"
+grep -o 'data-bpmn-source-regression[^>]*>[^<]*' "${BPMN_DOM}"
+echo "Source compact BPMN geometry and A4 print smoke checks passed."
