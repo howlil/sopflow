@@ -26,11 +26,7 @@ export function buildBpmnModel(
   options: BpmnLayoutOptions = {},
 ): BpmnModel {
   const buildAtSpacing = (layoutOptions: BpmnLayoutOptions): BpmnModel => {
-    const first = buildBpmnModelPass(
-      document,
-      layoutOptions,
-      "feedback-first",
-    );
+    const first = buildBpmnModelPass(document, layoutOptions, "feedback-first");
     const second = buildBpmnModelPass(document, layoutOptions, "branch-first");
     return scoreBpmnPlan(second) < scoreBpmnPlan(first) ? second : first;
   };
@@ -46,8 +42,7 @@ export function buildBpmnModel(
     if (!best || scoreBpmnPlan(model) < scoreBpmnPlan(best)) best = model;
     const hasUnsafeRoute = model.edges.some(
       (edge) =>
-        edge.routeKind === "fallback" ||
-        (edge.quality?.obstacleHits ?? 0) > 0,
+        edge.routeKind === "fallback" || (edge.quality?.obstacleHits ?? 0) > 0,
     );
     if (!hasUnsafeRoute) return model;
   }
