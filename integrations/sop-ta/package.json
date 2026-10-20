@@ -1,0 +1,56 @@
+{
+  "name": "@sopflow/integration-sop-ta",
+  "version": "0.0.0",
+  "description": "Private SOP-TA compatibility integration and lossless legacy conversion",
+  "type": "module",
+  "sideEffects": false,
+  "author": {
+    "name": "howlil",
+    "email": "mhdulilabshar27@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howlil/sopflow.git",
+    "directory": "integrations/sop-ta"
+  },
+  "homepage": "https://github.com/howlil/sopflow#readme",
+  "bugs": {
+    "url": "https://github.com/howlil/sopflow/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@sopflow/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "keywords": [
+    "sop",
+    "sop-ta",
+    "adapter",
+    "workflow",
+    "typescript"
+  ],
+  "license": "MIT",
+  "private": true
+}
