@@ -38,6 +38,7 @@ export function Dialog({
     >
       <ArcDialogContent
         title={title}
+        footer={footer}
         description={description}
         role={role}
         className={styles.dialog}
@@ -60,7 +61,7 @@ export function Dialog({
           const firstField =
             content instanceof HTMLElement
               ? content.querySelector<HTMLElement>(
-                  "select:not([disabled]), input:not([disabled]), textarea:not([disabled])",
+                  'button[role="combobox"]:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), button[data-sopflow-cancel]',
                 )
               : null;
           if (firstField) {
@@ -74,7 +75,6 @@ export function Dialog({
         }}
       >
         {children}
-        {footer ? <footer className={styles.footer}>{footer}</footer> : null}
       </ArcDialogContent>
     </ArcDialog>
   );

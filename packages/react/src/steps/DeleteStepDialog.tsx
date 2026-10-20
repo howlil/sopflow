@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   buildRemoveStepAndReconnectOperations,
   getStepRemovalOptions,
+  getPresentationSteps,
   type SOPDocument,
   type SopOperation,
   type Step,
@@ -34,6 +35,7 @@ export function DeleteStepDialog({
   const removal = getStepRemovalOptions(document, step.id);
   const needsReplacement = removal.requiresReplacement;
   const candidates = removal.candidates;
+  const orderById = new Map(getPresentationSteps(document).map((item, index) => [item.id, index + 1] as const));
   const hasNoValidReplacement = needsReplacement && candidates.length === 0;
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export function DeleteStepDialog({
       onClose={onClose}
       footer={
         <>
-          <Button type="button" onClick={onClose}>
+          <Button type="button" data-sopflow-cancel onClick={onClose}>
             Batal
           </Button>
           <Button
@@ -106,9 +108,9 @@ export function DeleteStepDialog({
               placeholder="Pilih langkah"
               disabled={disabled || hasNoValidReplacement}
               onValueChange={setReplacementId}
-              options={candidates.map((candidate, index) => ({
+              options={candidates.map((candidate) => ({
                 value: candidate.id,
-                label: `${index + 1}. ${candidate.name || "Tanpa judul"}`,
+                label: `${orderById.get(candidate.id) ?? "?"}. ${candidate.name || "Tanpa judul"}`,
               }))}
             />
           </Field>

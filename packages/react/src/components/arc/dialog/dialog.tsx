@@ -49,6 +49,8 @@ export interface DialogContentProps
   title: string;
   description?: ReactNode;
   children: ReactNode;
+  /** Actions appear in an independent footer rather than inside the padded form body. */
+  footer?: ReactNode;
 }
 
 const fade: Transition = { duration: motionTokens.duration.instant };
@@ -103,6 +105,7 @@ export function DialogContent({
   title,
   description,
   children,
+  footer,
   className,
   onPointerDownOutside,
   ...props
@@ -143,7 +146,6 @@ export function DialogContent({
           ) : null}
         </div>
         <DialogPrimitive.Close
-          tabIndex={-1}
           className={styles.close}
           aria-label="Close dialog"
         >
@@ -151,6 +153,7 @@ export function DialogContent({
         </DialogPrimitive.Close>
       </div>
       <div className={styles.body}>{children}</div>
+      {footer ? <footer className={styles.footer}>{footer}</footer> : null}
     </>
   );
   // Under a bare Radix root the open state is unknown here, so CSS keyframes keyed off data-state animate the layers instead.

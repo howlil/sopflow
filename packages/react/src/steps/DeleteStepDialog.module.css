@@ -1,11 +1,2 @@
-.field {
-  padding: 0.75rem 0.875rem 0;
-}
-
-.notice {
-  margin: 0;
-  padding: 0.75rem 0.875rem 0;
-
-  color: var(--sopflow-text-muted);
-  font-size: var(--sopflow-font-xs);
-}
+.field { min-width: 0; }
+.notice { margin: 0; color: var(--sopflow-text-muted); font-size: var(--sopflow-font-xs); line-height: 1.4; }
