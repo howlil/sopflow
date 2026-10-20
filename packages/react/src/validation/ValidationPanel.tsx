@@ -7,9 +7,14 @@ import styles from "./ValidationPanel.module.css";
 export interface ValidationPanelProps {
   issues: readonly SopReadinessIssue[];
   onNavigate?: (issue: SopReadinessIssue) => void;
+  navigationFeedback?: string | null;
 }
 
-export function ValidationPanel({ issues, onNavigate }: ValidationPanelProps) {
+export function ValidationPanel({
+  issues,
+  onNavigate,
+  navigationFeedback,
+}: ValidationPanelProps) {
   const ready = issues.length === 0;
   const [expanded, setExpanded] = useState(false);
 
@@ -69,6 +74,9 @@ export function ValidationPanel({ issues, onNavigate }: ValidationPanelProps) {
             </li>
           ))}
         </ul>
+      ) : null}
+      {navigationFeedback ? (
+        <p className={styles.feedback} role="status">{navigationFeedback}</p>
       ) : null}
     </section>
   );
