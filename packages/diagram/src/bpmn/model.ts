@@ -25,9 +25,36 @@ export function buildBpmnModel(
   document: SOPDocument,
   options: BpmnLayoutOptions = {},
 ): BpmnModel {
-  const first = buildBpmnModelPass(document, options, "feedback-first");
-  const second = buildBpmnModelPass(document, options, "branch-first");
-  return scoreBpmnPlan(second) < scoreBpmnPlan(first) ? second : first;
+  const buildAtSpacing = (layoutOptions: BpmnLayoutOptions): BpmnModel => {
+    const first = buildBpmnModelPass(
+      document,
+      layoutOptions,
+      "feedback-first",
+    );
+    const second = buildBpmnModelPass(document, layoutOptions, "branch-first");
+    return scoreBpmnPlan(second) < scoreBpmnPlan(first) ? second : first;
+  };
+
+  // Only auto-adjust the *default* spacing; an explicit caller-provided
+  // stepGap remains authoritative. Dense loops sometimes need a wider
+  // horizontal routing corridor than a simple forward process.
+  if (options.stepGap !== undefined) return buildAtSpacing(options);
+
+  let best: BpmnModel | null = null;
+  for (const stepGap of [128, 144, 160]) {
+    const model = buildAtSpacing({ ...options, stepGap });
+    if (!best || scoreBpmnPlan(model) < scoreBpmnPlan(best)) best = model;
+    const hasUnsafeRoute = model.edges.some(
+      (edge) =>
+        edge.routeKind === "fallback" ||
+        (edge.quality?.obstacleHits ?? 0) > 0,
+    );
+    if (!hasUnsafeRoute) return model;
+  }
+  // Do not silently discard edges when even expanded spacing cannot avoid
+  // fallback. Keep the highest-quality bounded candidate and its diagnostics.
+  if (!best) throw new Error("BPMN spacing candidates were not evaluated");
+  return best;
 }
 
 function buildBpmnModelPass(
