@@ -94,7 +94,9 @@ export function SopBpmn({
   // Expand only the swimlane grid; node, edge and manual-route coordinates
   // remain in the original model coordinate space.
   const renderWidth =
-    presentation === "document" ? Math.max(model.width, documentWidth) : model.width;
+    presentation === "document"
+      ? Math.max(model.width, documentWidth)
+      : model.width;
   const gridLeft = presentation === "document" ? 1 : model.padding;
   const gridWidth =
     presentation === "document"
@@ -163,7 +165,7 @@ export function SopBpmn({
           </marker>
         </defs>
 
-        <g aria-hidden="true">
+        <g>
           {model.lanes.map((lane) => (
             <g key={lane.actorId ?? `lane-${lane.index}`}>
               <rect
