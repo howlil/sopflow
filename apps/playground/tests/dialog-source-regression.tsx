@@ -4,15 +4,25 @@ import "../../../packages/react/src/styles/uiarc-scoped.css";
 import "../../../packages/react/src/styles/token.css";
 import { Dialog } from "../../../packages/react/src/primitives/Dialog.tsx";
 import { Select } from "../../../packages/react/src/components/arc/select/select.tsx";
+import { SopDatePicker } from "../../../packages/react/src/components/sop-date-picker/SopDatePicker.tsx";
 
 function App() {
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState("a");
+  const [date, setDate] = useState("2026-10-20");
   return (
     <div data-sopflow-root>
       <button type="button" id="open-modal" onClick={() => setOpen(true)}>
         Buka konfirmasi
       </button>
+      <div style={{ width: 200, height: 48, overflow: "hidden" }}>
+        <SopDatePicker
+          value={date}
+          onValueChange={setDate}
+          label="Tanggal pembuatan"
+        />
+      </div>
+      <output id="date-result">{date}</output>
       {open ? (
         <Dialog
           open
@@ -133,6 +143,42 @@ async function run() {
   cancel.click();
   await delay(550);
   assert(!document.querySelector('[role="dialog"]'), "Dialog did not close");
+  // Calendar portal must escape a clipped inspector while preserving ISO dates.
+  const dateTrigger = document.querySelector<HTMLButtonElement>(
+    '[aria-label="Tanggal pembuatan"]',
+  );
+  assert(dateTrigger, "Calendar trigger missing");
+  dateTrigger.click();
+  await delay(320);
+  const calendar = document.querySelector<HTMLElement>(
+    '[role="dialog"][aria-label="Tanggal pembuatan"]',
+  );
+  assert(calendar, "Styled calendar did not open");
+  assert(
+    calendar.parentElement === document.body,
+    "Calendar was clipped inside inspector",
+  );
+  const popupBounds = calendar.getBoundingClientRect();
+  assert(
+    popupBounds.top >= 0 &&
+      popupBounds.left >= 0 &&
+      popupBounds.bottom <= window.innerHeight + 2,
+    "Calendar popover overflowed viewport",
+  );
+  const day21 = Array.from(calendar.querySelectorAll<HTMLButtonElement>("button"))
+    .find((button) => button.getAttribute("aria-label")?.includes("21 Oktober 2026"));
+  assert(day21, "Calendar day 21 is missing");
+  day21.click();
+  await delay(120);
+  assert(
+    document.getElementById("date-result")?.textContent === "2026-10-21",
+    "Calendar selection did not preserve local ISO date",
+  );
+  assert(
+    !document.querySelector('[role="dialog"]'),
+    "Calendar remained open after selecting a date",
+  );
+
   report(
     "pass",
     JSON.stringify({ contentZ, overlayZ, position: style.position }),
