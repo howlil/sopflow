@@ -35,6 +35,7 @@ export interface MultiSelectProps {
   disabled?: boolean;
   className?: string;
   compact?: boolean;
+  selectionMode?: "single" | "multiple";
 }
 
 const enter = motionTokens.ease.enter;
@@ -170,6 +171,7 @@ export function MultiSelect({
   disabled = false,
   className,
   compact = false,
+  selectionMode = "multiple",
 }: MultiSelectProps) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -274,6 +276,11 @@ export function MultiSelect({
   };
   const toggle = (option: MultiSelectOption) => {
     if (disabled || option.disabled) return;
+    if (selectionMode === "single") {
+      update([option.value]);
+      setOpen(false);
+      return;
+    }
     update(
       selectedSet.has(option.value)
         ? selected.filter((item) => item !== option.value)
@@ -425,7 +432,7 @@ export function MultiSelect({
           />
         </button>
         <AnimatePresence initial={false}>
-          {selected.length > 0 && !disabled && (
+          {selected.length > 0 && !disabled && selectionMode === "multiple" && (
             <motion.button
               type="button"
               aria-label="Clear selections"
@@ -488,7 +495,7 @@ export function MultiSelect({
               className={styles.menu}
               role="listbox"
               aria-label={label}
-              aria-multiselectable="true"
+              aria-multiselectable={selectionMode === "multiple"}
               onClick={(event) => event.stopPropagation()}
               style={{
                 left: menuPosition?.left ?? -10000,
