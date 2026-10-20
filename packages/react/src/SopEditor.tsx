@@ -62,6 +62,8 @@ export interface SopEditorProps {
   /** Optional externally controlled inspector visibility. */
   inspectorOpen?: boolean;
   onInspectorOpenChange?: (open: boolean) => void;
+  /** Leave focus and visibility controls to the host shell when external. */
+  inspectorTogglePlacement?: "internal" | "external";
   className?: string;
 }
 
@@ -90,6 +92,7 @@ export function SopEditor({
   toolbarPlacement = "document",
   inspectorOpen: controlledInspectorOpen,
   onInspectorOpenChange,
+  inspectorTogglePlacement = "internal",
   className,
 }: SopEditorProps) {
   const handleChange = useCallback(
@@ -145,10 +148,13 @@ export function SopEditor({
 
   useEffect(() => {
     if (previousInspectorOpen.current !== inspectorOpen) {
-      (inspectorOpen ? closeInspectorRef : openInspectorRef).current?.focus();
+      // An external shell owns focus after toggling its inspector control.
+      if (inspectorTogglePlacement === "internal") {
+        (inspectorOpen ? closeInspectorRef : openInspectorRef).current?.focus();
+      }
       previousInspectorOpen.current = inspectorOpen;
     }
-  }, [inspectorOpen]);
+  }, [inspectorOpen, inspectorTogglePlacement]);
 
   const selectedStepId =
     controlledSelectedStepId !== undefined
@@ -333,7 +339,7 @@ export function SopEditor({
           data-inspector-open={inspectorOpen}
         >
           <div className={styles.mainPane} data-sopflow-main-pane>
-            {!inspectorOpen ? (
+            {!inspectorOpen && inspectorTogglePlacement === "internal" ? (
               <Button
                 variant="ghost"
                 type="button"
@@ -377,17 +383,19 @@ export function SopEditor({
             >
               <div className={styles.inspectorHeader}>
                 <h2 className={styles.inspectorTitle}>Properti</h2>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className={styles.inspectorToggle}
-                  aria-label="Tutup panel properti"
-                  title="Tutup panel properti"
-                  buttonRef={closeInspectorRef}
-                  onClick={() => handleInspectorOpenChange(false)}
-                >
-                  <InspectorIcon />
-                </Button>
+                {inspectorTogglePlacement === "internal" ? (
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className={styles.inspectorToggle}
+                    aria-label="Tutup panel properti"
+                    title="Tutup panel properti"
+                    buttonRef={closeInspectorRef}
+                    onClick={() => handleInspectorOpenChange(false)}
+                  >
+                    <InspectorIcon />
+                  </Button>
+                ) : null}
               </div>
 
               <div className={styles.inspectorContent}>

@@ -284,6 +284,10 @@ describe("SopEditor default composition", () => {
     expect(
       container.querySelector("[data-sopflow-diagram-panel]"),
     ).toHaveAttribute("aria-label", "Flowchart SOP");
+    expect(container.querySelector("[data-sopflow-diagram-panel]")).toHaveAttribute(
+      "role",
+      "region",
+    );
     expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
   });
 
@@ -342,5 +346,46 @@ describe("SopEditor default composition", () => {
         '[data-sopflow-procedure-view][data-manual-editing="true"]',
       ),
     ).not.toBeNull();
+  });
+
+  it("leaves inspector controls and focus with the external host", async () => {
+    const user = userEvent.setup();
+    function ExternalHost() {
+      const [open, setOpen] = useState(true);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen((current) => !current)}>
+            Toggle host inspector
+          </button>
+          <SopWorkspace
+            value={document}
+            onChange={() => {}}
+            header={header}
+            onHeaderChange={() => {}}
+            toolbarPlacement="external"
+            inspectorOpen={open}
+            onInspectorOpenChange={setOpen}
+            inspectorTogglePlacement="external"
+          />
+        </>
+      );
+    }
+
+    const { container } = render(<ExternalHost />);
+    const hostToggle = screen.getByRole("button", { name: "Toggle host inspector" });
+    expect(
+      screen.queryByRole("button", { name: "Tutup panel properti" }),
+    ).toBeNull();
+
+    await user.click(hostToggle);
+    expect(container.querySelector("[data-sopflow-inspector]")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Buka panel properti" }),
+    ).toBeNull();
+    expect(hostToggle).toHaveFocus();
+
+    await user.click(hostToggle);
+    expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+    expect(hostToggle).toHaveFocus();
   });
 });

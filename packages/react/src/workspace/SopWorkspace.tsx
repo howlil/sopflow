@@ -33,6 +33,7 @@ export interface SopWorkspaceProps {
   toolbarPlacement?: "document" | "external";
   inspectorOpen?: boolean;
   onInspectorOpenChange?: (open: boolean) => void;
+  inspectorTogglePlacement?: "internal" | "external";
   manualEditing?: boolean;
   onManualEditingChange?: (editing: boolean) => void;
   className?: string;
@@ -59,6 +60,7 @@ export function SopWorkspace({
   toolbarPlacement = "document",
   inspectorOpen,
   onInspectorOpenChange,
+  inspectorTogglePlacement,
   manualEditing,
   onManualEditingChange,
   className,
@@ -89,6 +91,7 @@ export function SopWorkspace({
       toolbarPlacement={toolbarPlacement}
       {...(inspectorOpen !== undefined ? { inspectorOpen } : {})}
       {...(onInspectorOpenChange ? { onInspectorOpenChange } : {})}
+      {...(inspectorTogglePlacement ? { inspectorTogglePlacement } : {})}
       {...(manualEditing !== undefined ? { manualEditing } : {})}
       {...(onManualEditingChange ? { onManualEditingChange } : {})}
       {...(onReadinessChange ? { onReadinessChange } : {})}

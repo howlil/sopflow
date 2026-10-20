@@ -186,7 +186,7 @@ export function SopDocumentCanvas({
                 ref={diagramPanelRef}
                 id={diagramPanelId}
                 className={styles.diagramPanel}
-                role="tabpanel"
+                role={toolbarPlacement === "document" ? "tabpanel" : "region"}
                 {...(toolbarPlacement === "document"
                   ? {
                       "aria-labelledby": `${diagramPanelId}-tab-${diagramKind}`,
