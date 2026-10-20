@@ -72,8 +72,8 @@ export function buildProcedureModel(document: SOPDocument): ProcedureModel {
   const presentationSteps = getPresentationSteps(document);
   const hasFallbackRows = document.steps.some(
     (step) =>
-      step.actorIds.length === 0 ||
-      !step.actorIds.some((actorId) => actorIds.has(actorId)),
+      step.actorIds.length !== 1 ||
+      !actorIds.has(step.actorIds[0] ?? ""),
   );
   const actorColumns: ProcedureActorColumn[] = [
     ...document.actors.map((actor) => ({
@@ -91,7 +91,9 @@ export function buildProcedureModel(document: SOPDocument): ProcedureModel {
     activity: step.name,
     actorIds: step.actorIds,
     primaryActorId:
-      step.actorIds.find((actorId) => actorIds.has(actorId)) ?? null,
+      step.actorIds.length === 1 && actorIds.has(step.actorIds[0] ?? "")
+        ? (step.actorIds[0] ?? null)
+        : null,
     ...(step.input !== undefined ? { input: step.input } : {}),
     ...(step.duration !== undefined ? { duration: step.duration } : {}),
     ...(step.output !== undefined ? { output: step.output } : {}),
