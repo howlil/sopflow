@@ -58,20 +58,28 @@ test -s "$PNG"
   --print-to-pdf="$PDF" "$URL/" >/dev/null 2>&1
 test -s "$PDF"
 
+if ! command -v pdfinfo >/dev/null; then
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq poppler-utils
+fi
+
 python3 - "$PDF" <<'PY'
 import re
+import subprocess
 import sys
-from pathlib import Path
 
-content = Path(sys.argv[1]).read_bytes()
-boxes = re.findall(rb"/MediaBox\s*\[\s*([+-]?\d+(?:\.\d+)?)\s+([+-]?\d+(?:\.\d+)?)\s+([+-]?\d+(?:\.\d+)?)\s*\]", content)
-if not boxes:
-    raise SystemExit("No PDF MediaBox found")
-for values in boxes:
-    l, b, r, t = (float(value) for value in values)
-    if abs((r - l) - 841.89) > 5 or abs((t - b) - 595.28) > 5:
-        raise SystemExit(f"Expected A4 landscape page; got {[l, b, r, t]}")
-print(f"Verified {len(boxes)} A4 landscape PDF pages")
+info = subprocess.run(
+    ["pdfinfo", sys.argv[1]],
+    check=True,
+    capture_output=True,
+    text=True,
+).stdout
+match = re.search(r"Page size:\s*([\d.]+)\s+x\s+([\d.]+)\s+pts", info)
+if not match:
+    raise SystemExit("Cannot read page size from pdfinfo")
+width, height = map(float, match.groups())
+if abs(width - 841.89) > 5 or abs(height - 595.28) > 5:
+    raise SystemExit(f"Expected A4 landscape (841.89 × 595.28pt), got {width} × {height}pt")
+print(f"A4 landscape verified: {width} × {height}pt")
 PY
-
 echo "Unified npm consumer desktop/mobile/print smoke passed"
