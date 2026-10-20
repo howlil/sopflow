@@ -1,23 +1,45 @@
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore, type RefObject } from "react";
 
-/** Subscribe once to the responsive layout rather than mounting both editors. */
-const QUERY = "(max-width: 768px)";
+/**
+ * Embedded SOP editors switch layout by their available width, not the
+ * viewport width. A wide host with a narrow editor pane must not render an
+ * unusable horizontally clipped table.
+ */
+const COMPACT_WIDTH = 768;
+const MEDIA_QUERY = "(max-width: 768px)";
 
-function subscribe(listener: () => void): () => void {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const media = window.matchMedia(QUERY);
-  media.addEventListener("change", listener);
-  return () => media.removeEventListener("change", listener);
-}
+export function useCompactStepsLayout(
+  containerRef: RefObject<HTMLElement | null>,
+): boolean {
+  const subscribe = useCallback(
+    (listener: () => void): (() => void) => {
+      if (typeof window === "undefined") return () => {};
 
-function getSnapshot(): boolean {
-  return typeof window !== "undefined" && !!window.matchMedia?.(QUERY).matches;
-}
+      const container = containerRef.current;
+      if (container && typeof ResizeObserver !== "undefined") {
+        const observer = new ResizeObserver(listener);
+        observer.observe(container);
+        return () => observer.disconnect();
+      }
 
-function getServerSnapshot(): boolean {
-  return false;
-}
+      window.addEventListener("resize", listener);
+      const media = window.matchMedia?.(MEDIA_QUERY);
+      media?.addEventListener?.("change", listener);
+      return () => {
+        window.removeEventListener("resize", listener);
+        media?.removeEventListener?.("change", listener);
+      };
+    },
+    [containerRef],
+  );
 
-export function useCompactStepsLayout(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const getSnapshot = useCallback((): boolean => {
+    if (typeof window === "undefined") return false;
+    const width = containerRef.current?.getBoundingClientRect().width ?? 0;
+    return width > 0
+      ? width <= COMPACT_WIDTH
+      : (window.matchMedia?.(MEDIA_QUERY).matches ?? false);
+  }, [containerRef]);
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }

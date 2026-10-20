@@ -62,7 +62,9 @@ describe("DeleteStepDialog", () => {
       .focus();
     await user.keyboard("{ArrowDown}");
     const options = within(await screen.findByRole("listbox"));
-    expect(options.getByRole("option", { name: /End/i })).toBeInTheDocument();
+    expect(
+      options.getByRole("option", { name: /^4\. End$/i }),
+    ).toBeInTheDocument();
     expect(options.queryByRole("option", { name: /Start/i })).toBeNull();
     expect(options.queryByRole("option", { name: /^2\. A$/i })).toBeNull();
   });

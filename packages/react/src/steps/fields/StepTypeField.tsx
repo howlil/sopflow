@@ -60,6 +60,7 @@ export function StepTypeField({
       <ArcSelect
         label="Tipe langkah"
         compact
+        wideMenu
         value={step.type}
         disabled={disabled}
         options={[

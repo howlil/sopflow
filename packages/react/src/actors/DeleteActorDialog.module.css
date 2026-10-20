@@ -1,9 +1,9 @@
 .warning {
-  margin: 0.75rem 0.875rem 0;
+  margin: 0;
   padding: 0.75rem;
 
   border: 1px solid var(--sopflow-error-border);
-  border-radius: var(--sopflow-surface-radius);
+  border-radius: var(--sopflow-radius-inline);
 
   background: var(--sopflow-error-surface);
 }
@@ -19,6 +19,8 @@
 .stepList {
   margin: 0.5rem 0;
   padding-left: 1.25rem;
+  max-height: 8rem;
+  overflow-y: auto;
 
   color: var(--sopflow-text);
   font-size: var(--sopflow-font-xs);
@@ -26,8 +28,10 @@
 
 .warningText,
 .notice {
-  margin: 0.75rem 0.875rem 0;
+  margin: 0;
 
   color: var(--sopflow-text-muted);
   font-size: var(--sopflow-font-xs);
 }
+
+.warningText { margin-top: 0.5rem; line-height: 1.4; }

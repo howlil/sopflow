@@ -74,7 +74,7 @@ export function DecisionEditor({
       onClose={onClose}
       footer={
         <>
-          <Button type="button" onClick={onClose}>
+          <Button type="button" data-sopflow-cancel onClick={onClose}>
             Batal
           </Button>
           <Button
@@ -97,6 +97,7 @@ export function DecisionEditor({
         <Field label="Tahap jika Tidak">
           <Select
             compact
+            wideMenu
             label="Tahap jika Tidak"
             placeholder="Pilih tahap"
             value={noId}
@@ -113,6 +114,7 @@ export function DecisionEditor({
         <Field label="Tahap jika Ya">
           <Select
             compact
+            wideMenu
             label="Tahap jika Ya"
             placeholder="Pilih tahap"
             value={yesId}

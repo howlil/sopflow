@@ -14,15 +14,16 @@
 .trigger[data-state="open"] .chevron { transform: rotate(180deg); }
 .hint { color: var(--text-muted); font-size: var(--text-xs); }
 /* Radix holds the animation until the menu is positioned, so it always grows from the trigger edge. */
-.content { --menu-x: 0px; --menu-y: -6px; box-sizing: border-box; z-index: 1200; width: var(--radix-select-trigger-width); min-width: var(--radix-select-trigger-width); max-width: min(24rem, calc(100vw - 20px)); max-height: min(320px, var(--radix-select-content-available-height)); overflow: hidden; border: 1px solid var(--border); border-radius: calc(var(--radius-control) + 2px); padding: 6px; background: var(--surface-raised); color: var(--foreground); box-shadow: var(--shadow-floating); transform-origin: var(--radix-select-content-transform-origin); animation: select-in var(--duration-standard) var(--ease-enter) both; }
+.content { --menu-x: 0px; --menu-y: -6px; box-sizing: border-box; z-index: 1200; width: var(--radix-select-trigger-width); min-width: min(var(--radix-select-trigger-width), calc(100vw - 24px)); max-width: min(24rem, calc(100vw - 24px)); max-height: min(280px, var(--radix-select-content-available-height)); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-panel, 14px); padding: 5px; background: var(--surface-raised); color: var(--foreground); box-shadow: var(--shadow-floating); transform-origin: var(--radix-select-content-transform-origin); animation: select-in var(--duration-standard) var(--ease-enter) both; }
+.content[data-wide] { width: max(var(--radix-select-trigger-width), min(16.5rem, calc(100vw - 24px))); }
 .content[data-side="top"] { --menu-y: 6px; }
 .content[data-side="left"] { --menu-x: 6px; --menu-y: 0px; }
 .content[data-side="right"] { --menu-x: -6px; --menu-y: 0px; }
 .content[data-state="closed"] { animation: select-out var(--duration-instant) var(--ease-standard) both; }
 .viewport { padding: 2px 0; }
-.item { position: relative; display: flex; align-items: center; min-height: 36px; border-radius: var(--radius-pill); padding: 0 34px 0 11px; color: var(--foreground); font-size: var(--text-sm); cursor: default; outline: none; user-select: none; transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard); }
+.item { position: relative; display: flex; align-items: center; min-height: 34px; border-radius: var(--radius-menu-item, 8px); padding: 6px 34px 6px 11px; line-height: 1.3; overflow-wrap: anywhere; color: var(--foreground); font-size: var(--text-sm); cursor: default; outline: none; user-select: none; transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard); }
 .item[data-highlighted] { background: var(--surface-muted); }
-.item[data-disabled] { opacity: .45; }
+.item[data-disabled] { opacity: .55; cursor: not-allowed; }
 .indicator { position: absolute; right: 10px; display: inline-flex; align-items: center; color: var(--foreground); animation: indicator-in var(--duration-standard) var(--ease-enter) 40ms both; }
 .scrollButton { display: grid; height: 28px; place-items: center; color: var(--text-muted); }
 @keyframes select-in { from { opacity: 0; transform: translate(var(--menu-x), var(--menu-y)) scale(.97); } }

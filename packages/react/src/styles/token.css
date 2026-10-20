@@ -25,12 +25,16 @@
   --sopflow-radius-control: 9999px;
   --sopflow-radius-surface: 16px;
   --sopflow-radius-popover: 14px;
+  --sopflow-radius-menu-item: 8px;
   --sopflow-radius-inline: 10px;
   --sopflow-radius-field: 10px;
   --sopflow-radius-action: 9999px;
   --sopflow-radius-chip: 9999px;
   --sopflow-radius-dialog: 16px;
   --sopflow-field-height: 36px;
+  --sopflow-dialog-header-padding: 0.875rem 1rem;
+  --sopflow-dialog-body-padding: 0.875rem 1rem;
+  --sopflow-dialog-footer-padding: 0.75rem 1rem;
   --sopflow-field-padding-x: 10px;
   --sopflow-radius-document: 0px;
 
@@ -90,6 +94,7 @@
   --focus-ring: transparent;
   --radius-control: var(--sopflow-radius-control);
   --radius-panel: var(--sopflow-radius-popover);
+  --radius-menu-item: var(--sopflow-radius-menu-item);
   --radius-surface: var(--sopflow-radius-surface);
   --radius-pill: var(--sopflow-radius-pill);
   --control-height-sm: 2rem;

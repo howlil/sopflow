@@ -825,8 +825,8 @@ describe("SopEditor dialog accessibility", () => {
 
       const dialog = await screen.findByRole("alertdialog");
       const select = within(dialog).getByRole("combobox");
-      const cancelButton = within(dialog).getByRole("button", {
-        name: "Batal",
+      const closeButton = within(dialog).getByRole("button", {
+        name: "Close dialog",
       });
 
       await waitFor(() => {
@@ -834,7 +834,7 @@ describe("SopEditor dialog accessibility", () => {
       });
 
       await user.keyboard("{Shift>}{Tab}{/Shift}");
-      expect(document.activeElement).toBe(cancelButton);
+      expect(document.activeElement).toBe(closeButton);
 
       await user.tab();
       expect(document.activeElement).toBe(select);

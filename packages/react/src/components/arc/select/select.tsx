@@ -16,6 +16,8 @@ export interface SelectProps
   > {
   label: string;
   compact?: boolean;
+  /** Let text-heavy menus be wider than a narrow table cell without enlarging the trigger. */
+  wideMenu?: boolean;
   description?: string;
   placeholder?: string;
   id?: string;
@@ -66,6 +68,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
     {
       label,
       compact = false,
+      wideMenu = false,
       description,
       placeholder = "Select an option",
       options,
@@ -138,6 +141,8 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
             <SelectPrimitive.Content
               data-sopflow-root
               className={styles.content}
+              data-wide={wideMenu || undefined}
+              align="start"
               position="popper"
               sideOffset={4}
               collisionPadding={12}

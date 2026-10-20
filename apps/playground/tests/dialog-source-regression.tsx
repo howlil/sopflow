@@ -208,6 +208,12 @@ async function run() {
 
   const combo = content.querySelector<HTMLButtonElement>('[role="combobox"]');
   assert(combo, "Nested Arc Select is missing");
+  const footer = content.querySelector<HTMLElement>("footer");
+  assert(
+    footer?.parentElement === content,
+    "Dialog footer is nested inside body",
+  );
+  assert(!footer.contains(combo), "Dialog field moved into footer");
   combo.dispatchEvent(
     new PointerEvent("pointerdown", {
       bubbles: true,
@@ -225,6 +231,18 @@ async function run() {
     Number(getComputedStyle(menu).zIndex) > contentZ ||
       Number(getComputedStyle(popupParent).zIndex) > contentZ,
     "Nested Select menu cannot escape dialog layer",
+  );
+  assert(
+    getComputedStyle(menu).borderTopLeftRadius === "14px",
+    "Select menu inherited pill radius",
+  );
+  const menuRect = menu.getBoundingClientRect();
+  assert(
+    menuRect.left >= -1 &&
+      menuRect.top >= -1 &&
+      menuRect.right <= window.innerWidth + 1 &&
+      menuRect.bottom <= window.innerHeight + 1,
+    "Nested Select menu overflows the viewport",
   );
 
   document.dispatchEvent(

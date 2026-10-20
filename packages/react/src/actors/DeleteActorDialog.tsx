@@ -58,7 +58,7 @@ export function DeleteActorDialog({
       onClose={onClose}
       footer={
         <>
-          <Button type="button" onClick={onClose}>
+          <Button type="button" data-sopflow-cancel onClick={onClose}>
             Batal
           </Button>
           <Button
