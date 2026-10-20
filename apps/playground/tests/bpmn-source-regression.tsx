@@ -60,6 +60,14 @@ stage.id = "bpmn-stage";
 rootElement.appendChild(stage);
 createRoot(stage).render(<SopBpmn document={sopDocument} />);
 
+const documentStage = document.createElement("div");
+documentStage.id = "bpmn-document-stage";
+documentStage.style.width = "1009px"; // A4 landscape content width ≈ 267 mm
+rootElement.appendChild(documentStage);
+createRoot(documentStage).render(
+  <SopBpmn document={sopDocument} presentation="document" />,
+);
+
 function check(value: unknown, description: string): asserts value {
   if (!value) throw new Error(description);
 }
@@ -154,6 +162,40 @@ function verify() {
     "Responsive SVG changed its shape aspect ratio",
   );
   root.style.width = "";
+
+  const documentRoot = documentStage.querySelector<HTMLElement>(
+    '[data-sopflow-bpmn][data-presentation="document"]',
+  );
+  check(documentRoot, "Document BPMN root missing");
+  const documentSvg = documentRoot.querySelector<SVGSVGElement>('svg[role="img"]');
+  const laneFrame = documentRoot.querySelector<SVGRectElement>(
+    "[data-sopflow-bpmn-lane-frame]",
+  );
+  check(documentSvg && laneFrame, "Full-width BPMN grid missing");
+  check(
+    Math.abs(documentSvg.getBoundingClientRect().width - documentRoot.clientWidth) <= 1,
+    "Document BPMN does not match its available width",
+  );
+  check(
+    Number(laneFrame.getAttribute("width")) ===
+      Number(documentSvg.getAttribute("width")) - 2,
+    "Lane grid does not stretch to the document bounds",
+  );
+  check(
+    getComputedStyle(documentRoot).borderTopWidth === "0px",
+    "Document BPMN still has an extra outer wrapper border",
+  );
+  const intrinsicStart = stage.querySelector<SVGCircleElement>(
+    '[data-sopflow-step-id="start"] circle',
+  );
+  const documentStart = documentStage.querySelector<SVGCircleElement>(
+    '[data-sopflow-step-id="start"] circle',
+  );
+  check(intrinsicStart && documentStart, "Start event missing");
+  check(
+    intrinsicStart.getAttribute("cx") === documentStart.getAttribute("cx"),
+    "Document expansion shifted BPMN node layout",
+  );
   return {
     lanes: model.lanes.length,
     steps: shapeCount,
@@ -162,6 +204,8 @@ function verify() {
     compactHeader: model.headerWidth,
     narrowWidth: resized.width,
     actorLabel: "vertical",
+    documentWidth: documentSvg.getBoundingClientRect().width,
+    documentGrid: "full-width",
   };
 }
 
