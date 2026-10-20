@@ -51,9 +51,13 @@ interface DragSession {
   readonly index: number;
   readonly originPath: readonly DiagramPoint[];
   readonly originPoint: DiagramPoint;
+  readonly originClientX: number;
+  readonly originClientY: number;
   latestPreview: ManualPathPreview | null;
   moved: boolean;
 }
+
+const DRAG_START_THRESHOLD_PX = 3;
 
 export function EditableFormalFlowchartPath({
   path,
@@ -73,6 +77,8 @@ export function EditableFormalFlowchartPath({
   onReset,
 }: EditableFormalFlowchartPathProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
+  const pendingPreviewRef = useRef<ManualPathPreview | null>(null);
+  const previewFrameRef = useRef<number | null>(null);
 
   const [preview, setPreview] = useState<ManualPathPreview | null>(null);
   const displayPath = preview?.path ?? path;
@@ -105,10 +111,20 @@ export function EditableFormalFlowchartPath({
   };
 
   // Manual drag is a transaction: preview in React only, persist on pointerup.
-  // Clean up a canceled drag without accidentally committing it.
+  // Cancel pending paints on pointer cancel or unmount.
+  const clearPendingPreview = () => {
+    if (previewFrameRef.current !== null && typeof cancelAnimationFrame === "function") {
+      cancelAnimationFrame(previewFrameRef.current);
+    }
+    previewFrameRef.current = null;
+    pendingPreviewRef.current = null;
+  };
   useEffect(
     () => () => {
       dragSessionRef.current = null;
+      if (previewFrameRef.current !== null && typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(previewFrameRef.current);
+      }
     },
     [],
   );
@@ -142,6 +158,8 @@ export function EditableFormalFlowchartPath({
       index,
       originPath: path.map((candidate) => ({ ...candidate })),
       originPoint: point,
+      originClientX: event.clientX,
+      originClientY: event.clientY,
       latestPreview: null,
       moved: false,
     };
@@ -158,15 +176,31 @@ export function EditableFormalFlowchartPath({
     if (!point) return;
 
     event.preventDefault();
+    // Pointer jitter must not turn selection into an edit transaction.
+    if (
+      !session.moved &&
+      Math.hypot(event.clientX - session.originClientX, event.clientY - session.originClientY) <
+        DRAG_START_THRESHOLD_PX
+    ) return;
 
+    // Preserve the last snapped side for hysteresis instead of returning to
+    // the original side on every pointer movement.
+    const context = session.latestPreview
+      ? {
+          ...editContext,
+          sourceSide: session.latestPreview.sourceSide,
+          targetSide: session.latestPreview.targetSide,
+        }
+      : editContext;
     const nextPreview = previewManualPathDrag({
       mode: session.mode,
       index: session.index,
       originPath: session.originPath,
       originPoint: session.originPoint,
       point,
-      context: editContext,
+      context,
     });
+    const firstPreview = session.latestPreview === null;
     session.latestPreview = nextPreview;
     session.moved ||= !manualPathPreviewEquals(
       {
@@ -176,7 +210,16 @@ export function EditableFormalFlowchartPath({
       },
       nextPreview,
     );
-    setPreview(nextPreview);
+    pendingPreviewRef.current = nextPreview;
+    // First feedback is immediate, subsequent pointermoves coalesce per frame.
+    if (firstPreview || typeof requestAnimationFrame !== "function") {
+      setPreview(nextPreview);
+    } else if (previewFrameRef.current === null) {
+      previewFrameRef.current = requestAnimationFrame(() => {
+        previewFrameRef.current = null;
+        if (pendingPreviewRef.current) setPreview(pendingPreviewRef.current);
+      });
+    }
   };
 
   const finishDrag = (
@@ -192,6 +235,7 @@ export function EditableFormalFlowchartPath({
       // Pointer capture is optional in test DOMs.
     }
     dragSessionRef.current = null;
+    clearPendingPreview();
     setPreview(null);
     if (cancelled || !session.moved || !session.latestPreview) return;
     const next = session.latestPreview;
@@ -320,8 +364,31 @@ export function EditableFormalFlowchartPath({
     onSelect(connectionId);
   };
 
+  const activeEndpoint = preview && dragSessionRef.current?.mode;
+  const highlightRect = activeEndpoint === "source-endpoint"
+    ? sourceRect
+    : activeEndpoint === "target-endpoint"
+      ? targetRect
+      : undefined;
+  const highlightSide = activeEndpoint === "source-endpoint"
+    ? preview.sourceSide
+    : activeEndpoint === "target-endpoint"
+      ? preview.targetSide
+      : undefined;
+  const highlight = highlightRect && highlightSide
+    ? formalSideLine(highlightRect, highlightSide)
+    : null;
+
   return (
     <g data-sopflow-editable-route={connectionId}>
+      {highlight ? (
+        <line
+          {...highlight}
+          className={styles.anchorHighlight}
+          data-sopflow-route-anchor-highlight={highlightSide}
+          aria-hidden="true"
+        />
+      ) : null}
       {/* biome-ignore lint/a11y/useSemanticElements: SVG geometry is the interactive route hit target. */}
       <path
         d={pointsToPath(displayPath)}
@@ -447,4 +514,20 @@ function clientToSvgPoint(
     x: ((clientX - rect.left) / rect.width) * width + viewBox.x,
     y: ((clientY - rect.top) / rect.height) * height + viewBox.y,
   };
+}
+
+function formalSideLine(
+  rect: FormalFlowchartRect,
+  side: FormalFlowchartSide,
+): { x1: number; y1: number; x2: number; y2: number } {
+  switch (side) {
+    case "top":
+      return { x1: rect.left, y1: rect.top, x2: rect.left + rect.width, y2: rect.top };
+    case "bottom":
+      return { x1: rect.left, y1: rect.top + rect.height, x2: rect.left + rect.width, y2: rect.top + rect.height };
+    case "left":
+      return { x1: rect.left, y1: rect.top, x2: rect.left, y2: rect.top + rect.height };
+    case "right":
+      return { x1: rect.left + rect.width, y1: rect.top, x2: rect.left + rect.width, y2: rect.top + rect.height };
+  }
 }
