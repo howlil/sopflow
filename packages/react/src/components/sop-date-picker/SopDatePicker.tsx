@@ -122,7 +122,19 @@ export function SopDatePicker({
       'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
     const focusables = Array.from(
       trigger.ownerDocument.querySelectorAll<HTMLElement>(selector),
-    ).filter((element) => !popupRef.current?.contains(element));
+    ).filter((element) => {
+      if (popupRef.current?.contains(element)) return false;
+      // Hidden accordion panels can contain tabbable DOM nodes. Native
+      // keyboard Tab skips them, so our portal exit must skip them as well.
+      for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+        if (node.hidden || node.hasAttribute("inert")) return false;
+        const style = getComputedStyle(node);
+        if (style.display === "none" || style.visibility === "hidden") {
+          return false;
+        }
+      }
+      return true;
+    });
     const index = focusables.indexOf(trigger);
     const next = focusables[index + (backward ? -1 : 1)];
     close();
