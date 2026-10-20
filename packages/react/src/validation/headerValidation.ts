@@ -4,7 +4,7 @@ import {
   type SopApHeaderField,
   type SopApHeaderValidationCode,
   type SopApHeaderValidationIssue,
-} from "@sopflow/sop-ap";
+} from "@sopflow/core/sop-ap";
 import type { SopHeaderValue } from "../header/types.js";
 
 export type SopHeaderField = SopApHeaderField;

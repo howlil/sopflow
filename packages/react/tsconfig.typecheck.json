@@ -2,14 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
+      "@sopflow/core/sop-ap": [
+        "../core/src/sop-ap.ts"
+      ],
       "@sopflow/core": [
         "../core/src/index.ts"
       ],
       "@sopflow/diagram": [
         "../diagram/src/index.ts"
-      ],
-      "@sopflow/sop-ap": [
-        "../sop-ap/src/index.ts"
       ]
     }
   }
