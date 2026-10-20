@@ -117,8 +117,8 @@ describe("manual path manager", () => {
         path: [result.startPoint, ...result.bendPoints, result.endPoint],
         sourceSide: result.sourceSide,
         targetSide: result.targetSide,
-        occupied: blocked.occupied,
-        bounds: blocked.bounds,
+        occupied: blocked.occupied ?? [],
+        bounds: blocked.bounds ?? null,
       });
       expect(validation.valid).toBe(true);
     }
