@@ -223,7 +223,8 @@ describe("SopUnifiedWorkspace", () => {
     );
     const toggles = screen.getAllByRole("button", { name: /Problems/ });
     const [firstToggle, secondToggle] = toggles;
-    if (!firstToggle || !secondToggle) throw new Error("Missing Problems controls");
+    if (!firstToggle || !secondToggle)
+      throw new Error("Missing Problems controls");
     await user.click(firstToggle);
     await user.click(secondToggle);
     const first = firstToggle.getAttribute("aria-controls");
