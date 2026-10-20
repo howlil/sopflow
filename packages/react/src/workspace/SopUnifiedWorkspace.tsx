@@ -1,5 +1,5 @@
 import { GitFork, List, PanelRight, PenLine, Workflow } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import {
   SopWorkspace,
@@ -7,6 +7,10 @@ import {
   type SopWorkspaceView,
 } from "./SopWorkspace.js";
 import type { SopDiagramKind } from "../SopEditor.js";
+import type { SopReadinessIssue } from "../validation/readiness.js";
+import { getSopReadinessIssues } from "../validation/readiness.js";
+import { ProblemsPanel } from "./ProblemsPanel.js";
+import { resolveProblemTarget } from "./resolveProblemTarget.js";
 import styles from "./SopUnifiedWorkspace.module.css";
 
 type UnifiedView = "flowchart" | "bpmn" | "steps";
@@ -43,6 +47,16 @@ export function SopUnifiedWorkspace({
     useState<SopDiagramKind>("flowchart");
   const [manualEditing, setManualEditing] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [problemsOpen, setProblemsOpen] = useState(false);
+  const [issues, setIssues] = useState<readonly SopReadinessIssue[]>(() =>
+    getSopReadinessIssues(value, workspaceProps.header),
+  );
+  const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<
+    { kind: "header"; field: string } | { kind: "step"; stepId: string } | null
+  >(null);
+  const [navigationFeedback, setNavigationFeedback] = useState<string | null>(null);
+  const shellRef = useRef<HTMLElement>(null);
 
   const workspaceView: SopWorkspaceView =
     view === "steps" ? "editor" : "diagram";
@@ -82,8 +96,79 @@ export function SopUnifiedWorkspace({
     setManualEditing((current) => !current);
   }
 
+  const handleReadinessChange = useCallback(
+    (nextIssues: readonly SopReadinessIssue[]) => {
+      setIssues(nextIssues);
+      workspaceProps.onReadinessChange?.(nextIssues);
+    },
+    [workspaceProps.onReadinessChange],
+  );
+
+  function handleSelectedStepChange(stepId: string | null) {
+    setSelectedStep(stepId);
+    workspaceProps.onSelectedStepChange?.(stepId);
+  }
+
+  function navigateToIssue(issue: SopReadinessIssue) {
+    setNavigationFeedback(null);
+    setPendingNavigation(null);
+    const target = resolveProblemTarget(issue);
+    if (target.kind === "header") {
+      setInspectorOpen(true);
+      setPendingNavigation(target);
+      return;
+    }
+    if (target.kind === "actors") {
+      setInspectorOpen(true);
+      setNavigationFeedback("Check the Actors section in Properties.");
+      return;
+    }
+    if (target.kind === "step" && value.steps.some((step) => step.id === target.stepId)) {
+      setManualEditing(false);
+      changeView("steps");
+      handleSelectedStepChange(target.stepId);
+      setPendingNavigation(target);
+      return;
+    }
+    if (target.kind === "steps" || target.kind === "step") {
+      changeView("steps");
+      setNavigationFeedback("Review the steps editor to resolve this issue.");
+      return;
+    }
+    setNavigationFeedback("This issue has no direct field target. Review the document and validation details.");
+  }
+
+  useLayoutEffect(() => {
+    if (!pendingNavigation) return;
+    const shell = shellRef.current;
+    if (!shell) return;
+    const nodes = shell.querySelectorAll<HTMLElement>(
+      pendingNavigation.kind === "header"
+        ? "[data-sopflow-header-field]"
+        : "[data-sopflow-step-id]",
+    );
+    const expected = pendingNavigation.kind === "header"
+      ? pendingNavigation.field
+      : pendingNavigation.stepId;
+    const target = Array.from(nodes).find((node) =>
+      pendingNavigation.kind === "header"
+        ? node.dataset.sopflowHeaderField === expected
+        : node.dataset.sopflowStepId === expected,
+    );
+    if (target) {
+      if (typeof target.scrollIntoView === "function") {
+        target.scrollIntoView({ block: "nearest" });
+      }
+      target.focus({ preventScroll: true });
+    } else {
+      setNavigationFeedback("The target is not available. Review the highlighted section manually.");
+    }
+    setPendingNavigation(null);
+  }, [inspectorOpen, pendingNavigation, view]);
+
   return (
     <section
+      ref={shellRef}
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-sopflow-unified-workspace
     >
@@ -183,8 +268,23 @@ export function SopUnifiedWorkspace({
           onInspectorOpenChange={setInspectorOpen}
           toolbarPlacement="external"
           inspectorTogglePlacement="external"
+          selectedStepId={
+            workspaceProps.selectedStepId !== undefined
+              ? workspaceProps.selectedStepId
+              : selectedStep
+          }
+          onSelectedStepChange={handleSelectedStepChange}
+          onReadinessChange={handleReadinessChange}
         />
       </div>
+      <ProblemsPanel
+        issues={issues}
+        runtimeError={workspaceProps.error ?? null}
+        expanded={problemsOpen}
+        onExpandedChange={setProblemsOpen}
+        onNavigate={navigateToIssue}
+        navigationFeedback={navigationFeedback}
+      />
     </section>
   );
 }

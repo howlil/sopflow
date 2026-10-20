@@ -67,6 +67,7 @@ export function SopHeaderFields({
       <InspectorSection title="Identitas lembaga">
         <Field label="Nama lembaga">
           <ArcTextarea
+            data-sopflow-header-field="institutionName"
             compact
             label="Field SOP"
             className={styles.textarea}
@@ -159,6 +160,7 @@ export function SopHeaderFields({
       <InspectorSection title="Identitas SOP">
         <Field label="Nama SOP">
           <ArcTextarea
+            data-sopflow-header-field="title"
             compact
             label="Field SOP"
             className={styles.textarea}
@@ -178,6 +180,7 @@ export function SopHeaderFields({
 
         <Field label="Nomor SOP">
           <SopInput
+            data-sopflow-header-field="number"
             className={styles.input}
             type="text"
             value={header.number}
@@ -192,6 +195,7 @@ export function SopHeaderFields({
       <InspectorSection title="Tanggal">
         <Field label="Tanggal pembuatan">
           <SopInput
+            data-sopflow-header-field="createdDate"
             className={styles.input}
             type="date"
             value={header.createdDate}
@@ -205,6 +209,7 @@ export function SopHeaderFields({
 
         <Field label="Tanggal revisi">
           <SopInput
+            data-sopflow-header-field="revisionDate"
             className={styles.input}
             type="date"
             value={header.revisionDate}
@@ -218,6 +223,7 @@ export function SopHeaderFields({
 
         <Field label="Tanggal efektif">
           <SopInput
+            data-sopflow-header-field="effectiveDate"
             className={styles.input}
             type="date"
             value={header.effectiveDate}
@@ -271,6 +277,7 @@ export function SopHeaderFields({
       </InspectorSection>
 
       <ListSection
+        field="lawBasis"
         title="Dasar hukum"
         value={header.lawBasis}
         disabled={headerDisabled}
@@ -278,6 +285,7 @@ export function SopHeaderFields({
       />
 
       <ListSection
+        field="qualifications"
         title="Kualifikasi pelaksanaan"
         value={header.qualifications}
         disabled={headerDisabled}
@@ -285,6 +293,7 @@ export function SopHeaderFields({
       />
 
       <ListSection
+        field="relatedSops"
         title="Keterkaitan dengan SOP"
         value={header.relatedSops}
         disabled={headerDisabled}
@@ -292,6 +301,7 @@ export function SopHeaderFields({
       />
 
       <ListSection
+        field="equipment"
         title="Peralatan / perlengkapan"
         value={header.equipment}
         disabled={headerDisabled}
@@ -299,6 +309,7 @@ export function SopHeaderFields({
       />
 
       <ListSection
+        field="warnings"
         title="Peringatan"
         value={header.warnings}
         disabled={headerDisabled}
@@ -306,6 +317,7 @@ export function SopHeaderFields({
       />
 
       <ListSection
+        field="records"
         title="Pencatatan dan pendataan"
         value={header.records}
         disabled={headerDisabled}
@@ -316,11 +328,13 @@ export function SopHeaderFields({
 }
 
 function ListSection({
+  field,
   title,
   value,
   disabled,
   onChange,
 }: {
+  field: string;
   title: string;
   value: readonly string[];
   disabled: boolean;
@@ -346,6 +360,7 @@ function ListSection({
             type="button"
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
+            data-sopflow-header-field={field}
             onClick={() => onChange([...value, ""])}
           >
             +
@@ -369,6 +384,7 @@ function ListSection({
                   rows={1}
                   value={item}
                   aria-label={`${title} ${index + 1}`}
+                  data-sopflow-header-field={index === 0 ? field : undefined}
                   placeholder={title}
                   onChange={(event) => updateItem(index, event.target.value)}
                 />
