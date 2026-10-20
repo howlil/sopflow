@@ -7,6 +7,13 @@
   -ms-overflow-style: none;
 }
 
+.root[data-presentation="document"] {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
 .root::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -23,16 +30,23 @@
 
 .lane {
   fill: var(--sopflow-surface);
+}
+
+.laneHeader {
+  fill: var(--sopflow-surface-muted);
+}
+
+.laneFrame,
+.laneDivider {
+  fill: none;
   stroke: var(--sopflow-document-border);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
-.laneHeader {
-  fill: var(--sopflow-surface-muted);
-  stroke: var(--sopflow-document-border);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+.root[data-presentation="document"] .laneFrame,
+.root[data-presentation="document"] .laneDivider {
+  stroke-width: 2;
 }
 
 .laneLabel {

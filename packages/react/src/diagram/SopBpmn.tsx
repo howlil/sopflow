@@ -10,7 +10,7 @@ import {
   type FormalRouteChange,
   type SopDiagramConfig,
 } from "@sopflow/diagram";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import "../styles/token.css";
 import { EditableFormalFlowchartPath } from "./EditableFormalFlowchartPath.js";
@@ -23,6 +23,8 @@ export interface SopBpmnProps {
   diagramConfig?: SopDiagramConfig;
   onDiagramConfigChange?: (config: SopDiagramConfig) => void;
   manualEditing?: boolean;
+  /** Intrinsic standalone diagram or full-width SOP document presentation. */
+  presentation?: "intrinsic" | "document";
   className?: string;
 }
 
@@ -33,12 +35,15 @@ export function SopBpmn({
   diagramConfig = {},
   onDiagramConfigChange,
   manualEditing = false,
+  presentation = "intrinsic",
   className,
 }: SopBpmnProps) {
   const markerId = `sopflow-bpmn-arrow-${useId().replace(/:/g, "")}`;
   const [selectedConnectionId, setSelectedConnectionId] = useState<
     string | null
   >(null);
+  const rootRef = useRef<HTMLElement>(null);
+  const [documentWidth, setDocumentWidth] = useState(0);
   const model = useMemo(
     () => buildBpmnModel(document, { diagramConfig }),
     [diagramConfig, document],
@@ -60,6 +65,45 @@ export function SopBpmn({
   useEffect(() => {
     if (!manualEditing) setSelectedConnectionId(null);
   }, [manualEditing]);
+
+  useEffect(() => {
+    if (presentation !== "document") return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    // CSS preview zoom does not change clientWidth: measure in SVG/CSS units.
+    const measure = () => {
+      const width = root.clientWidth;
+      if (width > 0) {
+        setDocumentWidth((previous) => (previous === width ? previous : width));
+      }
+    };
+    measure();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(measure);
+      observer.observe(root);
+      return () => observer.disconnect();
+    }
+
+    // Older embedders can still resize the standalone document without RO.
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [presentation]);
+
+  // Expand only the swimlane grid; node, edge and manual-route coordinates
+  // remain in the original model coordinate space.
+  const renderWidth =
+    presentation === "document"
+      ? Math.max(model.width, documentWidth)
+      : model.width;
+  const gridLeft = presentation === "document" ? 1 : model.padding;
+  const gridWidth =
+    presentation === "document"
+      ? Math.max(0, renderWidth - 2)
+      : model.width - model.padding * 2;
+  const firstLane = model.lanes[0];
+  const lastLane = model.lanes.at(-1);
 
   const changeRoute = (edgeId: string, route: FormalRouteChange) => {
     if (!onDiagramConfigChange) return;
@@ -92,16 +136,18 @@ export function SopBpmn({
 
   return (
     <section
+      ref={rootRef}
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-sopflow-root
       data-sopflow-bpmn
+      data-presentation={presentation}
       aria-label="BPMN SOP"
     >
       <svg
         className={styles.svg}
-        width={model.width}
+        width={renderWidth}
         height={model.height}
-        viewBox={`0 0 ${model.width} ${model.height}`}
+        viewBox={`0 0 ${renderWidth} ${model.height}`}
         role="img"
         aria-label={`BPMN SOP ${document.title}`}
       >
@@ -119,34 +165,68 @@ export function SopBpmn({
           </marker>
         </defs>
 
+        <g>
+          {model.lanes.map((lane) => (
+            <g key={lane.actorId ?? `lane-${lane.index}`}>
+              <rect
+                x={gridLeft}
+                y={lane.y}
+                width={gridWidth}
+                height={lane.height}
+                className={styles.lane}
+              />
+              <rect
+                x={gridLeft}
+                y={lane.y}
+                width={model.headerWidth}
+                height={lane.height}
+                className={styles.laneHeader}
+              />
+            </g>
+          ))}
+          {firstLane && lastLane ? (
+            <>
+              <rect
+                x={gridLeft}
+                y={firstLane.y}
+                width={gridWidth}
+                height={lastLane.y + lastLane.height - firstLane.y}
+                className={styles.laneFrame}
+                data-sopflow-bpmn-lane-frame
+              />
+              <line
+                x1={gridLeft + model.headerWidth}
+                x2={gridLeft + model.headerWidth}
+                y1={firstLane.y}
+                y2={lastLane.y + lastLane.height}
+                className={styles.laneDivider}
+              />
+              {model.lanes.slice(1).map((lane) => (
+                <line
+                  key={lane.actorId ?? `separator-${lane.index}`}
+                  x1={gridLeft}
+                  x2={gridLeft + gridWidth}
+                  y1={lane.y}
+                  y2={lane.y}
+                  className={styles.laneDivider}
+                />
+              ))}
+            </>
+          ) : null}
+        </g>
         {model.lanes.map((lane) => (
-          <g key={lane.actorId ?? `lane-${lane.index}`}>
-            <rect
-              x={model.padding}
-              y={lane.y}
-              width={model.width - model.padding * 2}
-              height={lane.height}
-              className={styles.lane}
-            />
-            <rect
-              x={model.padding}
-              y={lane.y}
-              width={model.headerWidth}
-              height={lane.height}
-              className={styles.laneHeader}
-            />
-            <text
-              x={model.padding + model.headerWidth / 2}
-              y={lane.y + lane.height / 2}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              transform={`rotate(-90 ${model.padding + model.headerWidth / 2} ${lane.y + lane.height / 2})`}
-              data-sopflow-actor-lane-label={lane.actorId ?? "unassigned"}
-              className={styles.laneLabel}
-            >
-              {lane.label}
-            </text>
-          </g>
+          <text
+            key={lane.actorId ?? `lane-label-${lane.index}`}
+            x={gridLeft + model.headerWidth / 2}
+            y={lane.y + lane.height / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            transform={`rotate(-90 ${gridLeft + model.headerWidth / 2} ${lane.y + lane.height / 2})`}
+            data-sopflow-actor-lane-label={lane.actorId ?? "unassigned"}
+            className={styles.laneLabel}
+          >
+            {lane.label}
+          </text>
         ))}
 
         <g className={styles.edges}>
