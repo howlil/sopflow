@@ -1,11 +1,4 @@
-import type { SOPDocument } from "@sopflow/core";
-import {
-  GitFork,
-  List,
-  PanelRight,
-  PenLine,
-  Workflow,
-} from "lucide-react";
+import { GitFork, List, PanelRight, PenLine, Workflow } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -107,7 +100,7 @@ export function SopUnifiedWorkspace({
         </div>
 
         <nav className={styles.navigation} aria-label="Tampilan SOP">
-          <div className={styles.switcher} role="group" aria-label="Mode dokumen">
+          <div className={styles.switcher}>
             <button
               type="button"
               className={styles.tab}

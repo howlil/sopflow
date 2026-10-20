@@ -13,7 +13,13 @@ const document: SOPDocument = {
   title: "Pengajuan Dokumen",
   actors: [{ id: "staff", name: "Staff" }],
   steps: [
-    { id: "start", type: "start", name: "Mulai", actorIds: ["staff"], next: "end" },
+    {
+      id: "start",
+      type: "start",
+      name: "Mulai",
+      actorIds: ["staff"],
+      next: "end",
+    },
     { id: "end", type: "end", name: "Selesai", actorIds: ["staff"] },
   ],
 };
@@ -66,10 +72,14 @@ describe("SopUnifiedWorkspace", () => {
     expect(container.querySelector("[data-sopflow-bpmn]")).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Steps" }));
-    expect(container.querySelector("[data-sopflow-steps-scroll]")).not.toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-steps-scroll]"),
+    ).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Flowchart" }));
-    expect(container.querySelector("[data-sopflow-procedure-view]")).not.toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-procedure-view]"),
+    ).not.toBeNull();
   });
 
   it("keeps properties controlled by the external toolbar", async () => {
@@ -97,17 +107,19 @@ describe("SopUnifiedWorkspace", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit routes" }));
     expect(
-      container.querySelector('[data-sopflow-procedure-view][data-manual-editing="true"]'),
+      container.querySelector(
+        '[data-sopflow-procedure-view][data-manual-editing="true"]',
+      ),
     ).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Steps" }));
-    expect(
-      screen.queryByRole("button", { name: "Edit routes" }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit routes" })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Flowchart" }));
     expect(
-      container.querySelector('[data-sopflow-procedure-view][data-manual-editing="true"]'),
+      container.querySelector(
+        '[data-sopflow-procedure-view][data-manual-editing="true"]',
+      ),
     ).toBeNull();
   });
 });
