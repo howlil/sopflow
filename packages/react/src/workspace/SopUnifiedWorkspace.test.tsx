@@ -192,4 +192,39 @@ describe("SopUnifiedWorkspace", () => {
       screen.getAllByText("Failed to build diagram").length,
     ).toBeGreaterThan(0);
   });
+
+  it("updates the issue list when a missing header requirement is completed", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: /Problems/ }));
+    expect(
+      screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Tambah dasar hukum" }));
+    await user.type(screen.getByRole("textbox", { name: "Dasar hukum 1" }), "Regulation 1");
+    expect(
+      screen.queryByRole("button", { name: /Dasar hukum harus diisi/ }),
+    ).toBeNull();
+  });
+
+  it("provides distinct Problems targets when two workspaces are embedded", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <SopUnifiedWorkspace value={document} header={header} />
+        <SopUnifiedWorkspace value={document} header={header} />
+      </>,
+    );
+    const toggles = screen.getAllByRole("button", { name: /Problems/ });
+    await user.click(toggles[0]!);
+    await user.click(toggles[1]!);
+    const first = toggles[0]!.getAttribute("aria-controls");
+    const second = toggles[1]!.getAttribute("aria-controls");
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+    expect(first).not.toBe(second);
+    expect(window.document.getElementById(first!)).not.toBeNull();
+    expect(window.document.getElementById(second!)).not.toBeNull();
+  });
 });

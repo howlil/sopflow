@@ -58,7 +58,7 @@ export function resolveProblemTarget(issue: SopReadinessIssue): ProblemTarget {
 export function problemKey(issue: SopReadinessIssue): string {
   const detail =
     issue.kind === "schema"
-      ? issue.path.join(".")
+      ? issue.path.map(String).join(".")
       : "field" in issue
         ? issue.field
         : (issue.stepId ?? "");

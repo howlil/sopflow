@@ -5,6 +5,7 @@ import {
   ChevronUp,
   X,
 } from "lucide-react";
+import { useId } from "react";
 
 import type { SopReadinessIssue } from "../validation/readiness.js";
 import { problemKey } from "./resolveProblemTarget.js";
@@ -28,11 +29,12 @@ export function ProblemsPanel({
   navigationFeedback = null,
 }: ProblemsPanelProps) {
   const count = issues.length + (runtimeError ? 1 : 0);
+  const listId = useId();
 
   return (
     <section className={styles.root} data-sopflow-problems>
       {expanded ? (
-        <div className={styles.panel} id="sopflow-problems-list">
+        <div className={styles.panel} id={listId}>
           <div className={styles.panelHeader}>
             <strong>Validation issues</strong>
             <button
@@ -85,7 +87,7 @@ export function ProblemsPanel({
           type="button"
           className={styles.toggle}
           aria-expanded={expanded}
-          aria-controls={expanded ? "sopflow-problems-list" : undefined}
+          aria-controls={expanded ? listId : undefined}
           onClick={() => onExpandedChange(!expanded)}
         >
           <AlertCircle size={14} aria-hidden="true" />
