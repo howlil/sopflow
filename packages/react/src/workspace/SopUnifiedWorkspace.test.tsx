@@ -201,8 +201,13 @@ describe("SopUnifiedWorkspace", () => {
       screen.getByRole("button", { name: /Dasar hukum harus diisi/ }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Tambah dasar hukum" }));
-    await user.type(screen.getByRole("textbox", { name: "Dasar hukum 1" }), "Regulation 1");
+    await user.click(
+      screen.getByRole("button", { name: "Tambah dasar hukum" }),
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Dasar hukum 1" }),
+      "Regulation 1",
+    );
     expect(
       screen.queryByRole("button", { name: /Dasar hukum harus diisi/ }),
     ).toBeNull();
@@ -217,14 +222,17 @@ describe("SopUnifiedWorkspace", () => {
       </>,
     );
     const toggles = screen.getAllByRole("button", { name: /Problems/ });
-    await user.click(toggles[0]!);
-    await user.click(toggles[1]!);
-    const first = toggles[0]!.getAttribute("aria-controls");
-    const second = toggles[1]!.getAttribute("aria-controls");
+    const [firstToggle, secondToggle] = toggles;
+    if (!firstToggle || !secondToggle) throw new Error("Missing Problems controls");
+    await user.click(firstToggle);
+    await user.click(secondToggle);
+    const first = firstToggle.getAttribute("aria-controls");
+    const second = secondToggle.getAttribute("aria-controls");
     expect(first).toBeTruthy();
     expect(second).toBeTruthy();
     expect(first).not.toBe(second);
-    expect(window.document.getElementById(first!)).not.toBeNull();
-    expect(window.document.getElementById(second!)).not.toBeNull();
+    if (!first || !second) throw new Error("Missing Problems list IDs");
+    expect(window.document.getElementById(first)).not.toBeNull();
+    expect(window.document.getElementById(second)).not.toBeNull();
   });
 });
