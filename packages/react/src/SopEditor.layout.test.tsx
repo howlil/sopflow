@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { SOPDocument } from "@sopflow/core";
 import type { SopHeaderValue } from "./header/types.js";
 import { SopEditor } from "./SopEditor.js";
+import { SopWorkspace } from "./workspace/SopWorkspace.js";
 
 const document: SOPDocument = {
   schemaVersion: "1",
@@ -259,6 +260,78 @@ describe("SopEditor default composition", () => {
     expect(
       container.querySelector(
         '[data-sopflow-diagram-panel][data-diagram-kind="bpmn"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("keeps the legacy document toolbar by default and omits it for external hosts", () => {
+    const props = {
+      value: document,
+      onChange: () => {},
+      header,
+      onHeaderChange: () => {},
+    };
+    const { container, rerender } = render(<SopEditor {...props} />);
+    expect(container.querySelector("[data-sopflow-document-toolbar]")).not.toBeNull();
+
+    rerender(<SopEditor {...props} toolbarPlacement="external" />);
+    expect(container.querySelector("[data-sopflow-document-toolbar]")).toBeNull();
+    expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-diagram-panel]"),
+    ).toHaveAttribute("aria-label", "Flowchart SOP");
+    expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+  });
+
+  it("allows hosts to control inspector visibility while preserving the document", async () => {
+    const user = userEvent.setup();
+    function ControlledInspector() {
+      const [inspectorOpen, setInspectorOpen] = useState(false);
+      return (
+        <SopEditor
+          value={document}
+          onChange={() => {}}
+          header={header}
+          onHeaderChange={() => {}}
+          toolbarPlacement="external"
+          inspectorOpen={inspectorOpen}
+          onInspectorOpenChange={setInspectorOpen}
+        />
+      );
+    }
+
+    const { container } = render(<ControlledInspector />);
+    expect(container.querySelector("[data-sopflow-inspector]")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Buka panel properti" }));
+    expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Tutup panel properti" }));
+    expect(container.querySelector("[data-sopflow-inspector]")).toBeNull();
+    expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
+  });
+
+  it("forwards controlled route editing through SopWorkspace", async () => {
+    const user = userEvent.setup();
+    function ControlledWorkspace() {
+      const [manualEditing, setManualEditing] = useState(false);
+      return (
+        <SopWorkspace
+          value={document}
+          onChange={() => {}}
+          header={header}
+          onHeaderChange={() => {}}
+          manualEditing={manualEditing}
+          onManualEditingChange={setManualEditing}
+        />
+      );
+    }
+
+    const { container } = render(<ControlledWorkspace />);
+    await user.click(screen.getByRole("button", { name: "Edit Manual" }));
+    expect(
+      container.querySelector(
+        '[data-sopflow-procedure-view][data-manual-editing="true"]',
       ),
     ).not.toBeNull();
   });

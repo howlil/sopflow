@@ -57,6 +57,11 @@ export interface SopEditorProps {
   error?: string | null;
   onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
   showValidationPanel?: boolean;
+  /** Keep the legacy in-document controls unless the host provides its own toolbar. */
+  toolbarPlacement?: "document" | "external";
+  /** Optional externally controlled inspector visibility. */
+  inspectorOpen?: boolean;
+  onInspectorOpenChange?: (open: boolean) => void;
   className?: string;
 }
 
@@ -82,6 +87,9 @@ export function SopEditor({
   error = null,
   onReadinessChange,
   showValidationPanel = true,
+  toolbarPlacement = "document",
+  inspectorOpen: controlledInspectorOpen,
+  onInspectorOpenChange,
   className,
 }: SopEditorProps) {
   const handleChange = useCallback(
@@ -120,10 +128,20 @@ export function SopEditor({
   const [internalDiagramConfigs, setInternalDiagramConfigs] =
     useState<SopDiagramConfigs>({});
   const [internalManualEditing, setInternalManualEditing] = useState(false);
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [internalInspectorOpen, setInternalInspectorOpen] = useState(true);
+  const inspectorOpen = controlledInspectorOpen ?? internalInspectorOpen;
   const openInspectorRef = useRef<HTMLButtonElement>(null);
   const closeInspectorRef = useRef<HTMLButtonElement>(null);
   const previousInspectorOpen = useRef(inspectorOpen);
+  const handleInspectorOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (controlledInspectorOpen === undefined) {
+        setInternalInspectorOpen(nextOpen);
+      }
+      onInspectorOpenChange?.(nextOpen);
+    },
+    [controlledInspectorOpen, onInspectorOpenChange],
+  );
 
   useEffect(() => {
     if (previousInspectorOpen.current !== inspectorOpen) {
@@ -323,12 +341,13 @@ export function SopEditor({
                 aria-label="Buka panel properti"
                 title="Buka panel properti"
                 buttonRef={openInspectorRef}
-                onClick={() => setInspectorOpen(true)}
+                onClick={() => handleInspectorOpenChange(true)}
               >
                 <InspectorIcon />
               </Button>
             ) : null}
             <SopDocumentCanvas
+              toolbarPlacement={toolbarPlacement}
               document={value}
               header={header}
               issues={issues}
@@ -365,7 +384,7 @@ export function SopEditor({
                   aria-label="Tutup panel properti"
                   title="Tutup panel properti"
                   buttonRef={closeInspectorRef}
-                  onClick={() => setInspectorOpen(false)}
+                  onClick={() => handleInspectorOpenChange(false)}
                 >
                   <InspectorIcon />
                 </Button>

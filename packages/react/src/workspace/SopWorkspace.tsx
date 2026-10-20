@@ -29,6 +29,12 @@ export interface SopWorkspaceProps {
   error?: string | null;
   onReadinessChange?: (issues: readonly SopReadinessIssue[]) => void;
   showValidationPanel?: boolean;
+  /** Defaults to the original toolbar rendered inside the A4 document. */
+  toolbarPlacement?: "document" | "external";
+  inspectorOpen?: boolean;
+  onInspectorOpenChange?: (open: boolean) => void;
+  manualEditing?: boolean;
+  onManualEditingChange?: (editing: boolean) => void;
   className?: string;
 }
 
@@ -50,6 +56,11 @@ export function SopWorkspace({
   error = null,
   onReadinessChange,
   showValidationPanel = true,
+  toolbarPlacement = "document",
+  inspectorOpen,
+  onInspectorOpenChange,
+  manualEditing,
+  onManualEditingChange,
   className,
 }: SopWorkspaceProps) {
   const [internalView, setInternalView] = useState<SopWorkspaceView>("diagram");
@@ -75,6 +86,11 @@ export function SopWorkspace({
       readOnly={readOnly}
       loading={loading}
       error={error}
+      toolbarPlacement={toolbarPlacement}
+      {...(inspectorOpen !== undefined ? { inspectorOpen } : {})}
+      {...(onInspectorOpenChange ? { onInspectorOpenChange } : {})}
+      {...(manualEditing !== undefined ? { manualEditing } : {})}
+      {...(onManualEditingChange ? { onManualEditingChange } : {})}
       {...(onReadinessChange ? { onReadinessChange } : {})}
       {...(showValidationPanel !== undefined ? { showValidationPanel } : {})}
       {...(onChange ? { onChange } : {})}
