@@ -14,7 +14,7 @@ pnpm --filter playground dev --host 127.0.0.1 --port "$PORT" >"$LOG" 2>&1 &
 SERVER_PID=$!
 cleanup() {
   kill "$SERVER_PID" >/dev/null 2>&1 || true
-  rm -rf "$PROFILE" "$PROFILE-desktop" "$PROFILE-mobile" "$PROFILE-print" >/dev/null 2>&1 || true
+  rm -rf "$PROFILE" "$PROFILE-valid" "$PROFILE-desktop" "$PROFILE-mobile" "$PROFILE-print" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -47,6 +47,15 @@ for variant in desktop mobile; do
     exit 1
   fi
 done
+
+"$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --window-size=1365,900 --user-data-dir="$PROFILE-valid" \
+  --virtual-time-budget=10000 --dump-dom "$URL/" >"$DOM"
+if ! grep -q 'data-sopflow-ready="true"' "$DOM"; then
+  echo "::error::Default published consumer fixture must be publication-ready"
+  cat "$LOG"
+  exit 1
+fi
 
 "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
   --window-size=1365,900 --user-data-dir="$PROFILE-desktop" \
