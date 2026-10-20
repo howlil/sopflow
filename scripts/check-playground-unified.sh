@@ -2,12 +2,13 @@
 set -euo pipefail
 
 PORT=4182
+OUT="${RUNNER_TEMP:-/tmp}"
 URL="http://127.0.0.1:$PORT"
-LOG=/tmp/sopflow-unified-consumer.log
-PROFILE=/tmp/sopflow-unified-consumer-chrome
-DOM=/tmp/sopflow-unified-consumer.html
-PNG=/tmp/sopflow-unified-desktop.png
-PDF=/tmp/sopflow-unified-desktop.pdf
+LOG="$OUT/sopflow-unified-consumer.log"
+PROFILE="$OUT/sopflow-unified-consumer-chrome"
+DOM="$OUT/sopflow-unified-consumer.html"
+PNG="$OUT/sopflow-unified-desktop.png"
+PDF="$OUT/sopflow-unified-desktop.pdf"
 
 pnpm --filter playground dev --host 127.0.0.1 --port "$PORT" >"$LOG" 2>&1 &
 SERVER_PID=$!
