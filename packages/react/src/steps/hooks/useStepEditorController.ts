@@ -30,7 +30,8 @@ export function useStepEditorController({
   const stepIssues = getStepIssues(issues, step.id);
   const hasActorError = hasStepIssue(issues, step.id, [
     "UNKNOWN_ACTOR_REFERENCE",
-  ]);
+    "INVALID_ACTOR_COUNT",
+  ]) || step.actorIds.length !== 1;
   const hasWorkflowError = hasStepIssue(issues, step.id, [
     "UNKNOWN_STEP_REFERENCE",
     "CANNOT_REACH_END",
@@ -42,6 +43,8 @@ export function useStepEditorController({
   }
 
   function updateActorIds(actorIds: string[]) {
+    // SOP-AP drafts may be unassigned, but the editor never writes multi-actor rows.
+    if (actorIds.length > 1) return;
     actions.updateStep({ ...step, actorIds });
   }
 
