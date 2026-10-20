@@ -43,6 +43,42 @@ const document: SOPDocument = {
 };
 
 describe("buildBpmnModel", () => {
+  it("routes ambiguous legacy actor assignments to an explicit fallback lane", () => {
+    const invalid: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "review" ? { ...step, actorIds: ["staff", "manager"] } : step,
+      ),
+    };
+    const model = buildBpmnModel(invalid);
+    const review = model.nodes.filter((node) => node.id === "review");
+    expect(review).toHaveLength(1);
+    expect(review[0]?.laneIndex).toBe(2);
+    expect(model.lanes.at(-1)?.actorId).toBeNull();
+    expect(model.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "MULTIPLE_ACTOR_ASSIGNMENT",
+        from: "review",
+      }),
+    );
+  });
+
+  it("reassigns a single step to a different lane without changing edge identities", () => {
+    const baseline = buildBpmnModel(document);
+    const reassigned: SOPDocument = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "fix" ? { ...step, actorIds: ["manager"] } : step,
+      ),
+    };
+    const next = buildBpmnModel(reassigned);
+    expect(next.nodes.find((node) => node.id === "fix")?.laneIndex).toBe(1);
+    expect(next.nodes).toHaveLength(baseline.nodes.length);
+    expect(next.edges.map((edge) => edge.id)).toEqual(
+      baseline.edges.map((edge) => edge.id),
+    );
+  });
+
   it("lays out actor lanes and nodes from the shared workflow graph", () => {
     const model = buildBpmnModel(document);
 
