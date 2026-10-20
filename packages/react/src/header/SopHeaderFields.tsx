@@ -16,7 +16,7 @@ export interface SopHeaderFieldsProps {
   onHeaderChange?: (header: SopHeaderValue) => void;
   disabled?: boolean;
   className?: string;
-  highlightedField?: string;
+  highlightedField?: string | undefined;
 }
 
 export function SopHeaderFields({

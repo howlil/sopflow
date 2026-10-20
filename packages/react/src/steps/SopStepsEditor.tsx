@@ -21,7 +21,7 @@ export interface SopStepsEditorProps {
   document: SOPDocument;
   issues: ValidationIssue[];
   selectedStepId: StepId | null;
-  activeProblemTarget?: ProblemTarget | null;
+  activeProblemTarget?: ProblemTarget | null | undefined;
   onSelectedStepChange: (stepId: StepId | null) => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;

@@ -27,7 +27,7 @@ export interface SopStepRowProps {
   orderedSteps?: readonly Step[];
   stepOrder?: ReadonlyMap<string, number>;
   selected?: boolean;
-  highlightedField?: StepProblemField;
+  highlightedField?: StepProblemField | undefined;
   onSelect: () => void;
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
