@@ -1,5 +1,5 @@
 import { Button } from "../primitives/Button.js";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Actor, SOPDocument, SopOperation } from "@sopflow/core";
 import { createActorId } from "./createActorId.js";
@@ -63,7 +63,7 @@ export function ActorsEditor({
             onClick={handleAdd}
           >
             <Plus size={14} aria-hidden="true" />
-            Tambah pelaksana
+            Tambah
           </Button>
         ) : null}
         <p className={styles.description}>
@@ -106,7 +106,7 @@ export function ActorsEditor({
                   aria-label={`Hapus ${actor.name || "pelaksana"}`}
                   onClick={() => setActorToDelete(actor)}
                 >
-                  Hapus
+                  <Trash2 size={14} aria-hidden="true" />
                 </Button>
               ) : null}
             </div>

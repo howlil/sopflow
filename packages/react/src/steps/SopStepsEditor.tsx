@@ -115,6 +115,9 @@ export function SopStepsEditor({
             melihat semua kolom.
           </p>
         </div>
+        {!disabled && steps.length > 0 ? (
+          <AddStepButton document={document} onOperations={onOperations} />
+        ) : null}
       </div>
 
       {steps.length === 0 ? (
@@ -189,9 +192,6 @@ export function SopStepsEditor({
             </div>
           )}
 
-          {!disabled ? (
-            <AddStepButton document={document} onOperations={onOperations} />
-          ) : null}
         </>
       )}
     </section>
