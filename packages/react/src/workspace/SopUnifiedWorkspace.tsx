@@ -53,9 +53,15 @@ export function SopUnifiedWorkspace({
   );
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<
-    { kind: "header"; field: string } | { kind: "step"; stepId: string } | null
+    | { kind: "header"; field: string }
+    | { kind: "step"; stepId: string }
+    | { kind: "actors" }
+    | { kind: "steps" }
+    | null
   >(null);
-  const [navigationFeedback, setNavigationFeedback] = useState<string | null>(null);
+  const [navigationFeedback, setNavigationFeedback] = useState<string | null>(
+    null,
+  );
   const shellRef = useRef<HTMLElement>(null);
 
   const workspaceView: SopWorkspaceView =
@@ -120,10 +126,13 @@ export function SopUnifiedWorkspace({
     }
     if (target.kind === "actors") {
       setInspectorOpen(true);
-      setNavigationFeedback("Check the Actors section in Properties.");
+      setPendingNavigation({ kind: "actors" });
       return;
     }
-    if (target.kind === "step" && value.steps.some((step) => step.id === target.stepId)) {
+    if (
+      target.kind === "step" &&
+      value.steps.some((step) => step.id === target.stepId)
+    ) {
       setManualEditing(false);
       changeView("steps");
       handleSelectedStepChange(target.stepId);
@@ -132,39 +141,54 @@ export function SopUnifiedWorkspace({
     }
     if (target.kind === "steps" || target.kind === "step") {
       changeView("steps");
-      setNavigationFeedback("Review the steps editor to resolve this issue.");
+      setPendingNavigation({ kind: "steps" });
       return;
     }
-    setNavigationFeedback("This issue has no direct field target. Review the document and validation details.");
+    setNavigationFeedback(
+      "This issue has no direct field target. Review the document and validation details.",
+    );
   }
 
   useLayoutEffect(() => {
     if (!pendingNavigation) return;
     const shell = shellRef.current;
     if (!shell) return;
-    const nodes = shell.querySelectorAll<HTMLElement>(
-      pendingNavigation.kind === "header"
-        ? "[data-sopflow-header-field]"
-        : "[data-sopflow-step-id]",
-    );
-    const expected = pendingNavigation.kind === "header"
-      ? pendingNavigation.field
-      : pendingNavigation.stepId;
-    const target = Array.from(nodes).find((node) =>
-      pendingNavigation.kind === "header"
-        ? node.dataset.sopflowHeaderField === expected
-        : node.dataset.sopflowStepId === expected,
-    );
+    let target: HTMLElement | undefined;
+    if (pendingNavigation.kind === "actors") {
+      target = shell.querySelector<HTMLElement>("[data-sopflow-actors]") ?? undefined;
+    } else if (pendingNavigation.kind === "steps") {
+      target =
+        shell.querySelector<HTMLElement>(
+          '[aria-label="Navigasi langkah SOP"]',
+        ) ?? undefined;
+    } else {
+      const attr =
+        pendingNavigation.kind === "header"
+          ? "data-sopflow-header-field"
+          : "data-sopflow-step-id";
+      const expected =
+        pendingNavigation.kind === "header"
+          ? pendingNavigation.field
+          : pendingNavigation.stepId;
+      target = Array.from(shell.querySelectorAll<HTMLElement>(`[${attr}]`)).find(
+        (node) =>
+          (pendingNavigation.kind === "header"
+            ? node.dataset.sopflowHeaderField
+            : node.dataset.sopflowStepId) === expected,
+      );
+    }
     if (target) {
       if (typeof target.scrollIntoView === "function") {
         target.scrollIntoView({ block: "nearest" });
       }
       target.focus({ preventScroll: true });
     } else {
-      setNavigationFeedback("The target is not available. Review the highlighted section manually.");
+      setNavigationFeedback(
+        "The target is not available. Review the relevant section manually.",
+      );
     }
     setPendingNavigation(null);
-  }, [inspectorOpen, pendingNavigation, view]);
+  }, [pendingNavigation]);
 
   return (
     <section

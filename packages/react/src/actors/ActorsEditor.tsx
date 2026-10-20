@@ -48,6 +48,8 @@ export function ActorsEditor({
       className={styles.editor}
       data-empty={document.actors.length === 0 || undefined}
       data-disabled={disabled || undefined}
+      data-sopflow-actors
+      tabIndex={-1}
     >
       <header className={styles.header}>
         <div>

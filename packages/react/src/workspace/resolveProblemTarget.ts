@@ -22,9 +22,7 @@ const headerFields = new Set([
   "records",
 ]);
 
-export function resolveProblemTarget(
-  issue: SopReadinessIssue,
-): ProblemTarget {
+export function resolveProblemTarget(issue: SopReadinessIssue): ProblemTarget {
   if (issue.kind === "header") {
     return { kind: "header", field: issue.field };
   }
@@ -41,13 +39,12 @@ export function resolveProblemTarget(
   }
 
   if (issue.kind === "schema") {
-    const [section, field, index] = issue.path;
-    if (section === "header" && field && headerFields.has(field)) {
+    if (issue.stepId) return { kind: "step", stepId: issue.stepId };
+    const [section, field] = issue.path;
+    if (section === "header" && typeof field === "string" && headerFields.has(field)) {
       return { kind: "header", field };
     }
-    if (section === "steps" && index && /^\d+$/.test(index)) {
-      return { kind: "steps" };
-    }
+    if (section === "steps") return { kind: "steps" };
     if (section === "actors") return { kind: "actors" };
   }
 

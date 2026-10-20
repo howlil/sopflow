@@ -1,4 +1,10 @@
-import { AlertCircle, ArrowRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  X,
+} from "lucide-react";
 
 import type { SopReadinessIssue } from "../validation/readiness.js";
 import { problemKey } from "./resolveProblemTarget.js";
@@ -79,7 +85,7 @@ export function ProblemsPanel({
           type="button"
           className={styles.toggle}
           aria-expanded={expanded}
-          aria-controls="sopflow-problems-list"
+          aria-controls={expanded ? "sopflow-problems-list" : undefined}
           onClick={() => onExpandedChange(!expanded)}
         >
           <AlertCircle size={14} aria-hidden="true" />

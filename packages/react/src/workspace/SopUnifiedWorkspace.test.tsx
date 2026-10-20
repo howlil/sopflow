@@ -162,14 +162,18 @@ describe("SopUnifiedWorkspace", () => {
     const { container } = render(<Harness />);
     await user.click(screen.getByRole("button", { name: /Problems/ }));
     await user.click(
-      screen.getByRole("button", { name: /Langkah 1: kelengkapan wajib diisi/ }),
+      screen.getByRole("button", {
+        name: /Langkah 1: kelengkapan wajib diisi/,
+      }),
     );
     expect(screen.getByRole("button", { name: "Steps" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
     expect(
-      container.querySelector('[data-sopflow-step-id="start"][data-selected="true"]'),
+      container.querySelector(
+        '[data-sopflow-step-id="start"][data-selected="true"]',
+      ),
     ).not.toBeNull();
   });
 
@@ -184,6 +188,8 @@ describe("SopUnifiedWorkspace", () => {
     );
     await user.click(screen.getByRole("button", { name: /Problems/ }));
     expect(screen.getByText("Diagram error")).toBeInTheDocument();
-    expect(screen.getAllByText("Failed to build diagram").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("Failed to build diagram").length,
+    ).toBeGreaterThan(0);
   });
 });
