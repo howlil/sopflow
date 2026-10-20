@@ -267,14 +267,12 @@ describe("SopUnifiedWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
     expect(canvas).toHaveAttribute("data-preview-scale", "1.1");
     expect(
-      (canvas as HTMLElement).style.getPropertyValue(
-        "--sopflow-preview-scale",
-      ),
+      (canvas as HTMLElement).style.getPropertyValue("--sopflow-preview-scale"),
     ).toBe("1.1");
     expect(paper).toHaveAttribute("data-sopflow-page", "a4");
-    expect(screen.getByRole("button", { name: "Fit to viewport" })).toHaveTextContent(
-      "110%",
-    );
+    expect(
+      screen.getByRole("button", { name: "Fit to viewport" }),
+    ).toHaveTextContent("110%");
     await user.click(screen.getByRole("button", { name: "Fit to viewport" }));
     expect(canvas).toHaveAttribute("data-preview-scale", "1");
   });
@@ -285,25 +283,28 @@ describe("SopUnifiedWorkspace", () => {
     for (let i = 0; i < 25; i++) {
       await user.click(screen.getByRole("button", { name: "Zoom in" }));
     }
-    expect(container.querySelector("[data-sopflow-canvas-stage]")).toHaveAttribute(
-      "data-preview-scale",
-      "2",
-    );
+    expect(
+      container.querySelector("[data-sopflow-canvas-stage]"),
+    ).toHaveAttribute("data-preview-scale", "2");
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Zoom out" }));
-    expect(container.querySelector("[data-sopflow-canvas-stage]")).toHaveAttribute(
-      "data-preview-scale",
-      "1.9",
-    );
+    expect(
+      container.querySelector("[data-sopflow-canvas-stage]"),
+    ).toHaveAttribute("data-preview-scale", "1.9");
   });
 
   it("supports keyboard inspector resizing without shifting canvas state", async () => {
     const user = userEvent.setup();
     const { container } = render(<Harness />);
     // JSDOM has no layout; provide the host width used by the resize guard.
-    const dragHost = container.querySelector("[data-sopflow-unified-workspace]")?.querySelector("[data-sopflow-inspector-resize]")?.parentElement;
+    const dragHost = container
+      .querySelector("[data-sopflow-unified-workspace]")
+      ?.querySelector("[data-sopflow-inspector-resize]")?.parentElement;
     if (!dragHost) throw new Error("Workspace resize host missing");
-    Object.defineProperty(dragHost, "clientWidth", { configurable: true, value: 900 });
+    Object.defineProperty(dragHost, "clientWidth", {
+      configurable: true,
+      value: 900,
+    });
     const resize = screen.getByRole("separator", { name: "Resize Properties" });
     expect(resize).toHaveAttribute("aria-valuenow", "258");
     resize.focus();
@@ -311,6 +312,6 @@ describe("SopUnifiedWorkspace", () => {
     expect(resize).toHaveAttribute("aria-valuenow", "268");
     await user.keyboard("{ArrowRight}");
     expect(resize).toHaveAttribute("aria-valuenow", "258");
-    expect(container.querySelector("[data-sopflow-page=\"a4\"]")).not.toBeNull();
+    expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
   });
 });

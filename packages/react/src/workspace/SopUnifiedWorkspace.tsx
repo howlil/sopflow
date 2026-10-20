@@ -7,7 +7,15 @@ import {
   Plus,
   Workflow,
 } from "lucide-react";
-import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 
 import {
   SopWorkspace,
@@ -107,9 +115,7 @@ export function SopUnifiedWorkspace({
         (Number.parseFloat(content.paddingRight) || 0);
       const freeWidth = Math.max(0, pane.clientWidth - horizontalPadding - 8);
       if (freeWidth > 0) {
-        setFitScale(
-          clamp(freeWidth / A4_LANDSCAPE_WIDTH_PX, 0.25, 1),
-        );
+        setFitScale(clamp(freeWidth / A4_LANDSCAPE_WIDTH_PX, 0.25, 1));
       }
     };
     measure();
@@ -118,7 +124,7 @@ export function SopUnifiedWorkspace({
     observer.observe(stage);
     observer.observe(pane);
     return () => observer.disconnect();
-  }, [inspectorOpen, isCompact]);
+  }, []);
 
   function changeZoom(delta: number) {
     const current = zoomMode === "fit" ? fitScale * 100 : zoomPercent;
@@ -141,21 +147,21 @@ export function SopUnifiedWorkspace({
     setInspectorWidth(clamp(nextWidth, MIN_INSPECTOR_WIDTH, maximum));
   }
 
-  function onInspectorPointerDown(event: PointerEvent<HTMLDivElement>) {
+  function onInspectorPointerDown(event: PointerEvent<HTMLHRElement>) {
     if (isCompact || !inspectorOpen || event.button !== 0) return;
     dragPointerId.current = event.pointerId;
     event.currentTarget.setPointerCapture?.(event.pointerId);
     event.preventDefault();
   }
 
-  function onInspectorPointerMove(event: PointerEvent<HTMLDivElement>) {
+  function onInspectorPointerMove(event: PointerEvent<HTMLHRElement>) {
     if (dragPointerId.current !== event.pointerId) return;
     const stage = stageRef.current;
     if (!stage) return;
     resizeInspector(stage.getBoundingClientRect().right - event.clientX);
   }
 
-  function onInspectorPointerEnd(event: PointerEvent<HTMLDivElement>) {
+  function onInspectorPointerEnd(event: PointerEvent<HTMLHRElement>) {
     if (dragPointerId.current !== event.pointerId) return;
     dragPointerId.current = null;
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
@@ -163,7 +169,7 @@ export function SopUnifiedWorkspace({
     }
   }
 
-  function onInspectorResizeKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  function onInspectorResizeKeyDown(event: KeyboardEvent<HTMLHRElement>) {
     if (isCompact || !inspectorOpen) return;
     const step = event.shiftKey ? 25 : 10;
     let delta = 0;
@@ -386,7 +392,7 @@ export function SopUnifiedWorkspace({
         </nav>
 
         <div className={styles.actions}>
-          <div className={styles.zoomControls} aria-label="Canvas zoom">
+          <div className={styles.zoomControls} role="group" aria-label="Canvas zoom">
             <button
               type="button"
               className={styles.zoomButton}
@@ -455,10 +461,9 @@ export function SopUnifiedWorkspace({
           onReadinessChange={handleReadinessChange}
         />
         {inspectorOpen && !isCompact ? (
-          <div
+          <hr
             className={styles.inspectorResize}
             data-sopflow-inspector-resize
-            role="separator"
             aria-label="Resize Properties"
             aria-orientation="vertical"
             aria-valuemin={MIN_INSPECTOR_WIDTH}
