@@ -272,10 +272,14 @@ describe("SopEditor default composition", () => {
       onHeaderChange: () => {},
     };
     const { container, rerender } = render(<SopEditor {...props} />);
-    expect(container.querySelector("[data-sopflow-document-toolbar]")).not.toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-document-toolbar]"),
+    ).not.toBeNull();
 
     rerender(<SopEditor {...props} toolbarPlacement="external" />);
-    expect(container.querySelector("[data-sopflow-document-toolbar]")).toBeNull();
+    expect(
+      container.querySelector("[data-sopflow-document-toolbar]"),
+    ).toBeNull();
     expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
     expect(
       container.querySelector("[data-sopflow-diagram-panel]"),
@@ -303,10 +307,14 @@ describe("SopEditor default composition", () => {
     const { container } = render(<ControlledInspector />);
     expect(container.querySelector("[data-sopflow-inspector]")).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Buka panel properti" }));
+    await user.click(
+      screen.getByRole("button", { name: "Buka panel properti" }),
+    );
     expect(container.querySelector("[data-sopflow-inspector]")).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Tutup panel properti" }));
+    await user.click(
+      screen.getByRole("button", { name: "Tutup panel properti" }),
+    );
     expect(container.querySelector("[data-sopflow-inspector]")).toBeNull();
     expect(container.querySelector('[data-sopflow-page="a4"]')).not.toBeNull();
   });
