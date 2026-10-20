@@ -113,7 +113,7 @@ interactive 2FA; **do not disable 2FA**.
    ```
 
    `npm whoami` must output `howlilabs`. Bootstrap will repair known legacy
-   workspace names, run the existing tests/builds, produce all five inspected
+   workspace names, run the existing tests/builds, produce all three inspected
    tarballs, then publish only versions missing on npm in dependency order.
 
 3. Bootstrap then configures npm Trusted Publishing for all three public packages via
@@ -137,9 +137,7 @@ interactive 2FA; **do not disable 2FA**.
    ```powershell
    npm view @sopflow/core version
    npm view @sopflow/diagram version
-   npm view @sopflow/sop-ap version
-   npm view @sopflow/adapter-sop-ta version
-   npm view @sopflow/react version
+         npm view @sopflow/react version
    ```
 
 ## First OIDC publication and validation

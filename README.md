@@ -79,7 +79,7 @@ runs the repair before its first install.
 - `presentationOrder` controls authored row order, not execution.
 - `applyOperations()` supports intermediate drafts. `applyValidatedOperations()` and `parseSop()` both enforce schema and semantic validity.
 - `SopWorkspace` accepts controlled `value`, `header`, and optional per-kind `diagramConfigs`. The consuming application owns persistence; manual route overrides are not part of `SOPDocument`.
-- `@sopflow/sop-ap` validates government-specific readiness separately from core invariants.
+- `@sopflow/core/sop-ap` validates government-specific readiness separately from generic core invariants.
 - Playground demonstrates the React workspace and validation states. Core history/JSON operation functions are available through `@sopflow/core`, but are not primary playground UI features.
 
 See [core contract](./docs/CORE_CONTRACT.md), [product contract](./PRODUCT.md), [design contract](./DESIGN.md), and [roadmap](./docs/ROADMAP.md).
