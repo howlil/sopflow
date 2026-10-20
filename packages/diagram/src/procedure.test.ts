@@ -30,7 +30,7 @@ const document: SOPDocument = {
       id: "review",
       type: "decision",
       name: "Valid?",
-      actorIds: ["staff", "manager"],
+      actorIds: ["staff"],
       yes: "end",
       no: "start",
     },
@@ -66,11 +66,10 @@ describe("procedure model", () => {
       "review",
       "end",
     ]);
-    expect(model.rows[1]?.primaryActorId).toBe(null);
+    expect(model.rows[1]?.primaryActorId).toBe("staff");
     expect(model.actorColumns.map((column) => column.actorId)).toEqual([
       "staff",
       "manager",
-      null,
     ]);
     expect(model.graph.edges.map((edge) => edge.id)).toEqual([
       "start:next:review",
@@ -94,6 +93,23 @@ describe("procedure model", () => {
       "start:next:review",
       "review:yes:end",
       "review:no:start",
+    ]);
+  });
+
+  it("does not silently pick the first actor for legacy multi-actor rows", () => {
+    const legacy = {
+      ...document,
+      steps: document.steps.map((step) =>
+        step.id === "review"
+          ? { ...step, actorIds: ["staff", "manager"] }
+          : step,
+      ),
+    };
+    const model = buildProcedureModel(legacy);
+    expect(model.rows.find((row) => row.stepId === "review")?.primaryActorId).toBeNull();
+    expect(model.actorColumns.at(-1)?.actorId).toBeNull();
+    expect(model.graph.edges.map((edge) => edge.id)).toEqual([
+      "start:next:review", "review:yes:end", "review:no:start",
     ]);
   });
 
