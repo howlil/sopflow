@@ -1,0 +1,35 @@
+name: One-time playground lockfile regeneration
+on:
+  push:
+    branches:
+      - chore/playground-react-031-consumer-20261021
+permissions:
+  contents: write
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Regenerate lockfile from published npm package
+        run: pnpm install --lockfile-only --ignore-scripts
+      - name: Commit refreshed pnpm lockfile to the feature branch
+        env:
+          BRANCH: chore/playground-react-031-consumer-20261021
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pnpm-lock.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(playground): refresh npm 0.3.1 lockfile'
+            git push origin "HEAD:refs/heads/${BRANCH}"
+          fi
