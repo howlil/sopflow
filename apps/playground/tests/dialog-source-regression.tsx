@@ -209,7 +209,10 @@ async function run() {
   const combo = content.querySelector<HTMLButtonElement>('[role="combobox"]');
   assert(combo, "Nested Arc Select is missing");
   const footer = content.querySelector<HTMLElement>("footer");
-  assert(footer?.parentElement === content, "Dialog footer is nested inside body");
+  assert(
+    footer?.parentElement === content,
+    "Dialog footer is nested inside body",
+  );
   assert(!footer.contains(combo), "Dialog field moved into footer");
   combo.dispatchEvent(
     new PointerEvent("pointerdown", {

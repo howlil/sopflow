@@ -35,7 +35,11 @@ export function DeleteStepDialog({
   const removal = getStepRemovalOptions(document, step.id);
   const needsReplacement = removal.requiresReplacement;
   const candidates = removal.candidates;
-  const orderById = new Map(getPresentationSteps(document).map((item, index) => [item.id, index + 1] as const));
+  const orderById = new Map(
+    getPresentationSteps(document).map(
+      (item, index) => [item.id, index + 1] as const,
+    ),
+  );
   const hasNoValidReplacement = needsReplacement && candidates.length === 0;
 
   useEffect(() => {

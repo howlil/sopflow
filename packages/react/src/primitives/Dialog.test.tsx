@@ -9,7 +9,11 @@ describe("SOPFlow Dialog", () => {
         open
         title="Hapus langkah"
         onClose={() => {}}
-        footer={<button type="button" data-sopflow-cancel>Batal</button>}
+        footer={
+          <button type="button" data-sopflow-cancel>
+            Batal
+          </button>
+        }
       >
         <p>Isi konfirmasi</p>
       </Dialog>,
@@ -22,6 +26,8 @@ describe("SOPFlow Dialog", () => {
     expect(footer?.previousElementSibling).toContainElement(
       screen.getByText("Isi konfirmasi"),
     );
-    expect(footer).toContainElement(screen.getByRole("button", { name: "Batal" }));
+    expect(footer).toContainElement(
+      screen.getByRole("button", { name: "Batal" }),
+    );
   });
 });
