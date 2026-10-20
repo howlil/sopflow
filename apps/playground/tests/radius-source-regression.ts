@@ -79,6 +79,8 @@ portal.setAttribute("data-sopflow-root", "");
 document.body.appendChild(portal);
 const portalChecks = [
   ["Arc dialog portal", element("div", dialog.content, portal), "16px"],
+  ["Arc select popover", element("div", select.content, portal), "14px"],
+  ["Arc select option", element("div", select.item, portal), "8px"],
   ["Arc dropdown portal", element("div", dropdown.menu, portal), "14px"],
 ] as const;
 
