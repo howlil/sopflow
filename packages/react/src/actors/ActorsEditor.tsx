@@ -12,6 +12,7 @@ export interface ActorsEditorProps {
   onOperation: (operation: SopOperation) => void;
   onOperations: (operations: SopOperation[]) => void;
   disabled?: boolean;
+  issueActive?: boolean;
 }
 
 export function ActorsEditor({
@@ -19,6 +20,7 @@ export function ActorsEditor({
   onOperation,
   onOperations,
   disabled = false,
+  issueActive = false,
 }: ActorsEditorProps) {
   const [actorToDelete, setActorToDelete] = useState<Actor | null>(null);
 
@@ -50,6 +52,7 @@ export function ActorsEditor({
       data-empty={document.actors.length === 0 || undefined}
       data-disabled={disabled || undefined}
       data-sopflow-actors
+      data-sopflow-issue-active={issueActive || undefined}
       tabIndex={-1}
     >
       <header className={styles.header}>

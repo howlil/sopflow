@@ -36,6 +36,7 @@ export interface MultiSelectProps {
   className?: string;
   compact?: boolean;
   selectionMode?: "single" | "multiple";
+  error?: boolean;
 }
 
 const enter = motionTokens.ease.enter;
@@ -172,6 +173,7 @@ export function MultiSelect({
   className,
   compact = false,
   selectionMode = "multiple",
+  error = false,
 }: MultiSelectProps) {
   const id = useId();
   const labelId = `${id}-label`;
@@ -345,6 +347,7 @@ export function MultiSelect({
       ref={rootRef}
       className={[styles.field, className].filter(Boolean).join(" ")}
       data-compact={compact || undefined}
+      data-error={error || undefined}
     >
       <span id={labelId} className={styles.label}>
         {label}
@@ -357,6 +360,7 @@ export function MultiSelect({
           data-sopflow-actor-trigger={compact || undefined}
           disabled={disabled}
           aria-labelledby={`${labelId} ${valueId}`}
+          aria-invalid={error || undefined}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? `${id}-listbox` : undefined}

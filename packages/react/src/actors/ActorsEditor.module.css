@@ -134,3 +134,5 @@
 }
 
 .removeButton:focus-visible { outline: 2px solid var(--sopflow-selected-border); outline-offset: 1px; }
+
+.editor[data-sopflow-issue-active="true"] { border: 1px solid var(--sopflow-error-border); border-radius: var(--sopflow-radius-inline); padding: 0.75rem 0.5rem; background: var(--sopflow-error-surface); }

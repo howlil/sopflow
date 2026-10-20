@@ -16,6 +16,7 @@ export interface SopHeaderFieldsProps {
   onHeaderChange?: (header: SopHeaderValue) => void;
   disabled?: boolean;
   className?: string;
+  highlightedField?: string;
 }
 
 export function SopHeaderFields({
@@ -25,6 +26,7 @@ export function SopHeaderFields({
   onHeaderChange,
   disabled = false,
   className,
+  highlightedField,
 }: SopHeaderFieldsProps) {
   const headerDisabled = disabled || !onHeaderChange;
   const documentDisabled = disabled || !onDocumentChange;
@@ -95,11 +97,13 @@ export function SopHeaderFields({
     <div
       className={[styles.inspector, className].filter(Boolean).join(" ")}
       data-sopflow-header-fields
+      data-sopflow-highlight-field={highlightedField}
     >
       <InspectorSection title="Identitas lembaga">
         <Field label="Nama lembaga">
           <ArcTextarea
             data-sopflow-header-field="institutionName"
+            aria-invalid={highlightedField === "institutionName" || undefined}
             ref={institutionTextareaRef}
             compact
             label="Field SOP"
@@ -194,6 +198,7 @@ export function SopHeaderFields({
         <Field label="Nama SOP">
           <ArcTextarea
             data-sopflow-header-field="title"
+            aria-invalid={highlightedField === "title" || undefined}
             ref={titleTextareaRef}
             compact
             label="Field SOP"
@@ -215,6 +220,7 @@ export function SopHeaderFields({
         <Field label="Nomor SOP">
           <SopInput
             data-sopflow-header-field="number"
+            aria-invalid={highlightedField === "number" || undefined}
             className={styles.input}
             type="text"
             value={header.number}
@@ -300,6 +306,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="lawBasis"
+        highlighted={highlightedField === "lawBasis"}
         title="Dasar hukum"
         value={header.lawBasis}
         disabled={headerDisabled}
@@ -308,6 +315,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="qualifications"
+        highlighted={highlightedField === "qualifications"}
         title="Kualifikasi pelaksanaan"
         value={header.qualifications}
         disabled={headerDisabled}
@@ -316,6 +324,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="relatedSops"
+        highlighted={highlightedField === "relatedSops"}
         title="Keterkaitan dengan SOP"
         value={header.relatedSops}
         disabled={headerDisabled}
@@ -324,6 +333,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="equipment"
+        highlighted={highlightedField === "equipment"}
         title="Peralatan / perlengkapan"
         value={header.equipment}
         disabled={headerDisabled}
@@ -332,6 +342,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="warnings"
+        highlighted={highlightedField === "warnings"}
         title="Peringatan"
         value={header.warnings}
         disabled={headerDisabled}
@@ -340,6 +351,7 @@ export function SopHeaderFields({
 
       <ListSection
         field="records"
+        highlighted={highlightedField === "records"}
         title="Pencatatan dan pendataan"
         value={header.records}
         disabled={headerDisabled}
@@ -354,10 +366,12 @@ function ListSection({
   title,
   value,
   disabled,
+  highlighted,
   onChange,
 }: {
   field: string;
   title: string;
+  highlighted: boolean;
   value: readonly string[];
   disabled: boolean;
   onChange: (value: string[]) => void;
@@ -383,6 +397,7 @@ function ListSection({
             className={styles.addButton}
             aria-label={`Tambah ${title.toLowerCase()}`}
             data-sopflow-header-field={value.length === 0 ? field : undefined}
+            aria-invalid={highlighted && value.length === 0 || undefined}
             onClick={() => onChange([...value, ""])}
           >
             +
@@ -407,6 +422,7 @@ function ListSection({
                   value={item}
                   aria-label={`${title} ${index + 1}`}
                   data-sopflow-header-field={index === 0 ? field : undefined}
+                  aria-invalid={highlighted && index === 0 || undefined}
                   placeholder={title}
                   onChange={(event) => updateItem(index, event.target.value)}
                 />
