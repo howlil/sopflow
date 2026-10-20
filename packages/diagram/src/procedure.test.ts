@@ -66,10 +66,11 @@ describe("procedure model", () => {
       "review",
       "end",
     ]);
-    expect(model.rows[1]?.primaryActorId).toBe("staff");
+    expect(model.rows[1]?.primaryActorId).toBe(null);
     expect(model.actorColumns.map((column) => column.actorId)).toEqual([
       "staff",
       "manager",
+      null,
     ]);
     expect(model.graph.edges.map((edge) => edge.id)).toEqual([
       "start:next:review",
