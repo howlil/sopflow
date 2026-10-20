@@ -370,11 +370,13 @@ export function EditableFormalFlowchartPath({
     : activeEndpoint === "target-endpoint"
       ? targetRect
       : undefined;
-  const highlightSide = activeEndpoint === "source-endpoint"
-    ? preview.sourceSide
-    : activeEndpoint === "target-endpoint"
-      ? preview.targetSide
-      : undefined;
+  const highlightSide = preview
+    ? activeEndpoint === "source-endpoint"
+      ? preview.sourceSide
+      : activeEndpoint === "target-endpoint"
+        ? preview.targetSide
+        : undefined
+    : undefined;
   const highlight = highlightRect && highlightSide
     ? formalSideLine(highlightRect, highlightSide)
     : null;
