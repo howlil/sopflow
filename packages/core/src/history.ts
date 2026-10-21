@@ -1,4 +1,4 @@
-import type { SOPDocument } from "./types.js";
+import type { SOPDocument, Step } from "./types.js";
 import type { SopOperation } from "./operations.js";
 import { applyOperations, applyValidatedOperations } from "./operations.js";
 
@@ -49,7 +49,7 @@ function commitHistory(
   history: SopHistory,
   nextDocument: SOPDocument,
 ): SopHistory {
-  if (nextDocument === history.present) return history;
+  if (sameDocument(history.present, nextDocument)) return history;
 
   return {
     past: [...history.past, history.present],
@@ -80,4 +80,69 @@ export function redo(history: SopHistory): SopHistory {
     present: next,
     future: history.future.slice(1),
   };
+}
+
+/** Compare canonical domain values, not object identity, before recording undo. */
+function sameDocument(left: SOPDocument, right: SOPDocument): boolean {
+  if (left === right) return true;
+
+  return (
+    left.schemaVersion === right.schemaVersion &&
+    left.id === right.id &&
+    left.title === right.title &&
+    sameIds(left.presentationOrder, right.presentationOrder) &&
+    left.actors.length === right.actors.length &&
+    left.actors.every(
+      (actor, index) =>
+        actor.id === right.actors[index]?.id &&
+        actor.name === right.actors[index]?.name,
+    ) &&
+    left.steps.length === right.steps.length &&
+    left.steps.every((step, index) => {
+      const other = right.steps[index];
+      return other !== undefined && sameStep(step, other);
+    })
+  );
+}
+
+function sameIds(
+  left: readonly string[] | undefined,
+  right: readonly string[] | undefined,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+  return left.every((id, index) => id === right[index]);
+}
+
+function sameStep(left: Step, right: Step): boolean {
+  if (
+    left.type !== right.type ||
+    left.id !== right.id ||
+    left.name !== right.name ||
+    !sameIds(left.actorIds, right.actorIds) ||
+    left.input !== right.input ||
+    left.output !== right.output ||
+    left.note !== right.note ||
+    left.duration?.value !== right.duration?.value ||
+    left.duration?.unit !== right.duration?.unit
+  ) {
+    return false;
+  }
+
+  switch (left.type) {
+    case "start":
+    case "task":
+      return (
+        (right.type === "start" || right.type === "task") &&
+        left.next === right.next
+      );
+    case "decision":
+      return (
+        right.type === "decision" &&
+        left.yes === right.yes &&
+        left.no === right.no
+      );
+    case "end":
+      return true;
+  }
 }

@@ -70,6 +70,59 @@ describe("applyHistoryOperations", () => {
     expect(applyHistoryOperations(history, [])).toBe(history);
   });
 
+  it("keeps redo available when a reconnect does not change the document", () => {
+    const changed = applyHistoryOperation(createHistory(linearDocument), {
+      type: "connect",
+      from: "start",
+      to: "end",
+    });
+    expect(changed).toBeDefined();
+    expect(changed.present).toBe(linearDocument);
+    expect(changed.past).toEqual([]);
+  });
+
+  it("does not clear redo after a no-op update", () => {
+    const start = linearDocument.steps[0];
+    if (!start) throw new Error("Missing start fixture");
+
+    const changed = applyHistoryOperation(createHistory(linearDocument), {
+      type: "update-step",
+      step: { ...start, name: "Renamed" },
+    });
+    const undone = undo(changed);
+    const unchanged = applyHistoryOperation(undone, {
+      type: "update-step",
+      step: { ...start },
+    });
+
+    expect(unchanged).toBe(undone);
+    expect(unchanged.future).toHaveLength(1);
+    expect(redo(unchanged).present.steps[0]?.name).toBe("Renamed");
+  });
+
+  it("does not record a batch whose final state equals its initial state", () => {
+    const start = linearDocument.steps[0];
+    if (!start) throw new Error("Missing start fixture");
+
+    const history = createHistory(linearDocument);
+    const unchanged = applyHistoryOperations(history, [
+      { type: "update-step", step: { ...start, name: "Temporary" } },
+      { type: "update-step", step: start },
+    ]);
+
+    expect(unchanged).toBe(history);
+    expect(unchanged.past).toEqual([]);
+  });
+
+  it("does not record a strict validated no-op batch", () => {
+    const history = createHistory(linearDocument);
+    expect(
+      applyValidatedHistoryOperations(history, [
+        { type: "connect", from: "start", to: "end" },
+      ]),
+    ).toBe(history);
+  });
+
   it("stores a batch of operations as one undoable change", () => {
     const history = createHistory(exampleSop);
 

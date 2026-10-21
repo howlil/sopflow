@@ -32,22 +32,24 @@ export function validateSopApHeader(
   header: SopApHeader,
 ): SopApHeaderValidationIssue[] {
   const issues: SopApHeaderValidationIssue[] = [];
+  // Headers may come from persisted JSON without prior runtime validation.
+  const values = header ?? ({} as SopApHeader);
 
   requiredText(
     issues,
     "institutionName",
-    header.institutionName,
+    values.institutionName,
     "Nama instansi",
   );
-  requiredText(issues, "number", header.number, "Nomor SOP");
+  requiredText(issues, "number", values.number, "Nomor SOP");
   requiredText(issues, "title", document.title, "Judul SOP");
 
   for (const [field, value, label] of [
-    ["createdDate", header.createdDate, "Tanggal pembuatan"],
-    ["revisionDate", header.revisionDate, "Tanggal revisi"],
-    ["effectiveDate", header.effectiveDate, "Tanggal efektif"],
+    ["createdDate", values.createdDate, "Tanggal pembuatan"],
+    ["revisionDate", values.revisionDate, "Tanggal revisi"],
+    ["effectiveDate", values.effectiveDate, "Tanggal efektif"],
   ] as const) {
-    if (value && !isIsoDate(value)) {
+    if (value && (typeof value !== "string" || !isIsoDate(value))) {
       issues.push({
         kind: "header",
         code: "INVALID_HEADER_DATE",
@@ -65,7 +67,14 @@ export function validateSopApHeader(
     ["warnings", "Peringatan"],
     ["records", "Pencatatan dan pendataan"],
   ] as const) {
-    if (header[field].some((item) => item.trim())) continue;
+    const entries = values[field];
+    if (
+      Array.isArray(entries) &&
+      entries.every((item) => typeof item === "string") &&
+      entries.some((item) => item.trim())
+    ) {
+      continue;
+    }
 
     issues.push({
       kind: "header",
@@ -81,10 +90,10 @@ export function validateSopApHeader(
 function requiredText(
   issues: SopApHeaderValidationIssue[],
   field: "institutionName" | "number" | "title",
-  value: string,
+  value: unknown,
   label: string,
 ): void {
-  if (value.trim()) return;
+  if (typeof value === "string" && value.trim()) return;
 
   issues.push({
     kind: "header",

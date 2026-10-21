@@ -72,8 +72,9 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
   function visitComponent(rootId: StepId): void {
     const ordered: StepId[] = [];
     const terminal: StepId[] = [];
+    const frames: { id: StepId; nextIds: StepId[]; nextIndex: number }[] = [];
 
-    function visit(id: StepId): void {
+    function enter(id: StepId): void {
       if (visited.has(id) || visiting.has(id)) return;
 
       const step = steps.get(id);
@@ -85,20 +86,35 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
         ordered.push(id);
       }
 
-      for (const nextId of getNextStepIds(step)) {
-        visit(nextId);
-      }
-
-      visiting.delete(id);
-      visited.add(id);
-
-      if (step.type === "end") {
-        terminal.push(id);
-      }
+      frames.push({ id, nextIds: getNextStepIds(step), nextIndex: 0 });
     }
 
-    visit(rootId);
-    result.push(...ordered, ...terminal);
+    enter(rootId);
+
+    while (frames.length > 0) {
+      const frame = frames[frames.length - 1];
+      if (!frame) break;
+
+      const nextId = frame.nextIds[frame.nextIndex];
+
+      if (nextId !== undefined) {
+        frame.nextIndex += 1;
+        enter(nextId);
+        continue;
+      }
+
+      visiting.delete(frame.id);
+      visited.add(frame.id);
+
+      if (steps.get(frame.id)?.type === "end") {
+        terminal.push(frame.id);
+      }
+
+      frames.pop();
+    }
+
+    for (const id of ordered) result.push(id);
+    for (const id of terminal) result.push(id);
   }
 
   const startIds = document.steps
@@ -334,46 +350,85 @@ export function canReachEnd(document: SOPDocument, startId: StepId): boolean {
   return false;
 }
 
+/**
+ * Find every step belonging to a directed cycle, including overlapping cycles.
+ * Kosaraju's algorithm uses explicit stacks to avoid call-stack exhaustion.
+ */
 export function findCycleStepIds(document: SOPDocument): Set<StepId> {
   const steps = createStepMap(document);
-  const visited = new Set<StepId>();
-  const visiting = new Set<StepId>();
-  const path: StepId[] = [];
-  const cycleNodes = new Set<StepId>();
+  const forward = new Map<StepId, StepId[]>();
+  const reverse = new Map<StepId, StepId[]>();
 
-  function dfs(id: StepId): void {
-    if (visiting.has(id)) {
-      const cycleStart = path.indexOf(id);
-
-      if (cycleStart >= 0) {
-        for (const cycleId of path.slice(cycleStart)) {
-          cycleNodes.add(cycleId);
-        }
-      }
-
-      return;
-    }
-
-    if (visited.has(id)) return;
-
-    visiting.add(id);
-    path.push(id);
-
-    const step = steps.get(id);
-
-    if (step) {
-      for (const nextId of getNextStepIds(step)) {
-        dfs(nextId);
-      }
-    }
-
-    path.pop();
-    visiting.delete(id);
-    visited.add(id);
+  for (const id of steps.keys()) {
+    reverse.set(id, []);
   }
 
   for (const step of document.steps) {
-    dfs(step.id);
+    const targets = getNextStepIds(step).filter((id) => steps.has(id));
+    forward.set(step.id, targets);
+
+    for (const targetId of targets) {
+      reverse.get(targetId)?.push(step.id);
+    }
+  }
+
+  const visited = new Set<StepId>();
+  const finishingOrder: StepId[] = [];
+
+  for (const rootId of steps.keys()) {
+    if (visited.has(rootId)) continue;
+
+    visited.add(rootId);
+    const frames: { id: StepId; nextIndex: number }[] = [
+      { id: rootId, nextIndex: 0 },
+    ];
+
+    while (frames.length > 0) {
+      const frame = frames[frames.length - 1];
+      if (!frame) break;
+
+      const targets = forward.get(frame.id) ?? [];
+      const nextId = targets[frame.nextIndex];
+
+      if (nextId !== undefined) {
+        frame.nextIndex += 1;
+        if (!visited.has(nextId)) {
+          visited.add(nextId);
+          frames.push({ id: nextId, nextIndex: 0 });
+        }
+      } else {
+        finishingOrder.push(frame.id);
+        frames.pop();
+      }
+    }
+  }
+
+  const assigned = new Set<StepId>();
+  const cycleNodes = new Set<StepId>();
+
+  for (let index = finishingOrder.length - 1; index >= 0; index--) {
+    const rootId = finishingOrder[index];
+    if (rootId === undefined || assigned.has(rootId)) continue;
+
+    const component: StepId[] = [];
+    const stack: StepId[] = [rootId];
+    assigned.add(rootId);
+
+    while (stack.length > 0) {
+      const id = stack.pop();
+      if (id === undefined) continue;
+
+      component.push(id);
+      for (const previousId of reverse.get(id) ?? []) {
+        if (assigned.has(previousId)) continue;
+        assigned.add(previousId);
+        stack.push(previousId);
+      }
+    }
+
+    if (component.length > 1 || forward.get(rootId)?.includes(rootId)) {
+      for (const id of component) cycleNodes.add(id);
+    }
   }
 
   return cycleNodes;

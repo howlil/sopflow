@@ -183,6 +183,42 @@ describe("getOrderedStepIds", () => {
     ).toEqual(["cycle-a", "cycle-b"]);
   });
 
+  it("keeps graph-derived ordering on a long linear chain without recursion", () => {
+    const count = 12000;
+    const steps: SOPDocument["steps"][number][] = [
+      {
+        id: "start",
+        type: "start",
+        name: "Start",
+        actorIds: [],
+        next: "task-0",
+      },
+      ...Array.from(
+        { length: count },
+        (_, index): SOPDocument["steps"][number] => ({
+          id: `task-${index}`,
+          type: "task",
+          name: `Task ${index}`,
+          actorIds: [],
+          next: index === count - 1 ? "end" : `task-${index + 1}`,
+        }),
+      ),
+      { id: "end", type: "end", name: "End", actorIds: [] },
+    ];
+    const large: SOPDocument = {
+      schemaVersion: "1",
+      id: "large-order",
+      title: "Large order",
+      actors: [],
+      steps,
+    };
+
+    const ordered = getOrderedStepIds(large);
+    expect(ordered).toHaveLength(count + 2);
+    expect(ordered.slice(0, 3)).toEqual(["start", "task-0", "task-1"]);
+    expect(ordered.at(-1)).toBe("end");
+  });
+
   it("keeps orphan records visible after the graph", () => {
     const document = {
       ...exampleSop,
@@ -463,6 +499,93 @@ describe("findCycleStepIds", () => {
     const cycles = findCycleStepIds(exampleSop);
 
     expect(cycles.has("prepare-document")).toBe(true);
+  });
+
+  it("includes every member of overlapping cycles that share a node", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "overlapping-cycles",
+      title: "Overlapping cycles",
+      actors: [],
+      steps: [
+        { id: "start", type: "start", name: "Start", actorIds: [], next: "a" },
+        {
+          id: "a",
+          type: "decision",
+          name: "A",
+          actorIds: [],
+          yes: "b",
+          no: "d",
+        },
+        { id: "b", type: "task", name: "B", actorIds: [], next: "c" },
+        { id: "d", type: "task", name: "D", actorIds: [], next: "c" },
+        {
+          id: "c",
+          type: "decision",
+          name: "C",
+          actorIds: [],
+          yes: "a",
+          no: "end",
+        },
+        { id: "end", type: "end", name: "End", actorIds: [] },
+      ],
+    };
+
+    expect(findCycleStepIds(document)).toEqual(new Set(["a", "b", "c", "d"]));
+  });
+
+  it("handles cycles in disconnected components and a graph with no cycles", () => {
+    const disconnected: SOPDocument = {
+      schemaVersion: "1",
+      id: "disconnected",
+      title: "Disconnected",
+      actors: [],
+      steps: [
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: [],
+          next: "end",
+        },
+        { id: "end", type: "end", name: "End", actorIds: [] },
+        { id: "x", type: "task", name: "X", actorIds: [], next: "y" },
+        { id: "y", type: "task", name: "Y", actorIds: [], next: "x" },
+      ],
+    };
+
+    expect(findCycleStepIds(disconnected)).toEqual(new Set(["x", "y"]));
+    expect(findCycleStepIds(exampleSop).has("start")).toBe(false);
+  });
+
+  it("processes a large linear graph without recursive call-stack overflow", () => {
+    const count = 12000;
+    const large: SOPDocument = {
+      schemaVersion: "1",
+      id: "large-cycle-check",
+      title: "Large graph",
+      actors: [],
+      steps: Array.from(
+        { length: count },
+        (_, index): SOPDocument["steps"][number] =>
+          index === count - 1
+            ? {
+                id: `step-${index}`,
+                type: "end",
+                name: `Step ${index}`,
+                actorIds: [],
+              }
+            : {
+                id: `step-${index}`,
+                type: "task",
+                name: `Step ${index}`,
+                actorIds: [],
+                next: `step-${index + 1}`,
+              },
+      ),
+    };
+
+    expect(findCycleStepIds(large)).toEqual(new Set());
   });
 
   it("does not mark a non-cycle predecessor as part of the loop", () => {
