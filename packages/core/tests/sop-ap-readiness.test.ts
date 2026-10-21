@@ -143,10 +143,7 @@ describe("SOP AP readiness", () => {
     const missingSteps = { ...document, steps: null } as unknown as SOPDocument;
     const unknownType = {
       ...document,
-      steps: [
-        { ...document.steps[0], type: "unknown" },
-        document.steps[1],
-      ],
+      steps: [{ ...document.steps[0], type: "unknown" }, document.steps[1]],
     } as unknown as SOPDocument;
 
     for (const malformed of [missingSteps, unknownType]) {

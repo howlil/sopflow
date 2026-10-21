@@ -193,13 +193,16 @@ describe("getOrderedStepIds", () => {
         actorIds: [],
         next: "task-0",
       },
-      ...Array.from({ length: count }, (_, index): SOPDocument["steps"][number] => ({
-        id: `task-${index}`,
-        type: "task",
-        name: `Task ${index}`,
-        actorIds: [],
-        next: index === count - 1 ? "end" : `task-${index + 1}`,
-      })),
+      ...Array.from(
+        { length: count },
+        (_, index): SOPDocument["steps"][number] => ({
+          id: `task-${index}`,
+          type: "task",
+          name: `Task ${index}`,
+          actorIds: [],
+          next: index === count - 1 ? "end" : `task-${index + 1}`,
+        }),
+      ),
       { id: "end", type: "end", name: "End", actorIds: [] },
     ];
     const large: SOPDocument = {
@@ -506,10 +509,24 @@ describe("findCycleStepIds", () => {
       actors: [],
       steps: [
         { id: "start", type: "start", name: "Start", actorIds: [], next: "a" },
-        { id: "a", type: "decision", name: "A", actorIds: [], yes: "b", no: "d" },
+        {
+          id: "a",
+          type: "decision",
+          name: "A",
+          actorIds: [],
+          yes: "b",
+          no: "d",
+        },
         { id: "b", type: "task", name: "B", actorIds: [], next: "c" },
         { id: "d", type: "task", name: "D", actorIds: [], next: "c" },
-        { id: "c", type: "decision", name: "C", actorIds: [], yes: "a", no: "end" },
+        {
+          id: "c",
+          type: "decision",
+          name: "C",
+          actorIds: [],
+          yes: "a",
+          no: "end",
+        },
         { id: "end", type: "end", name: "End", actorIds: [] },
       ],
     };
@@ -524,7 +541,13 @@ describe("findCycleStepIds", () => {
       title: "Disconnected",
       actors: [],
       steps: [
-        { id: "start", type: "start", name: "Start", actorIds: [], next: "end" },
+        {
+          id: "start",
+          type: "start",
+          name: "Start",
+          actorIds: [],
+          next: "end",
+        },
         { id: "end", type: "end", name: "End", actorIds: [] },
         { id: "x", type: "task", name: "X", actorIds: [], next: "y" },
         { id: "y", type: "task", name: "Y", actorIds: [], next: "x" },

@@ -70,7 +70,8 @@ export function validateSopApHeader(
     const entries = values[field];
     if (
       Array.isArray(entries) &&
-      entries.some((item) => typeof item === "string" && item.trim())
+      entries.every((item) => typeof item === "string") &&
+      entries.some((item) => item.trim())
     ) {
       continue;
     }

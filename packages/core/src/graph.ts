@@ -113,7 +113,8 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
       frames.pop();
     }
 
-    result.push(...ordered, ...terminal);
+    for (const id of ordered) result.push(id);
+    for (const id of terminal) result.push(id);
   }
 
   const startIds = document.steps
