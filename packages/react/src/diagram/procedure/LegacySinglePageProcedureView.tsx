@@ -687,9 +687,7 @@ export function LegacySinglePageSopProcedureView({
                     {edge.label}
                   </text>
                 ) : null}
-                {manualEditing &&
-                selected &&
-                usesLegacyManualPaths ? (
+                {manualEditing && selected && usesLegacyManualPaths ? (
                   <circle
                     cx={edge.handlePosition.x}
                     cy={edge.handlePosition.y}
