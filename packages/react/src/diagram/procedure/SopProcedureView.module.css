@@ -172,6 +172,14 @@
   fill: var(--sopflow-color-document-border);
 }
 
+.selectedArrowHead {
+  fill: var(--sopflow-route-selected);
+}
+
+.overlay[data-editing="true"] .edge[data-static-route="true"] {
+  visibility: hidden;
+}
+
 .edgeLabel {
   fill: var(--sopflow-text);
   font-size: var(--sopflow-font-document);
@@ -265,7 +273,12 @@
     pointer-events: none;
   }
 
-  .pathHandle {
+  .pathHandle,
+  .overlay [data-sopflow-editable-route] {
     display: none;
+  }
+
+  .overlay[data-editing="true"] .edge[data-static-route="true"] {
+    visibility: visible;
   }
 }

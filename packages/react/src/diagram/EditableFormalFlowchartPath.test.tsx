@@ -36,9 +36,12 @@ describe("EditableFormalFlowchartPath", () => {
     expect(
       container.querySelectorAll("[data-sopflow-route-waypoint]"),
     ).toHaveLength(3);
+    const endpoints = container.querySelectorAll("[data-sopflow-route-endpoint]");
+    expect(endpoints).toHaveLength(2);
+    expect([...endpoints].every((endpoint) => endpoint.tagName.toLowerCase() === "rect")).toBe(true);
     expect(
-      container.querySelectorAll("[data-sopflow-route-endpoint]"),
-    ).toHaveLength(2);
+      container.querySelector('[data-sopflow-editable-route="edge-1"] path[data-selected="true"]'),
+    ).not.toBeNull();
   });
 
   it("previews a segment drag locally and persists exactly once on pointerup", () => {
