@@ -25,11 +25,28 @@ export function getSopApReadinessIssues(
   header: SopApHeader,
   graphIssues?: readonly ValidationIssue[],
 ): SopApReadinessIssue[] {
+  const rawSchemaIssues = getSopSchemaIssues(document);
+  const schemaIssues = rawSchemaIssues.map((issue) => ({
+    ...issue,
+    kind: "schema" as const,
+  }));
+
+  // Schema failures that change the runtime shape make downstream graph and
+  // procedure traversal unsafe. Content-only draft failures (e.g. empty names)
+  // must still collect contextual diagnostics for the editor.
+  if (
+    rawSchemaIssues.some(
+      (issue) =>
+        issue.code === "invalid_type" ||
+        issue.code === "invalid_union" ||
+        issue.code === "invalid_value",
+    )
+  ) {
+    return schemaIssues;
+  }
+
   return [
-    ...getSopSchemaIssues(document).map((issue) => ({
-      ...issue,
-      kind: "schema" as const,
-    })),
+    ...schemaIssues,
     ...(graphIssues ?? validateSop(document)).map((issue) => ({
       ...issue,
       kind: "graph" as const,
