@@ -85,7 +85,8 @@ export function LegacySinglePageSopProcedureView({
   useEffect(() => {
     if (
       selectedConnectionId &&
-      (!manualEditing || !routedEdges.some((edge) => edge.id === selectedConnectionId))
+      (!manualEditing ||
+        !routedEdges.some((edge) => edge.id === selectedConnectionId))
     ) {
       setSelectedConnectionId(null);
     }
@@ -402,7 +403,11 @@ export function LegacySinglePageSopProcedureView({
       data-manual-editing={manualEditing || undefined}
       aria-label="Prosedur SOP"
       onPointerDown={(event) => {
-        if (manualEditing && !(event.target as Element).closest("[data-sopflow-editable-route]") && !(event.target as Element).closest("[data-editable='true']")) {
+        if (
+          manualEditing &&
+          !(event.target as Element).closest("[data-sopflow-editable-route]") &&
+          !(event.target as Element).closest("[data-editable='true']")
+        ) {
           setSelectedConnectionId(null);
         }
       }}
@@ -655,7 +660,9 @@ export function LegacySinglePageSopProcedureView({
                   d={pointsToPath(edge.points)}
                   className={styles.edge}
                   data-selected={selected || undefined}
-                  data-static-route={manualEditing && !usesLegacyManualPaths || undefined}
+                  data-static-route={
+                    (manualEditing && !usesLegacyManualPaths) || undefined
+                  }
                   data-editable={
                     manualEditing && usesLegacyManualPaths ? true : undefined
                   }
@@ -682,7 +689,7 @@ export function LegacySinglePageSopProcedureView({
                 ) : null}
                 {manualEditing &&
                 selected &&
-                (usesLegacyManualPaths || edge.points.length < 4) ? (
+                usesLegacyManualPaths ? (
                   <circle
                     cx={edge.handlePosition.x}
                     cy={edge.handlePosition.y}

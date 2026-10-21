@@ -264,7 +264,8 @@ export function SopProcedurePage({
   useEffect(() => {
     if (
       selectedConnectionId &&
-      (!editingEnabled || !routedEdges.some((edge) => edge.id === selectedConnectionId))
+      (!editingEnabled ||
+        !routedEdges.some((edge) => edge.id === selectedConnectionId))
     ) {
       setSelectedConnectionId(null);
     }
@@ -286,7 +287,10 @@ export function SopProcedurePage({
       data-manual-editing={editingEnabled || undefined}
       aria-label={`Prosedur SOP halaman ${page.pageIndex + 1}`}
       onPointerDown={(event) => {
-        if (editingEnabled && !(event.target as Element).closest("[data-sopflow-editable-route]")) {
+        if (
+          editingEnabled &&
+          !(event.target as Element).closest("[data-sopflow-editable-route]")
+        ) {
           setSelectedConnectionId(null);
         }
       }}

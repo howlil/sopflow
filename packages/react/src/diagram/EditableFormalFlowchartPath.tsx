@@ -388,9 +388,7 @@ export function EditableFormalFlowchartPath({
     );
   };
 
-  const handleEndpointKeyDown = (
-    event: ReactKeyboardEvent<SVGRectElement>,
-  ) => {
+  const handleEndpointKeyDown = (event: ReactKeyboardEvent<SVGRectElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     event.stopPropagation();
@@ -417,6 +415,7 @@ export function EditableFormalFlowchartPath({
       : null;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: SVG group owns the delegated pointer capture for interactive child controls.
     <g
       data-sopflow-editable-route={connectionId}
       onPointerMove={handlePointerMove}
