@@ -183,6 +183,39 @@ describe("getOrderedStepIds", () => {
     ).toEqual(["cycle-a", "cycle-b"]);
   });
 
+  it("keeps graph-derived ordering on a long linear chain without recursion", () => {
+    const count = 12000;
+    const steps: SOPDocument["steps"][number][] = [
+      {
+        id: "start",
+        type: "start",
+        name: "Start",
+        actorIds: [],
+        next: "task-0",
+      },
+      ...Array.from({ length: count }, (_, index): SOPDocument["steps"][number] => ({
+        id: `task-${index}`,
+        type: "task",
+        name: `Task ${index}`,
+        actorIds: [],
+        next: index === count - 1 ? "end" : `task-${index + 1}`,
+      })),
+      { id: "end", type: "end", name: "End", actorIds: [] },
+    ];
+    const large: SOPDocument = {
+      schemaVersion: "1",
+      id: "large-order",
+      title: "Large order",
+      actors: [],
+      steps,
+    };
+
+    const ordered = getOrderedStepIds(large);
+    expect(ordered).toHaveLength(count + 2);
+    expect(ordered.slice(0, 3)).toEqual(["start", "task-0", "task-1"]);
+    expect(ordered.at(-1)).toBe("end");
+  });
+
   it("keeps orphan records visible after the graph", () => {
     const document = {
       ...exampleSop,
@@ -509,13 +542,24 @@ describe("findCycleStepIds", () => {
       id: "large-cycle-check",
       title: "Large graph",
       actors: [],
-      steps: Array.from({ length: count }, (_, index) => ({
-        id: `step-${index}`,
-        type: index === count - 1 ? ("end" as const) : ("task" as const),
-        name: `Step ${index}`,
-        actorIds: [],
-        next: `step-${index + 1}`,
-      })),
+      steps: Array.from(
+        { length: count },
+        (_, index): SOPDocument["steps"][number] =>
+          index === count - 1
+            ? {
+                id: `step-${index}`,
+                type: "end",
+                name: `Step ${index}`,
+                actorIds: [],
+              }
+            : {
+                id: `step-${index}`,
+                type: "task",
+                name: `Step ${index}`,
+                actorIds: [],
+                next: `step-${index + 1}`,
+              },
+      ),
     };
 
     expect(findCycleStepIds(large)).toEqual(new Set());

@@ -72,8 +72,9 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
   function visitComponent(rootId: StepId): void {
     const ordered: StepId[] = [];
     const terminal: StepId[] = [];
+    const frames: { id: StepId; nextIds: StepId[]; nextIndex: number }[] = [];
 
-    function visit(id: StepId): void {
+    function enter(id: StepId): void {
       if (visited.has(id) || visiting.has(id)) return;
 
       const step = steps.get(id);
@@ -85,19 +86,33 @@ export function getOrderedStepIds(document: SOPDocument): StepId[] {
         ordered.push(id);
       }
 
-      for (const nextId of getNextStepIds(step)) {
-        visit(nextId);
-      }
-
-      visiting.delete(id);
-      visited.add(id);
-
-      if (step.type === "end") {
-        terminal.push(id);
-      }
+      frames.push({ id, nextIds: getNextStepIds(step), nextIndex: 0 });
     }
 
-    visit(rootId);
+    enter(rootId);
+
+    while (frames.length > 0) {
+      const frame = frames[frames.length - 1];
+      if (!frame) break;
+
+      const nextId = frame.nextIds[frame.nextIndex];
+
+      if (nextId !== undefined) {
+        frame.nextIndex += 1;
+        enter(nextId);
+        continue;
+      }
+
+      visiting.delete(frame.id);
+      visited.add(frame.id);
+
+      if (steps.get(frame.id)?.type === "end") {
+        terminal.push(frame.id);
+      }
+
+      frames.pop();
+    }
+
     result.push(...ordered, ...terminal);
   }
 
