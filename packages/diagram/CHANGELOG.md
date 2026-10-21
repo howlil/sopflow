@@ -1,5 +1,12 @@
 # @sopflow/diagram
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [2dc8cfe]
+  - @sopflow/core@0.2.1
+
 ## 0.2.2
 
 ### Patch Changes

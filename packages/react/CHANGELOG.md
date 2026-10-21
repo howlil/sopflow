@@ -1,5 +1,13 @@
 # @sopflow/react
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [2dc8cfe]
+  - @sopflow/core@0.2.1
+  - @sopflow/diagram@0.2.3
+
 ## 0.3.5
 
 ### Patch Changes

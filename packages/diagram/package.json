@@ -1,6 +1,6 @@
 {
   "name": "@sopflow/diagram",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Deterministic layout engine for Sopflow workflow diagrams",
   "type": "module",
   "sideEffects": false,
