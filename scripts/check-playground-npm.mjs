@@ -1,7 +1,15 @@
+import { execFileSync } from "node:child_process";
 #!/usr/bin/env node
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+const integrity = execFileSync(
+  "npm",
+  ["view", "@sopflow/react@0.3.5", "dist.integrity"],
+  { encoding: "utf8" },
+).trim();
+console.log(`Registry integrity for React 0.3.5: ${integrity}`);
 
 const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const appDir = join(repo, "apps", "playground");
