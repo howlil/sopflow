@@ -465,6 +465,62 @@ describe("findCycleStepIds", () => {
     expect(cycles.has("prepare-document")).toBe(true);
   });
 
+  it("includes every member of overlapping cycles that share a node", () => {
+    const document: SOPDocument = {
+      schemaVersion: "1",
+      id: "overlapping-cycles",
+      title: "Overlapping cycles",
+      actors: [],
+      steps: [
+        { id: "start", type: "start", name: "Start", actorIds: [], next: "a" },
+        { id: "a", type: "decision", name: "A", actorIds: [], yes: "b", no: "d" },
+        { id: "b", type: "task", name: "B", actorIds: [], next: "c" },
+        { id: "d", type: "task", name: "D", actorIds: [], next: "c" },
+        { id: "c", type: "decision", name: "C", actorIds: [], yes: "a", no: "end" },
+        { id: "end", type: "end", name: "End", actorIds: [] },
+      ],
+    };
+
+    expect(findCycleStepIds(document)).toEqual(new Set(["a", "b", "c", "d"]));
+  });
+
+  it("handles cycles in disconnected components and a graph with no cycles", () => {
+    const disconnected: SOPDocument = {
+      schemaVersion: "1",
+      id: "disconnected",
+      title: "Disconnected",
+      actors: [],
+      steps: [
+        { id: "start", type: "start", name: "Start", actorIds: [], next: "end" },
+        { id: "end", type: "end", name: "End", actorIds: [] },
+        { id: "x", type: "task", name: "X", actorIds: [], next: "y" },
+        { id: "y", type: "task", name: "Y", actorIds: [], next: "x" },
+      ],
+    };
+
+    expect(findCycleStepIds(disconnected)).toEqual(new Set(["x", "y"]));
+    expect(findCycleStepIds(exampleSop).has("start")).toBe(false);
+  });
+
+  it("processes a large linear graph without recursive call-stack overflow", () => {
+    const count = 12000;
+    const large: SOPDocument = {
+      schemaVersion: "1",
+      id: "large-cycle-check",
+      title: "Large graph",
+      actors: [],
+      steps: Array.from({ length: count }, (_, index) => ({
+        id: `step-${index}`,
+        type: index === count - 1 ? ("end" as const) : ("task" as const),
+        name: `Step ${index}`,
+        actorIds: [],
+        next: `step-${index + 1}`,
+      })),
+    };
+
+    expect(findCycleStepIds(large)).toEqual(new Set());
+  });
+
   it("does not mark a non-cycle predecessor as part of the loop", () => {
     const document: SOPDocument = {
       ...exampleSop,
