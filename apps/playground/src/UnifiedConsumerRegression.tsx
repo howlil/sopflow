@@ -138,7 +138,9 @@ async function exercise(): Promise<void> {
     "Issue navigation did not focus the correction field",
   );
   requireState(
-    root.querySelector('[data-sopflow-header-fields][data-sopflow-highlight-field="lawBasis"]'),
+    root.querySelector(
+      '[data-sopflow-header-fields][data-sopflow-highlight-field="lawBasis"]',
+    ),
     "Header issue did not highlight Dasar hukum",
   );
 
