@@ -49,9 +49,28 @@ async function exercise(): Promise<void> {
 
   button(root, "Steps").click();
   await tick();
+  const stepEditor = root.querySelector<HTMLElement>(
+    '[aria-label="Navigasi langkah SOP"]',
+  );
+  requireState(stepEditor, "Steps mode failed");
+  const stepHeading = Array.from(stepEditor.querySelectorAll("h2")).find(
+    (heading) => heading.textContent?.trim() === "Edit langkah / prosedur",
+  );
+  const addStepAction = button(stepEditor, "Tambah langkah");
   requireState(
-    root.querySelector('[aria-label="Navigasi langkah SOP"]'),
-    "Steps mode failed",
+    stepHeading?.parentElement?.parentElement?.contains(addStepAction),
+    "Tambah langkah must be aligned with the procedure heading",
+  );
+  const addActorAction = button(root, "Tambah pelaksana");
+  requireState(
+    addActorAction.textContent?.trim() === "Tambah",
+    "Actor Add action is not compact",
+  );
+  const actorDelete = button(root, "Hapus Staff");
+  requireState(
+    actorDelete.textContent?.trim() === "" &&
+      actorDelete.querySelector("svg") !== null,
+    "Actor Delete must use the accessible icon-only action",
   );
   button(root, "Flowchart").click();
   await tick();
@@ -117,6 +136,31 @@ async function exercise(): Promise<void> {
       "data-sopflow-header-field",
     ) === "lawBasis",
     "Issue navigation did not focus the correction field",
+  );
+  requireState(
+    root.querySelector('[data-sopflow-header-fields][data-sopflow-highlight-field="lawBasis"]'),
+    "Header issue did not highlight Dasar hukum",
+  );
+
+  const inputIssue = Array.from(
+    root.querySelectorAll<HTMLButtonElement>("[data-sopflow-problems] button"),
+  ).find((item) =>
+    item.textContent?.includes("Langkah 2: kelengkapan wajib diisi"),
+  );
+  requireState(inputIssue, "The missing step-input issue was not reported");
+  inputIssue.click();
+  await tick();
+  const activeRow = Array.from(
+    root.querySelectorAll<HTMLElement>('[data-sopflow-step-id="submit"]'),
+  ).find((node) => node.dataset.sopflowHighlightField === "input");
+  requireState(activeRow, "Validation did not highlight the correct SOP step");
+  const brokenInput = activeRow.querySelector<HTMLTextAreaElement>(
+    '[data-sopflow-step-field="input"] textarea',
+  );
+  requireState(
+    brokenInput?.getAttribute("aria-invalid") === "true" &&
+      document.activeElement === brokenInput,
+    "Validation issue did not focus the highlighted Kelengkapan field",
   );
 
   const stage = root.querySelector<HTMLElement>("[data-sopflow-unified-stage]");

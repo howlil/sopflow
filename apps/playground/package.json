@@ -15,7 +15,7 @@
     "react-dom": "^19.3.0",
     "@sopflow/core": "npmjs:0.2.0",
     "@sopflow/diagram": "npmjs:0.2.2",
-    "@sopflow/react": "npmjs:0.3.4"
+    "@sopflow/react": "npmjs:0.3.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
