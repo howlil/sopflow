@@ -112,5 +112,7 @@ export const validationHeader: SopHeaderValue = {
 /** ?scenario=issues is for manual testing; ?unified-regression for CI. */
 export function isValidationScenario(search: string): boolean {
   const params = new URLSearchParams(search);
-  return params.has("unified-regression") || params.get("scenario") === "issues";
+  return (
+    params.has("unified-regression") || params.get("scenario") === "issues"
+  );
 }

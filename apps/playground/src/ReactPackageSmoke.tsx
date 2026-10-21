@@ -21,7 +21,9 @@ export function ReactPackageSmoke() {
       : demoDocument,
   );
   const [header, setHeader] = useState(() =>
-    isValidationScenario(window.location.search) ? validationHeader : demoHeader,
+    isValidationScenario(window.location.search)
+      ? validationHeader
+      : demoHeader,
   );
 
   const diagramError = useMemo(() => {
