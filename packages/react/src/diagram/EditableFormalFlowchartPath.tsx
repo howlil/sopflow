@@ -245,12 +245,14 @@ export function EditableFormalFlowchartPath({
     const session = dragSessionRef.current;
     if (!session || session.pointerId !== event.pointerId) return;
 
+    // End the transaction before releasing capture: lostpointercapture must
+    // not re-enter finishDrag and process the same gesture twice.
+    dragSessionRef.current = null;
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {
       // Pointer capture is optional in test DOMs.
     }
-    dragSessionRef.current = null;
     clearPendingPreview();
     setPreview(null);
     if (cancelled || !session.moved || !session.latestPreview) return;
