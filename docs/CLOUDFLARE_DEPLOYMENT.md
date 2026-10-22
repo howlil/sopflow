@@ -1,83 +1,92 @@
-# SOPFlow Cloudflare Pages deployment
+# SOPFlow — one Cloudflare Pages project
 
-SOPFlow is a pnpm monorepo (packageManager `pnpm@11.21.0`). Deploy **two separate Cloudflare Pages projects** from the same GitHub repository `howlil/sopflow`, production branch `master`.
+Production origin: **https://sopflow.howlil.site**
 
-## Architecture
+| Route | Application | Implementation |
+| --- | --- | --- |
+| `/` | Marketing / landing page | `apps/landing` HTML and CSS |
+| `/playground/` | Interactive editor | `apps/playground` React + Vite |
+| `/playground/?scenario=issues` | Validation fixture | The same playground app |
+| `/playground` | Redirect to `/playground/` | Cloudflare Pages `_redirects` |
 
-| Surface | Cloudflare Pages project | Source | Production output |
-| --- | --- | --- | --- |
-| Marketing site | `sopflow-landing` | `apps/landing` | `apps/landing/dist` |
-| npm consumer playground | `sopflow-playground` | `apps/playground` | `apps/playground/dist` |
+The two apps are built into **one static output tree**, published as **one** Cloudflare Pages project. No additional hostname, reverse proxy, Workers, API service, or database is needed for the present client-side demo.
 
-The landing links to `https://sopflow-playground.pages.dev/` by default. When a custom playground hostname is ready, configure the landing project environment variable `SOPFLOW_PLAYGROUND_URL=https://playground.YOUR_DOMAIN` and redeploy the landing project.
+## Build from the pnpm workspace root
 
-Do not replace published `@sopflow/*` registry dependencies in `apps/playground` with local workspace aliases. The playground is an integration consumer of pinned npm releases.
-
-## Before deploying
-
-From the monorepo root:
+The repository uses `pnpm@11.21.0`, Node.js 22, and the root `pnpm-lock.yaml`.
 
 ```sh
 corepack enable
 pnpm install --frozen-lockfile
-node scripts/build-landing.mjs
-pnpm --filter playground build
+node scripts/build-site.mjs
 ```
 
-The two artifact directories above must contain `index.html`.
+The builder runs `scripts/build-landing.mjs` and compiles the existing npm-consumer playground with `vite build --base=/playground/`. It then copies the playground production bundle to `apps/landing/dist/playground` and writes the redirect file.
 
-## Create Pages project 1: landing
+Output:
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git.
-2. Authorize GitHub access to `howlil/sopflow` if not already connected.
-3. Project name: `sopflow-landing`. Production branch: **master**.
-4. Root directory: **repository root** (leave blank or `/`).
-5. Framework preset: **None**.
-6. Build command: `node scripts/build-landing.mjs`.
-7. Build output directory: `apps/landing/dist`.
-8. Build environment: `NODE_VERSION=22`.
-9. Optional build-time env: `SOPFLOW_PLAYGROUND_URL=https://sopflow-playground.pages.dev/` (this is the default; replace with a custom hostname after DNS setup).
+```text
+apps/landing/dist/
+├── index.html
+├── styles.css
+├── brand/logo.svg
+├── playground/
+│   ├── index.html
+│   └── assets/
+└── _redirects
+```
 
-The landing uses plain HTML/CSS to stay independent from the published packages; its build script copies the canonical brand SVG from `assets/brand/logo.svg`.
+The landing CTA is `/playground/`, a **relative-origin path**. This works on the custom domain, the `*.pages.dev` hostname, and branch preview URLs. There is no environment variable for a second domain.
 
-## Create Pages project 2: playground
+Standalone `pnpm --filter playground build` is deliberately unchanged (default Vite base `/`) because existing npm-consumer browser regression checks still expect that behavior.
 
-1. Same flow, same `howlil/sopflow` repository.
-2. Project name: `sopflow-playground`. Production branch: **master**.
-3. Root directory: **repository root** (important: `pnpm-lock.yaml` and `pnpm-workspace.yaml` are here).
-4. Framework preset: **None** (explicit commands below).
-5. Build command: `pnpm install --frozen-lockfile && pnpm --filter playground build`.
-6. Build output directory: `apps/playground/dist`.
-7. Build environment variables: `NODE_VERSION=22`, `PNPM_VERSION=11.21.0`.
+Do not alter the playground `@sopflow/*` npm dependencies to workspace aliases. Published versions and `pnpm-lock.yaml` remain the release boundary.
 
-Cloudflare Pages may automatically run the dependency installation phase before the build command. Explicit `pnpm install --frozen-lockfile` ensures the root lockfile is used even if auto-install behavior differs.
+## Configure Cloudflare Pages
 
-The default playground runs from `/`. Its existing demo scenarios use query params like `/?scenario=issues`, not client-side path routes; no custom redirects are needed for these URLs.
+Go to Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to GitHub. Choose repository `howlil/sopflow`.
 
-## Domain routing
+| Field | Value |
+| --- | --- |
+| Project name | `sopflow` (if available) |
+| Git repository | `howlil/sopflow` |
+| Production branch | `master` |
+| Root directory | Repository root (`/`) |
+| Framework preset | None |
+| Build command | `pnpm install --frozen-lockfile && node scripts/build-site.mjs` |
+| Build output directory | `apps/landing/dist` |
+| `NODE_VERSION` | `22` |
+| `PNPM_VERSION` | `11.21.0` |
 
-Initially:
-- `sopflow-landing.pages.dev` → landing.
-- `sopflow-playground.pages.dev` → editor.
+Cloudflare may install dependencies automatically before invoking the build command; the explicit frozen-lockfile installation is intentional and ensures reproducibility from the monorepo root.
 
-With a custom Cloudflare-managed domain:
-- `YOUR_DOMAIN` → landing Pages project.
-- `playground.YOUR_DOMAIN` → playground Pages project.
+After the Pages project builds, test both routes using its assigned `*.pages.dev` hostname, including the validation fixture. Then configure the custom domain **`sopflow.howlil.site`** in this **same** Pages project's Custom domains settings. The `howlil.site` DNS zone must be present in Cloudflare, and there must not be a conflicting DNS record or custom domain binding.
 
-Add the relevant custom domains from each Pages project's **Custom domains** tab, and let Cloudflare configure or validate DNS. Update `SOPFLOW_PLAYGROUND_URL` in the landing Pages project and redeploy it once the playground subdomain resolves.
+Cloudflare manages/validates the appropriate DNS record during custom-domain setup. Do not create a second Pages project for `playground`; path routing comes from the output file layout.
 
-These domain strings are examples; they do not imply DNS or a domain has been purchased/configured.
+## Verification
 
-## Release and state contracts
+- `/` serves the landing and all three CTAs link to `/playground/`.
+- `/styles.css` and `/brand/logo.svg` return the landing assets.
+- `/playground` redirects to `/playground/`.
+- `/playground/` loads without missing CSS, JS, or module chunks.
+- `/playground/?scenario=issues` loads the intended validation fixture.
+- Browser print / diagrams / Problems navigation still work.
+- Existing npm-consumer checks remain green.
 
-- Changes under `packages/*` do **not** change the deployed playground until the updated packages are published to npm, `apps/playground/package.json` pins are updated, and `pnpm-lock.yaml` is updated.
-- The playground is not a hosted document management service. Its editor's current React state is in browser memory, so edits can be lost on refresh or navigation. Adding persistence requires a separate product decision; this deployment doesn't imply database/storage is configured.
-- Cloudflare Pages creates preview deployments on non-production branches; merge after verification.
-- Optional: configure build watch paths so landing and playground do not rebuild on unrelated commits. Include shared root dependency files in playground's watch rules.
+Cloudflare Pages follows the filesystem for static path routing; no SPA rewrite is required because the playground uses query-parameter fixtures rather than nested client routes.
+
+## State, release, and CI boundaries
+
+The current playground holds edited document and header values in React memory. **Refresh/navigation can discard edits**; this deployment does not add persistent storage.
+
+Updates to `packages/*` do not reach the deployed playground until packages are published to npm and pinned registry versions and lockfile are updated.
+
+A new Pages project must first be connected through the Cloudflare dashboard. This document and GitHub branch **do not imply production deployment has occurred**.
 
 ## Troubleshooting
 
-- `ERR_PNPM_*` / lockfile mismatch: confirm root directory is repository root, env `PNPM_VERSION=11.21.0`, and the committed lockfile matches `package.json`.
-- Build succeeded but Pages returns 404: confirm each project's build output directory path is relative to the configured repository root and contains `index.html`.
-- New library change not visible: publish npm packages, bump playground pins and lockfile, then redeploy.
-- Landing CTA points to the wrong place: check `SOPFLOW_PLAYGROUND_URL` and rebuild landing (environment variable is build-time, not runtime).
+- `ERR_PNPM_*`: confirm root directory is the repository root, Node 22/pnpm 11, and lockfile committed.
+- Blank playground / missing assets: use the composite builder, not `pnpm --filter playground build` alone. Inspect generated `playground/index.html` for references starting with `/playground/assets/`.
+- 404 on `/playground/`: verify `apps/landing/dist/playground/index.html` exists at deployment.
+- Landing leads to wrong URL: rebuild using `scripts/build-site.mjs` and verify the exact link `href="/playground/"`.
