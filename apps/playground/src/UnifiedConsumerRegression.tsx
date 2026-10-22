@@ -168,7 +168,11 @@ async function exercise(): Promise<void> {
   );
   // Production CSS/layout may complete after the Steps view transition.
   // Require eventual focus on the specific visible field, not a fixed timer.
-  for (let attempt = 0; attempt < 8 && document.activeElement !== brokenInput; attempt++) {
+  for (
+    let attempt = 0;
+    attempt < 8 && document.activeElement !== brokenInput;
+    attempt++
+  ) {
     await tick();
   }
   requireState(
