@@ -39,6 +39,7 @@ if (!landingHtml.includes('href="/playground/"') || landingHtml.includes("__PLAY
 
 // Normalize /playground to /playground/ while preserving query strings.
 writeFileSync(join(output, "_redirects"), "/playground /playground/ 301\n");
+run(process.execPath, ["scripts/verify-site.mjs"]);
 console.log("Cloudflare Pages artifact ready:", output);
 console.log("  / → landing");
 console.log("  /playground/ → React playground");
