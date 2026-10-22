@@ -8,7 +8,7 @@ LOG="${OUT}/sopflow-pages-preview.log"
 PROFILE="${OUT}/sopflow-pages-chrome"
 DOM="${OUT}/sopflow-pages-dom.html"
 
-pnpm exec wrangler pages dev apps/landing/dist --ip 127.0.0.1 --port "${PORT}" >"${LOG}" 2>&1 &
+npx --yes wrangler@4 pages dev apps/landing/dist --ip 127.0.0.1 --port "${PORT}" >"${LOG}" 2>&1 &
 SERVER_PID=$!
 cleanup() {
   kill "${SERVER_PID}" >/dev/null 2>&1 || true
