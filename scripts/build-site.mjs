@@ -11,6 +11,9 @@ function run(command, args) {
   execFileSync(command, args, { cwd: root, stdio: "inherit", shell: process.platform === "win32" });
 }
 
+// Remove stale outputs from previous combined builds before assembling this artifact.
+rmSync(output, { recursive: true, force: true });
+
 // Keep ordinary playground dev / CI builds at their original root path.
 // Only the combined production build uses Vite's /playground/ public base.
 run(process.execPath, ["scripts/build-landing.mjs"]);
