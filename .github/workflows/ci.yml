@@ -39,6 +39,15 @@ jobs:
       - name: Check workspace
         run: pnpm check
 
+      - name: Build Cloudflare Pages landing + nested playground
+        run: |
+          node scripts/build-site.mjs
+          test -f apps/landing/dist/index.html
+          test -f apps/landing/dist/playground/index.html
+          test -f apps/landing/dist/_redirects
+          grep -q 'href="/playground/"' apps/landing/dist/index.html
+          grep -q '/playground/assets/' apps/landing/dist/playground/index.html
+
       - name: Pack publishable packages
         run: |
           mkdir -p /tmp/sopflow-packs
