@@ -36,7 +36,7 @@ apps/landing/dist/
 └── _redirects
 ```
 
-The landing CTA is `/playground/`, a **relative-origin path**. This works on the custom domain, the `*.pages.dev` hostname, and branch preview URLs. There is no environment variable for a second domain.
+The composite builder runs `scripts/verify-site.mjs` and fails before publishing if required files, same-origin links, 404 behavior prerequisites, or referenced playground assets are absent. CI additionally tests the artifact using `wrangler pages dev` and Chromium.\n\nThe landing CTA is `/playground/`, a **relative-origin path**. This works on the custom domain, the `*.pages.dev` hostname, and branch preview URLs. There is no environment variable for a second domain.
 
 Standalone `pnpm --filter playground build` is deliberately unchanged (default Vite base `/`) because existing npm-consumer browser regression checks still expect that behavior.
 
@@ -68,7 +68,7 @@ Cloudflare manages/validates the appropriate DNS record during custom-domain set
 
 - `/` serves the landing and all three CTAs link to `/playground/`.
 - `/styles.css` and `/brand/logo.svg` return the landing assets.
-- `/playground` redirects to `/playground/`.
+- `/playground` redirects to `/playground/`.\n- Unknown routes, including `/playground/missing`, return HTTP 404 instead of landing HTML.
 - `/playground/` loads without missing CSS, JS, or module chunks.
 - `/playground/?scenario=issues` loads the intended validation fixture.
 - Browser print / diagrams / Problems navigation still work.
@@ -78,11 +78,11 @@ Cloudflare Pages follows the filesystem for static path routing; no SPA rewrite 
 
 ## State, release, and CI boundaries
 
-The current playground holds edited document and header values in React memory. **Refresh/navigation can discard edits**; this deployment does not add persistent storage.
+The public landing explicitly warns that edits are not saved across refresh or leaving the playground. The current playground holds edited document and header values in React memory. **Refresh/navigation can discard edits**; this deployment does not add persistent storage.
 
 Updates to `packages/*` do not reach the deployed playground until packages are published to npm and pinned registry versions and lockfile are updated.
 
-A new Pages project must first be connected through the Cloudflare dashboard. This document and GitHub branch **do not imply production deployment has occurred**.
+Production release gate: preview Pages routes must be checked before merge; after automatic production deployment verify both HTTP routes on the custom hostname, and use the last known-good deployment if the production smoke fails.\n\nA new Pages project must first be connected through the Cloudflare dashboard. This document and GitHub branch **do not imply production deployment has occurred**.
 
 ## Troubleshooting
 
