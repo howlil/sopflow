@@ -20,6 +20,8 @@ describe("EditableFormalFlowchartPath", () => {
           path={path}
           connectionId="edge-1"
           selected
+          markerId="normal-marker"
+          selectedMarkerId="selected-marker"
           sourceSide="bottom"
           targetSide="top"
           sourceRect={{ left: 80, top: 60, width: 40, height: 40 }}
@@ -36,8 +38,24 @@ describe("EditableFormalFlowchartPath", () => {
     expect(
       container.querySelectorAll("[data-sopflow-route-waypoint]"),
     ).toHaveLength(3);
+    const endpoints = container.querySelectorAll(
+      "[data-sopflow-route-endpoint]",
+    );
+    expect(endpoints).toHaveLength(2);
     expect(
-      container.querySelectorAll("[data-sopflow-route-endpoint]"),
+      [...endpoints].every(
+        (endpoint) => endpoint.tagName.toLowerCase() === "rect",
+      ),
+    ).toBe(true);
+    expect(
+      container
+        .querySelector(
+          '[data-sopflow-editable-route="edge-1"] path[data-selected="true"]',
+        )
+        ?.getAttribute("marker-end"),
+    ).toBe("url(#selected-marker)");
+    expect(
+      container.querySelectorAll('[data-sopflow-editable-route="edge-1"] path'),
     ).toHaveLength(2);
   });
 
@@ -202,6 +220,120 @@ describe("EditableFormalFlowchartPath", () => {
     fireEvent.pointerCancel(source, { pointerId: 7 });
     expect(
       container.querySelector("[data-sopflow-route-anchor-highlight]"),
+    ).toBeNull();
+  });
+
+  it("cancels a dragged route on Escape without changing persisted diagram config", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
+    const onChange = vi.fn();
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Manual route Escape cancel test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          onSelect={() => undefined}
+          onChange={onChange}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const hitPath = screen.getByRole("button", { name: "Edit route edge-1" });
+    if (!svg) throw new Error("Missing SVG");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(hitPath, {
+      pointerId: 1,
+      button: 0,
+      clientX: 140,
+      clientY: 140,
+    });
+    fireEvent.pointerMove(hitPath, {
+      pointerId: 1,
+      clientX: 160,
+      clientY: 140,
+    });
+    fireEvent.keyDown(hitPath, { key: "Escape" });
+    fireEvent.pointerUp(hitPath, { pointerId: 1 });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
+    ).toBeNull();
+  });
+
+  it("discards a drag after losing pointer capture", () => {
+    vi.stubGlobal("PointerEvent", MouseEvent);
+    const onChange = vi.fn();
+    const { container } = render(
+      <svg viewBox="0 0 400 300">
+        <title>Manual route lost capture test</title>
+        <EditableFormalFlowchartPath
+          path={path}
+          connectionId="edge-1"
+          selected
+          sourceSide="right"
+          targetSide="top"
+          onSelect={() => undefined}
+          onChange={onChange}
+        />
+      </svg>,
+    );
+    const svg = container.querySelector("svg");
+    const hitPath = screen.getByRole("button", { name: "Edit route edge-1" });
+    if (!svg) throw new Error("Missing SVG");
+    Object.defineProperty(svg, "viewBox", {
+      configurable: true,
+      value: { baseVal: { x: 0, y: 0, width: 400, height: 300 } },
+    });
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 400,
+      bottom: 300,
+      width: 400,
+      height: 300,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerDown(hitPath, {
+      pointerId: 1,
+      button: 0,
+      clientX: 140,
+      clientY: 140,
+    });
+    fireEvent.pointerMove(hitPath, {
+      pointerId: 1,
+      clientX: 160,
+      clientY: 140,
+    });
+    const group = container.querySelector("[data-sopflow-editable-route]");
+    if (!group) throw new Error("Missing stable route capture group");
+    fireEvent.lostPointerCapture(group, { pointerId: 1 });
+    fireEvent.pointerUp(hitPath, { pointerId: 1 });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      container.querySelector("[data-sopflow-manual-route-preview]"),
     ).toBeNull();
   });
 

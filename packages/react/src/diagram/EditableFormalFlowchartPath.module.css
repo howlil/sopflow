@@ -13,18 +13,23 @@
   cursor: grab;
 }
 
-.previewPath {
+.visiblePath {
   fill: none;
-  stroke: var(--sopflow-selected-border);
+  stroke: var(--sopflow-color-document-border);
   stroke-width: 2;
-  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
 
+.visiblePath[data-selected="true"] {
+  stroke: var(--sopflow-route-selected);
+  stroke-width: 3;
+}
+
 .waypoint {
   fill: var(--sopflow-color-surface);
-  stroke: var(--sopflow-selected-border);
+  stroke: var(--sopflow-route-selected);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 
@@ -33,13 +38,18 @@
   touch-action: none;
 }
 
+.waypoint:hover,
+.waypoint:focus-visible {
+  fill: var(--sopflow-route-handle-active);
+}
+
 .waypoint:active {
   cursor: grabbing;
 }
 
 .endpoint {
   fill: var(--sopflow-color-surface);
-  stroke: var(--sopflow-color-text);
+  stroke: var(--sopflow-route-selected);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 
@@ -48,12 +58,17 @@
   touch-action: none;
 }
 
+.endpoint:hover,
+.endpoint:focus-visible {
+  fill: var(--sopflow-route-handle-active);
+}
+
 .endpoint:active {
   cursor: grabbing;
 }
 
 .anchorHighlight {
-  stroke: var(--sopflow-selected-border);
+  stroke: var(--sopflow-route-selected);
   stroke-width: 4;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;

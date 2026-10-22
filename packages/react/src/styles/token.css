@@ -11,6 +11,8 @@
 
   --sopflow-color-selected: #f0f0f0;
   --sopflow-color-selected-border: #171717;
+  --sopflow-route-selected: #2563eb;
+  --sopflow-route-handle-active: #dbeafe;
 
   --sopflow-color-error: #dc2626;
   --sopflow-color-error-surface: #fef2f2;

@@ -31,6 +31,8 @@ export interface EditableFormalFlowchartPathProps {
   path: readonly DiagramPoint[];
   connectionId: string;
   selected: boolean;
+  markerId?: string;
+  selectedMarkerId?: string;
   sourceSide?: FormalFlowchartSide;
   targetSide?: FormalFlowchartSide;
   sourceRect?: FormalFlowchartRect;
@@ -63,6 +65,8 @@ export function EditableFormalFlowchartPath({
   path,
   connectionId,
   selected,
+  markerId,
+  selectedMarkerId,
   sourceSide = "bottom",
   targetSide = "top",
   sourceRect,
@@ -152,8 +156,11 @@ export function EditableFormalFlowchartPath({
     event.stopPropagation();
     onSelect(connectionId);
 
+    // Capture on the stable group, not a waypoint which may be replaced during preview.
     try {
-      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget
+        .closest<SVGGElement>("[data-sopflow-editable-route]")
+        ?.setPointerCapture(event.pointerId);
     } catch {
       // Pointer capture is best-effort in browsers and absent in some test DOMs.
     }
@@ -238,12 +245,14 @@ export function EditableFormalFlowchartPath({
     const session = dragSessionRef.current;
     if (!session || session.pointerId !== event.pointerId) return;
 
+    // End the transaction before releasing capture: lostpointercapture must
+    // not re-enter finishDrag and process the same gesture twice.
+    dragSessionRef.current = null;
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {
       // Pointer capture is optional in test DOMs.
     }
-    dragSessionRef.current = null;
     clearPendingPreview();
     setPreview(null);
     if (cancelled || !session.moved || !session.latestPreview) return;
@@ -257,6 +266,23 @@ export function EditableFormalFlowchartPath({
       return;
     }
     emitPath(next.path, next.sourceSide, next.targetSide);
+  };
+
+  const handleRouteKeyDown = (event: ReactKeyboardEvent<SVGGElement>) => {
+    const session = dragSessionRef.current;
+    if (event.key !== "Escape" || !session) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragSessionRef.current = null;
+    clearPendingPreview();
+    setPreview(null);
+    try {
+      if (event.currentTarget.hasPointerCapture?.(session.pointerId)) {
+        event.currentTarget.releasePointerCapture(session.pointerId);
+      }
+    } catch {
+      // Capture may have been released by the browser already.
+    }
   };
 
   const handlePathClick = (event: ReactMouseEvent<SVGPathElement>) => {
@@ -364,9 +390,7 @@ export function EditableFormalFlowchartPath({
     );
   };
 
-  const handleEndpointKeyDown = (
-    event: ReactKeyboardEvent<SVGCircleElement>,
-  ) => {
+  const handleEndpointKeyDown = (event: ReactKeyboardEvent<SVGRectElement>) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     event.stopPropagation();
@@ -393,7 +417,15 @@ export function EditableFormalFlowchartPath({
       : null;
 
   return (
-    <g data-sopflow-editable-route={connectionId}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: SVG group owns the delegated pointer capture for interactive child controls.
+    <g
+      data-sopflow-editable-route={connectionId}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishDrag}
+      onPointerCancel={(event) => finishDrag(event, true)}
+      onLostPointerCapture={(event) => finishDrag(event, true)}
+      onKeyDown={handleRouteKeyDown}
+    >
       {highlight ? (
         <line
           {...highlight}
@@ -401,6 +433,19 @@ export function EditableFormalFlowchartPath({
           data-sopflow-route-anchor-highlight={highlightSide}
         />
       ) : null}
+      <path
+        d={pointsToPath(displayPath)}
+        className={styles.visiblePath}
+        data-selected={selected || undefined}
+        data-sopflow-manual-route-preview={preview ? true : undefined}
+        markerEnd={
+          selected && selectedMarkerId
+            ? `url(#${selectedMarkerId})`
+            : markerId
+              ? `url(#${markerId})`
+              : undefined
+        }
+      />
       {/* biome-ignore lint/a11y/useSemanticElements: SVG geometry is the interactive route hit target. */}
       <path
         d={pointsToPath(displayPath)}
@@ -413,25 +458,16 @@ export function EditableFormalFlowchartPath({
         onKeyDown={handlePathKeyDown}
         onClick={handlePathClick}
         onPointerDown={handlePathPointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={(event) => finishDrag(event, true)}
       />
-
-      {preview ? (
-        <path
-          d={pointsToPath(displayPath)}
-          data-sopflow-manual-route-preview
-          className={styles.previewPath}
-        />
-      ) : null}
 
       {selected && sourceRect && displayPath[0] ? (
         // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
-        <circle
-          cx={displayPath[0].x}
-          cy={displayPath[0].y}
-          r={7}
+        <rect
+          x={displayPath[0].x - 6}
+          y={displayPath[0].y - 6}
+          width={12}
+          height={12}
+          rx={1}
           className={styles.endpoint}
           data-sopflow-route-endpoint="source"
           role="button"
@@ -439,18 +475,17 @@ export function EditableFormalFlowchartPath({
           aria-label={`Source endpoint route ${connectionId}`}
           onKeyDown={handleEndpointKeyDown}
           onPointerDown={(event) => startDrag(event, "source-endpoint", 0)}
-          onPointerMove={handlePointerMove}
-          onPointerUp={finishDrag}
-          onPointerCancel={(event) => finishDrag(event, true)}
         />
       ) : null}
 
       {selected && targetRect && displayPath.at(-1) ? (
         // biome-ignore lint/a11y/useSemanticElements: SVG endpoint handles are directly focusable controls.
-        <circle
-          cx={displayPath.at(-1)?.x}
-          cy={displayPath.at(-1)?.y}
-          r={7}
+        <rect
+          x={(displayPath.at(-1)?.x ?? 0) - 6}
+          y={(displayPath.at(-1)?.y ?? 0) - 6}
+          width={12}
+          height={12}
+          rx={1}
           className={styles.endpoint}
           data-sopflow-route-endpoint="target"
           role="button"
@@ -460,9 +495,6 @@ export function EditableFormalFlowchartPath({
           onPointerDown={(event) =>
             startDrag(event, "target-endpoint", displayPath.length - 1)
           }
-          onPointerMove={handlePointerMove}
-          onPointerUp={finishDrag}
-          onPointerCancel={(event) => finishDrag(event, true)}
         />
       ) : null}
 
@@ -484,9 +516,6 @@ export function EditableFormalFlowchartPath({
                   aria-label={`Waypoint ${index} route ${connectionId}`}
                   onKeyDown={(event) => handleWaypointKeyDown(index, event)}
                   onPointerDown={(event) => startDrag(event, "waypoint", index)}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={finishDrag}
-                  onPointerCancel={(event) => finishDrag(event, true)}
                   onContextMenu={(event) =>
                     handleWaypointContextMenu(index, event)
                   }

@@ -17,6 +17,7 @@ import {
 } from "@sopflow/diagram";
 import {
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -260,6 +261,16 @@ export function SopProcedurePage({
 
   const editingEnabled = manualEditing && onDiagramConfigChange !== undefined;
 
+  useEffect(() => {
+    if (
+      selectedConnectionId &&
+      (!editingEnabled ||
+        !routedEdges.some((edge) => edge.id === selectedConnectionId))
+    ) {
+      setSelectedConnectionId(null);
+    }
+  }, [editingEnabled, routedEdges, selectedConnectionId]);
+
   const setShapeRef = useCallback(
     (shapeId: string, element: HTMLSpanElement | null) => {
       if (element) shapeRefs.current.set(shapeId, element);
@@ -275,6 +286,14 @@ export function SopProcedurePage({
       data-sopflow-procedure-page={page.pageIndex}
       data-manual-editing={editingEnabled || undefined}
       aria-label={`Prosedur SOP halaman ${page.pageIndex + 1}`}
+      onPointerDown={(event) => {
+        if (
+          editingEnabled &&
+          !(event.target as Element).closest("[data-sopflow-editable-route]")
+        ) {
+          setSelectedConnectionId(null);
+        }
+      }}
     >
       <OpcStrip
         endpoints={page.topOpc}
@@ -449,6 +468,20 @@ export function SopProcedurePage({
             >
               <path d="M0,0 L8,4 L0,8 L2,4 Z" className={styles.arrowHead} />
             </marker>
+            <marker
+              id={`${markerId}-selected`}
+              markerWidth="10"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path
+                d="M0,0 L8,4 L0,8 L2,4 Z"
+                className={styles.selectedArrowHead}
+              />
+            </marker>
           </defs>
 
           {routedEdges.map((edge) => {
@@ -485,6 +518,8 @@ export function SopProcedurePage({
                     path={edge.points}
                     connectionId={edge.id}
                     selected={selected}
+                    markerId={markerId}
+                    selectedMarkerId={`${markerId}-selected`}
                     sourceSide={edge.sourceSide}
                     targetSide={edge.targetSide}
                     {...(sourceShape ? { sourceRect: sourceShape.rect } : {})}
@@ -503,7 +538,7 @@ export function SopProcedurePage({
                 <path
                   d={pointsToPath(edge.points)}
                   className={styles.edge}
-                  data-selected={selected || undefined}
+                  data-static-route
                   markerEnd={`url(#${markerId})`}
                 />
                 {edge.label && edge.labelPosition ? (

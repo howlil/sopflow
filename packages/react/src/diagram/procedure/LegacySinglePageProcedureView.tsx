@@ -17,6 +17,7 @@ import {
 } from "@sopflow/diagram";
 import {
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -80,6 +81,16 @@ export function LegacySinglePageSopProcedureView({
       geometry ? routeProcedureEdges(model, geometry, routeOverrides) : [],
     [geometry, model, routeOverrides],
   );
+
+  useEffect(() => {
+    if (
+      selectedConnectionId &&
+      (!manualEditing ||
+        !routedEdges.some((edge) => edge.id === selectedConnectionId))
+    ) {
+      setSelectedConnectionId(null);
+    }
+  }, [manualEditing, routedEdges, selectedConnectionId]);
 
   const routeSegmentsById = useMemo(
     () =>
@@ -391,6 +402,15 @@ export function LegacySinglePageSopProcedureView({
       data-sopflow-procedure-view
       data-manual-editing={manualEditing || undefined}
       aria-label="Prosedur SOP"
+      onPointerDown={(event) => {
+        if (
+          manualEditing &&
+          !(event.target as Element).closest("[data-sopflow-editable-route]") &&
+          !(event.target as Element).closest("[data-editable='true']")
+        ) {
+          setSelectedConnectionId(null);
+        }
+      }}
     >
       <table className={styles.table}>
         <colgroup>
@@ -558,6 +578,20 @@ export function LegacySinglePageSopProcedureView({
             >
               <path d="M0,0 L8,4 L0,8 L2,4 Z" className={styles.arrowHead} />
             </marker>
+            <marker
+              id={`${markerId}-selected`}
+              markerWidth="10"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path
+                d="M0,0 L8,4 L0,8 L2,4 Z"
+                className={styles.selectedArrowHead}
+              />
+            </marker>
           </defs>
 
           {routedEdges.map((edge) => {
@@ -599,6 +633,8 @@ export function LegacySinglePageSopProcedureView({
                           path={edge.points}
                           connectionId={edge.id}
                           selected={selected}
+                          markerId={markerId}
+                          selectedMarkerId={`${markerId}-selected`}
                           sourceSide={edge.sourceSide ?? "bottom"}
                           targetSide={edge.targetSide ?? "top"}
                           {...(sourceShape
@@ -624,6 +660,9 @@ export function LegacySinglePageSopProcedureView({
                   d={pointsToPath(edge.points)}
                   className={styles.edge}
                   data-selected={selected || undefined}
+                  data-static-route={
+                    (manualEditing && !usesLegacyManualPaths) || undefined
+                  }
                   data-editable={
                     manualEditing && usesLegacyManualPaths ? true : undefined
                   }
@@ -648,9 +687,7 @@ export function LegacySinglePageSopProcedureView({
                     {edge.label}
                   </text>
                 ) : null}
-                {manualEditing &&
-                selected &&
-                (usesLegacyManualPaths || edge.points.length < 4) ? (
+                {manualEditing && selected && usesLegacyManualPaths ? (
                   <circle
                     cx={edge.handlePosition.x}
                     cy={edge.handlePosition.y}
