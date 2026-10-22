@@ -14,5 +14,6 @@ if (!html.includes("__PLAYGROUND_URL__")) {
 mkdirSync(join(output, "brand"), { recursive: true });
 writeFileSync(join(output, "index.html"), html.replaceAll("__PLAYGROUND_URL__", playgroundPath));
 copyFileSync(join(source, "styles.css"), join(output, "styles.css"));
+copyFileSync(join(source, "404.html"), join(output, "404.html"));
 copyFileSync(join(root, "assets", "brand", "logo.svg"), join(output, "brand", "logo.svg"));
 console.log("Built landing:", output, "→", playgroundPath);
