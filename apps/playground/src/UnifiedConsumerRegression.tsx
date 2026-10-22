@@ -166,10 +166,15 @@ async function exercise(): Promise<void> {
   const brokenInput = activeRow.querySelector<HTMLTextAreaElement>(
     '[data-sopflow-step-field="input"] textarea',
   );
+  // Production CSS/layout may complete after the Steps view transition.
+  // Require eventual focus on the specific visible field, not a fixed timer.
+  for (let attempt = 0; attempt < 8 && document.activeElement !== brokenInput; attempt++) {
+    await tick();
+  }
   requireState(
     brokenInput?.getAttribute("aria-invalid") === "true" &&
       document.activeElement === brokenInput,
-    `Validation issue did not focus the visible Kelengkapan field: invalid=${brokenInput?.getAttribute("aria-invalid")}, active=${document.activeElement?.getAttribute("aria-label")}, candidates=${highlightedRows.length}, visible=${highlightedRows.filter((node) => node.getClientRects().length > 0).length}`,
+    `Validation issue did not focus the visible Kelengkapan field: invalid=${brokenInput?.getAttribute("aria-invalid")}, actual=${document.activeElement?.outerHTML.slice(0, 260)}, candidates=${highlightedRows.length}, visible=${highlightedRows.filter((node) => node.getClientRects().length > 0).length}`,
   );
 
   const stage = root.querySelector<HTMLElement>("[data-sopflow-unified-stage]");
