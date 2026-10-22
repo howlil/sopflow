@@ -152,9 +152,16 @@ async function exercise(): Promise<void> {
   requireState(inputIssue, "The missing step-input issue was not reported");
   inputIssue.click();
   await tick();
-  const activeRow = Array.from(
-    root.querySelectorAll<HTMLElement>('[data-sopflow-step-id="submit"]'),
-  ).find((node) => node.dataset.sopflowHighlightField === "input");
+  const highlightedRows = Array.from(
+    root.querySelectorAll<HTMLElement>(
+      '[data-sopflow-step-id="submit"][data-sopflow-highlight-field="input"]',
+    ),
+  );
+  // The editor may render responsive duplicates; navigation focuses the
+  // visible row, not necessarily the first matching DOM node.
+  const activeRow =
+    highlightedRows.find((node) => node.getClientRects().length > 0) ??
+    highlightedRows[0];
   requireState(activeRow, "Validation did not highlight the correct SOP step");
   const brokenInput = activeRow.querySelector<HTMLTextAreaElement>(
     '[data-sopflow-step-field="input"] textarea',
@@ -162,7 +169,7 @@ async function exercise(): Promise<void> {
   requireState(
     brokenInput?.getAttribute("aria-invalid") === "true" &&
       document.activeElement === brokenInput,
-    "Validation issue did not focus the highlighted Kelengkapan field",
+    `Validation issue did not focus the visible Kelengkapan field: invalid=${brokenInput?.getAttribute("aria-invalid")}, active=${document.activeElement?.getAttribute("aria-label")}, candidates=${highlightedRows.length}, visible=${highlightedRows.filter((node) => node.getClientRects().length > 0).length}`,
   );
 
   const stage = root.querySelector<HTMLElement>("[data-sopflow-unified-stage]");
