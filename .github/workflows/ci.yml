@@ -48,6 +48,9 @@ jobs:
           grep -q 'href="/playground/"' apps/landing/dist/index.html
           grep -q '/playground/assets/' apps/landing/dist/playground/index.html
 
+      - name: Browser smoke of production Pages routing
+        run: bash scripts/check-site-browser.sh
+
       - name: Pack publishable packages
         run: |
           mkdir -p /tmp/sopflow-packs
