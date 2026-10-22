@@ -50,27 +50,32 @@ REDIRECT="$(curl --silent --output /dev/null --write-out '%{http_code} %{redirec
 
 CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
 [[ -n "${CHROME}" ]] || { echo "::error::Chrome/Chromium is required"; exit 1; }
-"${CHROME}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
-  --user-data-dir="${PROFILE}" --virtual-time-budget=12000 \
-  --dump-dom "${BASE}/playground/" >"${DOM}"
-grep -q 'data-sopflow-ready="true"' "${DOM}" || {
-  echo "::error::Production subpath failed to mount ready SOP"
-  cat "${LOG}"
-  exit 1
-}
 
-"${CHROME}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
-  --user-data-dir="${PROFILE}-regression" --virtual-time-budget=16000 \
-  --dump-dom "${BASE}/playground/?unified-regression=1" >"${DOM}"
-grep -q 'data-unified-consumer-regression="pass"' "${DOM}" || {
-  echo "::error::Production subpath unified regression failed"
-  grep -o 'id="unified-consumer-regression-status"[^>]*>[^<]*' "${DOM}" || true
-  if ! grep -q 'id="unified-consumer-regression-status"' "${DOM}"; then
-    echo "::error::Regression output was not mounted in the DOM"
-    head -c 3000 "${DOM}" || true
-  fi
-  cat "${LOG}"
-  exit 1
-}
+for variant in desktop mobile; do
+  if [[ "${variant}" == "desktop" ]]; then WIDTH=1365; else WIDTH=520; fi
+
+  "${CHROME}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+    --window-size="${WIDTH},900" --user-data-dir="${PROFILE}-${variant}" \
+    --virtual-time-budget=12000 --dump-dom "${BASE}/playground/" >"${DOM}"
+  grep -q 'data-sopflow-ready="true"' "${DOM}" || {
+    echo "::error::Production subpath failed to mount ready SOP on ${variant}"
+    cat "${LOG}"
+    exit 1
+  }
+
+  "${CHROME}" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+    --window-size="${WIDTH},900" --user-data-dir="${PROFILE}-${variant}-regression" \
+    --virtual-time-budget=16000 --dump-dom "${BASE}/playground/?unified-regression=1" >"${DOM}"
+  grep -q 'data-unified-consumer-regression="pass"' "${DOM}" || {
+    echo "::error::Production subpath unified regression failed on ${variant}"
+    grep -o 'id="unified-consumer-regression-status"[^>]*>[^<]*' "${DOM}" || true
+    if ! grep -q 'id="unified-consumer-regression-status"' "${DOM}"; then
+      echo "::error::Regression output was not mounted in the DOM"
+      head -c 3000 "${DOM}" || true
+    fi
+    cat "${LOG}"
+    exit 1
+  }
+done
 
 echo "Cloudflare Pages composite routing and published consumer browser smoke passed"
