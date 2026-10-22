@@ -84,12 +84,48 @@ export function inspectPacks(packDir, rootDir = process.cwd()) {
   });
 }
 
-async function isPublished(name, version) {
+// npm's public registry can have intermittent long-tail network latency on
+// GitHub-hosted runners. A timeout is not proof that a version is unpublished:
+// retry bounded reads rather than risking a duplicate immutable publication.
+const REGISTRY_LOOKUP_TIMEOUT_MS = 60_000;
+const REGISTRY_LOOKUP_MAX_ATTEMPTS = 4;
+
+export async function isPublished(
+  name,
+  version,
+  fetcher = fetch,
+  delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+) {
   const url = "https://registry.npmjs.org/" + encodeURIComponent(name) + "/" + encodeURIComponent(version);
-  const response = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
-  if (response.status === 404) return false;
-  if (response.ok) return true;
-  throw new Error("npm registry lookup failed for " + name + "@" + version + ": HTTP " + response.status);
+  for (let attempt = 1; attempt <= REGISTRY_LOOKUP_MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await fetcher(url, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(REGISTRY_LOOKUP_TIMEOUT_MS),
+      });
+      if (response.status === 404) return false;
+      if (response.ok) return true;
+      const error = new Error("npm registry lookup failed for " + name + "@" + version + ": HTTP " + response.status);
+      // Authentication or other non-rate-limit 4xx errors are not transient.
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw Object.assign(error, { permanent: true });
+      }
+      throw error;
+    } catch (error) {
+      if (error?.permanent || attempt === REGISTRY_LOOKUP_MAX_ATTEMPTS) {
+        throw new Error(
+          "npm registry lookup failed after " + attempt + " attempt(s) for " + name + "@" + version,
+          { cause: error },
+        );
+      }
+      console.warn(
+        "Retrying npm registry lookup for " + name + "@" + version +
+          " (" + attempt + "/" + REGISTRY_LOOKUP_MAX_ATTEMPTS + "): " + String(error?.message ?? error),
+      );
+      await delay(Math.min(1000 * 2 ** (attempt - 1), 8000));
+    }
+  }
+  throw new Error("Unreachable npm registry lookup state");
 }
 
 function assertNoPendingChangesets(rootDir) {

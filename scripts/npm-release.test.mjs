@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { PACKAGES, packedFileName, inspectPacks } from "./npm-release.mjs";
+import { PACKAGES, packedFileName, inspectPacks, isPublished } from "./npm-release.mjs";
 
 function fixture(overrides = {}) {
   const root = mkdtempSync(join(tmpdir(), "sopflow-release-test-"));
@@ -69,4 +69,51 @@ test("only three public packages remain in the release inventory", () => {
     "@sopflow/diagram",
     "@sopflow/react",
   ]);
+});
+
+test("registry lookup retries temporary timeouts before confirming an existing version", async () => {
+  let calls = 0;
+  const waits = [];
+  const result = await isPublished("@sopflow/react", "0.3.7", async () => {
+    calls++;
+    if (calls < 3) throw new DOMException("Timed out", "TimeoutError");
+    return { status: 200, ok: true };
+  }, async (ms) => { waits.push(ms); });
+  assert.equal(result, true);
+  assert.equal(calls, 3);
+  assert.deepEqual(waits, [1000, 2000]);
+});
+
+test("registry lookup treats 404 as unpublished without retry", async () => {
+  let calls = 0;
+  const result = await isPublished("@sopflow/react", "0.3.7", async () => {
+    calls++;
+    return { status: 404, ok: false };
+  }, async () => { throw new Error("Unexpected retry"); });
+  assert.equal(result, false);
+  assert.equal(calls, 1);
+});
+
+test("registry lookup fails fast on permanent 403 without retry", async () => {
+  let calls = 0;
+  await assert.rejects(
+    () => isPublished("@sopflow/react", "0.3.7", async () => {
+      calls++;
+      return { status: 403, ok: false };
+    }, async () => { throw new Error("Unexpected retry"); }),
+    /lookup failed after 1 attempt/,
+  );
+  assert.equal(calls, 1);
+});
+
+test("registry lookup eventually reports repeated timeout rather than attempting blind publication", async () => {
+  let calls = 0;
+  await assert.rejects(
+    () => isPublished("@sopflow/react", "0.3.7", async () => {
+      calls++;
+      throw new DOMException("Timed out", "TimeoutError");
+    }, async () => {}),
+    /lookup failed after 4 attempt/,
+  );
+  assert.equal(calls, 4);
 });
