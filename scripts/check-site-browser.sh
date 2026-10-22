@@ -64,6 +64,11 @@ grep -q 'data-sopflow-ready="true"' "${DOM}" || {
   --dump-dom "${BASE}/playground/?unified-regression=1" >"${DOM}"
 grep -q 'data-unified-consumer-regression="pass"' "${DOM}" || {
   echo "::error::Production subpath unified regression failed"
+  grep -o 'id="unified-consumer-regression-status"[^>]*>[^<]*' "${DOM}" || true
+  if ! grep -q 'id="unified-consumer-regression-status"' "${DOM}"; then
+    echo "::error::Regression output was not mounted in the DOM"
+    head -c 3000 "${DOM}" || true
+  fi
   cat "${LOG}"
   exit 1
 }
