@@ -36,6 +36,7 @@ check_code() {
   fi
 }
 check_code "/" 200
+check_code "/design-tokens.css" 200
 check_code "/playground/" 200
 check_code "/playground/?scenario=issues" 200
 check_code "/totally-missing-route" 404
