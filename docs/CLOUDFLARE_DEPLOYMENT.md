@@ -2,6 +2,8 @@
 
 Production origin: **https://sopflow.howlil.site**
 
+Cloudflare Pages project: **`sopflow`**, provisioned under the connected account. The Pages-provided deployment hostname is **https://sopflow.pages.dev**. Domain activation is verified separately after a successful build and deployment.
+
 | Route | Application | Implementation |
 | --- | --- | --- |
 | `/` | Marketing / landing page | `apps/landing` HTML and CSS |
