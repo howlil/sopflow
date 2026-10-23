@@ -14,8 +14,18 @@ function required(relativePath) {
 
 const landing = required("index.html");
 const playground = required("playground/index.html");
-required("404.html");
-required("styles.css");
+const notFound = required("404.html");
+const landingStyles = required("styles.css");
+const tokens = required("design-tokens.css");
+const canonicalTokens = readFileSync(join(root, "packages", "react", "src", "styles", "token.css"), "utf8");
+assert.equal(tokens, canonicalTokens, "Landing design tokens must match the React design system");
+for (const [route, html] of [["/", landing], ["/404", notFound]]) {
+  assert.match(html, /<body data-sopflow-root>/, `${route}: missing design token scope`);
+  assert.match(html, /href="\/design-tokens\.css"/, `${route}: missing design token file`);
+}
+assert.match(landingStyles, /var\(--sopflow-color-text\)/);
+assert.match(landingStyles, /var\(--sopflow-color-border\)/);
+assert.doesNotMatch(landingStyles, /#(?:1e6bff|101627|ecf3ff|e4eaf1)\b/i, "Legacy blue/navy palette leaked into landing");
 required("brand/logo.svg");
 const redirects = required("_redirects");
 
