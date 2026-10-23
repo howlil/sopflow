@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Explore SOPFlow, a TypeScript toolkit for modeling, editing and visualizing Standard Operating Procedures. Try the interactive browser playground." />
+    <meta property="og:title" content="SOPFlow — Visual SOP workflows" />
+    <meta property="og:description" content="Explore the open-source SOP editor and reusable workflow toolkit." />
+    <meta property="og:type" content="website" />
+    <title>SOPFlow — Visual SOP workflows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="site-header">
+        <a class="logo-link" href="/" aria-label="SOPFlow home">
+          <img class="brand" src="/brand/logo.svg" alt="SOPFlow" />
+        </a>
+        <nav aria-label="Main navigation" class="site-nav">
+          <a class="nav-link" href="#features">Features</a>
+          <a class="nav-link" href="https://github.com/howlil/sopflow" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="action-link action-link-dark action-link-small" href="__PLAYGROUND_URL__">Open Playground <span aria-hidden="true">↗</span></a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> OPEN-SOURCE SOP TOOLKIT</p>
+            <h1 id="hero-title">Make every process <span>clear to follow.</span></h1>
+            <p class="hero-subtitle">Model, edit, and validate Standard Operating Procedures with an approachable visual editor, powered by reusable TypeScript packages.</p>
+            <div class="hero-actions">
+              <a class="action-link action-link-primary" href="__PLAYGROUND_URL__">Try Interactive Playground <span aria-hidden="true">↗</span></a>
+              <a class="action-link action-link-outline" href="https://github.com/howlil/sopflow" target="_blank" rel="noopener noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
+            </div>
+            <p class="hero-note">Explore a sample SOP. No account required. Changes are not saved after you leave or refresh.</p>
+          </div>
+
+          <figure class="preview" aria-label="Illustrative example process, not the live editor">
+            <div class="preview-top"><span class="preview-title">Example workflow</span><span class="preview-state"><span aria-hidden="true">●</span> SOP ready</span></div>
+            <div class="preview-content">
+              <div class="process-step"><span class="process-icon">01</span><div><strong>Submit request</strong><small>Staff · Input</small></div><span class="process-type">Start</span></div>
+              <span class="flow-connector" aria-hidden="true"></span>
+              <div class="process-step"><span class="process-icon">02</span><div><strong>Review &amp; decide</strong><small>Manager · Decision</small></div><span class="process-type">Decision</span></div>
+              <span class="flow-connector" aria-hidden="true"></span>
+              <div class="process-step"><span class="process-icon">03</span><div><strong>Archive document</strong><small>Admin · Output</small></div><span class="process-type">Complete</span></div>
+            </div>
+            <figcaption class="preview-bottom"><span>Illustrative process</span><a href="__PLAYGROUND_URL__">Explore editor <span aria-hidden="true">→</span></a></figcaption>
+          </figure>
+        </section>
+
+        <section class="features" id="features" aria-label="SOPFlow capabilities">
+          <div class="feature"><div class="feature-marker">01 / EDIT</div><h2>Structured SOP editing</h2><p>Work with the SOP header, process steps, and properties in one document-focused workspace.</p></div>
+          <div class="feature"><div class="feature-marker">02 / VISUALIZE</div><h2>Workflow visualization</h2><p>See how steps connect through SOP diagrams, with layout and routing handled by the diagram package.</p></div>
+          <div class="feature"><div class="feature-marker">03 / VALIDATE</div><h2>Actionable validation</h2><p>Inspect document-readiness issues and navigate to fields that need attention.</p></div>
+        </section>
+      </main>
+      <footer class="site-footer"><span>© SOPFlow. Built with reusable TypeScript packages.</span><a href="https://github.com/howlil/sopflow" target="_blank" rel="noopener noreferrer">Source code ↗</a></footer>
+    </div>
+  </body>
+</html>

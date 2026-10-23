@@ -67,3 +67,19 @@ package pack tests, or browser screenshots.
 The BPMN manual-route repair function is still located in the formal
 flowchart internals. Its extraction requires geometric parity tests and
 is deliberately tracked separately rather than moving code by name alone.
+
+## Public website and Pages deployment
+
+Marketing and public integration proof share the origin `https://sopflow.howlil.site`, but retain separate source ownership: `apps/landing` owns marketing/SEO/links and `apps/playground` owns the React npm-consumer demonstration. Neither is an application persistence service.
+
+`GitHub revision + pinned registry versions → scripts/build-site.mjs → apps/landing/dist → Cloudflare Pages → browser`. The composite builder includes landing HTML/CSS, branded root `404.html`, and Vite-generated playground files under `/playground/`. The playground's **production-only** Vite base is `/playground/`; its standalone npm-consumer CI/dev build keeps `/`.
+
+Deployment invariants:
+- Landing links remain same-origin at `/playground/`.
+- A composite build includes **both** applications from the same revision and references only existing production assets.
+- Unknown routes return 404, not the landing fallback; `/playground` canonicalizes to `/playground/`.
+- Playground imports pinned published `@sopflow/*` packages rather than workspace source aliases.
+- Playground demo document/header are caller-owned React state and are not durable after navigation/refresh.
+- CI validates the artifact and runs route/browser smoke on the composite output; production custom-domain status remains a separate deployment verification step.
+
+See [single-origin deployment ADR](decisions/single-origin-pages.md) and [Cloudflare deployment instructions](../docs/CLOUDFLARE_DEPLOYMENT.md).
