@@ -46,9 +46,9 @@ Standalone `pnpm --filter playground build` is deliberately unchanged (default V
 
 Do not alter the playground `@sopflow/*` npm dependencies to workspace aliases. Published versions and `pnpm-lock.yaml` remain the release boundary.
 
-## Configure Cloudflare Pages
+## Cloudflare Pages configuration (provisioned)
 
-Go to Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to GitHub. Choose repository `howlil/sopflow`.
+The Git-integrated Pages project `sopflow` has been provisioned and is connected to `howlil/sopflow`. To inspect or recreate it, use Cloudflare Dashboard → Workers & Pages → `sopflow`.
 
 | Field | Value |
 | --- | --- |
@@ -64,9 +64,9 @@ Go to Cloudflare dashboard → Workers & Pages → Create → Pages → Connect 
 
 Cloudflare may install dependencies automatically before invoking the build command; the explicit frozen-lockfile installation is intentional and ensures reproducibility from the monorepo root.
 
-After the Pages project builds, test both routes using its assigned `*.pages.dev` hostname, including the validation fixture. Then configure the custom domain **`sopflow.howlil.site`** in this **same** Pages project's Custom domains settings. The `howlil.site` DNS zone must be present in Cloudflare, and there must not be a conflicting DNS record or custom domain binding.
+The Cloudflare Pages custom domain **`sopflow.howlil.site`** has been registered and validated under the active `howlil.site` zone. The proxied Cloudflare DNS record is `CNAME sopflow.howlil.site → sopflow.pages.dev`. Test both routes on Pages and the custom hostname after production deployment.
 
-Cloudflare manages/validates the appropriate DNS record during custom-domain setup. Do not create a second Pages project for `playground`; path routing comes from the output file layout.
+Do not create a second Pages project for `playground`; path routing comes from the output file layout.
 
 ## Verification
 
@@ -89,7 +89,7 @@ Updates to `packages/*` do not reach the deployed playground until packages are 
 
 Production release gate: preview Pages routes must be checked before merge; after automatic production deployment verify both HTTP routes on the custom hostname, and use the last known-good deployment if the production smoke fails.
 
-A new Pages project must first be connected through the Cloudflare dashboard. This document and GitHub branch **do not imply production deployment has occurred**.
+The Git-connected Pages project is configured with production branch `master` and automatic deployments enabled. Confirm each production deployment's success and its deployed Git commit via Cloudflare before treating the website as up to date.
 
 ## Troubleshooting
 
