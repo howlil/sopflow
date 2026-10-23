@@ -31,6 +31,7 @@ Output:
 apps/landing/dist/
 ├── index.html
 ├── styles.css
+├── design-tokens.css
 ├── brand/logo.svg
 ├── playground/
 │   ├── index.html
@@ -39,6 +40,8 @@ apps/landing/dist/
 ```
 
 The composite builder runs `scripts/verify-site.mjs` and fails before publishing if required files, same-origin links, 404 behavior prerequisites, or referenced playground assets are absent. CI additionally tests the artifact using `wrangler pages dev` and Chromium.
+
+The landing consumes **the exact canonical** `packages/react/src/styles/token.css` values copied into `/design-tokens.css`. Its body is scoped with `data-sopflow-root`; no unscoped Arc foundation CSS or React runtime is loaded in the static page. This keeps landing backgrounds, typography, borders, and CTA states aligned with the primary SOPFlow workbench. The existing blue logo is retained as a brand asset, separate from semantic interface colors.
 
 The landing CTA is `/playground/`, a **relative-origin path**. This works on the custom domain, the `*.pages.dev` hostname, and branch preview URLs. There is no environment variable for a second domain.
 
@@ -71,7 +74,7 @@ Do not create a second Pages project for `playground`; path routing comes from t
 ## Verification
 
 - `/` serves the landing and all three CTAs link to `/playground/`.
-- `/styles.css` and `/brand/logo.svg` return the landing assets.
+- `/styles.css`, `/design-tokens.css`, and `/brand/logo.svg` return the landing assets and canonical tokens match the React source.
 - `/playground` redirects to `/playground/`.
 - Unknown routes, including `/playground/missing`, return HTTP 404 instead of landing HTML.
 - `/playground/` loads without missing CSS, JS, or module chunks.
