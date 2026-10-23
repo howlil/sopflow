@@ -12,7 +12,7 @@ npx --yes wrangler@4 pages dev apps/landing/dist --ip 127.0.0.1 --port "${PORT}"
 SERVER_PID=$!
 cleanup() {
   kill "${SERVER_PID}" >/dev/null 2>&1 || true
-  rm -rf "${PROFILE}" >/dev/null 2>&1 || true
+  rm -rf "${PROFILE}" "${PROFILE}-desktop" "${PROFILE}-mobile" "${PROFILE}-desktop-regression" "${PROFILE}-mobile-regression" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
