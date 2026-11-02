@@ -30,12 +30,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Temporary lockfile-resolution proof; removed after the generated lock is committed.
-      - name: Resolve Astro 6 dependency lock
-        run: |
-          pnpm --filter sopflow-landing add -D astro@6.4.8 --save-exact
-          node -e "const b=require('fs').readFileSync('pnpm-lock.yaml').toString('base64'); console.log('LOCKFILE_BEGIN'); for(let i=0;i<b.length;i+=3500) console.log(b.slice(i,i+3500)); console.log('LOCKFILE_END')"
-
       - name: Assert registry packages are installed, not workspace linked
         run: node scripts/check-playground-npm.mjs
 
