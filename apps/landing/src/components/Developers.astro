@@ -1,0 +1,13 @@
+---
+// Source-faithful SOPFlow V6 marketing surface.
+---
+<section class="developer" id="developers"><div class="wrap developer-layout"><div><h2 class="section-title">A workflow toolkit.<br/>Your application.</h2><p class="section-description">SOPFlow provides framework-neutral modeling and diagram packages, plus an embeddable React workspace. Your application owns persistence, authentication, and approval logic.</p><a class="dev-link" href="https://github.com/howlil/sopflow" rel="noopener noreferrer" target="_blank">Explore the package architecture <svg class="icon"><use href="#ic-arrow"></use></svg></a></div><div class="code-surface"><div class="code-head"><span>Example · React integration</span><button class="copy-code" id="copyCode" type="button">Copy</button></div><pre id="codeSnippet"><span class="code-blue">import</span> &#123; SopUnifiedWorkspace &#125; <span class="code-blue">from</span> <span class="code-green">'@sopflow/react'</span>;
+<span class="code-blue">import</span> <span class="code-green">'@sopflow/react/styles.css'</span>;
+
+<span class="code-gray">// Your application owns persistence.</span>
+&lt;<span class="code-green">SopUnifiedWorkspace</span>
+  value=&#123;document&#125;
+  onChange=&#123;setDocument&#125;
+  header=&#123;header&#125;
+  onHeaderChange=&#123;setHeader&#125;
+/&gt;</pre></div></div></section>

@@ -1,0 +1,13 @@
+{
+  "name": "sopflow-landing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/sync-landing-assets.mjs && pnpm exec astro dev",
+    "build": "node ../../scripts/sync-landing-assets.mjs && pnpm exec astro build"
+  },
+  "devDependencies": {
+    "astro": "6.4.8"
+  }
+}
