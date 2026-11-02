@@ -21,7 +21,10 @@ const canonicalTokens = readFileSync(join(root, "packages", "react", "src", "sty
 assert.equal(tokens, canonicalTokens, "Landing design tokens must match the React design system");
 for (const [route, html] of [["/", landing], ["/404", notFound]]) {
   assert.match(html, /<body data-sopflow-root>/, `${route}: missing design token scope`);
-  assert.match(html, /href="\/design-tokens\.css"/, `${route}: missing design token file`);
+  const inline = html.match(/<style data-sopflow-inline>([\s\S]*?)<\/style>/);
+  assert.ok(inline, route + ": missing inlined canonical CSS");
+  assert.equal(inline[1], tokens + "\n" + landingStyles, route + ": CSS differs from build assets");
+  assert.doesNotMatch(html, /<link\b[^>]*href="\/(?:styles|design-tokens)\.css"/, route + ": external CSS dependency remains");
 }
 assert.match(landingStyles, /var\(--sopflow-color-text\)/);
 assert.match(landingStyles, /var\(--sopflow-color-border\)/);
