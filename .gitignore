@@ -2,3 +2,7 @@ node_modules
 dist
 coverage
 *.tgz
+
+# Generated from canonical assets for Astro dev and build.
+/apps/landing/public/design-tokens.css
+/apps/landing/public/brand/logo.svg

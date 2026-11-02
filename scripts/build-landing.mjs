@@ -1,21 +1,12 @@
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const source = join(root, "apps", "landing");
-const output = join(source, "dist");
-const playgroundPath = "/playground/";
-
-const html = readFileSync(join(source, "index.html"), "utf8");
-if (!html.includes("__PLAYGROUND_URL__")) {
-  throw new Error("Landing playground link placeholder is missing.");
-}
-mkdirSync(join(output, "brand"), { recursive: true });
-writeFileSync(join(output, "index.html"), html.replaceAll("__PLAYGROUND_URL__", playgroundPath));
-copyFileSync(join(source, "styles.css"), join(output, "styles.css"));
-// Reuse @sopflow/react semantic CSS variables; never maintain a second landing palette.
-copyFileSync(join(root, "packages", "react", "src", "styles", "token.css"), join(output, "design-tokens.css"));
-copyFileSync(join(source, "404.html"), join(output, "404.html"));
-copyFileSync(join(root, "assets", "brand", "logo.svg"), join(output, "brand", "logo.svg"));
-console.log("Built landing:", output, "→", playgroundPath);
+// Astro renders the static landing into apps/landing/dist.
+// The React playground remains a separate Vite build under /playground/.
+execFileSync("pnpm", ["--filter", "sopflow-landing", "build"], {
+  cwd: root,
+  stdio: "inherit",
+  shell: process.platform === "win32",
+});
+console.log("Built Astro landing: apps/landing/dist → /playground/");

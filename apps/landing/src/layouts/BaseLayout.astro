@@ -1,0 +1,28 @@
+---
+import SiteHeader from "../components/SiteHeader.astro";
+import IconSprite from "../components/IconSprite.astro";
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/design-tokens.css" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script is:inline defer src="/landing.js"></script>
+  </head>
+  <body data-sopflow-root>
+    <div class="scroll-indicator" aria-hidden="true"></div>
+    <IconSprite />
+    <SiteHeader />
+    <slot />
+  </body>
+</html>

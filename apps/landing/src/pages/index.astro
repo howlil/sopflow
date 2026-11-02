@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import WorkspacePreview from "../components/WorkspacePreview.astro";
+import Features from "../components/Features.astro";
+import Developers from "../components/Developers.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+<BaseLayout title="SOPFlow — Structured SOPs, visualized." description="SOPFlow turns procedure steps into connected SOP workflows, diagrams, and validated documents. Open-source TypeScript toolkit with a React playground.">
+  <main id="top">
+    <Hero />
+    <WorkspacePreview />
+    <Features />
+    <Developers />
+  </main>
+  <SiteFooter />
+</BaseLayout>
