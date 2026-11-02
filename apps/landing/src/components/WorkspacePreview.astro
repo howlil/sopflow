@@ -1,56 +1,30 @@
 ---
-// Source-faithful SOPFlow V6 marketing surface.
+/** Use the real, same-origin React playground rather than a second diagram implementation. */
 ---
-<section aria-label="SOPFlow product workspace preview" class="preview-section wrap" id="preview">
-<div class="preview-intro">
-<div><h2>Explore the SOP workspace.</h2><p>The same document, shown as a formal flowchart, BPMN, or editable steps.</p></div>
-</div>
-<div class="preview-window-scene"><div class="product-window" id="productWindow">
-<div class="workbench" data-problems="false" id="workbench">
-<div class="wb-topbar">
-<div class="wb-identity"><span class="wb-logo"><svg class="icon"><use href="#ic-workflow"></use></svg></span><strong class="wb-brand">SOPFlow</strong><span class="wb-sep"></span><span class="wb-doctitle">Pengajuan dan Verifikasi Dokumen</span></div>
-<div class="wb-center"><div aria-label="Tampilan SOP" class="wb-switcher" role="group"><button aria-pressed="true" class="wb-tab" data-active="true" data-tab="flowchart"><svg class="icon"><use href="#ic-git"></use></svg>Flowchart</button><button aria-pressed="false" class="wb-tab" data-active="false" data-tab="bpmn"><svg class="icon"><use href="#ic-workflow"></use></svg>BPMN</button><button aria-pressed="false" class="wb-tab" data-active="false" data-tab="steps"><svg class="icon"><use href="#ic-list"></use></svg>Steps</button></div><button aria-label="Edit routes" aria-pressed="false" class="wb-icon-button" id="routesToggle" title="Illustrative route edit state"><svg class="icon"><use href="#ic-pen"></use></svg></button></div>
-<div class="wb-actions"><div aria-label="Zoom" class="wb-zoom" role="group"><button aria-label="Zoom out" id="zoomMinus"><svg class="icon" style="width:14px;height:14px"><use href="#ic-minus"></use></svg></button><button aria-label="Fit to viewport" class="zoom-label" id="zoomFit">Fit</button><button aria-label="Zoom in" id="zoomPlus"><svg class="icon" style="width:14px;height:14px"><use href="#ic-plus"></use></svg></button></div><button aria-label="Toggle Properties" aria-pressed="true" class="wb-icon-button" data-active="true" id="inspectorToggle" title="Toggle Properties"><svg class="icon"><use href="#ic-panel"></use></svg></button></div>
-</div>
-<div class="wb-stage">
-<div class="wb-canvas-pane" id="canvasPane"><div class="wb-page-holder"><div class="wb-page-zoom" id="pageZoom">
-<article aria-label="Example SOP A4 landscape document" class="wb-a4">
-<table aria-label="SOP header" class="a4-header">
-<colgroup><col style="width:45%"/><col style="width:26%"/><col style="width:2%"/><col style="width:27%"/></colgroup>
-<tbody>
-<tr><th class="a4-header-logo" rowspan="6"><div class="logo-placeholder">LOGO</div><b>SOPFlow Demo</b></th><td class="meta-label">NOMOR SOP</td><td class="meta-colon">:</td><td>SOP/DEMO/001</td></tr>
-<tr><td class="meta-label">TANGGAL PEMBUATAN</td><td class="meta-colon">:</td><td>21/10/2026</td></tr>
-<tr><td class="meta-label">TANGGAL REVISI</td><td class="meta-colon">:</td><td>21/10/2026</td></tr>
-<tr><td class="meta-label">TANGGAL EFEKTIF</td><td class="meta-colon">:</td><td>21/10/2026</td></tr>
-<tr><td class="meta-label">DISAHKAN OLEH</td><td class="meta-colon">:</td><td><div class="a4-sign">Manajer Administrasi<span> </span><span>Penanggung Jawab SOP<br/><em>NIP. —</em></span></div></td></tr>
-<tr><td class="meta-label">SOP</td><td class="meta-colon">:</td><td class="header-strong">Pengajuan dan Verifikasi Dokumen</td></tr>
-<tr><td class="sec-title">DASAR HUKUM</td><td class="sec-title" colspan="3">KUALIFIKASI PELAKSANAAN</td></tr>
-<tr><td class="sec-value"><ol><li>Kebijakan internal pengelolaan dokumen (data contoh)</li></ol></td><td class="sec-value" colspan="3"><ol><li>Petugas administrasi dan verifikator dokumen</li></ol></td></tr>
-<tr><td class="sec-title">KETERKAITAN DENGAN SOP LAIN</td><td class="sec-title" colspan="3">PERALATAN / PERLENGKAPAN</td></tr>
-<tr><td class="sec-value"><ol><li>Prosedur pengarsipan dokumen</li></ol></td><td class="sec-value" colspan="3"><ol><li>Formulir pengajuan, komputer, dan penyimpanan arsip</li></ol></td></tr>
-<tr><td class="sec-title">PERINGATAN</td><td class="sec-title" colspan="3">PENCATATAN DAN PENDATAAN</td></tr>
-<tr><td class="sec-value"><ol><li>Dokumen tidak lengkap dikembalikan untuk diperbaiki.</li></ol></td><td class="sec-value" colspan="3"><ol><li>Daftar pengajuan dan register arsip dokumen</li></ol></td></tr>
-</tbody>
-</table>
-<div class="wb-document-content">
-<div class="doc-flow" data-surface="flowchart"><table aria-label="Example procedure flowchart"><colgroup><col style="width:4%"/><col style="width:19%"/><col style="width:9%"/><col style="width:9%"/><col style="width:9%"/><col style="width:16%"/><col style="width:9%"/><col style="width:16%"/><col style="width:9%"/></colgroup><thead><tr><th rowspan="2">No</th><th rowspan="2">Kegiatan</th><th colspan="3">Pelaksana</th><th colspan="3">Mutu Baku</th><th rowspan="2">Ket</th></tr><tr><th>Staff</th><th>Manager</th><th>Admin</th><th>Kelengkapan</th><th>Waktu</th><th>Output</th></tr></thead><tbody>
-<tr class="flowrow"><td class="num">1</td><td class="activity-cell">Mulai</td><td class="shape-cell"><span class="shape oval">Mulai</span></td><td></td><td></td><td>Kebutuhan pengajuan dokumen</td><td>0 menit</td><td>Proses pengajuan dimulai</td><td>Staff menyiapkan dokumen.</td></tr>
-<tr class="flowrow"><td class="num">2</td><td class="activity-cell">Ajukan dokumen</td><td class="shape-cell"><span class="shape rect">Ajukan dokumen</span></td><td></td><td></td><td>Formulir pengajuan dan dokumen pendukung</td><td>15 menit</td><td>Berkas pengajuan diterima</td><td>Lengkapi seluruh lampiran.</td></tr>
-<tr class="flowrow"><td class="num">3</td><td class="activity-cell">Dokumen valid?<small class="small-meta">Ya: arsip · Tidak: revisi</small></td><td></td><td class="shape-cell"><span class="shape diamond"><span>Valid?</span></span></td><td></td><td>Berkas pengajuan dan daftar pemeriksaan</td><td>10 menit</td><td>Keputusan verifikasi dokumen</td><td>Tidak: perbaiki dan ajukan kembali.</td></tr>
-<tr class="flowrow"><td class="num">4</td><td class="activity-cell">Arsipkan dokumen</td><td></td><td></td><td class="shape-cell"><span class="shape rect">Arsipkan</span></td><td>Dokumen yang telah diverifikasi</td><td>5 menit</td><td>Dokumen tercatat dalam arsip</td><td>Simpan dokumen sesuai aturan retensi.</td></tr>
-<tr class="flowrow"><td class="num">5</td><td class="activity-cell">Selesai</td><td></td><td></td><td class="shape-cell"><span class="shape oval">Selesai</span></td><td>Bukti pencatatan dokumen</td><td>0 menit</td><td>Proses pengajuan ditutup</td><td>Dokumen dapat ditemukan kembali.</td></tr>
-</tbody></table></div>
-<div class="doc-bpmn" data-surface="bpmn" hidden=""><div class="bpmn-lane"><div class="bpmn-lane-label">Staff</div><div class="bpmn-thing circle" style="left:116px;top:25px">Start</div><div class="bpmn-thing rounded" style="left:264px;top:23px">Ajukan dokumen</div></div><div class="bpmn-lane"><div class="bpmn-lane-label">Manager</div><div class="bpmn-thing gate" style="left:470px;top:24px"><span>Valid?</span></div></div><div class="bpmn-lane"><div class="bpmn-lane-label">Admin</div><div class="bpmn-thing rounded" style="left:660px;top:24px">Arsipkan dokumen</div><div class="bpmn-thing circle" style="left:860px;top:25px">End</div></div><svg class="bpmn-wires" preserveaspectratio="none" viewbox="0 0 1000 300"><g fill="none" stroke="#171717" stroke-width="2"><path d="M165 50H260"></path><path d="M406 50H475V150"></path><path d="M524 150H680V250"></path><path d="M800 250H875"></path></g><g fill="#171717"><path d="m260 50-9-4v8z M475 150l-4-9h8z M680 250l-4-9h8z M875 250l-9-4v8z"></path></g></svg></div>
-<div data-surface="steps" hidden=""><table aria-label="Editable SOP steps list" class="doc-steps"><colgroup><col style="width:5%"/><col style="width:22%"/><col style="width:15%"/><col style="width:12%"/><col style="width:15%"/><col style="width:31%"/></colgroup><thead><tr><th>No</th><th>Kegiatan</th><th>Jenis</th><th>Pelaksana</th><th>Waktu</th><th>Kelengkapan</th></tr></thead><tbody><tr><td>1</td><td>Mulai</td><td class="type">Start</td><td>Staff</td><td>0 menit</td><td>Kebutuhan pengajuan dokumen</td></tr><tr><td>2</td><td>Ajukan dokumen</td><td class="type">Task</td><td>Staff</td><td>15 menit</td><td>Formulir pengajuan dan dokumen pendukung</td></tr><tr><td>3</td><td>Dokumen valid?</td><td class="type">Decision</td><td>Manager</td><td>10 menit</td><td>Berkas pengajuan dan daftar pemeriksaan</td></tr><tr><td>4</td><td>Arsipkan dokumen</td><td class="type">Task</td><td>Admin</td><td>5 menit</td><td>Dokumen yang telah diverifikasi</td></tr><tr><td>5</td><td>Selesai</td><td class="type">End</td><td>Admin</td><td>0 menit</td><td>Bukti pencatatan dokumen</td></tr></tbody></table></div>
-</div>
-</article>
-</div></div></div>
-<aside class="wb-inspector" id="inspector"><div class="wb-inspector-heading">Properties</div><div class="wb-inspector-body"><div class="insp-group"><h3 class="insp-group-title">Identitas lembaga</h3><div class="insp-field"><span class="insp-label">Nama lembaga</span><div class="insp-value">SOPFlow Demo</div></div><div class="insp-field"><span class="insp-label">Logo instansi</span><div class="insp-value muted">Belum ada file</div></div></div><div class="insp-group"><h3 class="insp-group-title">Identitas SOP</h3><div class="insp-field"><span class="insp-label">Nama SOP</span><div class="insp-value">Pengajuan dan Verifikasi Dokumen</div></div><div class="insp-field"><span class="insp-label">Nomor SOP</span><div class="insp-value">SOP/DEMO/001</div></div></div><div class="insp-group"><h3 class="insp-group-title">Tanggal</h3><div class="insp-field"><span class="insp-label">Tanggal pembuatan</span><div class="insp-value">21/10/2026</div></div><div class="insp-field"><span class="insp-label">Tanggal revisi</span><div class="insp-value">21/10/2026</div></div><div class="insp-field"><span class="insp-label">Tanggal efektif</span><div class="insp-value">21/10/2026</div></div></div><div class="insp-group"><h3 class="insp-group-title">Pengesahan</h3><div class="insp-field"><span class="insp-label">Jabatan</span><div class="insp-value">Manajer Administrasi</div></div></div></div></aside>
-</div>
-<div class="wb-problems">No validation issues. The example document is ready.</div>
-<div class="wb-footer"><button aria-expanded="false" class="problems-button" id="problemsToggle"><svg class="icon"><use href="#ic-alert"></use></svg> Problems <span class="problems-count">0</span></button><span>A4 landscape · preview</span></div>
-</div>
-</div></div>
-<div class="preview-caption">Changes are not saved after you leave or refresh. Try the full editor in the playground.</div>
-<div class="mobile-preview-tools"><button aria-pressed="false" id="detailZoom" type="button">Magnify document <svg class="icon"><use href="#ic-plus"></use></svg></button></div>
+<section id="preview" class="preview-section wrap" aria-labelledby="preview-title">
+  <div class="preview-intro">
+    <div>
+      <h2 id="preview-title">Explore the SOP workspace.</h2>
+      <p>Review the same procedure as a flowchart, BPMN, or editable steps.</p>
+    </div>
+    <a class="preview-open" href="/playground/">
+      Open full workspace <svg class="icon" aria-hidden="true"><use href="#ic-arrow"></use></svg>
+    </a>
+  </div>
+
+  <div class="preview-window-scene">
+    <div class="product-window">
+      <iframe
+        class="playground-frame"
+        src="/playground/"
+        title="SOPFlow interactive playground"
+        loading="lazy"
+        referrerpolicy="same-origin"
+      ></iframe>
+    </div>
+  </div>
+  <p class="preview-caption">
+    Changes are not saved after you leave or refresh.
+    <a href="/playground/">Open playground in a full window</a>
+  </p>
 </section>

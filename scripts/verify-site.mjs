@@ -30,6 +30,10 @@ required("brand/logo.svg");
 const redirects = required("_redirects");
 
 assert.match(landing, /href="\/playground\/"/);
+assert.match(landing, /<iframe\b[^>]*src="\/playground\/"/, "Landing must embed the real playground");
+assert.doesNotMatch(landing, /id="routesToggle"|data-surface="flowchart"|id="inspectorToggle"/, "Remove mock editor controls");
+assert.doesNotMatch(landingStyles, /\.preview-caption\s*\{[^}]*left:\s*-9999px/, "Persistence notice must be visible");
+assert.doesNotMatch(landingStyles, /--sopflow-color-text\s*:|--sopflow-color-border\s*:/, "Do not override canonical semantic tokens");
 assert.doesNotMatch(landing, /__PLAYGROUND_URL__/);
 assert.match(landing, /Changes are not saved after you leave or refresh/);
 assert.match(redirects, /^\/playground \/playground\/ 301\s*$/m);
